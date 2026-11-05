@@ -11,7 +11,6 @@ let db;
 
 /**
  * راه‌اندازی اولیه پایگاه داده
- * این تابع یک Promise برمی‌گرداند که پس از آماده شدن DB resolve می‌شود.
  */
 function initDB() {
     return new Promise((resolve, reject) => {
@@ -53,15 +52,15 @@ function initDB() {
                 db.createObjectStore('subjects', { keyPath: 'id', autoIncrement: true });
             }
 
-            // 5. جدول ثبت ارزشیابی‌ها (Records)
+            // 5. جدول ثبت ارزشیابی‌ها
             if (!db.objectStoreNames.contains('records')) {
                 const recordStore = db.createObjectStore('records', { keyPath: 'id', autoIncrement: true });
                 recordStore.createIndex('subjectId', 'subjectId', { unique: false });
                 recordStore.createIndex('date', 'date', { unique: false });
-                recordStore.createIndex('sourceRecordId', 'sourceRecordId', { unique: false }); // برای تشویق‌های خودکار
+                recordStore.createIndex('sourceRecordId', 'sourceRecordId', { unique: false });
             }
 
-            // 6. جدول تنظیمات جایگاه‌ها و نشان‌ها (Badges)
+            // 6. جدول تنظیمات جایگاه‌ها و نشان‌ها
             if (!db.objectStoreNames.contains('badgesSettings')) {
                 db.createObjectStore('badgesSettings', { keyPath: 'id' });
             }
@@ -131,4 +130,35 @@ function clearStore(storeName) {
         request.onsuccess = () => resolve();
         request.onerror = (event) => reject(event.target.error);
     });
-                       }
+}
+
+/**
+ * توابع پشتیبان‌گیری و بازیابی (Export / Import JSON)
+ */
+async function exportAllData() {
+    const data = {};
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings'];
+    
+    for (const store of stores) {
+        try {
+            data[store] = await getAllData(store);
+        } catch (e) {
+            data[store] = [];
+        }
+    }
+    
+    return data;
+}
+
+async function importAllData(data) {
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings'];
+    
+    for (const store of stores) {
+        if (data[store]) {
+            await clearStore(store);
+            for (const item of data[store]) {
+                await saveData(store, item);
+            }
+        }
+    }
+}
