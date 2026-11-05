@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>کوشا — همیار پرتلاش معلم</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4A90E2">
+    <link rel="stylesheet" href="styles.css">
+    
+    <style>
+        #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.8s ease-out, visibility 0.8s ease-out; }
+        .splash-logo { font-size: 100px; animation: bounce 2s infinite ease-in-out; text-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .splash-title { color: white; font-size: 2rem; font-weight: bold; margin-top: 20px; opacity: 0; animation: fadeIn 1.5s forwards 0.5s; }
+        .splash-subtitle { color: rgba(255, 255, 255, 0.8); font-size: 1rem; margin-top: 10px; opacity: 0; animation: fadeIn 1.5s forwards 1s; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .splash-hidden { opacity: 0; visibility: hidden; }
+        #app-container { display: none; }
+        
+        .student-checkbox-list { max-height: 250px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px; background: #f8fafc; }
+        .student-checkbox-item { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #e2e8f0; }
+        .student-checkbox-item:last-child { border-bottom: none; }
+        
+        /* استایل مودال پیش‌نمایش */
+        .preview-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e2e8f0; }
+        .preview-row strong { color: var(--primary-dark); }
+    </style>
+</head>
+<body>
+
+    <div id="splash-screen">
+        <div class="splash-logo">👨‍🎓</div>
+        <div class="splash-title">کوشا</div>
+        <div class="splash-subtitle">همیار پرتلاش معلم</div>
+    </div>
+
+    <div id="app-container">
+        <header class="app-header">
+            <h1>کوشا</h1>
+            <p>همیار پرتلاش معلم</p>
+        </header>
+
+        <div class="container">
+            <div class="card">
+                <h2 class="card-title">📝 ثبت ارزشیابی جدید</h2>
+                
+                <form id="record-form">
+                    <div class="form-group">
+                        <label class="form-label" for="recordSubject">درس (الزامی)</label>
+                        <select id="recordSubject" class="form-control" required>
+                            <option value="" disabled selected>لطفاً یک درس انتخاب کنید...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="recordItem">آیتم ارزشیابی (الزامی)</label>
+                        <select id="recordItem" class="form-control" required>
+                            <option value="" disabled selected>لطفاً یک آیتم انتخاب کنید...</option>
+                        </select>
+                    </div>
+
+                    <div id="dynamic-score-section" class="form-group" style="display: none; background: #eef2ff; padding: 15px; border-radius: 8px;">
+                        <label class="form-label" id="score-label">تعیین امتیاز</label>
+                        <div id="score-input-container"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">انتخاب دانش‌آموزان (الزامی)</label>
+                        <div style="margin-bottom: 8px;">
+                            <button type="button" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="toggleAllStudents(true)">انتخاب همه</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="toggleAllStudents(false)">لغو همه</button>
+                        </div>
+                        <div id="students-checkbox-container" class="student-checkbox-list">
+                            <p style="color: #64748b; text-align: center;">در حال بارگذاری دانش‌آموزان...</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="recordTitle">عنوان (الزامی)</label>
+                        <input type="text" id="recordTitle" class="form-control" placeholder="مثلاً: حفظ شعر ستایش" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="recordDate">تاریخ (الزامی)</label>
+                        <input type="text" id="recordDate" class="form-control" placeholder="مثلاً: ۱۴۰۵/۰۸/۱۵" required>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="recordArf">
+                        <label for="recordArf">🎁 ارفاق آموزشی (برچسب بصری)</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mt-4">👁️ پیش‌نمایش و ثبت</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال پیش‌نمایش -->
+    <div id="preview-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">👁️ پیش‌نمایش ثبت ارزشیابی</div>
+            <div id="preview-content"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closePreviewModal()">انصراف</button>
+                <button type="button" class="btn btn-primary" onclick="confirmAndSaveRecord()">✅ تأیید و ذخیره</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="db.js"></script>
+    <script src="app.js"></script>
+    <script>
+        window.addEventListener('load', async () => {
+            try { await initDB(); } catch (error) { console.warn('دیتابیس محلی غیرفعال است.'); }
+            if (typeof initAssessmentForm === 'function') initAssessmentForm();
+
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                const app = document.getElementById('app-container');
+                if(splash) splash.classList.add('splash-hidden');
+                if(app) app.style.display = 'block';
+                setTimeout(() => { if(splash) splash.remove(); }, 800);
+            }, 2500); 
+        });
+    </script>
+</body>
+  </html>
