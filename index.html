@@ -38,7 +38,7 @@
 
         <div class="container">
             
-            <!-- تب ۱: پروفایل کلاس -->
+            <!-- تب ۱: کلاس -->
             <div id="page-class" class="page-section active">
                 <div class="card">
                     <h2 class="card-title">🏫 اطلاعات کلاس</h2>
@@ -47,12 +47,12 @@
                         <div class="form-group"><label class="form-label" for="classGrade">پایه</label><input type="text" id="classGrade" class="form-control" required></div>
                         <div class="form-group"><label class="form-label" for="classMotto">شعار کلاس</label><input type="text" id="classMotto" class="form-control" required></div>
                         <div class="form-group"><label class="form-label" for="teacherName">نام آموزگار</label><input type="text" id="teacherName" class="form-control" required></div>
-                        <button type="submit" class="btn btn-primary mt-4">💾 ذخیره اطلاعات کلاس</button>
+                        <button type="submit" class="btn btn-primary mt-4">💾 ذخیره</button>
                     </form>
                 </div>
             </div>
 
-            <!-- تب ۲: دروس -->
+            <!-- تب ۲: دروس (آپدیت شده با تنظیمات نشان شاگرد اول درس) -->
             <div id="page-subjects" class="page-section">
                 <div class="card">
                     <h2 class="card-title">📚 مدیریت درس‌ها</h2>
@@ -62,9 +62,25 @@
                     </form>
                 </div>
                 <div class="card"><h2 class="card-title">لیست دروس</h2><div id="subjects-list" class="list-group"></div></div>
+                
+                <!-- بخش جدید: تنظیمات نشان شاگرد اول درس -->
+                <div class="card">
+                    <h2 class="card-title">🏅 تنظیمات نشان شاگرد اول درس</h2>
+                    <p style="color: #64748b; font-size: 0.9rem;">درس مورد نظر را انتخاب کنید و نشان آن را تعریف کنید.</p>
+                    <div class="form-group">
+                        <label class="form-label" for="badgeSubjectSelect">انتخاب درس</label>
+                        <select id="badgeSubjectSelect" class="form-control" onchange="loadSubjectBadgeSettings()"></select>
+                    </div>
+                    <form id="subject-badge-form">
+                        <div class="form-group"><label class="form-label" for="subjectBadgeIcon">آیکون</label><input type="text" id="subjectBadgeIcon" class="form-control" placeholder="مثلاً: 🥇" required></div>
+                        <div class="form-group"><label class="form-label" for="subjectBadgeTitle">عنوان</label><input type="text" id="subjectBadgeTitle" class="form-control" placeholder="مثلاً: ریاضیدان برتر" required></div>
+                        <div class="form-group"><label class="form-label" for="subjectBadgeMotto">شعار</label><input type="text" id="subjectBadgeMotto" class="form-control" placeholder="مثلاً: با محاسبه‌گر" required></div>
+                        <button type="submit" class="btn btn-primary mt-4">💾 ذخیره نشان درس</button>
+                    </form>
+                </div>
             </div>
 
-            <!-- تب ۳: کلاس -->
+            <!-- تب ۳: دانش‌آموزان -->
             <div id="page-students" class="page-section">
                 <div class="card">
                     <h2 class="card-title">👥 ساخت گروه جدید</h2>
@@ -81,7 +97,7 @@
                     <form id="student-form">
                         <div class="form-group"><label class="form-label" for="studentFirstName">نام</label><input type="text" id="studentFirstName" class="form-control" required></div>
                         <div class="form-group"><label class="form-label" for="studentLastName">نام خانوادگی</label><input type="text" id="studentLastName" class="form-control" required></div>
-                        <div class="form-group"><label class="form-label" for="studentGroup">گروه (الزامی)</label><select id="studentGroup" class="form-control" required><option value="" disabled selected>انتخاب کنید...</option></select></div>
+                        <div class="form-group"><label class="form-label" for="studentGroup">گروه (الزامی)</label><select id="studentGroup" class="form-control" required></select></div>
                         <button type="submit" class="btn btn-primary mt-4">➕ ثبت دانش‌آموز</button>
                     </form>
                 </div>
@@ -95,48 +111,36 @@
                     <form id="record-form">
                         <div class="form-group"><label class="form-label" for="recordSubject">درس (الزامی)</label><select id="recordSubject" class="form-control" required></select></div>
                         <div class="form-group"><label class="form-label" for="recordItem">آیتم ارزشیابی (الزامی)</label><select id="recordItem" class="form-control" required></select></div>
-                        
-                        <div id="dynamic-score-section" class="form-group" style="display: none; background: #eef2ff; padding: 15px; border-radius: 8px;">
-                            <label class="form-label" id="score-label">تعیین امتیاز</label>
-                            <div id="score-input-container"></div>
-                        </div>
-
+                        <div id="dynamic-score-section" class="form-group" style="display: none; background: #eef2ff; padding: 15px; border-radius: 8px;"><label class="form-label" id="score-label">تعیین امتیاز</label><div id="score-input-container"></div></div>
                         <div class="form-group">
                             <label class="form-label">انتخاب دانش‌آموزان (الزامی)</label>
-                            <div style="margin-bottom: 8px;">
-                                <button type="button" class="btn btn-secondary" onclick="toggleAllStudents(true)">انتخاب همه</button>
-                                <button type="button" class="btn btn-secondary" onclick="toggleAllStudents(false)">لغو همه</button>
-                            </div>
+                            <div style="margin-bottom: 8px;"><button type="button" class="btn btn-secondary" onclick="toggleAllStudents(true)">انتخاب همه</button><button type="button" class="btn btn-secondary" onclick="toggleAllStudents(false)">لغو همه</button></div>
                             <div id="students-checkbox-container" class="student-checkbox-list"></div>
                         </div>
-
                         <div class="form-group"><label class="form-label" for="recordTitle">عنوان (الزامی)</label><input type="text" id="recordTitle" class="form-control" required></div>
                         <div class="form-group"><label class="form-label" for="recordDate">تاریخ (الزامی)</label><input type="text" id="recordDate" class="form-control" required></div>
                         <div class="form-group checkbox-group"><input type="checkbox" id="recordArf"><label for="recordArf">🎁 ارفاق آموزشی</label></div>
-                        
                         <button type="submit" class="btn btn-primary mt-4">👁️ پیش‌نمایش و ثبت</button>
                     </form>
                 </div>
             </div>
 
-            <!-- تب ۵: جایگاه‌ها و نشان‌ها (جدید) -->
+            <!-- تب ۵: جایگاه‌ها -->
             <div id="page-badges" class="page-section">
                 <div class="card">
                     <h2 class="card-title">🏆 تنظیمات جایگاه‌های گروهی</h2>
-                    <p style="color: #64748b; font-size: 0.9rem;">تعداد جایگاه‌ها بر اساس بزرگ‌ترین گروه شما تعیین می‌شود: <strong id="max-group-size">0</strong> نفر</p>
+                    <p style="color: #64748b; font-size: 0.9rem;">تعداد جایگاه‌ها بر اساس بزرگ‌ترین گروه: <strong id="max-group-size">0</strong> نفر</p>
                     <div id="group-ranks-form-container"></div>
                 </div>
-                
                 <div class="card">
                     <h2 class="card-title">🎓 تنظیمات نشان شاگرد اول کلاس</h2>
                     <form id="top-student-form">
                         <div class="form-group"><label class="form-label" for="topStudentIcon">آیکون</label><input type="text" id="topStudentIcon" class="form-control" placeholder="مثلاً: 👑" required></div>
                         <div class="form-group"><label class="form-label" for="topStudentTitle">عنوان</label><input type="text" id="topStudentTitle" class="form-control" placeholder="مثلاً: نابغه کلاس" required></div>
                         <div class="form-group"><label class="form-label" for="topStudentMotto">شعار</label><input type="text" id="topStudentMotto" class="form-control" placeholder="مثلاً: تلاشگر برتر" required></div>
-                        <button type="submit" class="btn btn-primary mt-4">💾 ذخیره نشان</button>
+                        <button type="submit" class="btn btn-primary mt-4">💾 ذخیره نشان شاگرد اول</button>
                     </form>
                 </div>
-
                 <div class="card">
                     <h2 class="card-title">📊 نمایش زنده جایگاه‌ها</h2>
                     <div id="live-ranks-list" class="list-group"></div>
@@ -145,24 +149,17 @@
 
             <!-- تب ۶: گزارشات -->
             <div id="page-reports" class="page-section">
-                <div class="card">
-                    <h2 class="card-title">📊 گزارش امتیازات کلاسی</h2>
-                    <div id="reports-list" class="list-group"></div>
-                </div>
+                <div class="card"><h2 class="card-title">📊 گزارش امتیازات کلاسی</h2><div id="reports-list" class="list-group"></div></div>
                 <div class="card">
                     <h2 class="card-title">⚙️ پشتیبان‌گیری</h2>
                     <button type="button" class="btn btn-primary mt-4" onclick="exportData()">📤 خروجی JSON</button>
-                    <div style="margin-top: 10px;">
-                        <label class="form-label">بازیابی از فایل:</label>
-                        <input type="file" id="importFile" accept=".json" class="form-control" onchange="importData(event)">
-                    </div>
+                    <div style="margin-top: 10px;"><label class="form-label">بازیابی:</label><input type="file" id="importFile" accept=".json" class="form-control" onchange="importData(event)"></div>
                 </div>
             </div>
 
         </div>
     </div>
 
-    <!-- منوی ناوبری (آپدیت شده با تب جایگاه‌ها) -->
     <nav class="bottom-nav">
         <a href="#" class="nav-item active" onclick="switchPage('page-class', this)"><span class="icon">🏫</span><span>کلاس</span></a>
         <a href="#" class="nav-item" onclick="switchPage('page-subjects', this)"><span class="icon">📚</span><span>دروس</span></a>
@@ -172,7 +169,6 @@
         <a href="#" class="nav-item" onclick="switchPage('page-reports', this)"><span class="icon">📊</span><span>گزارشات</span></a>
     </nav>
 
-    <!-- مودال پیش‌نمایش -->
     <div id="preview-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">👁️ پیش‌نمایش</div>
@@ -190,7 +186,6 @@
         window.addEventListener('load', async () => {
             try { await initDB(); } catch (error) { console.warn('دیتابیس محلی غیرفعال است.'); }
             if (typeof initApp === 'function') initApp();
-            
             setTimeout(() => {
                 const splash = document.getElementById('splash-screen');
                 const app = document.getElementById('app-container');
@@ -207,6 +202,7 @@
             navElement.classList.add('active');
             if (pageId === 'page-reports' && typeof generateReports === 'function') generateReports();
             if (pageId === 'page-badges' && typeof loadBadgesSettings === 'function') loadBadgesSettings();
+            if (pageId === 'page-subjects' && typeof loadSubjectBadgeList === 'function') loadSubjectBadgeList();
         }
     </script>
 </body>
