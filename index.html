@@ -61,8 +61,9 @@
                 <div class="card">
                     <h2 class="card-title">📚 مدیریت درس‌ها</h2>
                     <form id="subject-form">
+                        <input type="hidden" id="editSubjectId" value="">
                         <div class="form-group"><label class="form-label" for="subjectName">نام درس</label><input type="text" id="subjectName" class="form-control" required></div>
-                        <button type="submit" class="btn btn-primary mt-4">➕ ثبت درس</button>
+                        <button type="submit" id="subject-submit-btn" class="btn btn-primary mt-4">➕ ثبت درس</button>
                     </form>
                 </div>
                 <div class="card"><h2 class="card-title">لیست دروس</h2><div id="subjects-list" class="list-group"></div></div>
@@ -81,22 +82,24 @@
             <!-- تب ۳: دانش‌آموزان -->
             <div id="page-students" class="page-section">
                 <div class="card">
-                    <h2 class="card-title">👥 ساخت گروه</h2>
+                    <h2 class="card-title">👥 ساخت گروه جدید</h2>
                     <form id="group-form">
+                        <input type="hidden" id="editGroupId" value="">
                         <div class="form-group"><label class="form-label" for="groupName">نام گروه</label><input type="text" id="groupName" class="form-control" required></div>
-                        <div class="form-group"><label class="form-label" for="groupSymbol">نماد</label><input type="text" id="groupSymbol" class="form-control" required></div>
-                        <div class="form-group"><label class="form-label" for="groupMotto">شعار</label><input type="text" id="groupMotto" class="form-control" required></div>
-                        <button type="submit" class="btn btn-primary mt-4">➕ ثبت گروه</button>
+                        <div class="form-group"><label class="form-label" for="groupSymbol">نماد (ایموجی)</label><input type="text" id="groupSymbol" class="form-control" required></div>
+                        <div class="form-group"><label class="form-label" for="groupMotto">شعار گروه</label><input type="text" id="groupMotto" class="form-control" required></div>
+                        <button type="submit" id="group-submit-btn" class="btn btn-primary mt-4">➕ ثبت گروه</button>
                     </form>
                 </div>
                 <div class="card"><h2 class="card-title">لیست گروه‌ها</h2><div id="groups-list" class="list-group"></div></div>
                 <div class="card">
                     <h2 class="card-title">👦 افزودن دانش‌آموز</h2>
                     <form id="student-form">
+                        <input type="hidden" id="editStudentId" value="">
                         <div class="form-group"><label class="form-label" for="studentFirstName">نام</label><input type="text" id="studentFirstName" class="form-control" required></div>
                         <div class="form-group"><label class="form-label" for="studentLastName">نام خانوادگی</label><input type="text" id="studentLastName" class="form-control" required></div>
                         <div class="form-group"><label class="form-label" for="studentGroup">گروه (الزامی)</label><select id="studentGroup" class="form-control" required></select></div>
-                        <button type="submit" class="btn btn-primary mt-4">➕ ثبت دانش‌آموز</button>
+                        <button type="submit" id="student-submit-btn" class="btn btn-primary mt-4">➕ ثبت دانش‌آموز</button>
                     </form>
                 </div>
                 <div class="card"><h2 class="card-title">لیست دانش‌آموزان</h2><div id="students-list" class="list-group"></div></div>
@@ -133,7 +136,7 @@
                 </div>
             </div>
 
-            <!-- تب ۵: جایگاه‌ها (آپدیت شده با تشویق‌های پویش) -->
+            <!-- تب ۵: جایگاه‌ها -->
             <div id="page-badges" class="page-section">
                 <div class="card">
                     <h2 class="card-title">🏆 تنظیمات جایگاه‌های گروهی</h2>
@@ -155,12 +158,11 @@
                 </div>
                 <div class="card">
                     <h2 class="card-title">🏅 تشویق‌های پویش قرآن</h2>
-                    <p style="color: #64748b; font-size: 0.9rem;">لیست دانش‌آموزانی که تشویق پویش گرفته‌اند:</p>
                     <div id="quran-rewards-list" class="list-group"></div>
                 </div>
             </div>
 
-            <!-- تب ۶: گزارشات (آپدیت شده با فیلترها) -->
+            <!-- تب ۶: گزارشات -->
             <div id="page-reports" class="page-section">
                 <div class="card">
                     <h2 class="card-title">📊 گزارش امتیازات</h2>
