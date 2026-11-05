@@ -1,18 +1,18 @@
 /**
- * فایل app.js — مغز متفکر اپلیکیشن کوشا
+ * فایل app.js — مغز متفکر اپلیکیشن کوشا (نسخه نهایی با اصلاحیه‌ها)
  */
 
 // ==========================================
-// 1. ساختار درخت ارزشیابی (اصلاح‌شده نهایی)
+// 1. ساختار درخت ارزشیابی (اصلاح‌شده قطعی)
 // ==========================================
 const assessmentTree = [
     { value: "پرسش و پاسخ", type: "level1", levels: { "خیلی خوب": 25, "خوب": 16, "قابل قبول": 9, "نیازمند تلاش": 0 } },
     { value: "حفظ و قرائت", type: "level1", levels: { "خیلی خوب": 25, "خوب": 16, "قابل قبول": 9, "نیازمند تلاش": 0 } },
     { value: "پویش حفظ قرآن کریم", type: "quran", levels: {} },
-    // اصلاح: آزمون مداد و کاغذی در دسته اول قرار گرفت
-    { value: "آزمون مداد و کاغذی", type: "level1", levels: { "خیلی خوب": 25, "خوب": 16, "قابل قبول": 9, "نیازمند تلاش": 0 } },
+    // ✅ اصلاح نهایی: آزمون مداد و کاغذی به دسته دوم (۱۰۰، ۶۶، ۳۳) منتقل شد
+    { value: "آزمون مداد و کاغذی", type: "level2", levels: { "خیلی خوب": 100, "خوب": 66, "قابل قبول": 33, "نیازمند تلاش": 0 } },
     { value: "کاربرگ", type: "count", factor: 10, levels: {} },
-    // اصلاح: آزمون الکترونیکی در دسته اول قرار گرفت
+    // ✅ آزمون الکترونیکی در دسته اول (۲۵، ۱۶، ۹) قرار گرفت
     { value: "آزمون الکترونیکی", type: "level1", levels: { "خیلی خوب": 25, "خوب": 16, "قابل قبول": 9, "نیازمند تلاش": 0 } },
     { value: "کاردستی و مهارت دست‌ورزی", type: "fixed", score: 25, levels: {} },
     { value: "نمایش و ایفای نقش", type: "fixed", score: 50, levels: {} },
@@ -111,7 +111,7 @@ function initApp() {
 }
 
 // ==========================================
-// 3. بارگذاری داده‌ها و رندر لیست‌ها
+// 3. بارگذاری داده‌ها
 // ==========================================
 async function loadAllData() {
     try {
@@ -275,7 +275,7 @@ async function confirmAndSaveRecord() {
 }
 
 // ==========================================
-// 5. گزارشات
+// 5. گزارشات (شاگرد اول کلاس)
 // ==========================================
 async function generateReports() {
     const container = document.getElementById('reports-list');
@@ -296,12 +296,22 @@ async function generateReports() {
 
         studentScores.sort((a, b) => b.totalScore - a.totalScore);
 
-        container.innerHTML = studentScores.map((st, index) => `
-            <div class="list-item ${index === 0 ? 'top-student-row' : ''}">
-                <span><strong>${index + 1}. ${st.firstName} ${st.lastName}</strong> ${index === 0 ? '👑' : ''}</span>
-                <span class="rank-badge" style="font-size: 1rem; ${index === 0 ? 'background: var(--arf-border); color: white;' : ''}">${st.totalScore} امتیاز</span>
+        // بررسی تساوی برای شاگرد اول
+        let firstPlaceStudents = [];
+        if (studentScores.length > 0) {
+            const highestScore = studentScores[0].totalScore;
+            firstPlaceStudents = studentScores.filter(s => s.totalScore === highestScore);
+        }
+
+        container.innerHTML = studentScores.map((st, index) => {
+            const isFirst = firstPlaceStudents.includes(st) && st.totalScore > 0;
+            return `
+            <div class="list-item ${isFirst ? 'top-student-row' : ''}">
+                <span><strong>${index + 1}. ${st.firstName} ${st.lastName}</strong> ${isFirst ? '👑' : ''}</span>
+                <span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${st.totalScore} امتیاز</span>
             </div>
-        `).join('');
+        `}).join('');
+
     } catch (e) { container.innerHTML = '<p style="text-align:center; color:red;">خطا در تولید گزارش.</p>'; }
 }
 
