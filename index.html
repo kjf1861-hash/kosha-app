@@ -235,9 +235,25 @@
     <script src="db.js"></script>
     <script src="app.js"></script>
     <script>
+        // راه‌اندازی با مدیریت خطا برای جلوگیری از گیر کردن در Splash
         window.addEventListener('load', async () => {
-            try { await initDB(); } catch (error) { console.warn('دیتابیس محلی غیرفعال است.'); }
-            if (typeof initApp === 'function') initApp();
+            try {
+                await initDB();
+            } catch (error) {
+                console.warn('دیتابیس محلی غیرفعال است.');
+            }
+            
+            try {
+                if (typeof initApp === 'function') {
+                    initApp();
+                } else {
+                    console.error('تابع initApp پیدا نشد.');
+                }
+            } catch (error) {
+                console.error('خطا در راه‌اندازی اپلیکیشن:', error);
+            }
+            
+            // پنهان کردن Splash Screen با تاخیر
             setTimeout(() => {
                 const splash = document.getElementById('splash-screen');
                 const app = document.getElementById('app-container');
