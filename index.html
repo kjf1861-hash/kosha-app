@@ -38,7 +38,7 @@
 
         <div class="container">
             
-            <!-- تب ۱: کلاس -->
+            <!-- تب ۱: پروفایل کلاس -->
             <div id="page-class" class="page-section active">
                 <div class="card">
                     <h2 class="card-title">🏫 اطلاعات کلاس</h2>
@@ -52,7 +52,7 @@
                 </div>
             </div>
 
-            <!-- تب ۲: دروس (آپدیت شده با تنظیمات نشان شاگرد اول درس) -->
+            <!-- تب ۲: دروس -->
             <div id="page-subjects" class="page-section">
                 <div class="card">
                     <h2 class="card-title">📚 مدیریت درس‌ها</h2>
@@ -63,10 +63,8 @@
                 </div>
                 <div class="card"><h2 class="card-title">لیست دروس</h2><div id="subjects-list" class="list-group"></div></div>
                 
-                <!-- بخش جدید: تنظیمات نشان شاگرد اول درس -->
                 <div class="card">
                     <h2 class="card-title">🏅 تنظیمات نشان شاگرد اول درس</h2>
-                    <p style="color: #64748b; font-size: 0.9rem;">درس مورد نظر را انتخاب کنید و نشان آن را تعریف کنید.</p>
                     <div class="form-group">
                         <label class="form-label" for="badgeSubjectSelect">انتخاب درس</label>
                         <select id="badgeSubjectSelect" class="form-control" onchange="loadSubjectBadgeSettings()"></select>
@@ -104,22 +102,43 @@
                 <div class="card"><h2 class="card-title">لیست دانش‌آموزان</h2><div id="students-list" class="list-group"></div></div>
             </div>
 
-            <!-- تب ۴: ارزشیابی -->
+            <!-- تب ۴: ارزشیابی (آپدیت شده با انتخاب گروه و تاریخ خودکار) -->
             <div id="page-assessment" class="page-section">
                 <div class="card">
                     <h2 class="card-title">📝 ثبت ارزشیابی جدید</h2>
                     <form id="record-form">
                         <div class="form-group"><label class="form-label" for="recordSubject">درس (الزامی)</label><select id="recordSubject" class="form-control" required></select></div>
                         <div class="form-group"><label class="form-label" for="recordItem">آیتم ارزشیابی (الزامی)</label><select id="recordItem" class="form-control" required></select></div>
-                        <div id="dynamic-score-section" class="form-group" style="display: none; background: #eef2ff; padding: 15px; border-radius: 8px;"><label class="form-label" id="score-label">تعیین امتیاز</label><div id="score-input-container"></div></div>
+                        
+                        <div id="dynamic-score-section" class="form-group" style="display: none; background: #eef2ff; padding: 15px; border-radius: 8px;">
+                            <label class="form-label" id="score-label">تعیین امتیاز</label>
+                            <div id="score-input-container"></div>
+                        </div>
+
                         <div class="form-group">
                             <label class="form-label">انتخاب دانش‌آموزان (الزامی)</label>
-                            <div style="margin-bottom: 8px;"><button type="button" class="btn btn-secondary" onclick="toggleAllStudents(true)">انتخاب همه</button><button type="button" class="btn btn-secondary" onclick="toggleAllStudents(false)">لغو همه</button></div>
+                            <div style="margin-bottom: 8px; display: flex; gap: 5px; flex-wrap: wrap;">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllStudents(true)">انتخاب همه</button>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllStudents(false)">لغو همه</button>
+                                <select id="groupFilterSelect" class="form-control" style="width: auto; padding: 4px 8px; font-size: 0.85rem;" onchange="selectGroupMembers(this.value)">
+                                    <option value="">انتخاب گروه...</option>
+                                </select>
+                            </div>
                             <div id="students-checkbox-container" class="student-checkbox-list"></div>
                         </div>
+
                         <div class="form-group"><label class="form-label" for="recordTitle">عنوان (الزامی)</label><input type="text" id="recordTitle" class="form-control" required></div>
-                        <div class="form-group"><label class="form-label" for="recordDate">تاریخ (الزامی)</label><input type="text" id="recordDate" class="form-control" required></div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="recordDate">تاریخ (الزامی)</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="recordDate" class="form-control" placeholder="مثلاً: ۱۴۰۵/۰۸/۱۵" required style="flex-grow: 1;">
+                                <button type="button" class="btn btn-secondary" onclick="setTodayDate()" style="white-space: nowrap; padding: 0 15px;">📅 امروز</button>
+                            </div>
+                        </div>
+
                         <div class="form-group checkbox-group"><input type="checkbox" id="recordArf"><label for="recordArf">🎁 ارفاق آموزشی</label></div>
+                        
                         <button type="submit" class="btn btn-primary mt-4">👁️ پیش‌نمایش و ثبت</button>
                     </form>
                 </div>
