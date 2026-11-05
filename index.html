@@ -10,7 +10,7 @@
     
     <style>
         #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.8s ease-out, visibility 0.8s ease-out; }
-        .splash-logo { font-size: 100px; animation: bounce 2s infinite ease-in-out; text-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .splash-logo { margin-bottom: 10px; animation: bounce 2s infinite ease-in-out; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3)); }
         .splash-title { color: white; font-size: 2rem; font-weight: bold; margin-top: 20px; opacity: 0; animation: fadeIn 1.5s forwards 0.5s; }
         .splash-subtitle { color: rgba(255, 255, 255, 0.8); font-size: 1rem; margin-top: 10px; opacity: 0; animation: fadeIn 1.5s forwards 1s; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
@@ -29,7 +29,24 @@
 <body>
 
     <div id="splash-screen">
-        <div class="splash-logo">👨‍🎓</div>
+        <div class="splash-logo">
+            <svg width="120" height="120" viewBox="0 0 512 512">
+                <defs>
+                    <linearGradient id="splash-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#4A90E2"/>
+                        <stop offset="100%" stop-color="#357ABD"/>
+                    </linearGradient>
+                </defs>
+                <rect width="512" height="512" rx="115" fill="url(#splash-bg)"/>
+                <circle cx="420" cy="90" r="60" fill="#ffffff" opacity="0.15"/>
+                <circle cx="90" cy="420" r="80" fill="#ffffff" opacity="0.1"/>
+                <path d="M 256 130 L 140 185 L 256 240 L 372 185 Z" fill="#ffffff" stroke="#ffffff" stroke-width="8" stroke-linejoin="round"/>
+                <path d="M 140 185 L 140 250 C 140 250 170 280 256 280 C 342 280 372 250 372 250 L 372 185" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+                <path d="M 372 185 L 372 260" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+                <circle cx="372" cy="270" r="14" fill="#ffffff"/>
+                <path d="M 190 320 L 322 320 L 322 360 C 322 360 280 380 256 380 C 232 380 190 360 190 360 Z" fill="#ffffff" opacity="0.9"/>
+            </svg>
+        </div>
         <div class="splash-title">کوشا</div>
         <div class="splash-subtitle">همیار پرتلاش معلم</div>
     </div>
@@ -162,7 +179,7 @@
                 </div>
             </div>
 
-            <!-- تب ۶: گزارشات (آپدیت شده با مرتب‌سازی) -->
+            <!-- تب ۶: گزارشات -->
             <div id="page-reports" class="page-section">
                 <div class="card">
                     <h2 class="card-title">📊 گزارش امتیازات</h2>
@@ -174,7 +191,6 @@
                     <div id="subject-filter-container" style="display:none; margin-bottom: 10px;">
                         <select id="reportSubjectSelect" class="form-control" onchange="generateReports()"></select>
                     </div>
-                    <!-- منوی مرتب‌سازی -->
                     <div style="margin-bottom: 15px;">
                         <label class="form-label">مرتب‌سازی بر اساس:</label>
                         <select id="sortCriteriaSelect" class="form-control" onchange="generateReports()">
