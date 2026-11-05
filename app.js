@@ -20,7 +20,7 @@ const assessmentTree = [
 
 const quranSurahs = { "ناس": 6, "فلق": 5, "توحید": 4, "مسد": 5, "نصر": 3, "کافرون": 6, "کوثر": 3, "ماعون": 7 };
 
-let currentReportFilter = 'class'; // فیلتر پیش‌فرض گزارشات
+let currentReportFilter = 'class';
 
 // ==========================================
 // 2. راه‌اندازی اولیه
@@ -35,22 +35,37 @@ function initApp() {
 
     document.getElementById('subject-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        await saveData('subjects', { name: document.getElementById('subjectName').value });
+        const editId = document.getElementById('editSubjectId').value;
+        const data = { name: document.getElementById('subjectName').value };
+        if (editId) data.id = parseInt(editId);
+        await saveData('subjects', data);
         document.getElementById('subject-form').reset();
+        document.getElementById('editSubjectId').value = '';
+        document.getElementById('subject-submit-btn').textContent = '➕ ثبت درس';
         loadAllData();
     });
 
     document.getElementById('group-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        await saveData('groups', { name: document.getElementById('groupName').value, symbol: document.getElementById('groupSymbol').value, motto: document.getElementById('groupMotto').value });
+        const editId = document.getElementById('editGroupId').value;
+        const data = { name: document.getElementById('groupName').value, symbol: document.getElementById('groupSymbol').value, motto: document.getElementById('groupMotto').value };
+        if (editId) data.id = parseInt(editId);
+        await saveData('groups', data);
         document.getElementById('group-form').reset();
+        document.getElementById('editGroupId').value = '';
+        document.getElementById('group-submit-btn').textContent = '➕ ثبت گروه';
         loadAllData();
     });
 
     document.getElementById('student-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        await saveData('students', { firstName: document.getElementById('studentFirstName').value, lastName: document.getElementById('studentLastName').value, groupId: parseInt(document.getElementById('studentGroup').value) });
+        const editId = document.getElementById('editStudentId').value;
+        const data = { firstName: document.getElementById('studentFirstName').value, lastName: document.getElementById('studentLastName').value, groupId: parseInt(document.getElementById('studentGroup').value) };
+        if (editId) data.id = parseInt(editId);
+        await saveData('students', data);
         document.getElementById('student-form').reset();
+        document.getElementById('editStudentId').value = '';
+        document.getElementById('student-submit-btn').textContent = '➕ ثبت دانش‌آموز';
         loadAllData();
     });
 
@@ -108,7 +123,7 @@ async function loadAllData() {
         if (subjectsList) {
             subjectsList.innerHTML = subjects.length === 0 ? '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>' : '';
             subjects.forEach(s => {
-                subjectsList.innerHTML += `<div class="list-item"><span><strong>${s.name}</strong></span><button class="btn btn-danger btn-sm" onclick="deleteItem('subjects', ${s.id})">🗑️</button></div>`;
+                subjectsList.innerHTML += `<div class="list-item"><span><strong>${s.name}</strong></span><div style="display:flex; gap:5px;"><button class="btn btn-secondary btn-sm" onclick="editSubject(${s.id})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteItem('subjects', ${s.id})">🗑️</button></div></div>`;
             });
         }
         
@@ -121,7 +136,7 @@ async function loadAllData() {
         const studentGroupSelect = document.getElementById('studentGroup');
         if (groupsList) {
             groupsList.innerHTML = groups.length === 0 ? '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>' : '';
-            groups.forEach(g => { groupsList.innerHTML += `<div class="list-item"><span>${g.symbol} <strong>${g.name}</strong></span><button class="btn btn-danger btn-sm" onclick="deleteItem('groups', ${g.id})">🗑️</button></div>`; });
+            groups.forEach(g => { groupsList.innerHTML += `<div class="list-item"><span>${g.symbol} <strong>${g.name}</strong></span><div style="display:flex; gap:5px;"><button class="btn btn-secondary btn-sm" onclick="editGroup(${g.id})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteItem('groups', ${g.id})">🗑️</button></div></div>`; });
         }
         if (studentGroupSelect) studentGroupSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + groups.map(g => `<option value="${g.id}">${g.symbol} ${g.name}</option>`).join('');
 
@@ -140,7 +155,7 @@ async function loadAllData() {
             studentsList.innerHTML = students.length === 0 ? '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>' : '';
             students.forEach(st => {
                 const g = groups.find(x => x.id === st.groupId);
-                studentsList.innerHTML += `<div class="list-item"><span><strong>${st.firstName} ${st.lastName}</strong></span><div style="display:flex; gap:5px; align-items:center;"><span class="rank-badge">${g ? g.symbol+' '+g.name : 'بدون گروه'}</span><button class="btn btn-danger btn-sm" onclick="deleteItem('students', ${st.id})">🗑️</button></div></div>`;
+                studentsList.innerHTML += `<div class="list-item"><span><strong>${st.firstName} ${st.lastName}</strong></span><div style="display:flex; gap:5px; align-items:center;"><span class="rank-badge">${g ? g.symbol+' '+g.name : 'بدون گروه'}</span><button class="btn btn-secondary btn-sm" onclick="editStudent(${st.id})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteItem('students', ${st.id})">🗑️</button></div></div>`;
             });
         }
         if (checkboxContainer) {
@@ -159,7 +174,44 @@ async function deleteItem(storeName, id) {
 }
 
 // ==========================================
-// 4. منطق امتیازدهی
+// 4. توابع ویرایش
+// ==========================================
+async function editSubject(id) {
+    const subject = await getDataById('subjects', id);
+    if (subject) {
+        document.getElementById('subjectName').value = subject.name;
+        document.getElementById('editSubjectId').value = subject.id;
+        document.getElementById('subject-submit-btn').textContent = '💾 به‌روزرسانی درس';
+        document.getElementById('subject-form').scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+async function editGroup(id) {
+    const group = await getDataById('groups', id);
+    if (group) {
+        document.getElementById('groupName').value = group.name;
+        document.getElementById('groupSymbol').value = group.symbol;
+        document.getElementById('groupMotto').value = group.motto;
+        document.getElementById('editGroupId').value = group.id;
+        document.getElementById('group-submit-btn').textContent = '💾 به‌روزرسانی گروه';
+        document.getElementById('group-form').scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+async function editStudent(id) {
+    const student = await getDataById('students', id);
+    if (student) {
+        document.getElementById('studentFirstName').value = student.firstName;
+        document.getElementById('studentLastName').value = student.lastName;
+        document.getElementById('studentGroup').value = student.groupId;
+        document.getElementById('editStudentId').value = student.id;
+        document.getElementById('student-submit-btn').textContent = '💾 به‌روزرسانی دانش‌آموز';
+        document.getElementById('student-form').scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// ==========================================
+// 5. منطق امتیازدهی (بدون تغییر)
 // ==========================================
 function renderScoreInput(item) {
     const section = document.getElementById('dynamic-score-section');
@@ -251,18 +303,14 @@ async function confirmAndSaveRecord() {
     try {
         await saveData('records', window.tempRecordData);
 
-        // منطق تشویق خودکار پویش قرآن
         if (window.tempRecordData.itemName === "پویش حفظ قرآن کریم" && window.tempRecordData.finalScore > 0) {
-            // برای هر دانش‌آموز انتخاب‌شده، یک رکورد تشویق ثبت می‌کنیم
             for (const studentId of window.tempRecordData.students) {
-                // محاسبه تعداد کل سوره‌ها و آیات این دانش‌آموز
                 const allRecords = await getAllData('records');
                 let totalSurahs = 0;
                 let totalAyats = 0;
                 allRecords.forEach(rec => {
                     if (rec.itemName === "پویش حفظ قرآن کریم" && rec.students.includes(studentId)) {
                         totalSurahs += 1;
-                        // استخراج تعداد آیات از عنوان (مثلاً "سوره فلق - 5 آیه")
                         const match = rec.title.match(/\d+/);
                         if (match) totalAyats += parseInt(match[0]);
                     }
@@ -284,7 +332,7 @@ async function confirmAndSaveRecord() {
 }
 
 // ==========================================
-// 5. سیستم جایگاه‌ها و نشان‌ها
+// 6. سیستم جایگاه‌ها و نشان‌ها
 // ==========================================
 async function loadBadgesSettings() {
     try {
@@ -427,9 +475,6 @@ async function renderLiveRanks(groups, students, records, ranksSettings, topStud
     container.innerHTML = html;
 }
 
-// ==========================================
-// تابع جدید: نمایش تشویق‌های پویش
-// ==========================================
 async function loadQuranRewards() {
     const container = document.getElementById('quran-rewards-list');
     if (!container) return;
@@ -444,7 +489,6 @@ async function loadQuranRewards() {
             return;
         }
 
-        // گروه‌بندی بر اساس دانش‌آموز
         const grouped = {};
         quranRewards.forEach(reward => {
             if (!grouped[reward.studentId]) grouped[reward.studentId] = [];
@@ -466,7 +510,7 @@ async function loadQuranRewards() {
 }
 
 // ==========================================
-// 6. گزارشات
+// 7. گزارشات
 // ==========================================
 function changeReportFilter(filter, btn) {
     currentReportFilter = filter;
@@ -527,7 +571,7 @@ async function generateReports() {
                 return `<div class="list-item ${isFirst ? 'top-student-row' : ''}"><span><strong>${g.symbol} ${g.name}</strong> ${isFirst ? '🏆' : ''}</span><span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${g.totalScore} امتیاز</span></div>`;
             }).join('');
 
-        } else { // class filter
+        } else {
             const studentScores = students.map(st => {
                 let total = 0;
                 records.forEach(rec => { if (rec.students.includes(st.id)) total += rec.finalScore; });
@@ -545,7 +589,7 @@ async function generateReports() {
 }
 
 // ==========================================
-// 7. پشتیبان‌گیری
+// 8. پشتیبان‌گیری
 // ==========================================
 async function exportData() {
     try {
@@ -571,7 +615,7 @@ async function importData(event) {
 }
 
 // ==========================================
-// 8. Service Worker
+// 9. Service Worker
 // ==========================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
