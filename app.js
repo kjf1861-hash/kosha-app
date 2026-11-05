@@ -1,19 +1,18 @@
 /**
  * فایل app.js — مغز متفکر اپلیکیشن کوشا
- * شامل منطق ۶ حالت امتیازدهی، CRUD کامل، گزارشات و پشتیبان‌گیری
  */
 
 // ==========================================
-// 1. ساختار ثابت درخت ارزشیابی (با اصلاح آزمون مداد و کاغذی)
+// 1. ساختار درخت ارزشیابی (اصلاح‌شده نهایی)
 // ==========================================
 const assessmentTree = [
     { value: "پرسش و پاسخ", type: "level1", levels: { "خیلی خوب": 25, "خوب": 16, "قابل قبول": 9, "نیازمند تلاش": 0 } },
     { value: "حفظ و قرائت", type: "level1", levels: { "خیلی خوب": 25, "خوب": 16, "قابل قبول": 9, "نیازمند تلاش": 0 } },
     { value: "پویش حفظ قرآن کریم", type: "quran", levels: {} },
-    // اصلاح شد: آزمون مداد و کاغذی به دسته اول منتقل شد
+    // اصلاح: آزمون مداد و کاغذی در دسته اول قرار گرفت
     { value: "آزمون مداد و کاغذی", type: "level1", levels: { "خیلی خوب": 25, "خوب": 16, "قابل قبول": 9, "نیازمند تلاش": 0 } },
     { value: "کاربرگ", type: "count", factor: 10, levels: {} },
-    // اصلاح شد: آزمون الکترونیکی به دسته اول منتقل شد
+    // اصلاح: آزمون الکترونیکی در دسته اول قرار گرفت
     { value: "آزمون الکترونیکی", type: "level1", levels: { "خیلی خوب": 25, "خوب": 16, "قابل قبول": 9, "نیازمند تلاش": 0 } },
     { value: "کاردستی و مهارت دست‌ورزی", type: "fixed", score: 25, levels: {} },
     { value: "نمایش و ایفای نقش", type: "fixed", score: 50, levels: {} },
@@ -25,22 +24,18 @@ const assessmentTree = [
     { value: "تشویق خوش‌خط‌نویسی", type: "fixed", score: 4, levels: {} }
 ];
 
-// لیست کامل سوره‌های جزء سی به همراه تعداد آیات
 const quranSurahs = {
     "ناس": 6, "فلق": 5, "توحید": 4, "مسد": 5, "نصر": 3, "کافرون": 6, "کوثر": 3, "ماعون": 7,
     "قریش": 4, "فیل": 5, "همزه": 9, "عصر": 3, "تکاثر": 8, "قارعه": 11, "عادیات": 11, "زلزله": 8,
     "بینه": 8, "قدر": 5, "علق": 19, "تین": 8, "شرح": 8, "ضحی": 11, "لیل": 21, "شمس": 15,
     "بلد": 20, "فجر": 30, "غاشیه": 26, "اعلی": 19, "طارق": 17, "بروج": 22, "انشقاق": 25,
-    "مطففین": 36, "انفطار": 19, "تکویر": 29, "عبس": 42, "نازعات": 46, "نبأ": 40, "ملک": 30,
-    "قلم": 52, "حاقه": 52, "معارج": 44, "نوح": 28, "جن": 28, "مزمل": 20, "مدثر": 56, "قیامه": 40,
-    "انسان": 31, "مرسلات": 50
+    "مطففین": 36, "انفطار": 19, "تکویر": 29, "عبس": 42, "نازعات": 46, "نبأ": 40, "ملک": 30
 };
 
 // ==========================================
 // 2. راه‌اندازی اولیه اپلیکیشن
 // ==========================================
 function initApp() {
-    // --- فرم کلاس ---
     const classForm = document.getElementById('class-form');
     if (classForm) {
         classForm.addEventListener('submit', async (e) => {
@@ -57,7 +52,6 @@ function initApp() {
         });
     }
 
-    // --- فرم درس ---
     const subjectForm = document.getElementById('subject-form');
     if (subjectForm) {
         subjectForm.addEventListener('submit', async (e) => {
@@ -68,7 +62,6 @@ function initApp() {
         });
     }
 
-    // --- فرم گروه ---
     const groupForm = document.getElementById('group-form');
     if (groupForm) {
         groupForm.addEventListener('submit', async (e) => {
@@ -83,7 +76,6 @@ function initApp() {
         });
     }
 
-    // --- فرم دانش‌آموز ---
     const studentForm = document.getElementById('student-form');
     if (studentForm) {
         studentForm.addEventListener('submit', async (e) => {
@@ -98,7 +90,6 @@ function initApp() {
         });
     }
 
-    // --- آیتم‌های ارزشیابی ---
     const itemSelect = document.getElementById('recordItem');
     if (itemSelect) {
         assessmentTree.forEach((item, index) => {
@@ -109,7 +100,6 @@ function initApp() {
         itemSelect.addEventListener('change', (e) => renderScoreInput(assessmentTree[e.target.value]));
     }
 
-    // --- فرم ارزشیابی ---
     const recordForm = document.getElementById('record-form');
     if (recordForm) {
         recordForm.addEventListener('submit', (e) => {
@@ -121,11 +111,10 @@ function initApp() {
 }
 
 // ==========================================
-// 3. بارگذاری داده‌ها و رندر لیست‌ها (با قابلیت حذف)
+// 3. بارگذاری داده‌ها و رندر لیست‌ها
 // ==========================================
 async function loadAllData() {
     try {
-        // لود کلاس
         const classData = await getDataById('classProfile', 1);
         if (classData) {
             document.getElementById('className').value = classData.name || '';
@@ -135,43 +124,32 @@ async function loadAllData() {
             document.getElementById('header-subtitle').textContent = classData.name || 'همیار پرتلاش معلم';
         }
 
-        // لود دروس
         const subjects = await getAllData('subjects');
         const subjectsList = document.getElementById('subjects-list');
         const recordSubjectSelect = document.getElementById('recordSubject');
         if (subjectsList) {
             subjectsList.innerHTML = subjects.length === 0 ? '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>' : '';
             subjects.forEach(s => {
-                subjectsList.innerHTML += `
-                    <div class="list-item">
-                        <span><strong>${s.name}</strong></span>
-                        <button class="btn btn-danger btn-sm" onclick="deleteItem('subjects', ${s.id})">🗑️</button>
-                    </div>`;
+                subjectsList.innerHTML += `<div class="list-item"><span><strong>${s.name}</strong></span><button class="btn btn-danger btn-sm" onclick="deleteItem('subjects', ${s.id})">🗑️</button></div>`;
             });
         }
         if (recordSubjectSelect) {
             recordSubjectSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
         }
 
-        // لود گروه‌ها
         const groups = await getAllData('groups');
         const groupsList = document.getElementById('groups-list');
         const studentGroupSelect = document.getElementById('studentGroup');
         if (groupsList) {
             groupsList.innerHTML = groups.length === 0 ? '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>' : '';
             groups.forEach(g => {
-                groupsList.innerHTML += `
-                    <div class="list-item">
-                        <span>${g.symbol} <strong>${g.name}</strong></span>
-                        <button class="btn btn-danger btn-sm" onclick="deleteItem('groups', ${g.id})">🗑️</button>
-                    </div>`;
+                groupsList.innerHTML += `<div class="list-item"><span>${g.symbol} <strong>${g.name}</strong></span><button class="btn btn-danger btn-sm" onclick="deleteItem('groups', ${g.id})">🗑️</button></div>`;
             });
         }
         if (studentGroupSelect) {
             studentGroupSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + groups.map(g => `<option value="${g.id}">${g.symbol} ${g.name}</option>`).join('');
         }
 
-        // لود دانش‌آموزان
         const students = await getAllData('students');
         const studentsList = document.getElementById('students-list');
         const checkboxContainer = document.getElementById('students-checkbox-container');
@@ -179,33 +157,18 @@ async function loadAllData() {
             studentsList.innerHTML = students.length === 0 ? '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>' : '';
             students.forEach(st => {
                 const g = groups.find(x => x.id === st.groupId);
-                studentsList.innerHTML += `
-                    <div class="list-item">
-                        <span><strong>${st.firstName} ${st.lastName}</strong></span>
-                        <div style="display:flex; gap:5px; align-items:center;">
-                            <span class="rank-badge">${g ? g.symbol+' '+g.name : 'بدون گروه'}</span>
-                            <button class="btn btn-danger btn-sm" onclick="deleteItem('students', ${st.id})">🗑️</button>
-                        </div>
-                    </div>`;
+                studentsList.innerHTML += `<div class="list-item"><span><strong>${st.firstName} ${st.lastName}</strong></span><div style="display:flex; gap:5px; align-items:center;"><span class="rank-badge">${g ? g.symbol+' '+g.name : 'بدون گروه'}</span><button class="btn btn-danger btn-sm" onclick="deleteItem('students', ${st.id})">🗑️</button></div></div>`;
             });
         }
         if (checkboxContainer) {
             checkboxContainer.innerHTML = students.length === 0 ? '<p style="text-align:center; color:#64748b;">هیچ دانش‌آموزی نیست.</p>' : '';
             students.forEach(st => {
-                checkboxContainer.innerHTML += `
-                    <label class="student-checkbox-item">
-                        <input type="checkbox" class="student-checkbox" value="${st.id}">
-                        <span>${st.firstName} ${st.lastName}</span>
-                    </label>`;
+                checkboxContainer.innerHTML += `<label class="student-checkbox-item"><input type="checkbox" class="student-checkbox" value="${st.id}"><span>${st.firstName} ${st.lastName}</span></label>`;
             });
         }
-
     } catch (e) { console.log('خطا در لود داده‌ها', e); }
 }
 
-// ==========================================
-// 4. تابع حذف (CRUD: Delete)
-// ==========================================
 async function deleteItem(storeName, id) {
     if (confirm('آیا مطمئن هستید که می‌خواهید این مورد را حذف کنید؟')) {
         await deleteData(storeName, id);
@@ -214,7 +177,7 @@ async function deleteItem(storeName, id) {
 }
 
 // ==========================================
-// 5. منطق امتیازدهی (۶ حالت)
+// 4. منطق امتیازدهی
 // ==========================================
 function renderScoreInput(item) {
     const section = document.getElementById('dynamic-score-section');
@@ -241,13 +204,8 @@ function renderScoreInput(item) {
     }
 }
 
-function toggleAllStudents(checked) {
-    document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = checked);
-}
+function toggleAllStudents(checked) { document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = checked); }
 
-// ==========================================
-// 6. پیش‌نمایش و ذخیره ارزشیابی
-// ==========================================
 function showPreview() {
     const selectedIndex = document.getElementById('recordItem').value;
     const selectedItem = assessmentTree[selectedIndex];
@@ -262,8 +220,7 @@ function showPreview() {
             finalScore = c * selectedItem.factor;
             scoreDetails = `${c} × ${selectedItem.factor} = ${finalScore}`;
         } else if (selectedItem.type === 'fixed') {
-            finalScore = selectedItem.score;
-            scoreDetails = `ثابت: ${finalScore}`;
+            finalScore = selectedItem.score; scoreDetails = `ثابت: ${finalScore}`;
         } else if (selectedItem.type === 'free') {
             finalScore = parseInt(document.getElementById('dynamicFreeInput').value) || 0;
             scoreDetails = `دستی: ${finalScore}`;
@@ -271,33 +228,20 @@ function showPreview() {
             const ayat = parseInt(document.getElementById('quranAyatInput').value) || 0;
             const total = parseInt(document.getElementById('quranSurahSelect').value) || 0;
             const threshold = Math.ceil((total / 2) + 1);
-            if (ayat >= threshold && total > 0) {
-                finalScore = ayat * 5;
-                scoreDetails = `حد نصاب (${threshold}) رعایت شد: ${ayat} × 5 = ${finalScore}`;
-            } else {
-                finalScore = 0;
-                scoreDetails = `حد نصاب (${threshold}) رعایت نشد. امتیاز ۰.`;
-            }
+            if (ayat >= threshold && total > 0) { finalScore = ayat * 5; scoreDetails = `حد نصاب (${threshold}) رعایت شد: ${ayat} × 5 = ${finalScore}`; } 
+            else { finalScore = 0; scoreDetails = `حد نصاب (${threshold}) رعایت نشد.`; }
         }
-    } catch (e) {
-        alert('لطفاً فیلدهای امتیاز را کامل کنید.');
-        return;
-    }
+    } catch (e) { alert('لطفاً فیلدهای امتیاز را کامل کنید.'); return; }
 
     const studentCheckboxes = document.querySelectorAll('.student-checkbox:checked');
-    if (studentCheckboxes.length === 0) {
-        alert('لطفاً حداقل یک دانش‌آموز انتخاب کنید.');
-        return;
-    }
+    if (studentCheckboxes.length === 0) { alert('لطفاً حداقل یک دانش‌آموز انتخاب کنید.'); return; }
 
     document.getElementById('preview-content').innerHTML = `
         <div class="preview-row"><strong>درس:</strong> <span>${document.getElementById('recordSubject').options[document.getElementById('recordSubject').selectedIndex].text}</span></div>
         <div class="preview-row"><strong>آیتم:</strong> <span>${selectedItem.value}</span></div>
         <div class="preview-row"><strong>عنوان:</strong> <span>${document.getElementById('recordTitle').value}</span></div>
         <div class="preview-row"><strong>دانش‌آموزان:</strong> <span>${studentCheckboxes.length} نفر</span></div>
-        <div class="preview-row" style="background: #eef2ff; padding: 10px; border-radius: 8px; margin-top: 10px;">
-            <strong>امتیاز نهایی هر نفر:</strong> <span style="font-size: 1.2rem; color: #4A90E2;">${finalScore}</span>
-        </div>
+        <div class="preview-row" style="background: #eef2ff; padding: 10px; border-radius: 8px; margin-top: 10px;"><strong>امتیاز نهایی هر نفر:</strong> <span style="font-size: 1.2rem; color: #4A90E2;">${finalScore}</span></div>
     `;
 
     window.tempRecordData = {
@@ -318,20 +262,12 @@ function closePreviewModal() { document.getElementById('preview-modal').classLis
 async function confirmAndSaveRecord() {
     if (!window.tempRecordData) return;
     try {
-        // ذخیره ثبت ارزشیابی
         await saveData('records', window.tempRecordData);
-        
-        // منطق تشویق خودکار برای پویش (در صورت وجود)
-        if (window.tempRecordData.itemName === "پویش حفظ قرآن کریم" && window.tempRecordData.finalScore > 0) {
-            // در اینجا می‌توان منطق تشویق را اضافه کرد، فعلاً فقط یک پیام
-            console.log('تشویق پویش صادر شد.');
-        }
-
         alert('اطلاعات با موفقیت ذخیره شد!');
         closePreviewModal();
         document.getElementById('record-form').reset();
         document.getElementById('dynamic-score-section').style.display = 'none';
-        loadAllData(); // آپدیت لیست‌ها
+        loadAllData();
     } catch (error) {
         alert('خطا در ذخیره اطلاعات!');
         closePreviewModal();
@@ -339,7 +275,7 @@ async function confirmAndSaveRecord() {
 }
 
 // ==========================================
-// 7. گزارشات (Reports)
+// 5. گزارشات
 // ==========================================
 async function generateReports() {
     const container = document.getElementById('reports-list');
@@ -350,18 +286,11 @@ async function generateReports() {
         const students = await getAllData('students');
         const records = await getAllData('records');
 
-        if (students.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ دانش‌آموزی وجود ندارد.</p>';
-            return;
-        }
+        if (students.length === 0) { container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ دانش‌آموزی وجود ندارد.</p>'; return; }
 
         const studentScores = students.map(st => {
             let total = 0;
-            records.forEach(rec => {
-                if (rec.students && rec.students.includes(st.id)) {
-                    total += rec.finalScore;
-                }
-            });
+            records.forEach(rec => { if (rec.students && rec.students.includes(st.id)) { total += rec.finalScore; } });
             return { ...st, totalScore: total };
         });
 
@@ -373,14 +302,11 @@ async function generateReports() {
                 <span class="rank-badge" style="font-size: 1rem; ${index === 0 ? 'background: var(--arf-border); color: white;' : ''}">${st.totalScore} امتیاز</span>
             </div>
         `).join('');
-
-    } catch (e) {
-        container.innerHTML = '<p style="text-align:center; color:red;">خطا در تولید گزارش.</p>';
-    }
+    } catch (e) { container.innerHTML = '<p style="text-align:center; color:red;">خطا در تولید گزارش.</p>'; }
 }
 
 // ==========================================
-// 8. پشتیبان‌گیری (Export / Import)
+// 6. پشتیبان‌گیری
 // ==========================================
 async function exportData() {
     try {
@@ -392,15 +318,12 @@ async function exportData() {
         a.download = `kosha_backup_${new Date().toISOString().slice(0,10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
-    } catch (e) {
-        alert('خطا در گرفتن خروجی: ' + e.message);
-    }
+    } catch (e) { alert('خطا در گرفتن خروجی: ' + e.message); }
 }
 
 async function importData(event) {
     const file = event.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = async (e) => {
         try {
@@ -408,15 +331,13 @@ async function importData(event) {
             await importAllData(data);
             alert('بازیابی با موفقیت انجام شد!');
             loadAllData();
-        } catch (err) {
-            alert('فایل نامعتبر است!');
-        }
+        } catch (err) { alert('فایل نامعتبر است!'); }
     };
     reader.readAsText(file);
 }
 
 // ==========================================
-// 9. Service Worker و اعلان آپدیت
+// 7. Service Worker
 // ==========================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
