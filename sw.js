@@ -1,5 +1,4 @@
-// نسخه کش را با هر بار آپدیت تغییر دهید (مثلاً به v2, v3, ...)
-const CACHE_NAME = 'kosha-cache-v2'; 
+const CACHE_NAME = 'kosha-cache-v3'; // نسخه را بالا بردم تا کش قدیمی پاک شود
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -18,6 +17,8 @@ self.addEventListener('install', (event) => {
             return cache.addAll(ASSETS_TO_CACHE);
         })
     );
+    // فعال‌سازی فوری نسخه جدید
+    self.skipWaiting();
 });
 
 // 2. فعال‌سازی و پاک کردن کش‌های قدیمی
@@ -37,13 +38,22 @@ self.addEventListener('activate', (event) => {
     return self.clients.claim();
 });
 
-// 3. مدیریت درخواست‌ها (آفلاین بودن)
+// 3. مدیریت درخواست‌ها (حالت Network-First)
+// این حالت اول از شبکه درخواست می‌کند، اگر نبود از کش می‌خواند (برای آفلاین)
 self.addEventListener('fetch', (event) => {
     event.respondWith(
-        caches.match(event.request).then((response) => {
-            // اگر در کش بود، همان را برگردان، وگرنه از شبکه بگیر
-            return response || fetch(event.request);
-        })
+        fetch(event.request)
+            .then((networkResponse) => {
+                // اگر پاسخ از شبکه آمد، آن را در کش ذخیره کن و برگردان
+                return caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(event.request, networkResponse.clone());
+                    return networkResponse;
+                });
+            })
+            .catch(() => {
+                // اگر آفلاین بود، از کش بخوان
+                return caches.match(event.request);
+            })
     );
 });
 
