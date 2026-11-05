@@ -162,7 +162,7 @@
                 </div>
             </div>
 
-            <!-- تب ۶: گزارشات -->
+            <!-- تب ۶: گزارشات (آپدیت شده با مرتب‌سازی) -->
             <div id="page-reports" class="page-section">
                 <div class="card">
                     <h2 class="card-title">📊 گزارش امتیازات</h2>
@@ -173,6 +173,15 @@
                     </div>
                     <div id="subject-filter-container" style="display:none; margin-bottom: 10px;">
                         <select id="reportSubjectSelect" class="form-control" onchange="generateReports()"></select>
+                    </div>
+                    <!-- منوی مرتب‌سازی -->
+                    <div style="margin-bottom: 15px;">
+                        <label class="form-label">مرتب‌سازی بر اساس:</label>
+                        <select id="sortCriteriaSelect" class="form-control" onchange="generateReports()">
+                            <option value="score">📈 مجموع امتیاز (نزولی)</option>
+                            <option value="level">🏅 سطح غالب</option>
+                            <option value="count">🔢 تعداد ارزشیابی‌ها</option>
+                        </select>
                     </div>
                     <div id="reports-list" class="list-group"></div>
                 </div>
