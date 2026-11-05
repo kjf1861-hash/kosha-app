@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="styles.css">
     
     <style>
+        /* Splash Screen */
         #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.8s ease-out, visibility 0.8s ease-out; }
         .splash-logo { font-size: 100px; animation: bounce 2s infinite ease-in-out; text-shadow: 0 10px 20px rgba(0,0,0,0.2); }
         .splash-title { color: white; font-size: 2rem; font-weight: bold; margin-top: 20px; opacity: 0; animation: fadeIn 1.5s forwards 0.5s; }
@@ -20,32 +21,54 @@
         #app-container { display: none; padding-bottom: 70px; }
         .page-section { display: none; }
         .page-section.active { display: block; }
-        
-        .student-checkbox-list { max-height: 250px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px; background: #f8fafc; }
-        .student-checkbox-item { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #e2e8f0; }
-        .student-checkbox-item:last-child { border-bottom: none; }
-        .preview-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e2e8f0; }
-        .preview-row strong { color: var(--primary-dark); }
     </style>
 </head>
 <body>
 
+    <!-- Splash Screen -->
     <div id="splash-screen">
         <div class="splash-logo">👨‍🎓</div>
         <div class="splash-title">کوشا</div>
         <div class="splash-subtitle">همیار پرتلاش معلم</div>
     </div>
 
+    <!-- بدنه اصلی -->
     <div id="app-container">
         <header class="app-header">
             <h1>کوشا</h1>
-            <p>همیار پرتلاش معلم</p>
+            <p id="header-subtitle">همیار پرتلاش معلم</p>
         </header>
 
         <div class="container">
             
-            <!-- تب ۱: دروس -->
-            <div id="page-subjects" class="page-section active">
+            <!-- تب ۱: پروفایل کلاس -->
+            <div id="page-class" class="page-section active">
+                <div class="card">
+                    <h2 class="card-title">🏫 اطلاعات کلاس</h2>
+                    <form id="class-form">
+                        <div class="form-group">
+                            <label class="form-label" for="className">نام کلاس</label>
+                            <input type="text" id="className" class="form-control" placeholder="مثلاً: ریاضی ششم" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="classGrade">پایه</label>
+                            <input type="text" id="classGrade" class="form-control" placeholder="مثلاً: ششم" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="classMotto">شعار کلاس</label>
+                            <input type="text" id="classMotto" class="form-control" placeholder="مثلاً: به سوی قله‌ها" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="teacherName">نام آموزگار</label>
+                            <input type="text" id="teacherName" class="form-control" placeholder="مثلاً: آقای احمدی" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-4">💾 ذخیره اطلاعات کلاس</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- تب ۲: دروس -->
+            <div id="page-subjects" class="page-section">
                 <div class="card">
                     <h2 class="card-title">📚 مدیریت درس‌ها</h2>
                     <form id="subject-form">
@@ -58,74 +81,83 @@
                 </div>
                 <div class="card">
                     <h2 class="card-title">لیست دروس</h2>
-                    <div id="subjects-list" class="list-group"><p style="color: #64748b; text-align: center;">لیست خالی است.</p></div>
+                    <div id="subjects-list" class="list-group"></div>
                 </div>
             </div>
 
-            <!-- تب ۲: کلاس -->
+            <!-- تب ۳: گروه‌ها و دانش‌آموزان -->
             <div id="page-students" class="page-section">
                 <div class="card">
                     <h2 class="card-title">👥 ساخت گروه جدید</h2>
                     <form id="group-form">
-                        <div class="form-group"><label class="form-label" for="groupName">نام گروه</label><input type="text" id="groupName" class="form-control" required></div>
-                        <div class="form-group"><label class="form-label" for="groupSymbol">نماد (ایموجی)</label><input type="text" id="groupSymbol" class="form-control" required></div>
-                        <div class="form-group"><label class="form-label" for="groupMotto">شعار گروه</label><input type="text" id="groupMotto" class="form-control" required></div>
+                        <div class="form-group"><label class="form-label" for="groupName">نام گروه</label><input type="text" id="groupName" class="form-control" placeholder="مثلاً: گروه آبی" required></div>
+                        <div class="form-group"><label class="form-label" for="groupSymbol">نماد (ایموجی)</label><input type="text" id="groupSymbol" class="form-control" placeholder="مثلاً: 🦁" required></div>
+                        <div class="form-group"><label class="form-label" for="groupMotto">شعار گروه</label><input type="text" id="groupMotto" class="form-control" placeholder="مثلاً: با هم بهتریم" required></div>
                         <button type="submit" class="btn btn-primary mt-4">➕ ثبت گروه</button>
                     </form>
                 </div>
                 <div class="card">
                     <h2 class="card-title">لیست گروه‌ها</h2>
-                    <div id="groups-list" class="list-group"><p style="color: #64748b; text-align: center;">لیست خالی است.</p></div>
+                    <div id="groups-list" class="list-group"></div>
                 </div>
                 <div class="card">
                     <h2 class="card-title">👦 افزودن دانش‌آموز</h2>
                     <form id="student-form">
                         <div class="form-group"><label class="form-label" for="studentFirstName">نام</label><input type="text" id="studentFirstName" class="form-control" required></div>
                         <div class="form-group"><label class="form-label" for="studentLastName">نام خانوادگی</label><input type="text" id="studentLastName" class="form-control" required></div>
-                        <div class="form-group"><label class="form-label" for="studentGroup">گروه (الزامی)</label><select id="studentGroup" class="form-control" required><option value="" disabled selected>انتخاب کنید...</option></select></div>
+                        <div class="form-group"><label class="form-label" for="studentGroup">گروه (الزامی)</label><select id="studentGroup" class="form-control" required><option value="" disabled selected>ابتدا گروه بسازید...</option></select></div>
                         <button type="submit" class="btn btn-primary mt-4">➕ ثبت دانش‌آموز</button>
                     </form>
                 </div>
                 <div class="card">
                     <h2 class="card-title">لیست دانش‌آموزان</h2>
-                    <div id="students-list" class="list-group"><p style="color: #64748b; text-align: center;">لیست خالی است.</p></div>
+                    <div id="students-list" class="list-group"></div>
                 </div>
             </div>
 
-            <!-- تب ۳: ارزشیابی -->
+            <!-- تب ۴: ارزشیابی -->
             <div id="page-assessment" class="page-section">
                 <div class="card">
                     <h2 class="card-title">📝 ثبت ارزشیابی جدید</h2>
                     <form id="record-form">
                         <div class="form-group"><label class="form-label" for="recordSubject">درس (الزامی)</label><select id="recordSubject" class="form-control" required><option value="" disabled selected>انتخاب کنید...</option></select></div>
                         <div class="form-group"><label class="form-label" for="recordItem">آیتم ارزشیابی (الزامی)</label><select id="recordItem" class="form-control" required><option value="" disabled selected>انتخاب کنید...</option></select></div>
+                        
                         <div id="dynamic-score-section" class="form-group" style="display: none; background: #eef2ff; padding: 15px; border-radius: 8px;">
                             <label class="form-label" id="score-label">تعیین امتیاز</label>
                             <div id="score-input-container"></div>
                         </div>
+
                         <div class="form-group">
                             <label class="form-label">انتخاب دانش‌آموزان (الزامی)</label>
                             <div style="margin-bottom: 8px;">
                                 <button type="button" class="btn btn-secondary" onclick="toggleAllStudents(true)">انتخاب همه</button>
                                 <button type="button" class="btn btn-secondary" onclick="toggleAllStudents(false)">لغو همه</button>
                             </div>
-                            <div id="students-checkbox-container" class="student-checkbox-list"><p style="color: #64748b; text-align: center;">در حال بارگذاری...</p></div>
+                            <div id="students-checkbox-container" class="student-checkbox-list"></div>
                         </div>
+
                         <div class="form-group"><label class="form-label" for="recordTitle">عنوان (الزامی)</label><input type="text" id="recordTitle" class="form-control" required></div>
                         <div class="form-group"><label class="form-label" for="recordDate">تاریخ (الزامی)</label><input type="text" id="recordDate" class="form-control" required></div>
                         <div class="form-group checkbox-group"><input type="checkbox" id="recordArf"><label for="recordArf">🎁 ارفاق آموزشی</label></div>
+                        
                         <button type="submit" class="btn btn-primary mt-4">👁️ پیش‌نمایش و ثبت</button>
                     </form>
                 </div>
             </div>
 
-            <!-- تب ۴: گزارشات (جدید) -->
+            <!-- تب ۵: گزارشات -->
             <div id="page-reports" class="page-section">
                 <div class="card">
-                    <h2 class="card-title">📊 گزارش امتیازات کلاسی</h2>
-                    <p style="color: #64748b;">مجموع امتیازات دانش‌آموزان به صورت نزولی:</p>
-                    <div id="reports-list" class="list-group">
-                        <p style="color: #64748b; text-align: center;">در حال محاسبه...</p>
+                    <h2 class="card-title">📊 گزارش امتیازات</h2>
+                    <div id="reports-list" class="list-group"></div>
+                </div>
+                <div class="card">
+                    <h2 class="card-title">⚙️ تنظیمات و پشتیبان‌گیری</h2>
+                    <button type="button" class="btn btn-primary mt-4" onclick="exportData()">📤 خروجی گرفتن (Export JSON)</button>
+                    <div style="margin-top: 10px;">
+                        <label class="form-label">بازیابی از فایل:</label>
+                        <input type="file" id="importFile" accept=".json" class="form-control" onchange="importData(event)">
                     </div>
                 </div>
             </div>
@@ -133,20 +165,13 @@
         </div>
     </div>
 
-    <!-- منوی ناوبری پایین (آپدیت شده) -->
+    <!-- منوی ناوبری -->
     <nav class="bottom-nav">
-        <a href="#" class="nav-item active" onclick="switchPage('page-subjects', this)">
-            <span class="icon">📚</span><span>دروس</span>
-        </a>
-        <a href="#" class="nav-item" onclick="switchPage('page-students', this)">
-            <span class="icon">👥</span><span>کلاس</span>
-        </a>
-        <a href="#" class="nav-item" onclick="switchPage('page-assessment', this)">
-            <span class="icon">📝</span><span>ارزشیابی</span>
-        </a>
-        <a href="#" class="nav-item" onclick="switchPage('page-reports', this)">
-            <span class="icon">📊</span><span>گزارشات</span>
-        </a>
+        <a href="#" class="nav-item active" onclick="switchPage('page-class', this)"><span class="icon">🏫</span><span>کلاس</span></a>
+        <a href="#" class="nav-item" onclick="switchPage('page-subjects', this)"><span class="icon">📚</span><span>دروس</span></a>
+        <a href="#" class="nav-item" onclick="switchPage('page-students', this)"><span class="icon">👥</span><span>دانش‌آموزان</span></a>
+        <a href="#" class="nav-item" onclick="switchPage('page-assessment', this)"><span class="icon">📝</span><span>ارزشیابی</span></a>
+        <a href="#" class="nav-item" onclick="switchPage('page-reports', this)"><span class="icon">📊</span><span>گزارشات</span></a>
     </nav>
 
     <!-- مودال پیش‌نمایش -->
@@ -156,7 +181,7 @@
             <div id="preview-content"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closePreviewModal()">انصراف</button>
-                <button type="button" class="btn btn-primary" onclick="confirmAndSaveRecord()">✅ تأیید</button>
+                <button type="button" class="btn btn-primary" onclick="confirmAndSaveRecord()">✅ تأیید و ذخیره</button>
             </div>
         </div>
     </div>
@@ -167,7 +192,7 @@
         window.addEventListener('load', async () => {
             try { await initDB(); } catch (error) { console.warn('دیتابیس محلی غیرفعال است.'); }
             if (typeof initApp === 'function') initApp();
-
+            
             setTimeout(() => {
                 const splash = document.getElementById('splash-screen');
                 const app = document.getElementById('app-container');
@@ -182,11 +207,7 @@
             document.getElementById(pageId).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
             navElement.classList.add('active');
-            
-            // اگر به تب گزارشات رفتیم، گزارش را لود کن
-            if (pageId === 'page-reports') {
-                if (typeof generateReports === 'function') generateReports();
-            }
+            if (pageId === 'page-reports' && typeof generateReports === 'function') generateReports();
         }
     </script>
 </body>
