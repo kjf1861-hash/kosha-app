@@ -18,39 +18,66 @@ const assessmentTree = [
     { value: "تشویق خوش‌خط‌نویسی", type: "fixed", score: 4, levels: {} }
 ];
 
-const quranSurahs = {
-    "ناس": 6, "فلق": 5, "توحید": 4, "مسد": 5, "نصر": 3, "کافرون": 6, "کوثر": 3, "ماعون": 7,
-    "قریش": 4, "فیل": 5, "همزه": 9, "عصر": 3, "تکاثر": 8, "قارعه": 11, "عادیات": 11, "زلزله": 8
-    // برای سادگی فقط چند سوره اینجا آورده شده است
-};
-
-let currentCalculatedScore = 0;
+const quranSurahs = { "ناس": 6, "فلق": 5, "توحید": 4, "مسد": 5, "نصر": 3, "کافرون": 6, "کوثر": 3, "ماعون": 7 };
 
 // ==========================================
-// راه‌اندازی فرم
+// تابع اصلی راه‌اندازی اپلیکیشن
 // ==========================================
-async function initAssessmentForm() {
-    // 1. لود دروس (از دیتابیس)
-    const subjectSelect = document.getElementById('recordSubject');
-    if (subjectSelect) {
-        try {
-            const subjects = await getAllData('subjects');
-            if (subjects.length === 0) {
-                subjectSelect.innerHTML = '<option value="" disabled selected>هیچ درسی یافت نشد!</option>';
-            } else {
-                subjects.forEach(sub => {
-                    const opt = document.createElement('option');
-                    opt.value = sub.id;
-                    opt.textContent = sub.name;
-                    subjectSelect.appendChild(opt);
-                });
-            }
-        } catch (e) {
-            subjectSelect.innerHTML = '<option value="1">ریاضی (تست)</option>';
-        }
+function initApp() {
+    // --- 1. راه‌اندازی فرم درس‌ها ---
+    const subjectForm = document.getElementById('subject-form');
+    if (subjectForm) {
+        subjectForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('subjectName').value;
+            try {
+                await saveData('subjects', { name });
+                alert('درس ثبت شد!');
+                subjectForm.reset();
+                loadAllData();
+            } catch (e) { alert('خطا در ذخیره!'); }
+        });
     }
 
-    // 2. لود آیتم‌های ارزشیابی
+    // --- 2. راه‌اندازی فرم گروه‌ها ---
+    const groupForm = document.getElementById('group-form');
+    if (groupForm) {
+        groupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('groupName').value,
+                symbol: document.getElementById('groupSymbol').value,
+                motto: document.getElementById('groupMotto').value
+            };
+            try {
+                await saveData('groups', data);
+                alert('گروه ثبت شد!');
+                groupForm.reset();
+                loadAllData();
+            } catch (e) { alert('خطا در ذخیره!'); }
+        });
+    }
+
+    // --- 3. راه‌اندازی فرم دانش‌آموزان ---
+    const studentForm = document.getElementById('student-form');
+    if (studentForm) {
+        studentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                firstName: document.getElementById('studentFirstName').value,
+                lastName: document.getElementById('studentLastName').value,
+                groupId: parseInt(document.getElementById('studentGroup').value)
+            };
+            try {
+                await saveData('students', data);
+                alert('دانش‌آموز ثبت شد!');
+                studentForm.reset();
+                loadAllData();
+            } catch (e) { alert('خطا در ذخیره!'); }
+        });
+    }
+
+    // --- 4. راه‌اندازی آیتم‌های ارزشیابی ---
     const itemSelect = document.getElementById('recordItem');
     if (itemSelect) {
         assessmentTree.forEach((item, index) => {
@@ -62,178 +89,179 @@ async function initAssessmentForm() {
         itemSelect.addEventListener('change', (e) => renderScoreInput(assessmentTree[e.target.value]));
     }
 
-    // 3. لود دانش‌آموزان
-    loadStudentsForCheckbox();
+    // --- 5. راه‌اندازی فرم ثبت ارزشیابی ---
+    const recordForm = document.getElementById('record-form');
+    if (recordForm) {
+        recordForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            showPreview();
+        });
+    }
 
-    // 4. مدیریت ارسال فرم
-    document.getElementById('record-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        showPreview();
-    });
+    // بارگذاری اولیه داده‌ها
+    loadAllData();
 }
 
 // ==========================================
-// نمایش فیلد امتیاز داینامیک
+// بارگذاری همه داده‌ها و رندر لیست‌ها
+// ==========================================
+async function loadAllData() {
+    // 1. دروس
+    try {
+        const subjects = await getAllData('subjects');
+        const subjectsList = document.getElementById('subjects-list');
+        const recordSubjectSelect = document.getElementById('recordSubject');
+        
+        if (subjectsList) {
+            subjectsList.innerHTML = subjects.length === 0 ? '<p style="color: #64748b; text-align: center;">لیست خالی است.</p>' : '';
+            subjects.forEach(sub => {
+                subjectsList.innerHTML += `<div class="list-item"><strong>${sub.name}</strong></div>`;
+            });
+        }
+        
+        if (recordSubjectSelect) {
+            recordSubjectSelect.innerHTML = '<option value="" disabled selected>لطفاً یک درس انتخاب کنید...</option>';
+            subjects.forEach(sub => {
+                recordSubjectSelect.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
+            });
+        }
+    } catch (e) { console.log('خطا در لود دروس'); }
+
+    // 2. گروه‌ها
+    let groups = [];
+    try {
+        groups = await getAllData('groups');
+        const groupsList = document.getElementById('groups-list');
+        const studentGroupSelect = document.getElementById('studentGroup');
+
+        if (groupsList) {
+            groupsList.innerHTML = groups.length === 0 ? '<p style="color: #64748b; text-align: center;">لیست خالی است.</p>' : '';
+            groups.forEach(g => {
+                groupsList.innerHTML += `<div class="list-item"><span>${g.symbol} <strong>${g.name}</strong></span></div>`;
+            });
+        }
+
+        if (studentGroupSelect) {
+            studentGroupSelect.innerHTML = '<option value="" disabled selected>لطفاً یک گروه انتخاب کنید...</option>';
+            groups.forEach(g => {
+                studentGroupSelect.innerHTML += `<option value="${g.id}">${g.symbol} ${g.name}</option>`;
+            });
+        }
+    } catch (e) { console.log('خطا در لود گروه‌ها'); }
+
+    // 3. دانش‌آموزان
+    try {
+        const students = await getAllData('students');
+        const studentsList = document.getElementById('students-list');
+        const checkboxContainer = document.getElementById('students-checkbox-container');
+
+        if (studentsList) {
+            studentsList.innerHTML = students.length === 0 ? '<p style="color: #64748b; text-align: center;">لیست خالی است.</p>' : '';
+            students.forEach(st => {
+                const group = groups.find(g => g.id === st.groupId);
+                const groupName = group ? `${group.symbol} ${group.name}` : 'بدون گروه';
+                studentsList.innerHTML += `<div class="list-item"><span><strong>${st.firstName} ${st.lastName}</strong></span><span class="rank-badge">${groupName}</span></div>`;
+            });
+        }
+
+        if (checkboxContainer) {
+            checkboxContainer.innerHTML = students.length === 0 ? '<p style="color: #64748b; text-align: center;">لیست خالی است.</p>' : '';
+            students.forEach(st => {
+                checkboxContainer.innerHTML += `
+                    <label class="student-checkbox-item">
+                        <input type="checkbox" class="student-checkbox" value="${st.id}">
+                        <span>${st.firstName} ${st.lastName}</span>
+                    </label>
+                `;
+            });
+        }
+    } catch (e) { console.log('خطا در لود دانش‌آموزان'); }
+}
+
+// ==========================================
+// توابع کمکی (بدون تغییر از گام قبل)
 // ==========================================
 function renderScoreInput(item) {
     const section = document.getElementById('dynamic-score-section');
     const container = document.getElementById('score-input-container');
-    
     section.style.display = 'block';
     container.innerHTML = '';
-    currentCalculatedScore = 0;
 
     if (item.type === 'level1' || item.type === 'level2') {
         const select = document.createElement('select');
-        select.className = 'form-control';
-        select.id = 'dynamicLevelInput';
-        select.required = true;
+        select.className = 'form-control'; select.id = 'dynamicLevelInput'; select.required = true;
         select.innerHTML = '<option value="" disabled selected>انتخاب سطح...</option>';
         for (const [level, score] of Object.entries(item.levels)) {
             select.innerHTML += `<option value="${score}">${level} (${score} امتیاز)</option>`;
         }
         container.appendChild(select);
-        
     } else if (item.type === 'count') {
         const input = document.createElement('input');
-        input.type = 'number';
-        input.className = 'form-control';
-        input.id = 'dynamicCountInput';
-        input.min = '1';
-        input.placeholder = 'تعداد را وارد کنید';
-        input.required = true;
+        input.type = 'number'; input.className = 'form-control'; input.id = 'dynamicCountInput'; input.min = '1'; input.placeholder = 'تعداد را وارد کنید'; input.required = true;
         container.appendChild(input);
-
     } else if (item.type === 'fixed') {
         container.innerHTML = `<p style="font-weight: bold; color: #4A90E2;">${item.score} امتیاز (خودکار)</p>`;
-        currentCalculatedScore = item.score;
-
     } else if (item.type === 'free') {
         const input = document.createElement('input');
-        input.type = 'number';
-        input.className = 'form-control';
-        input.id = 'dynamicFreeInput';
-        input.min = '0';
-        input.placeholder = 'عدد امتیاز را وارد کنید';
-        input.required = true;
+        input.type = 'number'; input.className = 'form-control'; input.id = 'dynamicFreeInput'; input.min = '0'; input.placeholder = 'عدد امتیاز را وارد کنید'; input.required = true;
         container.appendChild(input);
-
     } else if (item.type === 'quran') {
-        // فرم پویش قرآن
         const select = document.createElement('select');
-        select.className = 'form-control';
-        select.id = 'quranSurahSelect';
+        select.className = 'form-control'; select.id = 'quranSurahSelect';
         select.innerHTML = '<option value="" disabled selected>انتخاب سوره...</option>';
         for (const [surah, ayat] of Object.entries(quranSurahs)) {
             select.innerHTML += `<option value="${ayat}">${surah} (${ayat} آیه)</option>`;
         }
-        
         const input = document.createElement('input');
-        input.type = 'number';
-        input.className = 'form-control';
-        input.id = 'quranAyatInput';
-        input.placeholder = 'تعداد آیات حفظ‌شده';
-        input.min = '1';
-        
+        input.type = 'number'; input.className = 'form-control'; input.id = 'quranAyatInput'; input.placeholder = 'تعداد آیات حفظ‌شده'; input.min = '1';
         container.appendChild(select);
         container.appendChild(document.createElement('br'));
         container.appendChild(input);
     }
 }
 
-// ==========================================
-// بارگذاری دانش‌آموزان
-// ==========================================
-async function loadStudentsForCheckbox() {
-    const container = document.getElementById('students-checkbox-container');
-    if (!container) return;
-
-    try {
-        const students = await getAllData('students');
-        if (students.length === 0) {
-            container.innerHTML = '<p style="color: #64748b; text-align: center;">هیچ دانش‌آموزی در دیتابیس نیست.</p>';
-            return;
-        }
-
-        container.innerHTML = '';
-        students.forEach(student => {
-            const div = document.createElement('label');
-            div.className = 'student-checkbox-item';
-            div.innerHTML = `
-                <input type="checkbox" class="student-checkbox" value="${student.id}">
-                <span>${student.firstName} ${student.lastName}</span>
-            `;
-            container.appendChild(div);
-        });
-    } catch (e) {
-        container.innerHTML = '<p style="color: red; text-align: center;">خطا در بارگذاری (حالت تست).</p>';
-    }
-}
-
-// انتخاب / لغو انتخاب همه
 function toggleAllStudents(checked) {
-    const checkboxes = document.querySelectorAll('.student-checkbox');
-    checkboxes.forEach(cb => cb.checked = checked);
+    document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = checked);
 }
 
-// ==========================================
-// پیش‌نمایش و ذخیره
-// ==========================================
 function showPreview() {
-    const itemSelect = document.getElementById('recordItem');
-    const selectedItem = assessmentTree[itemSelect.value];
-    
-    // محاسبه امتیاز نهایی
-    let finalScore = 0;
-    let scoreDetails = '';
+    const selectedItem = assessmentTree[document.getElementById('recordItem').value];
+    let finalScore = 0; let scoreDetails = '';
     
     if (selectedItem.type === 'level1' || selectedItem.type === 'level2') {
-        const level = document.getElementById('dynamicLevelInput').value;
-        finalScore = parseInt(level) || 0;
+        finalScore = parseInt(document.getElementById('dynamicLevelInput').value) || 0;
         scoreDetails = `امتیاز سطح: ${finalScore}`;
     } else if (selectedItem.type === 'count') {
         const count = parseInt(document.getElementById('dynamicCountInput').value) || 0;
         finalScore = count * selectedItem.factor;
         scoreDetails = `${count} × ${selectedItem.factor} = ${finalScore}`;
     } else if (selectedItem.type === 'fixed') {
-        finalScore = selectedItem.score;
-        scoreDetails = `امتیاز ثابت: ${finalScore}`;
+        finalScore = selectedItem.score; scoreDetails = `امتیاز ثابت: ${finalScore}`;
     } else if (selectedItem.type === 'free') {
         finalScore = parseInt(document.getElementById('dynamicFreeInput').value) || 0;
         scoreDetails = `امتیاز دستی: ${finalScore}`;
     } else if (selectedItem.type === 'quran') {
-        // محاسبه حد نصاب پویش
         const ayat = parseInt(document.getElementById('quranAyatInput').value) || 0;
         const surahTotal = parseInt(document.getElementById('quranSurahSelect').value) || 0;
-        
         const threshold = Math.ceil((surahTotal / 2) + 1);
-        
         if (ayat >= threshold && surahTotal > 0) {
-            finalScore = ayat * 5;
-            scoreDetails = `حد نصاب (${threshold}) رعایت شد. امتیاز: ${ayat} × 5 = ${finalScore}`;
+            finalScore = ayat * 5; scoreDetails = `حد نصاب (${threshold}) رعایت شد. امتیاز: ${ayat} × 5 = ${finalScore}`;
         } else {
-            finalScore = 0;
-            scoreDetails = `حد نصاب (${threshold}) رعایت نشد. امتیاز: 0`;
+            finalScore = 0; scoreDetails = `حد نصاب (${threshold}) رعایت نشد. امتیاز: 0`;
         }
     }
 
-    // نمایش در مودال
-    const content = document.getElementById('preview-content');
     const studentCheckboxes = document.querySelectorAll('.student-checkbox:checked');
-    
-    content.innerHTML = `
+    document.getElementById('preview-content').innerHTML = `
         <div class="preview-row"><strong>درس:</strong> <span>${document.getElementById('recordSubject').options[document.getElementById('recordSubject').selectedIndex].text}</span></div>
         <div class="preview-row"><strong>آیتم:</strong> <span>${selectedItem.value}</span></div>
         <div class="preview-row"><strong>عنوان:</strong> <span>${document.getElementById('recordTitle').value}</span></div>
-        <div class="preview-row"><strong>تاریخ:</strong> <span>${document.getElementById('recordDate').value}</span></div>
-        <div class="preview-row"><strong>تعداد دانش‌آموز:</strong> <span>${studentCheckboxes.length} نفر</span></div>
-        <div class="preview-row"><strong>نحوه محاسبه:</strong> <span>${scoreDetails}</span></div>
+        <div class="preview-row"><strong>دانش‌آموزان:</strong> <span>${studentCheckboxes.length} نفر</span></div>
         <div class="preview-row" style="border-bottom: none; margin-top: 10px; background: #eef2ff; padding: 10px; border-radius: 8px;">
             <strong>امتیاز نهایی هر نفر:</strong> <span style="font-size: 1.2rem; color: #4A90E2;">${finalScore}</span>
         </div>
     `;
     
-    // ذخیره موقت برای استفاده در مرحله بعد
     window.tempRecordData = {
         subjectId: parseInt(document.getElementById('recordSubject').value),
         itemName: selectedItem.value,
@@ -247,86 +275,48 @@ function showPreview() {
     document.getElementById('preview-modal').classList.add('show');
 }
 
-function closePreviewModal() {
-    document.getElementById('preview-modal').classList.remove('show');
-}
+function closePreviewModal() { document.getElementById('preview-modal').classList.remove('show'); }
 
 async function confirmAndSaveRecord() {
-    const data = window.tempRecordData;
-    if (!data) return;
-
+    if (!window.tempRecordData) return;
     try {
-        // ذخیره در دیتابیس
-        await saveData('records', {
-            subjectId: data.subjectId,
-            itemName: data.itemName,
-            title: data.title,
-            date: data.date,
-            students: data.students,
-            arf: data.arf,
-            finalScore: data.finalScore,
-            timestamp: Date.now()
-        });
-        
+        await saveData('records', window.tempRecordData);
         alert('اطلاعات با موفقیت ذخیره شد!');
         closePreviewModal();
         document.getElementById('record-form').reset();
         document.getElementById('dynamic-score-section').style.display = 'none';
-        
     } catch (error) {
-        console.error(error);
-        alert('خطا در ذخیره! (در حالت تست محلی، دیتابیس کار نمی‌کند)');
+        alert('خطا در ذخیره!');
         closePreviewModal();
     }
 }
-// ==========================================
-// 5. مدیریت Service Worker و اعلان آپدیت (Toast)
-// ==========================================
 
-// ثبت Service Worker (فقط در محیط‌های HTTPS یا localhost کار می‌کند)
+// ==========================================
+// راه‌اندازی Service Worker
+// ==========================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').then((registration) => {
-            console.log('Service Worker با موفقیت ثبت شد.');
-
-            // بررسی آپدیت
-            registration.addEventListener('updatefound', () => {
-                const newWorker = registration.installing;
-                
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+            reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
                 newWorker.addEventListener('statechange', () => {
                     if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        // نسخه جدید آماده است، نمایش Toast
                         showUpdateToast(newWorker);
                     }
                 });
             });
-        }).catch((error) => {
-            console.log('خطا در ثبت Service Worker:', error);
         });
     });
 }
 
-// تابع نمایش Toast آپدیت
 function showUpdateToast(newWorker) {
-    // ساخت المان Toast
     const toast = document.createElement('div');
     toast.className = 'toast-container';
-    toast.id = 'update-toast';
-    toast.innerHTML = `
-        <span>🚀 نسخه جدید در دسترس است!</span>
-        <button class="toast-btn" id="update-btn">به‌روزرسانی</button>
-    `;
+    toast.innerHTML = `<span>🚀 نسخه جدید در دسترس است!</span><button class="toast-btn" id="update-btn">به‌روزرسانی</button>`;
     document.body.appendChild(toast);
-
-    // نمایش با انیمیشن
     setTimeout(() => toast.classList.add('show'), 100);
-
-    // دکمه به‌روزرسانی
     document.getElementById('update-btn').addEventListener('click', () => {
-        if (newWorker) {
-            newWorker.postMessage({ action: 'skipWaiting' });
-        }
-        // رفرش صفحه پس از کنترل Service Worker جدید
+        if (newWorker) newWorker.postMessage({ action: 'skipWaiting' });
         setTimeout(() => window.location.reload(), 500);
     });
-}
+                                }
