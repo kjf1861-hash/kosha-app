@@ -66,7 +66,6 @@ function initApp() {
         alert('ذخیره شد!'); loadBadgesSettings();
     });
 
-    // فرم نشان شاگرد اول درس
     document.getElementById('subject-badge-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const selectedSubjectId = document.getElementById('badgeSubjectSelect').value;
@@ -122,9 +121,19 @@ async function loadAllData() {
         }
         if (studentGroupSelect) studentGroupSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + groups.map(g => `<option value="${g.id}">${g.symbol} ${g.name}</option>`).join('');
 
+        // پر کردن منوی انتخاب گروه در فرم ارزشیابی
+        const groupFilterSelect = document.getElementById('groupFilterSelect');
+        if (groupFilterSelect) {
+            groupFilterSelect.innerHTML = '<option value="">انتخاب گروه...</option>' + groups.map(g => `<option value="${g.id}">${g.symbol} ${g.name}</option>`).join('');
+        }
+
         const students = await getAllData('students');
         const studentsList = document.getElementById('students-list');
         const checkboxContainer = document.getElementById('students-checkbox-container');
+        
+        // ذخیره داده‌های دانش‌آموزان برای استفاده در تابع انتخاب گروه
+        window.allStudentsData = students;
+
         if (studentsList) {
             studentsList.innerHTML = students.length === 0 ? '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>' : '';
             students.forEach(st => {
@@ -148,7 +157,7 @@ async function deleteItem(storeName, id) {
 }
 
 // ==========================================
-// 4. منطق امتیازدهی (بدون تغییر)
+// 4. منطق امتیازدهی
 // ==========================================
 function renderScoreInput(item) {
     const section = document.getElementById('dynamic-score-section');
@@ -176,6 +185,36 @@ function renderScoreInput(item) {
 }
 
 function toggleAllStudents(checked) { document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = checked); }
+
+// تابع جدید: انتخاب اعضای یک گروه خاص
+function selectGroupMembers(groupId) {
+    if (!groupId) return;
+    // ابتدا همه تیک‌ها را برمی‌داریم
+    document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = false);
+
+    // از داده‌های ذخیره شده استفاده می‌کنیم
+    if (window.allStudentsData) {
+        window.allStudentsData.forEach(st => {
+            if (st.groupId == groupId) {
+                const checkbox = document.querySelector(`.student-checkbox[value="${st.id}"]`);
+                if (checkbox) checkbox.checked = true;
+            }
+        });
+    }
+}
+
+// تابع جدید: تنظیم تاریخ امروز
+function setTodayDate() {
+    const today = new Date();
+    const formatter = new Intl.DateTimeFormat('fa-IR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+    // خروجی به صورت 1405/08/14 است. برای پاکسازی کاراکترهای اضافی:
+    const dateStr = formatter.format(today).replace(/[^\d/]/g, '');
+    document.getElementById('recordDate').value = dateStr;
+}
 
 function showPreview() {
     const selectedItem = assessmentTree[document.getElementById('recordItem').value];
@@ -280,14 +319,12 @@ async function saveGroupRanks(maxGroupSize) {
     alert('ذخیره شد!'); loadBadgesSettings();
 }
 
-// بارگذاری لیست دروس برای تنظیمات نشان درس
 async function loadSubjectBadgeList() {
     const subjects = await getAllData('subjects');
     const select = document.getElementById('badgeSubjectSelect');
     if (select) select.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
 }
 
-// بارگذاری تنظیمات نشان درس انتخاب‌شده
 async function loadSubjectBadgeSettings() {
     const subjectId = document.getElementById('badgeSubjectSelect').value;
     if (!subjectId) return;
@@ -307,7 +344,6 @@ async function renderLiveRanks(groups, students, records, ranksSettings, topStud
     const container = document.getElementById('live-ranks-list');
     if (!container) return;
 
-    // 1. جایگاه گروه‌ها
     const groupScores = groups.map(g => {
         let total = 0;
         const groupStudents = students.filter(s => s.groupId === g.id);
@@ -323,7 +359,6 @@ async function renderLiveRanks(groups, students, records, ranksSettings, topStud
         html += `<div class="list-item"><span>${g.symbol} <strong>${g.name}</strong></span><span class="rank-badge">${badge} (${g.totalScore} امتیاز)</span></div>`;
     });
 
-    // 2. شاگرد اول کلاس
     if (students.length > 0 && topStudent) {
         const studentScores = students.map(st => {
             let total = 0;
@@ -341,7 +376,6 @@ async function renderLiveRanks(groups, students, records, ranksSettings, topStud
         } else { html += '<p style="color:#64748b;">هنوز امتیازی ثبت نشده است.</p>'; }
     }
 
-    // 3. شاگردان اول دروس (بخش جدید)
     html += `<h3 style="margin-top: 20px;">🏅 شاگردان اول دروس</h3>`;
     const subjects = await getAllData('subjects');
     let hasSubjectBadges = false;
@@ -356,7 +390,7 @@ async function renderLiveRanks(groups, students, records, ranksSettings, topStud
             return { ...st, totalScore: total };
         });
         const maxScore = Math.max(...subjectScores.map(s => s.totalScore));
-        if (maxScore === 0) continue; // اگر هیچ امتیازی ثبت نشده، نمایش داده نشود
+        if (maxScore === 0) continue;
         const topStudents = subjectScores.filter(s => s.totalScore === maxScore);
         
         hasSubjectBadges = true;
@@ -405,7 +439,7 @@ async function generateReports() {
 }
 
 // ==========================================
-// 7. پشتیبان‌گیری (Export / Import)
+// 7. پشتیبان‌گیری
 // ==========================================
 async function exportData() {
     try {
