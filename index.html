@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="styles.css">
     
     <style>
-        /* Splash Screen */
         #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.8s ease-out, visibility 0.8s ease-out; }
         .splash-logo { font-size: 100px; animation: bounce 2s infinite ease-in-out; text-shadow: 0 10px 20px rgba(0,0,0,0.2); }
         .splash-title { color: white; font-size: 2rem; font-weight: bold; margin-top: 20px; opacity: 0; animation: fadeIn 1.5s forwards 0.5s; }
@@ -25,14 +24,12 @@
 </head>
 <body>
 
-    <!-- Splash Screen -->
     <div id="splash-screen">
         <div class="splash-logo">👨‍🎓</div>
         <div class="splash-title">کوشا</div>
         <div class="splash-subtitle">همیار پرتلاش معلم</div>
     </div>
 
-    <!-- بدنه اصلی -->
     <div id="app-container">
         <header class="app-header">
             <h1>کوشا</h1>
@@ -146,12 +143,14 @@
                 </div>
             </div>
 
-            <!-- تب ۵: گزارشات -->
+            <!-- تب ۵: گزارشات و جایگاه‌ها -->
             <div id="page-reports" class="page-section">
                 <div class="card">
-                    <h2 class="card-title">📊 گزارش امتیازات</h2>
+                    <h2 class="card-title">📊 گزارش امتیازات کلاسی</h2>
+                    <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 10px;">شاگرد اول کلاس با نشان 👑 مشخص می‌شود.</p>
                     <div id="reports-list" class="list-group"></div>
                 </div>
+                
                 <div class="card">
                     <h2 class="card-title">⚙️ تنظیمات و پشتیبان‌گیری</h2>
                     <button type="button" class="btn btn-primary mt-4" onclick="exportData()">📤 خروجی گرفتن (Export JSON)</button>
