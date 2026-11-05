@@ -211,7 +211,7 @@ async function editStudent(id) {
 }
 
 // ==========================================
-// 5. منطق امتیازدهی (بدون تغییر)
+// 5. منطق امتیازدهی
 // ==========================================
 function renderScoreInput(item) {
     const section = document.getElementById('dynamic-score-section');
@@ -510,7 +510,7 @@ async function loadQuranRewards() {
 }
 
 // ==========================================
-// 7. گزارشات
+// 7. گزارشات (آپدیت شده با مرتب‌سازی)
 // ==========================================
 function changeReportFilter(filter, btn) {
     currentReportFilter = filter;
@@ -536,56 +536,116 @@ async function generateReports() {
         const groups = await getAllData('groups');
         const topStudent = await getDataById('badgesSettings', 'topStudent') || { icon: '👑', title: 'شاگرد اول' };
 
+        const sortCriteria = document.getElementById('sortCriteriaSelect') ? document.getElementById('sortCriteriaSelect').value : 'score';
+
         if (students.length === 0) { container.innerHTML = '<p style="text-align:center;">لیست خالی است.</p>'; return; }
+
+        // تابع کمکی برای یافتن سطح غالب
+        const getDominantLevel = (studentRecords) => {
+            const levelCounts = { "خیلی خوب": 0, "خوب": 0, "قابل قبول": 0, "نیازمند تلاش": 0 };
+            studentRecords.forEach(rec => {
+                const item = assessmentTree.find(i => i.value === rec.itemName);
+                if (item && item.levels) {
+                    for (const [level, score] of Object.entries(item.levels)) {
+                        if (score === rec.finalScore) { levelCounts[level]++; break; }
+                    }
+                }
+            });
+            
+            let dominantLevel = null, maxFreq = 0;
+            const levelOrder = { "خیلی خوب": 4, "خوب": 3, "قابل قبول": 2, "نیازمند تلاش": 1 };
+            for (const [level, freq] of Object.entries(levelCounts)) {
+                if (freq > maxFreq || (freq === maxFreq && levelOrder[level] > (levelOrder[dominantLevel] || 0))) {
+                    maxFreq = freq; dominantLevel = level;
+                }
+            }
+            return dominantLevel;
+        };
 
         if (currentReportFilter === 'subject') {
             const subjectId = parseInt(document.getElementById('reportSubjectSelect').value);
             if (!subjectId) { container.innerHTML = '<p style="text-align:center; color:#64748b;">لطفاً یک درس انتخاب کنید.</p>'; return; }
             
             const subjectRecords = records.filter(r => r.subjectId === subjectId);
-            const studentScores = students.map(st => {
+            let studentScores = students.map(st => {
                 let total = 0;
-                subjectRecords.forEach(rec => { if (rec.students.includes(st.id)) total += rec.finalScore; });
-                return { ...st, totalScore: total };
+                const myRecords = subjectRecords.filter(rec => rec.students.includes(st.id));
+                myRecords.forEach(rec => { total += rec.finalScore; });
+                return { ...st, totalScore: total, count: myRecords.length, dominantLevel: getDominantLevel(myRecords) };
             });
-            studentScores.sort((a, b) => b.totalScore - a.totalScore);
-            const maxScore = studentScores.length > 0 ? studentScores[0].totalScore : 0;
+
+            if (sortCriteria === 'level') {
+                const order = { "خیلی خوب": 4, "خوب": 3, "قابل قبول": 2, "نیازمند تلاش": 1, null: 0 };
+                studentScores.sort((a, b) => (order[b.dominantLevel] || 0) - (order[a.dominantLevel] || 0));
+            } else if (sortCriteria === 'count') {
+                studentScores.sort((a, b) => b.count - a.count);
+            } else {
+                studentScores.sort((a, b) => b.totalScore - a.totalScore);
+            }
+
+            const maxScore = studentScores.length > 0 ? Math.max(...studentScores.map(s => s.totalScore)) : 0;
 
             container.innerHTML = '<h3>📚 گزارش درسی</h3>' + studentScores.map((st, index) => {
-                const isFirst = st.totalScore === maxScore && maxScore > 0;
-                return `<div class="list-item ${isFirst ? 'top-student-row' : ''}"><span><strong>${index + 1}. ${st.firstName} ${st.lastName}</strong> ${isFirst ? topStudent.icon : ''}</span><span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${st.totalScore} امتیاز</span></div>`;
+                let displayValue = sortCriteria === 'level' ? (st.dominantLevel || '—') : (sortCriteria === 'count' ? `${st.count} ارزشیابی` : `${st.totalScore} امتیاز`);
+                const isFirst = sortCriteria === 'score' && st.totalScore === maxScore && maxScore > 0;
+                return `<div class="list-item ${isFirst ? 'top-student-row' : ''}">
+                    <span><strong>${index + 1}. ${st.firstName} ${st.lastName}</strong> ${isFirst ? topStudent.icon : ''}</span>
+                    <span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${displayValue}</span>
+                </div>`;
             }).join('');
 
         } else if (currentReportFilter === 'group') {
-            const groupScores = groups.map(g => {
+            let groupScores = groups.map(g => {
                 let total = 0;
+                let count = 0;
                 const groupStudents = students.filter(s => s.groupId === g.id);
-                records.forEach(rec => { rec.students.forEach(id => { if (groupStudents.find(s => s.id === id)) total += rec.finalScore; }); });
-                return { ...g, totalScore: total };
+                records.forEach(rec => { rec.students.forEach(id => { if (groupStudents.find(s => s.id === id)) { total += rec.finalScore; count++; } }); });
+                return { ...g, totalScore: total, count: count };
             });
-            groupScores.sort((a, b) => b.totalScore - a.totalScore);
-            const maxScore = groupScores.length > 0 ? groupScores[0].totalScore : 0;
+            
+            if (sortCriteria === 'count') groupScores.sort((a, b) => b.count - a.count);
+            else groupScores.sort((a, b) => b.totalScore - a.totalScore);
+
+            const maxScore = groupScores.length > 0 ? Math.max(...groupScores.map(s => s.totalScore)) : 0;
 
             container.innerHTML = '<h3>👥 گزارش گروهی</h3>' + groupScores.map((g, index) => {
-                const isFirst = g.totalScore === maxScore && maxScore > 0;
-                return `<div class="list-item ${isFirst ? 'top-student-row' : ''}"><span><strong>${g.symbol} ${g.name}</strong> ${isFirst ? '🏆' : ''}</span><span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${g.totalScore} امتیاز</span></div>`;
+                let displayValue = sortCriteria === 'count' ? `${g.count} ارزشیابی` : `${g.totalScore} امتیاز`;
+                const isFirst = sortCriteria === 'score' && g.totalScore === maxScore && maxScore > 0;
+                return `<div class="list-item ${isFirst ? 'top-student-row' : ''}">
+                    <span><strong>${g.symbol} ${g.name}</strong> ${isFirst ? '🏆' : ''}</span>
+                    <span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${displayValue}</span>
+                </div>`;
             }).join('');
 
         } else {
-            const studentScores = students.map(st => {
+            let studentScores = students.map(st => {
+                const myRecords = records.filter(rec => rec.students.includes(st.id));
                 let total = 0;
-                records.forEach(rec => { if (rec.students.includes(st.id)) total += rec.finalScore; });
-                return { ...st, totalScore: total };
+                myRecords.forEach(rec => { total += rec.finalScore; });
+                return { ...st, totalScore: total, count: myRecords.length, dominantLevel: getDominantLevel(myRecords) };
             });
-            studentScores.sort((a, b) => b.totalScore - a.totalScore);
-            const maxScore = studentScores.length > 0 ? studentScores[0].totalScore : 0;
+
+            if (sortCriteria === 'level') {
+                const order = { "خیلی خوب": 4, "خوب": 3, "قابل قبول": 2, "نیازمند تلاش": 1, null: 0 };
+                studentScores.sort((a, b) => (order[b.dominantLevel] || 0) - (order[a.dominantLevel] || 0));
+            } else if (sortCriteria === 'count') {
+                studentScores.sort((a, b) => b.count - a.count);
+            } else {
+                studentScores.sort((a, b) => b.totalScore - a.totalScore);
+            }
+
+            const maxScore = studentScores.length > 0 ? Math.max(...studentScores.map(s => s.totalScore)) : 0;
 
             container.innerHTML = '<h3>🏫 گزارش کلاسی</h3>' + studentScores.map((st, index) => {
-                const isFirst = st.totalScore === maxScore && maxScore > 0;
-                return `<div class="list-item ${isFirst ? 'top-student-row' : ''}"><span><strong>${index + 1}. ${st.firstName} ${st.lastName}</strong> ${isFirst ? topStudent.icon : ''}</span><span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${st.totalScore} امتیاز</span></div>`;
+                let displayValue = sortCriteria === 'level' ? (st.dominantLevel || '—') : (sortCriteria === 'count' ? `${st.count} ارزشیابی` : `${st.totalScore} امتیاز`);
+                const isFirst = sortCriteria === 'score' && st.totalScore === maxScore && maxScore > 0;
+                return `<div class="list-item ${isFirst ? 'top-student-row' : ''}">
+                    <span><strong>${index + 1}. ${st.firstName} ${st.lastName}</strong> ${isFirst ? topStudent.icon : ''}</span>
+                    <span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${displayValue}</span>
+                </div>`;
             }).join('');
         }
-    } catch (e) { container.innerHTML = '<p style="text-align:center; color:red;">خطا</p>'; }
+    } catch (e) { console.error(e); container.innerHTML = '<p style="text-align:center; color:red;">خطا</p>'; }
 }
 
 // ==========================================
