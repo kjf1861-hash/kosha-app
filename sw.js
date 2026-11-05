@@ -1,11 +1,13 @@
-const CACHE_NAME = 'kosha-cache-v1';
+// نسخه کش را با هر بار آپدیت تغییر دهید (مثلاً به v2, v3, ...)
+const CACHE_NAME = 'kosha-cache-v2'; 
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './styles.css',
     './app.js',
     './db.js',
-    './manifest.json'
+    './manifest.json',
+    './icon.svg'
 ];
 
 // 1. نصب و کش کردن اولیه فایل‌ها
