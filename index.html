@@ -104,10 +104,10 @@
                 <div class="card">
                     <h2 class="card-title">🏫 اطلاعات کلاس</h2>
                     <form id="class-form">
-                        <div class="form-group"><label class="form-label" for="className">نام کلاس</label><input type="text" id="className" class="form-control" placeholder="مثلاً: کلاس سوم الف" autocomplete="on" required></div>
-                        <div class="form-group"><label class="form-label" for="classGrade">پایه</label><input type="text" id="classGrade" class="form-control" placeholder="مثلاً: سوم ابتدایی" autocomplete="on" required></div>
-                        <div class="form-group"><label class="form-label" for="classMotto">شعار کلاس</label><input type="text" id="classMotto" class="form-control" placeholder="مثلاً: با هم بهتر یاد می‌گیریم" autocomplete="on" required></div>
-                        <div class="form-group"><label class="form-label" for="teacherName">نام آموزگار</label><input type="text" id="teacherName" class="form-control" placeholder="مثلاً: آقای احمدی" autocomplete="on" required></div>
+                        <div class="form-group"><label class="form-label" for="className">نام کلاس</label><input type="text" id="className" class="form-control" placeholder="شهید مهدی باکری" autocomplete="on" required></div>
+                        <div class="form-group"><label class="form-label" for="classGrade">پایه</label><input type="text" id="classGrade" class="form-control" placeholder="پنجم" autocomplete="on" required></div>
+                        <div class="form-group"><label class="form-label" for="classMotto">شعار کلاس</label><input type="text" id="classMotto" class="form-control" placeholder="تحصیل، تهذیب، ورزش" autocomplete="on" required></div>
+                        <div class="form-group"><label class="form-label" for="teacherName">نام آموزگار</label><input type="text" id="teacherName" class="form-control" placeholder="کریم جهانی فانی" autocomplete="on" required></div>
                         <button type="submit" class="btn btn-primary mt-4">💾 ذخیره</button>
                     </form>
                 </div>
@@ -142,9 +142,12 @@
                     <h2 class="card-title">👥 ساخت گروه جدید</h2>
                     <form id="group-form">
                         <input type="hidden" id="editGroupId" value="">
-                        <div class="form-group"><label class="form-label" for="groupName">نام گروه</label><input type="text" id="groupName" class="form-control" placeholder="مثلاً: یاران مهدی (عج)" autocomplete="on" required></div>
-                        <div class="form-group"><label class="form-label" for="groupSymbol">نماد (ایموجی)</label><input type="text" id="groupSymbol" class="form-control" placeholder="مثلاً: 🌟" autocomplete="on" required></div>
-                        <div class="form-group"><label class="form-label" for="groupMotto">شعار گروه</label><input type="text" id="groupMotto" class="form-control" placeholder="مثلاً: تلاش، تلاش، تلاش" autocomplete="on" required></div>
+                        <div class="form-group"><label class="form-label" for="groupName">نام گروه</label><input type="text" id="groupName" class="form-control" placeholder="شهباز بصیر" autocomplete="on" required></div>
+                        <div class="form-group"><label class="form-label" for="groupSymbol">نماد (ایموجی)</label><input type="text" id="groupSymbol" class="form-control" placeholder="🦅" autocomplete="off" required></div>
+                        <div class="form-group">
+                            <label class="form-label" for="groupMotto">شعار گروه</label>
+                            <textarea id="groupMotto" class="form-control" placeholder="تیزبین باشیم. (نماد بصیرت و دقت در جزئیات)&#10;پرندگان شکاری همچون شهباز، از بلندی‌ها کوچک‌ترین حرکت‌ها را می‌بینند. واژه «بصیر» به معنای بصیرت و دوراندیشی است. دانش‌آموز بصیر، در درس‌ها و در احساسات دوستانش تیزبین است. این گروه، پرچم‌دار دقت در کلاس است." autocomplete="on" required rows="5"></textarea>
+                        </div>
                         <button type="submit" id="group-submit-btn" class="btn btn-primary mt-4">➕ ثبت گروه</button>
                     </form>
                 </div>
@@ -153,8 +156,8 @@
                     <h2 class="card-title">👦 افزودن دانش‌آموز</h2>
                     <form id="student-form">
                         <input type="hidden" id="editStudentId" value="">
-                        <div class="form-group"><label class="form-label" for="studentFirstName">نام</label><input type="text" id="studentFirstName" class="form-control" placeholder="مثلاً: علی" autocomplete="on" required></div>
-                        <div class="form-group"><label class="form-label" for="studentLastName">نام خانوادگی</label><input type="text" id="studentLastName" class="form-control" placeholder="مثلاً: رضایی" autocomplete="on" required></div>
+                        <div class="form-group"><label class="form-label" for="studentFirstName">نام</label><input type="text" id="studentFirstName" class="form-control" placeholder="ارسلان" autocomplete="on" required></div>
+                        <div class="form-group"><label class="form-label" for="studentLastName">نام خانوادگی</label><input type="text" id="studentLastName" class="form-control" placeholder="قاسمی" autocomplete="on" required></div>
                         <div class="form-group"><label class="form-label" for="studentGroup">گروه (الزامی)</label><select id="studentGroup" class="form-control" required></select></div>
                         <button type="submit" id="student-submit-btn" class="btn btn-primary mt-4">➕ ثبت دانش‌آموز</button>
                     </form>
@@ -167,7 +170,7 @@
                     <h2 class="card-title">📝 ثبت ارزشیابی جدید</h2>
                     <form id="record-form">
                         <div class="form-group"><label class="form-label" for="recordSubject">درس (الزامی)</label><select id="recordSubject" class="form-control" required></select></div>
-                        <div class="form-group"><label class="form-label" for="recordTitle">عنوان (الزامی)</label><input type="text" id="recordTitle" class="form-control" placeholder="مثلاً: حفظ شعر ستایش" autocomplete="on" required></div>
+                        <div class="form-group"><label class="form-label" for="recordTitle">عنوان (الزامی)</label><input type="text" id="recordTitle" class="form-control" placeholder="امتحان فصل اول: آفرینش" autocomplete="on" required></div>
                         <div class="form-group"><label class="form-label" for="recordItem">آیتم ارزشیابی (الزامی)</label><select id="recordItem" class="form-control" required></select></div>
                         <div class="form-group">
                             <label class="form-label">انتخاب دانش‌آموزان (الزامی)</label>
@@ -339,6 +342,7 @@
                     <div class="card" style="margin-top: 20px;">
                         <h2 class="card-title">⚙️ پشتیبان‌گیری و خروجی</h2>
                         <button type="button" class="btn btn-primary mt-4" onclick="exportData()">📤 خروجی JSON (کل داده‌ها)</button>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; text-align: center;">این فایل را در گوگل درایو یا تلگرام ذخیره کنید تا در صورت نیاز، اطلاعات کلاس را بازیابی کنید.</p>
                         <button type="button" class="btn btn-secondary mt-4" onclick="exportCSV()">📗 خروجی اکسل (گزارش فعلی)</button>
                         <button type="button" class="btn btn-secondary mt-4" onclick="window.print()">🖨️ چاپ / ذخیره PDF</button>
                         <div style="margin-top: 10px;"><label class="form-label">بازیابی:</label><input type="file" id="importFile" accept=".json" class="form-control" onchange="importData(event)"></div>
