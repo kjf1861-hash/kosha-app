@@ -216,7 +216,35 @@
                 </div>
             </div>
 
-            <!-- تب ۵: جایگاه‌ها -->
+            <!-- تب ۵: حضور و غیاب (جدید) -->
+            <div id="page-attendance" class="page-section">
+                <div class="card">
+                    <h2 class="card-title">📅 ثبت حضور و غیاب</h2>
+                    
+                    <!-- انتخاب تاریخ -->
+                    <div class="form-group">
+                        <label class="form-label">تاریخ (الزامی)</label>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="attDateDay" class="form-control" style="flex: 1;" required></select>
+                            <select id="attDateMonth" class="form-control" style="flex: 1.5;" required></select>
+                            <select id="attDateYear" class="form-control" style="flex: 1.2;" required></select>
+                        </div>
+                        <input type="hidden" id="attendanceDate" value="">
+                    </div>
+
+                    <!-- لیست دانش‌آموزان برای حضور و غیاب -->
+                    <div class="form-group">
+                        <label class="form-label">وضعیت دانش‌آموزان</label>
+                        <div id="attendance-students-list" class="attendance-list-container">
+                            <!-- اینجا با جاوااسکریپت پر می‌شود -->
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-primary btn-block mt-4" onclick="saveAttendance()">💾 ذخیره حضور و غیاب</button>
+                </div>
+            </div>
+
+            <!-- تب ۶: جایگاه‌ها -->
             <div id="page-badges" class="page-section">
                 <div class="card">
                     <h2 class="card-title">🏆 تنظیمات جایگاه‌های گروهی</h2>
@@ -242,7 +270,7 @@
                 </div>
             </div>
 
-            <!-- تب ۶: گزارشات -->
+            <!-- تب ۷: گزارشات -->
             <div id="page-reports" class="page-section">
                 <div class="card">
                     <h2 class="card-title">📊 گزارش امتیازات</h2>
@@ -275,11 +303,13 @@
         </div>
     </div>
 
+    <!-- منوی ناوبری (آپدیت شده با تب حضور و غیاب) -->
     <nav class="bottom-nav">
         <a href="#" class="nav-item active" onclick="switchPage('page-class', this)"><span class="icon">🏫</span><span>کلاس</span></a>
         <a href="#" class="nav-item" onclick="switchPage('page-subjects', this)"><span class="icon">📚</span><span>دروس</span></a>
         <a href="#" class="nav-item" onclick="switchPage('page-students', this)"><span class="icon">👥</span><span>دانش‌آموزان</span></a>
         <a href="#" class="nav-item" onclick="switchPage('page-assessment', this)"><span class="icon">📝</span><span>ارزشیابی</span></a>
+        <a href="#" class="nav-item" onclick="switchPage('page-attendance', this)"><span class="icon">📅</span><span>حضور</span></a>
         <a href="#" class="nav-item" onclick="switchPage('page-badges', this)"><span class="icon">🏆</span><span>جایگاه‌ها</span></a>
         <a href="#" class="nav-item" onclick="switchPage('page-reports', this)"><span class="icon">📊</span><span>گزارشات</span></a>
     </nav>
@@ -318,6 +348,7 @@
             if (pageId === 'page-reports' && typeof generateReports === 'function') generateReports();
             if (pageId === 'page-badges' && typeof loadBadgesSettings === 'function') loadBadgesSettings();
             if (pageId === 'page-subjects' && typeof loadSubjectBadgeList === 'function') loadSubjectBadgeList();
+            if (pageId === 'page-attendance' && typeof loadAttendanceList === 'function') loadAttendanceList();
         }
     </script>
 </body>
