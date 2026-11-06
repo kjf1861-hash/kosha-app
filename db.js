@@ -3,9 +3,27 @@
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 4;
+const DB_VERSION = 5; // نسخه به 5 افزایش یافت برای اضافه شدن جدول آیتم‌های ارزشیابی
 
 let db;
+
+// آرایه آیتم‌های پیش‌فرض (۱۴ آیتم)
+const defaultAssessmentItems = [
+    { id: 1, title: "پرسش و پاسخ", type: "level", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
+    { id: 2, title: "حفظ و قرائت", type: "level", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
+    { id: 3, title: "پویش حفظ قرآن کریم", type: "quran" },
+    { id: 4, title: "آزمون مداد و کاغذی", type: "level", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
+    { id: 5, title: "کاربرگ", type: "count", unitScore: 10, placeholder: "تعداد برگه را وارد کنید:" },
+    { id: 6, title: "آزمون الکترونیکی", type: "level", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
+    { id: 7, title: "کاردستی و مهارت دست‌ورزی", type: "fixed", score: 25 },
+    { id: 8, title: "نمایش و ایفای نقش", type: "fixed", score: 50 },
+    { id: 9, title: "پروژه و آزمایش علمی", type: "fixed", score: 20 },
+    { id: 10, title: "بازی آموزشی تعاملی", type: "fixed", score: 5 },
+    { id: 11, title: "آزمون مهارت حرکتی", type: "level", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
+    { id: 12, title: "مشاهده", type: "level", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
+    { id: 13, title: "تشویق ویژه", type: "free", placeholder: "امتیاز تشویقی را وارد کنید:" },
+    { id: 14, title: "تشویق خوش‌خط‌نویسی", type: "fixed", score: 4 }
+];
 
 function initDB() {
     return new Promise((resolve, reject) => {
@@ -19,6 +37,7 @@ function initDB() {
         request.onsuccess = (event) => {
             db = event.target.result;
             console.log('پایگاه داده با موفقیت راه‌اندازی شد.');
+            seedAssessmentItems(); // مقداردهی اولیه آیتم‌ها
             resolve(db);
         };
 
@@ -26,27 +45,19 @@ function initDB() {
             const db = event.target.result;
             console.log('در حال ساخت/به‌روزرسانی جداول پایگاه داده...');
 
-            if (!db.objectStoreNames.contains('classProfile')) {
-                db.createObjectStore('classProfile', { keyPath: 'id' });
-            }
+            if (!db.objectStoreNames.contains('classProfile')) db.createObjectStore('classProfile', { keyPath: 'id' });
             if (!db.objectStoreNames.contains('students')) {
                 const studentStore = db.createObjectStore('students', { keyPath: 'id', autoIncrement: true });
                 studentStore.createIndex('groupId', 'groupId', { unique: false });
             }
-            if (!db.objectStoreNames.contains('groups')) {
-                db.createObjectStore('groups', { keyPath: 'id', autoIncrement: true });
-            }
-            if (!db.objectStoreNames.contains('subjects')) {
-                db.createObjectStore('subjects', { keyPath: 'id', autoIncrement: true });
-            }
+            if (!db.objectStoreNames.contains('groups')) db.createObjectStore('groups', { keyPath: 'id', autoIncrement: true });
+            if (!db.objectStoreNames.contains('subjects')) db.createObjectStore('subjects', { keyPath: 'id', autoIncrement: true });
             if (!db.objectStoreNames.contains('records')) {
                 const recordStore = db.createObjectStore('records', { keyPath: 'id', autoIncrement: true });
                 recordStore.createIndex('subjectId', 'subjectId', { unique: false });
                 recordStore.createIndex('date', 'date', { unique: false });
             }
-            if (!db.objectStoreNames.contains('badgesSettings')) {
-                db.createObjectStore('badgesSettings', { keyPath: 'id' });
-            }
+            if (!db.objectStoreNames.contains('badgesSettings')) db.createObjectStore('badgesSettings', { keyPath: 'id' });
             if (!db.objectStoreNames.contains('sessions')) {
                 const sessionStore = db.createObjectStore('sessions', { keyPath: 'id', autoIncrement: true });
                 sessionStore.createIndex('date', 'date', { unique: false });
@@ -56,8 +67,25 @@ function initDB() {
                 attStore.createIndex('sessionId', 'sessionId', { unique: false });
                 attStore.createIndex('studentId', 'studentId', { unique: false });
             }
+            // جدول جدید: آیتم‌های ارزشیابی
+            if (!db.objectStoreNames.contains('assessmentItems')) {
+                db.createObjectStore('assessmentItems', { keyPath: 'id' });
+            }
         };
     });
+}
+
+// تابع جدید: مقداردهی اولیه ۱۴ آیتم پیش‌فرض
+async function seedAssessmentItems() {
+    try {
+        const items = await getAllData('assessmentItems');
+        if (items.length === 0) {
+            for (const item of defaultAssessmentItems) {
+                await saveData('assessmentItems', item);
+            }
+            console.log('آیتم‌های پیش‌فرض با موفقیت به دیتابیس اضافه شدند.');
+        }
+    } catch (e) { console.error('خطا در مقداردهی اولیه آیتم‌ها:', e); }
 }
 
 function saveData(storeName, data) {
@@ -70,18 +98,12 @@ function saveData(storeName, data) {
     });
 }
 
-// تابع جدید: ذخیره گروهی داده‌ها برای افزایش سرعت
 function saveBulkData(storeName, dataArray) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
         let completed = 0;
-        
-        if (dataArray.length === 0) {
-            resolve();
-            return;
-        }
-
+        if (dataArray.length === 0) { resolve(); return; }
         dataArray.forEach(data => {
             const request = store.put(data);
             request.onsuccess = () => {
@@ -135,7 +157,7 @@ function clearStore(storeName) {
 
 async function exportAllData() {
     const data = {};
-    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance'];
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems'];
     for (const store of stores) {
         try { data[store] = await getAllData(store); } catch (e) { data[store] = []; }
     }
@@ -145,7 +167,7 @@ async function exportAllData() {
 async function importAllData(data) {
     if (!data || typeof data !== 'object') throw new Error('داده‌های نامعتبر');
     
-    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance'];
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems'];
     const backup = {};
     for (const store of stores) { backup[store] = await getAllData(store); }
     
