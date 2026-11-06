@@ -316,7 +316,7 @@
                             <button class="filter-btn active" onclick="changeAttReportFilter('class', this)">🏫 کلاسی</button>
                             <button class="filter-btn" onclick="changeAttReportFilter('group', this)">👥 گروهی</button>
                         </div>
-                        <div class="card" style="background: #eef2ff; margin-bottom: 15px; border: none;">
+                        <div class="card" style="background: var(--primary-light); margin-bottom: 15px; border: none;">
                             <h3 style="margin: 0; text-align: center; color: var(--primary-dark);">تعداد کل روزهای آموزشی: <span id="total-sessions-count">0</span></h3>
                         </div>
                         <div id="attendance-reports-list" class="list-group"></div>
@@ -329,8 +329,9 @@
                     </div>
 
                     <div class="card" style="margin-top: 20px;">
-                        <h2 class="card-title">⚙️ پشتیبان‌گیری و چاپ</h2>
-                        <button type="button" class="btn btn-primary mt-4" onclick="exportData()">📤 خروجی JSON</button>
+                        <h2 class="card-title">⚙️ پشتیبان‌گیری و خروجی</h2>
+                        <button type="button" class="btn btn-primary mt-4" onclick="exportData()">📤 خروجی JSON (کل داده‌ها)</button>
+                        <button type="button" class="btn btn-secondary mt-4" onclick="exportCSV()">📗 خروجی اکسل (گزارش فعلی)</button>
                         <button type="button" class="btn btn-secondary mt-4" onclick="window.print()">🖨️ چاپ / ذخیره PDF</button>
                         <div style="margin-top: 10px;"><label class="form-label">بازیابی:</label><input type="file" id="importFile" accept=".json" class="form-control" onchange="importData(event)"></div>
                     </div>
@@ -397,25 +398,13 @@
     <script src="db.js"></script>
     <script src="app.js"></script>
     <script>
-        // ==========================================
-        // مدیریت حالت شب/روز
-        // ==========================================
         function initTheme() {
             let savedTheme = null;
-            try {
-                savedTheme = localStorage.getItem('kosha-theme');
-            } catch (e) {
-                console.warn('localStorage در دسترس نیست');
-            }
-
+            try { savedTheme = localStorage.getItem('kosha-theme'); } catch (e) {}
             if (!savedTheme) {
-                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    savedTheme = 'dark';
-                } else {
-                    savedTheme = 'light';
-                }
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) savedTheme = 'dark';
+                else savedTheme = 'light';
             }
-
             document.documentElement.setAttribute('data-theme', savedTheme);
             updateThemeIcon(savedTheme);
         }
@@ -424,9 +413,7 @@
             const current = document.documentElement.getAttribute('data-theme') || 'light';
             const newTheme = current === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', newTheme);
-            try {
-                localStorage.setItem('kosha-theme', newTheme);
-            } catch (e) {}
+            try { localStorage.setItem('kosha-theme', newTheme); } catch (e) {}
             updateThemeIcon(newTheme);
         }
 
@@ -435,7 +422,6 @@
             if (icon) icon.textContent = theme === 'dark' ? '☀️' : '🌙';
         }
 
-        // شروع
         initTheme();
 
         window.addEventListener('load', async () => {
