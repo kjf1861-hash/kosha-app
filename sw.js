@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kosha-cache-v3';
+const CACHE_NAME = 'kosha-cache-v4'; // نسخه به 4 افزایش یافت تا کش قدیمی پاک شود
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
