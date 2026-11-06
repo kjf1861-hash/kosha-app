@@ -25,13 +25,11 @@ let currentReportFilter = 'class';
 let currentStudentView = 'flat'; 
 let isSaveAndNext = false; 
 
-// متغیرهای حضور و غیاب
 let currentSessionId = null;
 let currentSessionDate = null;
 let currentAttView = 'flat'; 
 let currentAttendanceState = {}; 
 
-// متغیرهای گزارشات
 let currentReportType = 'scores'; 
 let currentAttReportFilter = 'class'; 
 
@@ -431,6 +429,8 @@ function jalaliToDateString(jy, jm, jd) {
     return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
 }
 
+// ادامه در بخش ۲...
+
 // ==========================================
 // 7. منطق جلسات (روزهای آموزشی)
 // ==========================================
@@ -787,7 +787,7 @@ async function saveEditedRecord() {
     }
 }
 
-// ادامه در بخش ۳.۲...
+// ادامه در بخش ۳...
 
 // ==========================================
 // 10. پیش‌نمایش و ثبت ارزشیابی
@@ -931,8 +931,8 @@ async function loadBadgesSettings() {
             for (let i = 1; i <= maxGroupSize; i++) {
                 const existing = ranksSettings.ranks.find(r => r.rankNumber === i) || { rankNumber: i, icon: '', title: '', motto: '' };
                 container.innerHTML += `
-                    <div class="card" style="background: #f8fafc; padding: 12px; margin-bottom: 10px;">
-                        <h4 style="margin: 0 0 10px 0; color: var(--primary-dark);">جایگاه ${i}</h4>
+                    <div class="card" style="background: var(--input-bg); padding: 12px; margin-bottom: 10px;">
+                        <h4 style="margin: 0 0 10px 0; color: var(--primary);">جایگاه ${i}</h4>
                         <div class="form-group"><input type="text" id="rankIcon_${i}" class="form-control" placeholder="آیکون" value="${existing.icon}" required></div>
                         <div class="form-group"><input type="text" id="rankTitle_${i}" class="form-control" placeholder="عنوان" value="${existing.title}" required></div>
                         <div class="form-group"><input type="text" id="rankMotto_${i}" class="form-control" placeholder="شعار" value="${existing.motto}" required></div>
@@ -1041,7 +1041,7 @@ async function renderLiveRanks(groups, students, records, ranksSettings, topStud
         const topStudents = subjectScores.filter(s => s.totalScore === maxScore);
         
         hasSubjectBadges = true;
-        html += `<div class="card" style="padding: 10px; margin-bottom: 10px; background: #f8fafc;"><h4 style="margin: 0 0 8px 0; color: var(--primary-dark);">📖 ${subject.name}</h4>`;
+        html += `<div class="card" style="padding: 10px; margin-bottom: 10px; background: var(--input-bg);"><h4 style="margin: 0 0 8px 0; color: var(--primary);">📖 ${subject.name}</h4>`;
         topStudents.forEach(st => {
             html += `<div class="list-item" style="margin-bottom: 5px;"><span>${badge.icon} <strong>${st.firstName} ${st.lastName}</strong></span><span class="rank-badge">${badge.title} (${st.totalScore} امتیاز)</span></div>`;
         });
@@ -1079,9 +1079,9 @@ async function loadQuranRewards() {
             const student = students.find(s => s.id == studentId);
             const studentName = student ? `${student.firstName} ${student.lastName}` : `دانش‌آموز ${studentId}`;
             const latest = grouped[studentId][grouped[studentId].length - 1];
-            html += `<div class="list-item" style="flex-direction: column; align-items: flex-start; padding: 15px; background: #FFF8E1; border-right: 4px solid #f59e0b;">
+            html += `<div class="list-item" style="flex-direction: column; align-items: flex-start; padding: 15px; background: var(--arf-bg); border-right: 4px solid var(--arf-border);">
                 <strong style="font-size: 1.1rem;">🏅 ${studentName}</strong>
-                <span style="font-size: 0.9rem; color: #b45309;">تعداد سوره‌ها: ${latest.totalSurahs} | تعداد آیات: ${latest.totalAyats}</span>
+                <span style="font-size: 0.9rem; color: var(--arf-border);">تعداد سوره‌ها: ${latest.totalSurahs} | تعداد آیات: ${latest.totalAyats}</span>
             </div>`;
         }
         container.innerHTML = html;
@@ -1089,7 +1089,7 @@ async function loadQuranRewards() {
 }
 
 // ==========================================
-// 12. گزارشات (تعویض نوع گزارش و نمایش آمار)
+// 12. گزارشات (تعویض نوع گزارش)
 // ==========================================
 function switchReportType(type) {
     currentReportType = type;
@@ -1117,6 +1117,9 @@ function switchReportType(type) {
     }
 }
 
+// ------------------------------------------
+// گزارش امتیازات (با نمودار میله‌ای)
+// ------------------------------------------
 function changeReportFilter(filter, btn) {
     currentReportFilter = filter;
     document.querySelectorAll('#score-report-section .filter-btn').forEach(b => b.classList.remove('active'));
@@ -1192,12 +1195,17 @@ async function generateReports() {
             container.innerHTML = '<h3>📚 گزارش درسی</h3>' + studentScores.map((st, index) => {
                 let displayValue = sortCriteria === 'level' ? (st.dominantLevel || '—') : (sortCriteria === 'count' ? `${st.count} ارزشیابی` : `${st.totalScore} امتیاز`);
                 const isFirst = sortCriteria === 'score' && st.totalScore === maxScore && maxScore > 0;
-                return `<div class="list-item ${isFirst ? 'top-student-row' : ''}">
-                    <span><strong>${index + 1}. ${st.firstName} ${st.lastName}</strong> ${isFirst ? topStudent.icon : ''}</span>
-                    <div style="display: flex; gap: 5px; align-items: center;">
-                        <span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${displayValue}</span>
-                        <button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})" title="چاپ کارنامه">🖨️</button>
+                const percentage = maxScore > 0 ? (st.totalScore / maxScore) * 100 : 0;
+
+                return `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span><strong>${index + 1}. ${st.firstName} ${st.lastName}</strong> ${isFirst ? topStudent.icon : ''}</span>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${displayValue}</span>
+                            <button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})" title="چاپ کارنامه">🖨️</button>
+                        </div>
                     </div>
+                    ${sortCriteria === 'score' ? `<div class="score-bar-container"><div class="score-bar-fill ${isFirst ? 'is-first' : ''}" style="width: ${percentage}%;"></div></div>` : ''}
                 </div>`;
             }).join('');
 
@@ -1218,9 +1226,14 @@ async function generateReports() {
             container.innerHTML = '<h3>👥 گزارش گروهی</h3>' + groupScores.map((g, index) => {
                 let displayValue = sortCriteria === 'count' ? `${g.count} ارزشیابی` : `${g.totalScore} امتیاز`;
                 const isFirst = sortCriteria === 'score' && g.totalScore === maxScore && maxScore > 0;
-                return `<div class="list-item ${isFirst ? 'top-student-row' : ''}">
-                    <span><strong>${g.symbol} ${g.name}</strong> ${isFirst ? '🏆' : ''}</span>
-                    <span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${displayValue}</span>
+                const percentage = maxScore > 0 ? (g.totalScore / maxScore) * 100 : 0;
+
+                return `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span><strong>${g.symbol} ${g.name}</strong> ${isFirst ? '🏆' : ''}</span>
+                        <span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${displayValue}</span>
+                    </div>
+                    ${sortCriteria === 'score' ? `<div class="score-bar-container"><div class="score-bar-fill ${isFirst ? 'is-first' : ''}" style="width: ${percentage}%;"></div></div>` : ''}
                 </div>`;
             }).join('');
 
@@ -1246,19 +1259,26 @@ async function generateReports() {
             container.innerHTML = '<h3>🏫 گزارش کلاسی</h3>' + studentScores.map((st, index) => {
                 let displayValue = sortCriteria === 'level' ? (st.dominantLevel || '—') : (sortCriteria === 'count' ? `${st.count} ارزشیابی` : `${st.totalScore} امتیاز`);
                 const isFirst = sortCriteria === 'score' && st.totalScore === maxScore && maxScore > 0;
-                return `<div class="list-item ${isFirst ? 'top-student-row' : ''}">
-                    <span><strong>${index + 1}. ${st.firstName} ${st.lastName}</strong> ${isFirst ? topStudent.icon : ''}</span>
-                    <div style="display: flex; gap: 5px; align-items: center;">
-                        <span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${displayValue}</span>
-                        <button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})" title="چاپ کارنامه">🖨️</button>
+                const percentage = maxScore > 0 ? (st.totalScore / maxScore) * 100 : 0;
+
+                return `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span><strong>${index + 1}. ${st.firstName} ${st.lastName}</strong> ${isFirst ? topStudent.icon : ''}</span>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${displayValue}</span>
+                            <button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})" title="چاپ کارنامه">🖨️</button>
+                        </div>
                     </div>
+                    ${sortCriteria === 'score' ? `<div class="score-bar-container"><div class="score-bar-fill ${isFirst ? 'is-first' : ''}" style="width: ${percentage}%;"></div></div>` : ''}
                 </div>`;
             }).join('');
         }
     } catch (e) { console.error(e); container.innerHTML = '<p style="text-align:center; color:red;">خطا</p>'; }
 }
 
-// گزارش حضور و غیاب
+// ------------------------------------------
+// گزارش حضور و غیاب (با نمودار انباشته)
+// ------------------------------------------
 function changeAttReportFilter(filter, btn) {
     currentAttReportFilter = filter;
     const btns = btn.parentElement.querySelectorAll('.filter-btn');
@@ -1287,10 +1307,42 @@ async function generateAttendanceReports() {
             return;
         }
 
+        // محاسبه کل آمار کلاس
+        let totalPresent = 0, totalAbsent = 0, totalLate = 0;
+        attendance.forEach(att => {
+            if (att.status === 'present') totalPresent++;
+            else if (att.status === 'absent') totalAbsent++;
+            else if (att.status === 'late') totalLate++;
+        });
+        const totalAll = totalPresent + totalAbsent + totalLate;
+
         let html = '';
 
+        // نمایش نمودار کلی کلاس
+        if (totalAll > 0) {
+            const presentPct = (totalPresent / totalAll) * 100;
+            const absentPct = (totalAbsent / totalAll) * 100;
+            const latePct = (totalLate / totalAll) * 100;
+
+            html += `
+                <div class="card" style="background: var(--input-bg); margin-bottom: 20px; border: 1px solid var(--border-color);">
+                    <h4 style="margin: 0 0 10px 0; color: var(--primary); text-align: center;">📊 نمودار کلی حضور کلاس</h4>
+                    <div class="att-stacked-bar-container">
+                        ${presentPct > 0 ? `<div class="att-stacked-segment present" style="width: ${presentPct}%;">${Math.round(presentPct)}%</div>` : ''}
+                        ${absentPct > 0 ? `<div class="att-stacked-segment absent" style="width: ${absentPct}%;">${Math.round(absentPct)}%</div>` : ''}
+                        ${latePct > 0 ? `<div class="att-stacked-segment late" style="width: ${latePct}%;">${Math.round(latePct)}%</div>` : ''}
+                    </div>
+                    <div class="att-legend">
+                        <div class="att-legend-item"><div class="att-legend-color present"></div>حاضر</div>
+                        <div class="att-legend-item"><div class="att-legend-color absent"></div>غایب</div>
+                        <div class="att-legend-item"><div class="att-legend-color late"></div>تأخیر</div>
+                    </div>
+                </div>
+            `;
+        }
+
         if (currentAttReportFilter === 'class') {
-            html = '<h3 style="margin-bottom: 15px;">👦 گزارش حضور کلاسی</h3>';
+            html += '<h3 style="margin-bottom: 15px;">👦 گزارش حضور کلاسی</h3>';
             students.forEach(st => {
                 let present = 0, absent = 0, late = 0;
                 attendance.forEach(att => {
@@ -1315,7 +1367,7 @@ async function generateAttendanceReports() {
                 `;
             });
         } else {
-            html = '<h3 style="margin-bottom: 15px;">👥 گزارش حضور گروهی</h3>';
+            html += '<h3 style="margin-bottom: 15px;">👥 گزارش حضور گروهی</h3>';
             groups.forEach(g => {
                 let present = 0, absent = 0, late = 0;
                 const groupStudents = students.filter(s => s.groupId === g.id);
@@ -1351,7 +1403,7 @@ async function generateAttendanceReports() {
 }
 
 // ==========================================
-// 13. کارنامه اختصاصی دانش‌آموز (Report Card)
+// 13. کارنامه اختصاصی دانش‌آموز
 // ==========================================
 async function openReportCard(studentId) {
     try {
@@ -1369,7 +1421,6 @@ async function openReportCard(studentId) {
         const group = groups.find(g => g.id === student.groupId);
         const groupName = group ? `${group.symbol} ${group.name}` : 'بدون گروه';
 
-        // 1. آمار حضور و غیاب
         let presentCount = 0, absentCount = 0, lateCount = 0;
         attendance.forEach(att => {
             if (att.studentId === studentId) {
@@ -1379,7 +1430,6 @@ async function openReportCard(studentId) {
             }
         });
 
-        // 2. نمرات درسی
         const studentRecords = records.filter(rec => rec.students.includes(studentId));
         let subjectScoresHtml = '';
         let totalOverallScore = 0;
@@ -1399,7 +1449,6 @@ async function openReportCard(studentId) {
             subjectScoresHtml = '<p style="color:#64748b; text-align:center; font-size:0.9rem;">هنوز نمره‌ای برای این دانش‌آموز ثبت نشده است.</p>';
         }
 
-        // 3. بررسی نشان‌ها (شاگرد اول کلاس)
         let badgesHtml = '';
         const allStudentScores = window.allStudentsData.map(st => {
             let total = 0;
@@ -1412,11 +1461,10 @@ async function openReportCard(studentId) {
             badgesHtml += `<div class="arf-badge" style="margin-top: 10px;">${topStudentBadge.icon} <strong>${topStudentBadge.title}</strong> - ${topStudentBadge.motto}</div>`;
         }
 
-        // تولید HTML نهایی
         const html = `
             <div class="rc-header">
                 <h2>🏫 ${classData.name}</h2>
-                <p>کارنامه دانش‌آموز | سال تحصیلی ۱۴۰۵-۱۴۰۶</p>
+                <p>کارنامه دانش‌آموز</p>
             </div>
             
             <div class="rc-student-info">
@@ -1442,7 +1490,7 @@ async function openReportCard(studentId) {
             
             <div class="rc-subject-row" style="margin-top: 10px; background: var(--primary-light); padding: 10px; border-radius: 8px; border-bottom: none;">
                 <strong>مجموع کل امتیازات:</strong>
-                <strong style="color: var(--primary-dark); font-size: 1.1rem;">${totalOverallScore} امتیاز</strong>
+                <strong style="color: var(--primary); font-size: 1.1rem;">${totalOverallScore} امتیاز</strong>
             </div>
 
             ${badgesHtml}
