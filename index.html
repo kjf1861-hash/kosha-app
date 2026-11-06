@@ -24,6 +24,13 @@
         .filter-btn-group { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 15px; }
         .filter-btn { padding: 8px 12px; border-radius: 20px; border: 1px solid var(--border-color); background: white; cursor: pointer; font-family: inherit; font-size: 0.9rem; }
         .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* استایل هشدار برای فیلدهای خالی */
+        .input-error {
+            border-color: #dc2626 !important;
+            background-color: #fef2f2 !important;
+            box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1) !important;
+        }
     </style>
 </head>
 <body>
@@ -147,7 +154,7 @@
                         
                         <div class="form-group"><label class="form-label" for="recordTitle">عنوان</label><input type="text" id="recordTitle" class="form-control" required></div>
                         
-                        <!-- بخش تاریخ جدید: انتخابگر روز، ماه، سال -->
+                        <!-- بخش تاریخ: سه منوی کشویی -->
                         <div class="form-group">
                             <label class="form-label">تاریخ (الزامی)</label>
                             <div style="display: flex; gap: 8px;">
