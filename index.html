@@ -128,8 +128,17 @@
                     <h2 class="card-title">📝 ثبت ارزشیابی جدید</h2>
                     <form id="record-form">
                         <div class="form-group"><label class="form-label" for="recordSubject">درس</label><select id="recordSubject" class="form-control" required></select></div>
-                        <div class="form-group"><label class="form-label" for="recordItem">آیتم</label><select id="recordItem" class="form-control" required></select></div>
-                        <div id="dynamic-score-section" class="form-group" style="display: none; background: #eef2ff; padding: 15px; border-radius: 8px;"><label class="form-label" id="score-label">تعیین امتیاز</label><div id="score-input-container"></div></div>
+                        
+                        <!-- انتخاب آیتم‌ها به صورت دسته‌بندی شده -->
+                        <div class="form-group">
+                            <label class="form-label" for="recordItem">آیتم ارزشیابی</label>
+                            <select id="recordItem" class="form-control" required></select>
+                        </div>
+
+                        <div id="dynamic-score-section" class="form-group" style="display: none; background: #eef2ff; padding: 15px; border-radius: 8px;">
+                            <label class="form-label" id="score-label">تعیین امتیاز</label>
+                            <div id="score-input-container"></div>
+                        </div>
                         
                         <div class="form-group">
                             <label class="form-label">انتخاب دانش‌آموزان</label>
@@ -143,11 +152,11 @@
                         
                         <div class="form-group"><label class="form-label" for="recordTitle">عنوان</label><input type="text" id="recordTitle" class="form-control" required></div>
                         
-                        <!-- بخش تاریخ اصلاح‌شده با دکمه تقویم -->
+                        <!-- بخش تاریخ -->
                         <div class="form-group">
                             <label class="form-label" for="recordDateDisplay">تاریخ (الزامی)</label>
                             <div style="display: flex; gap: 8px;">
-                                <input type="text" id="recordDateDisplay" class="form-control" placeholder="مثلاً: ۱۴۰۵/۰۸/۱۵" required style="flex-grow: 1;" readonly onclick="openDatePicker()">
+                                <input type="text" id="recordDateDisplay" class="form-control" placeholder="انتخاب تاریخ..." required style="flex-grow: 1; cursor: pointer;" readonly onclick="openDatePicker()">
                                 <button type="button" class="btn btn-secondary" onclick="openDatePicker()" style="white-space: nowrap; padding: 0 15px;">📅 انتخاب</button>
                             </div>
                             <input type="hidden" id="recordDate" value="">
@@ -239,7 +248,7 @@
         </div>
     </div>
 
-    <!-- مودال تقویم (جدید) -->
+    <!-- مودال تقویم -->
     <div id="date-picker-modal" class="modal-overlay" style="z-index: 2500;">
         <div class="modal-content">
             <div class="modal-header">📅 انتخاب تاریخ</div>
