@@ -32,7 +32,7 @@ let currentAttView = 'flat';
 let currentAttendanceState = {}; 
 
 // متغیرهای گزارشات
-let currentReportType = 'scores'; // 'scores', 'attendance', or 'records'
+let currentReportType = 'scores'; 
 let currentAttReportFilter = 'class'; 
 
 // ==========================================
@@ -185,7 +185,7 @@ async function loadAllData() {
         
         renderStudentCheckboxes();
         loadSessions();
-        loadAssessmentRecords(); // لود سوابق ارزشیابی
+        loadAssessmentRecords();
 
     } catch (e) { console.log('خطا', e); }
 }
@@ -236,7 +236,7 @@ async function editStudent(id) {
 }
 
 // ==========================================
-// 5. منطق امتیازدهی (رندر اولیه)
+// 5. منطق امتیازدهی و رندر لیست دانش‌آموزان
 // ==========================================
 function renderScoreInput(item) {
     const section = document.getElementById('dynamic-score-section');
@@ -661,7 +661,7 @@ async function saveAttendance() {
 }
 
 // ==========================================
-// 9. مدیریت سوابق ارزشیابی (نمایش، ویرایش، حذف)
+// 9. مدیریت سوابق ارزشیابی
 // ==========================================
 async function loadAssessmentRecords() {
     const container = document.getElementById('assessment-records-list');
@@ -673,7 +673,6 @@ async function loadAssessmentRecords() {
         const records = await getAllData('records');
         const subjects = await getAllData('subjects');
         
-        // مرتب‌سازی بر اساس تاریخ نزولی
         records.sort((a, b) => b.date.localeCompare(a.date));
 
         if (records.length === 0) {
@@ -686,7 +685,6 @@ async function loadAssessmentRecords() {
             const subject = subjects.find(s => s.id === rec.subjectId);
             const subjectName = subject ? subject.name : 'نامشخص';
             
-            // پیدا کردن نام دانش‌آموزان
             let studentNames = '';
             if (rec.students && rec.students.length > 0) {
                 const names = rec.students.map(id => {
@@ -724,27 +722,12 @@ async function loadAssessmentRecords() {
 }
 
 async function deleteRecord(id) {
-    if (!confirm('آیا از حذف این رکورد ارزشیابی مطمئن هستید؟ (در صورت وجود تشویق مرتبط، آن نیز حذف خواهد شد)')) return;
-
+    if (!confirm('آیا از حذف این رکورد ارزشیابی مطمئن هستید؟')) return;
     try {
-        // پیدا کردن رکورد برای بررسی نوع آن
-        const record = await getDataById('records', id);
-        
-        // حذف رکورد اصلی
         await deleteData('records', id);
-
-        // اگر رکورد پویش قرآن بود، تشویق‌های مرتبط را پیدا و حذف کن
-        if (record && record.itemName === "پویش حفظ قرآن کریم") {
-            const allBadges = await getAllData('badgesSettings');
-            // پیدا کردن تشویق‌هایی که به این رکورد اشاره دارند (تشویق‌های پویش معمولاً با تاریخ و دانش‌آموز مشخص می‌شوند)
-            // در نسخه فعلی، تشویق‌ها شناسه رکورد مبدأ را ذخیره نمی‌کنند، بنابراین برای سادگی فعلاً آن‌ها را حذف نمی‌کنیم.
-            // در توسعه‌های بعدی این ارتباط قوی‌تر خواهد شد.
-        }
-
         alert('رکورد با موفقیت حذف شد.');
-        loadAssessmentRecords(); // آپدیت لیست
-        loadAllData(); // آپدیت گزارشات
-        
+        loadAssessmentRecords();
+        loadAllData();
     } catch (e) {
         console.error(e);
         alert('خطا در حذف رکورد.');
@@ -796,7 +779,7 @@ async function saveEditedRecord() {
         alert('تغییرات با موفقیت ذخیره شد.');
         closeEditModal();
         loadAssessmentRecords();
-        loadAllData(); // آپدیت گزارشات
+        loadAllData();
 
     } catch (e) {
         console.error(e);
@@ -804,10 +787,10 @@ async function saveEditedRecord() {
     }
 }
 
-// ادامه در قسمت ۲ (بخش ۳.۲)...
+// ادامه در بخش ۳.۲...
 
 // ==========================================
-// 10. پیش‌نمایش و ثبت ارزشیابی (با پشتیبانی از ثبت و نفر بعدی)
+// 10. پیش‌نمایش و ثبت ارزشیابی
 // ==========================================
 function showPreview(isFinal) {
     isSaveAndNext = !isFinal; 
@@ -882,7 +865,6 @@ async function confirmAndSaveRecord() {
     try {
         await saveData('records', window.tempRecordData);
 
-        // منطق تشویق پویش
         if (window.tempRecordData.itemName === "پویش حفظ قرآن کریم" && window.tempRecordData.finalScore > 0) {
             for (const studentId of window.tempRecordData.students) {
                 const allRecords = await getAllData('records');
@@ -1112,17 +1094,14 @@ async function loadQuranRewards() {
 function switchReportType(type) {
     currentReportType = type;
     
-    // مخفی کردن همه بخش‌ها
     document.getElementById('score-report-section').style.display = 'none';
     document.getElementById('attendance-report-section').style.display = 'none';
     document.getElementById('records-report-section').style.display = 'none';
     
-    // حذف کلاس اکتیو از همه دکمه‌ها
     document.getElementById('btnReportScores').classList.remove('active');
     document.getElementById('btnReportAttendance').classList.remove('active');
     document.getElementById('btnReportRecords').classList.remove('active');
 
-    // نمایش بخش انتخاب شده
     if (type === 'scores') {
         document.getElementById('score-report-section').style.display = 'block';
         document.getElementById('btnReportScores').classList.add('active');
@@ -1138,7 +1117,6 @@ function switchReportType(type) {
     }
 }
 
-// گزارش امتیازات
 function changeReportFilter(filter, btn) {
     currentReportFilter = filter;
     document.querySelectorAll('#score-report-section .filter-btn').forEach(b => b.classList.remove('active'));
@@ -1216,7 +1194,10 @@ async function generateReports() {
                 const isFirst = sortCriteria === 'score' && st.totalScore === maxScore && maxScore > 0;
                 return `<div class="list-item ${isFirst ? 'top-student-row' : ''}">
                     <span><strong>${index + 1}. ${st.firstName} ${st.lastName}</strong> ${isFirst ? topStudent.icon : ''}</span>
-                    <span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${displayValue}</span>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${displayValue}</span>
+                        <button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})" title="چاپ کارنامه">🖨️</button>
+                    </div>
                 </div>`;
             }).join('');
 
@@ -1267,7 +1248,10 @@ async function generateReports() {
                 const isFirst = sortCriteria === 'score' && st.totalScore === maxScore && maxScore > 0;
                 return `<div class="list-item ${isFirst ? 'top-student-row' : ''}">
                     <span><strong>${index + 1}. ${st.firstName} ${st.lastName}</strong> ${isFirst ? topStudent.icon : ''}</span>
-                    <span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${displayValue}</span>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${displayValue}</span>
+                        <button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})" title="چاپ کارنامه">🖨️</button>
+                    </div>
                 </div>`;
             }).join('');
         }
@@ -1318,7 +1302,10 @@ async function generateAttendanceReports() {
                 });
                 html += `
                     <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px;">
-                        <div style="font-weight: bold; font-size: 1.05rem;">${st.firstName} ${st.lastName}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-weight: bold; font-size: 1.05rem;">${st.firstName} ${st.lastName}</div>
+                            <button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})" title="چاپ کارنامه">🖨️ کارنامه</button>
+                        </div>
                         <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                             <span class="att-report-badge present">حاضر: ${present}</span>
                             <span class="att-report-badge absent">غایب: ${absent}</span>
@@ -1364,7 +1351,118 @@ async function generateAttendanceReports() {
 }
 
 // ==========================================
-// 13. پشتیبان‌گیری
+// 13. کارنامه اختصاصی دانش‌آموز (Report Card)
+// ==========================================
+async function openReportCard(studentId) {
+    try {
+        const student = window.allStudentsData.find(s => s.id === studentId);
+        if (!student) { alert('دانش‌آموز یافت نشد.'); return; }
+
+        const classData = await getDataById('classProfile', 1) || { name: 'کلاس من', teacherName: 'معلم' };
+        const groups = await getAllData('groups');
+        const subjects = await getAllData('subjects');
+        const records = await getAllData('records');
+        const sessions = await getAllData('sessions');
+        const attendance = await getAllData('attendance');
+        const topStudentBadge = await getDataById('badgesSettings', 'topStudent');
+
+        const group = groups.find(g => g.id === student.groupId);
+        const groupName = group ? `${group.symbol} ${group.name}` : 'بدون گروه';
+
+        // 1. آمار حضور و غیاب
+        let presentCount = 0, absentCount = 0, lateCount = 0;
+        attendance.forEach(att => {
+            if (att.studentId === studentId) {
+                if (att.status === 'present') presentCount++;
+                else if (att.status === 'absent') absentCount++;
+                else if (att.status === 'late') lateCount++;
+            }
+        });
+
+        // 2. نمرات درسی
+        const studentRecords = records.filter(rec => rec.students.includes(studentId));
+        let subjectScoresHtml = '';
+        let totalOverallScore = 0;
+
+        for (const subject of subjects) {
+            const subRecords = studentRecords.filter(r => r.subjectId === subject.id);
+            let subjectTotal = 0;
+            subRecords.forEach(r => subjectTotal += r.finalScore);
+            totalOverallScore += subjectTotal;
+            
+            if (subjectTotal > 0) {
+                subjectScoresHtml += `<div class="rc-subject-row"><span>📚 ${subject.name}</span><strong>${subjectTotal} امتیاز</strong></div>`;
+            }
+        }
+
+        if (subjectScoresHtml === '') {
+            subjectScoresHtml = '<p style="color:#64748b; text-align:center; font-size:0.9rem;">هنوز نمره‌ای برای این دانش‌آموز ثبت نشده است.</p>';
+        }
+
+        // 3. بررسی نشان‌ها (شاگرد اول کلاس)
+        let badgesHtml = '';
+        const allStudentScores = window.allStudentsData.map(st => {
+            let total = 0;
+            records.forEach(rec => { if (rec.students.includes(st.id)) total += rec.finalScore; });
+            return { id: st.id, score: total };
+        });
+        const maxScore = Math.max(...allStudentScores.map(s => s.score));
+        
+        if (maxScore > 0 && totalOverallScore === maxScore && topStudentBadge) {
+            badgesHtml += `<div class="arf-badge" style="margin-top: 10px;">${topStudentBadge.icon} <strong>${topStudentBadge.title}</strong> - ${topStudentBadge.motto}</div>`;
+        }
+
+        // تولید HTML نهایی
+        const html = `
+            <div class="rc-header">
+                <h2>🏫 ${classData.name}</h2>
+                <p>کارنامه دانش‌آموز | سال تحصیلی ۱۴۰۵-۱۴۰۶</p>
+            </div>
+            
+            <div class="rc-student-info">
+                <div>
+                    <strong>👤 ${student.firstName} ${student.lastName}</strong>
+                    <div style="font-size: 0.9rem; margin-top: 5px;">گروه: ${groupName}</div>
+                </div>
+                <div style="text-align: left;">
+                    <div style="font-size: 0.9rem;">آموزگار: ${classData.teacherName}</div>
+                    <div style="font-size: 0.9rem;">پایه: ${classData.grade || '-'}</div>
+                </div>
+            </div>
+
+            <div class="rc-section-title">📅 وضعیت حضور و غیاب (از ${sessions.length} روز آموزشی)</div>
+            <div class="rc-stats-row">
+                <div class="rc-stat-box present">حاضر <span>${presentCount}</span></div>
+                <div class="rc-stat-box absent">غایب <span>${absentCount}</span></div>
+                <div class="rc-stat-box late">تأخیر <span>${lateCount}</span></div>
+            </div>
+
+            <div class="rc-section-title">📊 کارنامه دروس</div>
+            ${subjectScoresHtml}
+            
+            <div class="rc-subject-row" style="margin-top: 10px; background: var(--primary-light); padding: 10px; border-radius: 8px; border-bottom: none;">
+                <strong>مجموع کل امتیازات:</strong>
+                <strong style="color: var(--primary-dark); font-size: 1.1rem;">${totalOverallScore} امتیاز</strong>
+            </div>
+
+            ${badgesHtml}
+        `;
+
+        document.getElementById('report-card-content').innerHTML = html;
+        document.getElementById('report-card-modal').classList.add('show');
+
+    } catch (e) {
+        console.error(e);
+        alert('خطا در تولید کارنامه.');
+    }
+}
+
+function closeReportCard() {
+    document.getElementById('report-card-modal').classList.remove('show');
+}
+
+// ==========================================
+// 14. پشتیبان‌گیری
 // ==========================================
 async function exportData() {
     try {
@@ -1390,7 +1488,7 @@ async function importData(event) {
 }
 
 // ==========================================
-// 14. Service Worker
+// 15. Service Worker
 // ==========================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
