@@ -744,7 +744,7 @@ async function loadBadgesSettings() {
             container.innerHTML = '';
             for (let i = 1; i <= maxGroupSize; i++) {
                 const existing = ranksSettings.ranks.find(r => r.rankNumber === i) || { rankNumber: i, icon: '', title: '', motto: '' };
-                container.innerHTML += `<div class="card" style="background: var(--input-bg); padding: 12px; margin-bottom: 10px;"><h4 style="margin: 0 0 10px 0; color: var(--primary);">جایگاه ${i}</h4><div class="form-group"><input type="text" id="rankIcon_${i}" class="form-control" placeholder="آیکون" value="${existing.icon}" required></div><div class="form-group"><input type="text" id="rankTitle_${i}" class="form-control" placeholder="عنوان" value="${existing.title}" required></div><div class="form-group"><input type="text" id="rankMotto_${i}" class="form-control" placeholder="شعار" value="${existing.motto}" required></div></div>`;
+                container.innerHTML += `<div class="card" style="background: var(--input-bg); padding: 12px; margin-bottom: 10px;"><h4 style="margin: 0 0 10px 0; color: var(--primary);">جایگاه ${i}</h4><div class="form-group"><input type="text" id="rankIcon_${i}" class="form-control" placeholder="آیکون" value="${existing.icon}" autocomplete="on" required></div><div class="form-group"><input type="text" id="rankTitle_${i}" class="form-control" placeholder="عنوان" value="${existing.title}" autocomplete="on" required></div><div class="form-group"><input type="text" id="rankMotto_${i}" class="form-control" placeholder="شعار" value="${existing.motto}" autocomplete="on" required></div></div>`;
             }
             container.innerHTML += `<button type="button" class="btn btn-primary mt-4" onclick="saveGroupRanks(${maxGroupSize})">💾 ذخیره</button>`;
         } else container.innerHTML = '<p style="color:#64748b;">ابتدا گروه بسازید.</p>';
@@ -869,7 +869,6 @@ async function generateReports() {
     if (!container) return;
     container.innerHTML = '<p style="text-align:center;">در حال محاسبه...</p>';
     try {
-        // اصلاح بهینه‌سازی: بررسی خالی بودن متغیرهای سراسری
         if (!window.allStudentsData || !window.allGroupsData) {
             window.allStudentsData = await getAllData('students');
             window.allGroupsData = await getAllData('groups');
@@ -1026,13 +1025,36 @@ async function openReportCard(studentId) {
         const ass = window.allStudentsData.map(st => { let t = 0; records.forEach(rec => { if (rec.students.includes(st.id)) t += rec.finalScore; }); return { id: st.id, score: t }; });
         const ms = Math.max(...ass.map(s => s.score));
         if (ms > 0 && tos === ms && topStudentBadge) bh += `<div class="arf-badge" style="margin-top: 10px;">${topStudentBadge.icon} <strong>${topStudentBadge.title}</strong> - ${topStudentBadge.motto}</div>`;
-        const html = `<div class="rc-header"><h2>🏫 ${classData.name}</h2><p>کارنامه دانش‌آموز</p></div><div class="rc-student-info"><div><strong>👤 ${student.firstName} ${student.lastName}</strong><div style="font-size: 0.9rem; margin-top: 5px;">گروه: ${groupName}</div></div><div style="text-align: left;"><div style="font-size: 0.9rem;">آموزگار: ${classData.teacherName}</div><div style="font-size: 0.9rem;">پایه: ${classData.grade || '-'}</div></div></div><div class="rc-section-title">📅 وضعیت حضور و غیاب (از ${sessions.length} روز آموزشی)</div><div class="rc-stats-row"><div class="rc-stat-box present">حاضر <span>${pc}</span></div><div class="rc-stat-box absent">غایب <span>${ac}</span></div><div class="rc-stat-box late">تأخیر <span>${lc}</span></div></div><div class="rc-section-title">📊 کارنامه دروس</div>${ssh}<div class="rc-subject-row" style="margin-top: 10px; background: var(--primary-light); padding: 10px; border-radius: 8px; border-bottom: none;"><strong>مجموع کل امتیازات:</strong><strong style="color: var(--primary); font-size: 1.1rem;">${tos} امتیاز</strong></div>${bh}`;
+        
+        // بسته‌بندی کارنامه در یک div با آی‌دی برای کپی کردن
+        const html = `<div id="report-card-text-to-copy" style="background: white; padding: 10px; border-radius: 8px;"><div class="rc-header"><h2>🏫 ${classData.name}</h2><p>کارنامه دانش‌آموز</p></div><div class="rc-student-info"><div><strong>👤 ${student.firstName} ${student.lastName}</strong><div style="font-size: 0.9rem; margin-top: 5px;">گروه: ${groupName}</div></div><div style="text-align: left;"><div style="font-size: 0.9rem;">آموزگار: ${classData.teacherName}</div><div style="font-size: 0.9rem;">پایه: ${classData.grade || '-'}</div></div></div><div class="rc-section-title">📅 وضعیت حضور و غیاب (از ${sessions.length} روز آموزشی)</div><div class="rc-stats-row"><div class="rc-stat-box present">حاضر <span>${pc}</span></div><div class="rc-stat-box absent">غایب <span>${ac}</span></div><div class="rc-stat-box late">تأخیر <span>${lc}</span></div></div><div class="rc-section-title">📊 کارنامه دروس</div>${ssh}<div class="rc-subject-row" style="margin-top: 10px; background: var(--primary-light); padding: 10px; border-radius: 8px; border-bottom: none;"><strong>مجموع کل امتیازات:</strong><strong style="color: var(--primary); font-size: 1.1rem;">${tos} امتیاز</strong></div>${bh}</div>`;
+        
         document.getElementById('report-card-content').innerHTML = html;
         document.getElementById('report-card-modal').classList.add('show');
     } catch (e) { console.error(e); alert('خطا در تولید کارنامه.'); }
 }
 
 function closeReportCard() { document.getElementById('report-card-modal').classList.remove('show'); }
+
+// تابع جدید برای کپی کردن متن کارنامه
+function copyReportText() {
+    const textToCopy = document.getElementById('report-card-text-to-copy');
+    if (!textToCopy) return;
+    
+    // ایجاد یک المان موقت برای کپی کردن به صورت متنی
+    const range = document.createRange();
+    range.selectNode(textToCopy);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    
+    try {
+        document.execCommand('copy');
+        alert('متن کارنامه کپی شد!');
+    } catch (err) {
+        alert('مرورگر شما از کپی خودکار پشتیبانی نمی‌کند. لطفاً متن را دستی انتخاب کنید.');
+    }
+    window.getSelection().removeAllRanges();
+}
 
 // ==========================================
 // 14. پشتیبان‌گیری و CSV
