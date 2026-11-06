@@ -147,12 +147,13 @@
                         
                         <div class="form-group"><label class="form-label" for="recordTitle">عنوان</label><input type="text" id="recordTitle" class="form-control" required></div>
                         
-                        <!-- بخش تاریخ اصلاح‌شده -->
+                        <!-- بخش تاریخ جدید: انتخابگر روز، ماه، سال -->
                         <div class="form-group">
-                            <label class="form-label" for="recordDateDisplay">تاریخ (الزامی)</label>
+                            <label class="form-label">تاریخ (الزامی)</label>
                             <div style="display: flex; gap: 8px;">
-                                <input type="text" id="recordDateDisplay" class="form-control" placeholder="انتخاب تاریخ..." required style="flex-grow: 1; cursor: pointer;" readonly onclick="openDatePicker()">
-                                <button type="button" class="btn btn-secondary" onclick="openDatePicker()" style="white-space: nowrap; padding: 0 15px;">📅 انتخاب</button>
+                                <select id="dateDay" class="form-control" style="flex: 1;" required></select>
+                                <select id="dateMonth" class="form-control" style="flex: 1.5;" required></select>
+                                <select id="dateYear" class="form-control" style="flex: 1.2;" required></select>
                             </div>
                             <input type="hidden" id="recordDate" value="">
                         </div>
@@ -239,18 +240,6 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closePreviewModal()">انصراف</button>
                 <button type="button" class="btn btn-primary" onclick="confirmAndSaveRecord()">✅ تأیید و ذخیره</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- مودال تقویم -->
-    <div id="date-picker-modal" class="modal-overlay" style="z-index: 2500;">
-        <div class="modal-content">
-            <div class="modal-header">📅 انتخاب تاریخ</div>
-            <div id="calendar-container"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeDatePicker()">انصراف</button>
-                <button type="button" class="btn btn-primary" onclick="selectTodayFromCalendar()">📅 امروز</button>
             </div>
         </div>
     </div>
