@@ -20,7 +20,6 @@ const assessmentTree = [
 
 const quranSurahs = { "ناس": 6, "فلق": 5, "توحید": 4, "مسد": 5, "نصر": 3, "کافرون": 6, "کوثر": 3, "ماعون": 7 };
 let currentReportFilter = 'class';
-let currentCalendarDate = { year: 0, month: 0 };
 
 // ==========================================
 // 2. راه‌اندازی اولیه
@@ -283,7 +282,7 @@ function selectGroupMembers(groupId) {
 }
 
 // ==========================================
-// 5.1. تقویم (اصلاح‌شده و دقیق)
+// 5.1. تقویم (کاملاً بازنویسی‌شده و دقیق)
 // ==========================================
 function getTodayJalali() {
     const now = new Date();
