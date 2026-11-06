@@ -31,6 +31,30 @@
             background-color: #fef2f2 !important;
             box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1) !important;
         }
+        
+        /* استایل برای دکمه های نمای دانش آموزان */
+        .view-toggle-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .view-toggle-btn {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid var(--border-color);
+            background: white;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--text-muted);
+        }
+        .view-toggle-btn.active {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+        }
     </style>
 </head>
 <body>
@@ -129,7 +153,7 @@
                 <div class="card"><h2 class="card-title">لیست دانش‌آموزان</h2><div id="students-list" class="list-group"></div></div>
             </div>
 
-            <!-- تب ۴: ارزشیابی (با ترتیب جدید) -->
+            <!-- تب ۴: ارزشیابی -->
             <div id="page-assessment" class="page-section">
                 <div class="card">
                     <h2 class="card-title">📝 ثبت ارزشیابی جدید</h2>
@@ -156,11 +180,13 @@
                         <!-- 4. انتخاب دانش‌آموزان -->
                         <div class="form-group">
                             <label class="form-label">انتخاب دانش‌آموزان (الزامی)</label>
-                            <div style="margin-bottom: 8px; display: flex; gap: 5px; flex-wrap: wrap;">
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllStudents(true)">انتخاب همه</button>
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllStudents(false)">لغو همه</button>
-                                <select id="groupFilterSelect" class="form-control" style="width: auto; padding: 4px 8px; font-size: 0.85rem;" onchange="selectGroupMembers(this.value)"><option value="">انتخاب گروه...</option></select>
+                            
+                            <!-- دکمه‌های تعویض نما -->
+                            <div class="view-toggle-group">
+                                <button type="button" id="btnFlatView" class="view-toggle-btn active" onclick="switchStudentView('flat')">👦 نمای کلاسی</button>
+                                <button type="button" id="btnGroupView" class="view-toggle-btn" onclick="switchStudentView('grouped')">👥 نمای گروهی</button>
                             </div>
+
                             <div id="students-checkbox-container" class="student-checkbox-list"></div>
                         </div>
                         
@@ -187,8 +213,11 @@
                             <label for="recordArf">🎁 ارفاق آموزشی</label>
                         </div>
                         
-                        <!-- دکمه ثبت -->
-                        <button type="submit" class="btn btn-primary mt-4">👁️ پیش‌نمایش و ثبت</button>
+                        <!-- دکمه‌های ثبت -->
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button type="button" class="btn btn-secondary" style="flex: 1; font-size: 0.9rem;" onclick="showPreview(false)">⏭️ ثبت و نفر بعدی</button>
+                            <button type="button" class="btn btn-primary" style="flex: 1; font-size: 0.9rem;" onclick="showPreview(true)">✅ ثبت نهایی</button>
+                        </div>
                     </form>
                 </div>
             </div>
