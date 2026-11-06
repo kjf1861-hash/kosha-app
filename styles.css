@@ -256,9 +256,7 @@ details.group-accordion[open] summary::after {
     border-top: 1px solid var(--border-color);
 }
 
-/* =========================================
-   استایل‌های حضور و غیاب
-   ========================================= */
+/* استایل‌های حضور و غیاب */
 .attendance-list-container {
     display: flex;
     flex-direction: column;
@@ -267,7 +265,6 @@ details.group-accordion[open] summary::after {
     overflow-y: auto;
     padding: 5px;
 }
-
 .attendance-student-row {
     display: flex;
     flex-direction: column;
@@ -277,7 +274,6 @@ details.group-accordion[open] summary::after {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
 }
-
 @media (min-width: 400px) {
     .attendance-student-row {
         flex-direction: row;
@@ -285,18 +281,15 @@ details.group-accordion[open] summary::after {
         align-items: center;
     }
 }
-
 .attendance-student-name {
     font-weight: bold;
     font-size: 0.95rem;
 }
-
 .att-btn-group {
     display: flex;
     gap: 5px;
     width: 100%;
 }
-
 .att-btn {
     flex: 1;
     padding: 8px 5px;
@@ -311,7 +304,6 @@ details.group-accordion[open] summary::after {
     color: var(--text-muted);
     text-align: center;
 }
-
 .att-btn.present.active { background: #dcfce7; color: #15803d; border-color: #22c55e; }
 .att-btn.absent.active { background: #fee2e2; color: #b91c1c; border-color: #ef4444; }
 .att-btn.late.active { background: #fef3c7; color: #b45309; border-color: #f59e0b; }
@@ -329,9 +321,7 @@ details.group-accordion[open] summary::after {
 .att-report-badge.absent { background: #fee2e2; color: #b91c1c; }
 .att-report-badge.late { background: #fef3c7; color: #b45309; }
 
-/* =========================================
-   استایل‌های لیست سوابق ارزشیابی (جدید)
-   ========================================= */
+/* استایل‌های لیست سوابق ارزشیابی */
 .record-item {
     background: #fff;
     border: 1px solid var(--border-color);
@@ -373,9 +363,113 @@ details.group-accordion[open] summary::after {
     justify-content: flex-end;
 }
 
+/* =========================================
+   استایل‌های کارنامه (Report Card)
+   ========================================= */
+.report-card-modal {
+    max-width: 600px;
+    width: 95%;
+    padding: 30px;
+    background: #fff;
+}
+.rc-header {
+    text-align: center;
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+.rc-header h2 {
+    margin: 0 0 5px 0;
+    color: var(--primary-dark);
+}
+.rc-header p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+.rc-student-info {
+    background: var(--primary-light);
+    padding: 15px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.rc-student-info strong {
+    font-size: 1.2rem;
+    color: var(--primary-dark);
+}
+.rc-section-title {
+    font-weight: bold;
+    color: var(--text-main);
+    margin: 20px 0 10px 0;
+    border-bottom: 1px dashed var(--border-color);
+    padding-bottom: 5px;
+}
+.rc-stats-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.rc-stat-box {
+    flex: 1;
+    min-width: 100px;
+    text-align: center;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+}
+.rc-stat-box span {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-top: 5px;
+}
+.rc-stat-box.present span { color: #15803d; }
+.rc-stat-box.absent span { color: #b91c1c; }
+.rc-stat-box.late span { color: #b45309; }
+.rc-subject-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dotted var(--border-color);
+}
+.rc-subject-row:last-child {
+    border-bottom: none;
+}
+
+/* =========================================
+   تنظیمات چاپ
+   ========================================= */
 @media print {
+    body * {
+        visibility: hidden;
+    }
+    #report-card-modal, #report-card-modal * {
+        visibility: visible;
+    }
+    #report-card-modal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white;
+    }
+    .modal-content.report-card-modal {
+        transform: none;
+        max-height: none;
+        overflow: visible;
+        box-shadow: none;
+        border: none;
+        padding: 0;
+    }
+    .no-print {
+        display: none !important;
+    }
+    /* سایر تنظیمات چاپ برای صفحات دیگر */
     .bottom-nav, .app-header, button, .filter-btn-group, #subject-filter-container, #sortCriteriaSelect, select { display: none !important; }
-    body { background: white; }
     .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
     .container { padding: 0; max-width: 100%; }
 }
