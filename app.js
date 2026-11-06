@@ -76,7 +76,6 @@ function initApp() {
             itemSelect.appendChild(opt);
         });
         
-        // انتخاب خودکار اولین آیتم در زمان لود
         itemSelect.selectedIndex = 0;
         renderScoreInput(assessmentTree[0]);
 
