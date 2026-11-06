@@ -82,7 +82,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
     box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.15); transform: translateY(-1px);
 }
 
-/* استایل هشدار برای فیلدهای خالی */
 .input-error {
     border-color: #dc2626 !important;
     background-color: #fef2f2 !important;
@@ -219,7 +218,6 @@ select.form-control {
 .student-checkbox-list::-webkit-scrollbar { width: 6px; }
 .student-checkbox-list::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 3px; }
 
-/* استایل برای منوی بازشو گروه‌ها */
 details.group-accordion {
     margin-bottom: 10px;
     border: 1px solid var(--border-color);
@@ -258,7 +256,7 @@ details.group-accordion[open] summary::after {
 }
 
 /* =========================================
-   استایل‌های حضور و غیاب (جدید)
+   استایل‌های حضور و غیاب
    ========================================= */
 .attendance-list-container {
     display: flex;
@@ -316,6 +314,20 @@ details.group-accordion[open] summary::after {
 .att-btn.present.active { background: #dcfce7; color: #15803d; border-color: #22c55e; }
 .att-btn.absent.active { background: #fee2e2; color: #b91c1c; border-color: #ef4444; }
 .att-btn.late.active { background: #fef3c7; color: #b45309; border-color: #f59e0b; }
+
+/* استایل برای گزارش حضور و غیاب */
+.att-report-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    margin: 2px;
+}
+.att-report-badge.present { background: #dcfce7; color: #15803d; }
+.att-report-badge.absent { background: #fee2e2; color: #b91c1c; }
+.att-report-badge.late { background: #fef3c7; color: #b45309; }
 
 @media print {
     .bottom-nav, .app-header, button, .filter-btn-group, #subject-filter-container, #sortCriteriaSelect, select { display: none !important; }
