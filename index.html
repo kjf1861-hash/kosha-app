@@ -130,6 +130,7 @@
                         <div class="form-group"><label class="form-label" for="recordSubject">درس</label><select id="recordSubject" class="form-control" required></select></div>
                         <div class="form-group"><label class="form-label" for="recordItem">آیتم</label><select id="recordItem" class="form-control" required></select></div>
                         <div id="dynamic-score-section" class="form-group" style="display: none; background: #eef2ff; padding: 15px; border-radius: 8px;"><label class="form-label" id="score-label">تعیین امتیاز</label><div id="score-input-container"></div></div>
+                        
                         <div class="form-group">
                             <label class="form-label">انتخاب دانش‌آموزان</label>
                             <div style="margin-bottom: 8px; display: flex; gap: 5px; flex-wrap: wrap;">
@@ -139,15 +140,21 @@
                             </div>
                             <div id="students-checkbox-container" class="student-checkbox-list"></div>
                         </div>
+                        
                         <div class="form-group"><label class="form-label" for="recordTitle">عنوان</label><input type="text" id="recordTitle" class="form-control" required></div>
+                        
+                        <!-- بخش تاریخ اصلاح‌شده با دکمه تقویم -->
                         <div class="form-group">
-                            <label class="form-label" for="recordDate">تاریخ</label>
+                            <label class="form-label" for="recordDateDisplay">تاریخ (الزامی)</label>
                             <div style="display: flex; gap: 8px;">
-                                <input type="text" id="recordDate" class="form-control" required style="flex-grow: 1;">
-                                <button type="button" class="btn btn-secondary" onclick="setTodayDate()">📅 امروز</button>
+                                <input type="text" id="recordDateDisplay" class="form-control" placeholder="مثلاً: ۱۴۰۵/۰۸/۱۵" required style="flex-grow: 1;" readonly onclick="openDatePicker()">
+                                <button type="button" class="btn btn-secondary" onclick="openDatePicker()" style="white-space: nowrap; padding: 0 15px;">📅 انتخاب</button>
                             </div>
+                            <input type="hidden" id="recordDate" value="">
                         </div>
+
                         <div class="form-group checkbox-group"><input type="checkbox" id="recordArf"><label for="recordArf">🎁 ارفاق آموزشی</label></div>
+                        
                         <button type="submit" class="btn btn-primary mt-4">👁️ پیش‌نمایش و ثبت</button>
                     </form>
                 </div>
@@ -232,28 +239,24 @@
         </div>
     </div>
 
+    <!-- مودال تقویم (جدید) -->
+    <div id="date-picker-modal" class="modal-overlay" style="z-index: 2500;">
+        <div class="modal-content">
+            <div class="modal-header">📅 انتخاب تاریخ</div>
+            <div id="calendar-container"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeDatePicker()">انصراف</button>
+                <button type="button" class="btn btn-primary" onclick="selectTodayFromCalendar()">📅 امروز</button>
+            </div>
+        </div>
+    </div>
+
     <script src="db.js"></script>
     <script src="app.js"></script>
     <script>
-        // راه‌اندازی با مدیریت خطا برای جلوگیری از گیر کردن در Splash
         window.addEventListener('load', async () => {
-            try {
-                await initDB();
-            } catch (error) {
-                console.warn('دیتابیس محلی غیرفعال است.');
-            }
-            
-            try {
-                if (typeof initApp === 'function') {
-                    initApp();
-                } else {
-                    console.error('تابع initApp پیدا نشد.');
-                }
-            } catch (error) {
-                console.error('خطا در راه‌اندازی اپلیکیشن:', error);
-            }
-            
-            // پنهان کردن Splash Screen با تاخیر
+            try { await initDB(); } catch (error) { console.warn('دیتابیس محلی غیرفعال است.'); }
+            if (typeof initApp === 'function') initApp();
             setTimeout(() => {
                 const splash = document.getElementById('splash-screen');
                 const app = document.getElementById('app-container');
