@@ -135,11 +135,33 @@ async function exportAllData() {
 }
 
 async function importAllData(data) {
+    if (!data || typeof data !== 'object') throw new Error('داده‌های نامعتبر');
+    
     const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance'];
+    
+    // گرفتن نسخه پشتیبان موقت از داده‌های فعلی
+    const backup = {};
     for (const store of stores) {
-        if (data[store]) {
-            await clearStore(store);
-            for (const item of data[store]) { await saveData(store, item); }
+        backup[store] = await getAllData(store);
+    }
+    
+    try {
+        for (const store of stores) {
+            if (data[store] && Array.isArray(data[store])) {
+                await clearStore(store);
+                for (const item of data[store]) {
+                    await saveData(store, item);
+                }
+            }
         }
+    } catch (e) {
+        // در صورت بروز خطا، بازگردانی داده‌های قبلی
+        for (const store of stores) {
+            await clearStore(store);
+            for (const item of backup[store]) {
+                await saveData(store, item);
+            }
+        }
+        throw new Error('خطا در بازیابی داده‌ها، تغییرات لغو شد.');
     }
 }
