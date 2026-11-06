@@ -358,7 +358,7 @@ details.group-accordion[open] summary::after {
     border-radius: 5px;
     margin-top: 8px;
     overflow: hidden;
-    direction: ltr; /* نوار از چپ به راست پر شود */
+    direction: ltr;
 }
 .score-bar-fill {
     height: 100%;
@@ -367,7 +367,7 @@ details.group-accordion[open] summary::after {
     transition: width 0.8s ease-out;
 }
 .score-bar-fill.is-first {
-    background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%); /* طلایی برای نفر اول */
+    background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
 }
 
 .att-stacked-bar-container {
@@ -416,33 +416,6 @@ details.group-accordion[open] summary::after {
 .att-legend-color.late { background-color: #f59e0b; }
 
 /* =========================================
-   تنظیمات چاپ
-   ========================================= */
-@media print {
-    :root, [data-theme="dark"] {
-        --bg-color: #ffffff;
-        --card-bg: #ffffff;
-        --input-bg: #ffffff;
-        --input-focus-bg: #ffffff;
-        --text-main: #000000;
-        --text-muted: #333333;
-        --border-color: #cccccc;
-        --primary: #000000;
-        --primary-dark: #000000;
-        --primary-light: #f0f0f0;
-    }
-
-    body * { visibility: hidden; }
-    #report-card-modal, #report-card-modal * { visibility: visible; }
-    #report-card-modal { position: absolute; left: 0; top: 0; width: 100%; background: white; }
-    .modal-content.report-card-modal { transform: none; max-height: none; overflow: visible; box-shadow: none; border: none; padding: 0; }
-    .no-print { display: none !important; }
-    
-    .bottom-nav, .app-header, button, .filter-btn-group, #subject-filter-container, #sortCriteriaSelect, select { display: none !important; }
-    .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
-    .container { padding: 0; max-width: 100%; }
-}
-/* =========================================
    استایل پیام‌های شناور (Toast Notifications)
    ========================================= */
 .custom-toast-container {
@@ -480,4 +453,32 @@ details.group-accordion[open] summary::after {
 }
 .custom-toast-info {
     border-right: 4px solid #3b82f6;
+}
+
+/* =========================================
+   تنظیمات چاپ
+   ========================================= */
+@media print {
+    :root, [data-theme="dark"] {
+        --bg-color: #ffffff;
+        --card-bg: #ffffff;
+        --input-bg: #ffffff;
+        --input-focus-bg: #ffffff;
+        --text-main: #000000;
+        --text-muted: #333333;
+        --border-color: #cccccc;
+        --primary: #000000;
+        --primary-dark: #000000;
+        --primary-light: #f0f0f0;
+    }
+
+    body * { visibility: hidden; }
+    #report-card-modal, #report-card-modal * { visibility: visible; }
+    #report-card-modal { position: absolute; left: 0; top: 0; width: 100%; background: white; }
+    .modal-content.report-card-modal { transform: none; max-height: none; overflow: visible; box-shadow: none; border: none; padding: 0; }
+    .no-print { display: none !important; }
+    
+    .bottom-nav, .app-header, button, .filter-btn-group, #subject-filter-container, #sortCriteriaSelect, select { display: none !important; }
+    .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+    .container { padding: 0; max-width: 100%; }
 }
