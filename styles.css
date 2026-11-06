@@ -177,6 +177,7 @@ select.form-control {
     border-radius: var(--radius-lg); padding: 24px;
     box-shadow: var(--shadow-lg); transform: scale(0.9) translateY(20px);
     transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    max-height: 90vh; overflow-y: auto;
 }
 .modal-overlay.show .modal-content { transform: scale(1) translateY(0); }
 .modal-header {
@@ -315,7 +316,6 @@ details.group-accordion[open] summary::after {
 .att-btn.absent.active { background: #fee2e2; color: #b91c1c; border-color: #ef4444; }
 .att-btn.late.active { background: #fef3c7; color: #b45309; border-color: #f59e0b; }
 
-/* استایل برای گزارش حضور و غیاب */
 .att-report-badge {
     display: inline-flex;
     align-items: center;
@@ -328,6 +328,50 @@ details.group-accordion[open] summary::after {
 .att-report-badge.present { background: #dcfce7; color: #15803d; }
 .att-report-badge.absent { background: #fee2e2; color: #b91c1c; }
 .att-report-badge.late { background: #fef3c7; color: #b45309; }
+
+/* =========================================
+   استایل‌های لیست سوابق ارزشیابی (جدید)
+   ========================================= */
+.record-item {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.record-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+}
+.record-title {
+    color: var(--primary-dark);
+    font-size: 1.05rem;
+}
+.record-score {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+.record-details {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.record-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
+    justify-content: flex-end;
+}
 
 @media print {
     .bottom-nav, .app-header, button, .filter-btn-group, #subject-filter-container, #sortCriteriaSelect, select { display: none !important; }
