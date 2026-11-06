@@ -491,15 +491,88 @@ async function loadSessions() {
         container.innerHTML = '';
         sessions.forEach(session => {
             container.innerHTML += `
-                <div class="list-item" onclick="openAttendanceForm(${session.id}, '${session.date}')" style="cursor: pointer;">
-                    <span><strong>📅 ${session.date}</strong></span>
-                    <button class="btn btn-primary btn-sm">ثبت حضور و غیاب</button>
+                <div class="list-item" style="justify-content: space-between;">
+                    <div onclick="openAttendanceForm(${session.id}, '${session.date}')" style="cursor: pointer; flex-grow: 1;">
+                        <span><strong>📅 ${session.date}</strong></span>
+                    </div>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <button class="btn btn-secondary btn-sm" onclick="editSessionDate(${session.id}, '${session.date}')" title="ویرایش تاریخ">✏️</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteSession(${session.id})" title="حذف روز">🗑️</button>
+                        <button class="btn btn-primary btn-sm" onclick="openAttendanceForm(${session.id}, '${session.date}')">ثبت حضور</button>
+                    </div>
                 </div>
             `;
         });
     } catch (e) {
         console.error(e);
         container.innerHTML = '<p style="color:red; text-align:center;">خطا در بارگذاری روزها.</p>';
+    }
+}
+
+// ویرایش تاریخ یک جلسه
+async function editSessionDate(sessionId, currentDate) {
+    const newDate = prompt('تاریخ جدید را وارد کنید (مثلاً 1405/08/20):', currentDate);
+    if (newDate === null) return; // کاربر انصراف داد
+    
+    const trimmed = newDate.trim();
+    // بررسی فرمت ساده تاریخ
+    if (!/^\d{4}\/\d{2}\/\d{2}$/.test(trimmed)) {
+        alert('فرمت تاریخ نامعتبر است. لطفاً به صورت 1405/08/20 وارد کنید.');
+        return;
+    }
+
+    if (trimmed === currentDate) {
+        alert('تاریخ جدید با تاریخ قبلی یکسان است.');
+        return;
+    }
+
+    try {
+        // بررسی اینکه تاریخ جدید قبلاً ثبت نشده باشد
+        const allSessions = await getAllData('sessions');
+        if (allSessions.find(s => s.date === trimmed && s.id !== sessionId)) {
+            alert('این تاریخ قبلاً به عنوان یک روز آموزشی دیگر ثبت شده است.');
+            return;
+        }
+
+        const session = await getDataById('sessions', sessionId);
+        if (!session) return;
+
+        session.date = trimmed;
+        await saveData('sessions', session);
+        alert('تاریخ روز آموزشی با موفقیت به‌روزرسانی شد.');
+        loadSessions();
+    } catch (e) {
+        console.error(e);
+        alert('خطا در ویرایش تاریخ.');
+    }
+}
+
+// حذف یک جلسه به همراه تمام حضورهای ثبت‌شده برای آن
+async function deleteSession(sessionId) {
+    if (!confirm('آیا از حذف این روز آموزشی مطمئن هستید؟ تمام حضور و غیاب‌های ثبت‌شده برای این روز نیز حذف خواهند شد.')) return;
+
+    try {
+        // حذف تمام رکوردهای حضور مرتبط با این جلسه
+        const allAttendance = await getAllData('attendance');
+        const sessionAttendance = allAttendance.filter(a => a.sessionId === sessionId);
+        
+        for (const att of sessionAttendance) {
+            await deleteData('attendance', att.id);
+        }
+
+        // حذف خود جلسه
+        await deleteData('sessions', sessionId);
+
+        alert('روز آموزشی و تمام رکوردهای حضور مرتبط با آن حذف شد.');
+        loadSessions();
+        
+        // اگر فرم حضور برای این جلسه باز بود، آن را ببند
+        if (currentSessionId === sessionId) {
+            closeAttendanceForm();
+        }
+    } catch (e) {
+        console.error(e);
+        alert('خطا در حذف روز آموزشی.');
     }
 }
 
@@ -1277,7 +1350,7 @@ async function generateReports() {
 }
 
 // ------------------------------------------
-// گزارش حضور و غیاب (با نمودار انباشته)
+// گزارش حضور و غیاب (با نمودار انباشته و جزئیات قابل کلیک)
 // ------------------------------------------
 function changeAttReportFilter(filter, btn) {
     currentAttReportFilter = filter;
@@ -1357,9 +1430,9 @@ async function generateAttendanceReports() {
                             <button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})" title="چاپ کارنامه">🖨️ کارنامه</button>
                         </div>
                         <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                            <span class="att-report-badge present">حاضر: ${present}</span>
-                            <span class="att-report-badge absent">غایب: ${absent}</span>
-                            <span class="att-report-badge late">تأخیر: ${late}</span>
+                            <span class="att-report-badge present clickable" onclick="showAttendanceDetails(${st.id}, 'present')">حاضر: ${present}</span>
+                            <span class="att-report-badge absent clickable" onclick="showAttendanceDetails(${st.id}, 'absent')">غایب: ${absent}</span>
+                            <span class="att-report-badge late clickable" onclick="showAttendanceDetails(${st.id}, 'late')">تأخیر: ${late}</span>
                         </div>
                     </div>
                 `;
@@ -1398,6 +1471,60 @@ async function generateAttendanceReports() {
         console.error(e);
         container.innerHTML = '<p style="color:red; text-align:center;">خطا در تولید گزارش.</p>';
     }
+}
+
+// نمایش جزئیات آمار حضور (تاریخ‌های مربوط به یک وضعیت خاص)
+async function showAttendanceDetails(studentId, statusType) {
+    try {
+        const student = window.allStudentsData.find(s => s.id === studentId);
+        if (!student) return;
+
+        const sessions = await getAllData('sessions');
+        const attendance = await getAllData('attendance');
+        
+        // پیدا کردن تاریخ‌هایی که این دانش‌آموز وضعیت خاصی داشته است
+        const records = attendance.filter(a => a.studentId === studentId && a.status === statusType);
+        
+        const statusLabels = { present: 'حاضر', absent: 'غایب', late: 'تأخیر' };
+        const statusIcons = { present: '🟢', absent: '🔴', late: '🟡' };
+        const label = statusLabels[statusType] || 'نامشخص';
+        const icon = statusIcons[statusType] || '';
+
+        const title = document.getElementById('attendance-details-title');
+        const content = document.getElementById('attendance-details-content');
+        const modal = document.getElementById('attendance-details-modal');
+
+        title.textContent = `${icon} تاریخ‌های ${label} - ${student.firstName} ${student.lastName}`;
+
+        if (records.length === 0) {
+            content.innerHTML = `<p style="color:#64748b; text-align:center; padding: 20px;">هیچ تاریخ ${label} برای این دانش‌آموز ثبت نشده است.</p>`;
+        } else {
+            const dates = records.map(r => {
+                const session = sessions.find(s => s.id === r.sessionId);
+                return session ? session.date : 'تاریخ نامشخص';
+            }).filter(d => d !== 'تاریخ نامشخص');
+            
+            dates.sort((a, b) => b.localeCompare(a));
+
+            let html = `<p style="text-align:center; font-weight:bold; margin-bottom: 15px;">تعداد: ${dates.length} روز</p>`;
+            html += '<div class="list-group">';
+            dates.forEach(d => {
+                html += `<div class="list-item"><span>📅 ${d}</span><span class="att-report-badge ${statusType}">${label}</span></div>`;
+            });
+            html += '</div>';
+            content.innerHTML = html;
+        }
+
+        modal.classList.add('show');
+
+    } catch (e) {
+        console.error(e);
+        alert('خطا در بارگذاری جزئیات.');
+    }
+}
+
+function closeAttendanceDetails() {
+    document.getElementById('attendance-details-modal').classList.remove('show');
 }
 
 // ==========================================
@@ -1508,7 +1635,7 @@ function closeReportCard() {
 }
 
 // ==========================================
-// 14. پشتیبان‌گیری
+// 14. پشتیبان‌گیری و خروجی اکسل
 // ==========================================
 async function exportData() {
     try {
@@ -1533,54 +1660,18 @@ async function importData(event) {
     reader.readAsText(file);
 }
 
-// ==========================================
-// 15. Service Worker
-// ==========================================
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').then((reg) => {
-            reg.addEventListener('updatefound', () => {
-                const newWorker = reg.installing;
-                newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        showUpdateToast(newWorker);
-                    }
-                });
-            });
-        });
-    });
-}
-
-function showUpdateToast(newWorker) {
-    const toast = document.createElement('div');
-    toast.className = 'toast-container';
-    toast.innerHTML = `<span>🚀 نسخه جدید!</span><button class="toast-btn" id="update-btn">به‌روزرسانی</button>`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.classList.add('show'), 100);
-    document.getElementById('update-btn').addEventListener('click', () => {
-        if (newWorker) newWorker.postMessage({ action: 'skipWaiting' });
-        setTimeout(() => window.location.reload(), 500);
-    });
-}
-// ==========================================
-// 16. خروجی اکسل (CSV)
-// ==========================================
 async function exportCSV() {
     try {
         let csvContent = "";
         let fileName = "";
 
         if (currentReportType === 'scores') {
-            // خروجی امتیازات
             const students = await getAllData('students');
             const records = await getAllData('records');
-            
-            // هدر فایل CSV
             csvContent = "ردیف,نام,نام خانوادگی,تعداد ارزشیابی,مجموع امتیاز\n";
             
             let studentScores = students.map(st => {
-                let total = 0;
-                let count = 0;
+                let total = 0, count = 0;
                 records.forEach(rec => {
                     if (rec.students.includes(st.id)) { total += rec.finalScore; count++; }
                 });
@@ -1592,8 +1683,7 @@ async function exportCSV() {
                 if (subjectId) {
                     const subjectRecords = records.filter(r => r.subjectId === subjectId);
                     studentScores = students.map(st => {
-                        let total = 0;
-                        let count = 0;
+                        let total = 0, count = 0;
                         subjectRecords.forEach(rec => {
                             if (rec.students.includes(st.id)) { total += rec.finalScore; count++; }
                         });
@@ -1609,10 +1699,8 @@ async function exportCSV() {
             fileName = `kosha_scores_${new Date().toISOString().slice(0,10)}.csv`;
 
         } else if (currentReportType === 'attendance') {
-            // خروجی حضور و غیاب
             const students = await getAllData('students');
             const attendance = await getAllData('attendance');
-            
             csvContent = "ردیف,نام,نام خانوادگی,تعداد حاضر,تعداد غایب,تعداد تأخیر\n";
             
             students.forEach((st, index) => {
@@ -1629,10 +1717,8 @@ async function exportCSV() {
             fileName = `kosha_attendance_${new Date().toISOString().slice(0,10)}.csv`;
 
         } else if (currentReportType === 'records') {
-            // خروجی سوابق ارزشیابی
             const records = await getAllData('records');
             const subjects = await getAllData('subjects');
-            
             csvContent = "ردیف,عنوان,درس,آیتم,تاریخ,امتیاز,ارفاق\n";
             
             records.sort((a, b) => b.date.localeCompare(a.date));
@@ -1640,13 +1726,11 @@ async function exportCSV() {
                 const subject = subjects.find(s => s.id === rec.subjectId);
                 const subjectName = subject ? subject.name : 'نامشخص';
                 const arfStatus = rec.arf ? 'دارد' : 'ندارد';
-                // برای جلوگیری از خطای کاما، فیلدهای متنی را در گیومه قرار می‌دهیم
                 csvContent += `${index + 1},"${rec.title}","${subjectName}","${rec.itemName}","${rec.date}",${rec.finalScore},"${arfStatus}"\n`;
             });
             fileName = `kosha_records_${new Date().toISOString().slice(0,10)}.csv`;
         }
 
-        // اضافه کردن BOM برای پشتیبانی از فارسی در اکسل
         const BOM = "\uFEFF";
         const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -1661,8 +1745,9 @@ async function exportCSV() {
         alert('خطا در تولید فایل اکسل: ' + e.message);
     }
 }
+
 // ==========================================
-// 17. Service Worker
+// 15. Service Worker
 // ==========================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
