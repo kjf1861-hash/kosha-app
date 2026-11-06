@@ -17,7 +17,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .splash-hidden { opacity: 0; visibility: hidden; }
         
-        #app-container { display: none; padding-bottom: 70px; }
         .page-section { display: none; }
         .page-section.active { display: block; }
         
@@ -308,11 +307,10 @@
                         <div id="attendance-reports-list" class="list-group"></div>
                     </div>
 
-                    <!-- بخش سوابق ارزشیابی (آپدیت شده) -->
+                    <!-- بخش سوابق ارزشیابی -->
                     <div id="records-report-section" style="display: none;">
                         <h2 class="card-title">📝 سوابق ارزشیابی</h2>
                         
-                        <!-- فیلترها -->
                         <div class="form-group" style="margin-bottom: 10px;">
                             <label class="form-label">فیلتر بر اساس درس</label>
                             <select id="recordsFilterSubject" class="form-control" onchange="loadAssessmentRecords()">
