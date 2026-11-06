@@ -203,7 +203,7 @@ select.form-control {
 .toast-btn { background: var(--primary); border: none; color: white; padding: 8px 16px; border-radius: 20px; font-family: inherit; font-size: 0.9rem; cursor: pointer; font-weight: bold; }
 
 .student-checkbox-list {
-    max-height: 220px; overflow-y: auto;
+    max-height: 300px; overflow-y: auto;
     border: 1px solid var(--border-color); border-radius: var(--radius-sm);
     padding: 12px; background: rgba(248, 250, 252, 0.8);
 }
@@ -218,6 +218,44 @@ select.form-control {
 
 .student-checkbox-list::-webkit-scrollbar { width: 6px; }
 .student-checkbox-list::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 3px; }
+
+/* استایل برای منوی بازشو گروه‌ها */
+details.group-accordion {
+    margin-bottom: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    overflow: hidden;
+}
+details.group-accordion summary {
+    padding: 12px;
+    background: rgba(241, 245, 249, 0.7);
+    font-weight: bold;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+details.group-accordion summary::-webkit-details-marker { display: none; }
+details.group-accordion summary::after {
+    content: '▼';
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+}
+details.group-accordion[open] summary::after {
+    transform: rotate(180deg);
+}
+.group-header-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.group-students-container {
+    padding: 10px;
+    border-top: 1px solid var(--border-color);
+}
 
 @media print {
     .bottom-nav, .app-header, button, .filter-btn-group, #subject-filter-container, #sortCriteriaSelect, select { display: none !important; }
