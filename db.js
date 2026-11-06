@@ -3,7 +3,7 @@
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 4; // نسخه به 4 افزایش یافت برای اضافه شدن جدول جلسات
+const DB_VERSION = 4;
 
 let db;
 
@@ -26,46 +26,31 @@ function initDB() {
             const db = event.target.result;
             console.log('در حال ساخت/به‌روزرسانی جداول پایگاه داده...');
 
-            // 1. جدول تنظیمات کلاس
             if (!db.objectStoreNames.contains('classProfile')) {
                 db.createObjectStore('classProfile', { keyPath: 'id' });
             }
-
-            // 2. جدول دانش‌آموزان
             if (!db.objectStoreNames.contains('students')) {
                 const studentStore = db.createObjectStore('students', { keyPath: 'id', autoIncrement: true });
                 studentStore.createIndex('groupId', 'groupId', { unique: false });
             }
-
-            // 3. جدول گروه‌ها
             if (!db.objectStoreNames.contains('groups')) {
                 db.createObjectStore('groups', { keyPath: 'id', autoIncrement: true });
             }
-
-            // 4. جدول درس‌ها
             if (!db.objectStoreNames.contains('subjects')) {
                 db.createObjectStore('subjects', { keyPath: 'id', autoIncrement: true });
             }
-
-            // 5. جدول ثبت ارزشیابی‌ها
             if (!db.objectStoreNames.contains('records')) {
                 const recordStore = db.createObjectStore('records', { keyPath: 'id', autoIncrement: true });
                 recordStore.createIndex('subjectId', 'subjectId', { unique: false });
                 recordStore.createIndex('date', 'date', { unique: false });
             }
-
-            // 6. جدول تنظیمات جایگاه‌ها و نشان‌ها
             if (!db.objectStoreNames.contains('badgesSettings')) {
                 db.createObjectStore('badgesSettings', { keyPath: 'id' });
             }
-
-            // 7. جدول جدید: جلسات (روزهای آموزشی)
             if (!db.objectStoreNames.contains('sessions')) {
                 const sessionStore = db.createObjectStore('sessions', { keyPath: 'id', autoIncrement: true });
                 sessionStore.createIndex('date', 'date', { unique: false });
             }
-
-            // 8. جدول جدید: حضور و غیاب (متصل به جلسه)
             if (!db.objectStoreNames.contains('attendance')) {
                 const attStore = db.createObjectStore('attendance', { keyPath: 'id', autoIncrement: true });
                 attStore.createIndex('sessionId', 'sessionId', { unique: false });
@@ -82,6 +67,29 @@ function saveData(storeName, data) {
         const request = store.put(data);
         request.onsuccess = () => resolve(request.result);
         request.onerror = (event) => reject(event.target.error);
+    });
+}
+
+// تابع جدید: ذخیره گروهی داده‌ها برای افزایش سرعت
+function saveBulkData(storeName, dataArray) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([storeName], 'readwrite');
+        const store = transaction.objectStore(storeName);
+        let completed = 0;
+        
+        if (dataArray.length === 0) {
+            resolve();
+            return;
+        }
+
+        dataArray.forEach(data => {
+            const request = store.put(data);
+            request.onsuccess = () => {
+                completed++;
+                if (completed === dataArray.length) resolve();
+            };
+            request.onerror = (event) => reject(event.target.error);
+        });
     });
 }
 
@@ -138,28 +146,23 @@ async function importAllData(data) {
     if (!data || typeof data !== 'object') throw new Error('داده‌های نامعتبر');
     
     const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance'];
-    
-    // گرفتن نسخه پشتیبان موقت از داده‌های فعلی
     const backup = {};
-    for (const store of stores) {
-        backup[store] = await getAllData(store);
-    }
+    for (const store of stores) { backup[store] = await getAllData(store); }
     
     try {
         for (const store of stores) {
             if (data[store] && Array.isArray(data[store])) {
                 await clearStore(store);
-                for (const item of data[store]) {
-                    await saveData(store, item);
+                if (data[store].length > 0) {
+                    await saveBulkData(store, data[store]);
                 }
             }
         }
     } catch (e) {
-        // در صورت بروز خطا، بازگردانی داده‌های قبلی
         for (const store of stores) {
             await clearStore(store);
-            for (const item of backup[store]) {
-                await saveData(store, item);
+            if (backup[store].length > 0) {
+                await saveBulkData(store, backup[store]);
             }
         }
         throw new Error('خطا در بازیابی داده‌ها، تغییرات لغو شد.');
