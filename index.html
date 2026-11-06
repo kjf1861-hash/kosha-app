@@ -54,7 +54,6 @@
             background: var(--primary-light);
         }
         
-        /* استایل دکمه آمار قابل کلیک */
         .att-report-badge.clickable {
             cursor: pointer;
             transition: transform 0.2s;
@@ -101,6 +100,7 @@
 
         <div class="container">
             
+            <!-- تب ۱: کلاس -->
             <div id="page-class" class="page-section active">
                 <div class="card">
                     <h2 class="card-title">🏫 اطلاعات کلاس</h2>
@@ -114,6 +114,7 @@
                 </div>
             </div>
 
+            <!-- تب ۲: دروس -->
             <div id="page-subjects" class="page-section">
                 <div class="card">
                     <h2 class="card-title">📚 مدیریت درس‌ها</h2>
@@ -136,6 +137,7 @@
                 </div>
             </div>
 
+            <!-- تب ۳: دانش‌آموزان -->
             <div id="page-students" class="page-section">
                 <div class="card">
                     <h2 class="card-title">👥 ساخت گروه جدید</h2>
@@ -161,6 +163,7 @@
                 <div class="card"><h2 class="card-title">لیست دانش‌آموزان</h2><div id="students-list" class="list-group"></div></div>
             </div>
 
+            <!-- تب ۴: ارزشیابی -->
             <div id="page-assessment" class="page-section">
                 <div class="card">
                     <h2 class="card-title">📝 ثبت ارزشیابی جدید</h2>
@@ -202,6 +205,7 @@
                 </div>
             </div>
 
+            <!-- تب ۵: حضور و غیاب -->
             <div id="page-attendance" class="page-section">
                 <div class="card">
                     <h2 class="card-title">📅 ثبت روز آموزشی جدید</h2>
@@ -236,6 +240,7 @@
                 </div>
             </div>
 
+            <!-- تب ۶: جایگاه‌ها -->
             <div id="page-badges" class="page-section">
                 <div class="card">
                     <h2 class="card-title">🏆 تنظیمات جایگاه‌های گروهی</h2>
@@ -261,6 +266,7 @@
                 </div>
             </div>
 
+            <!-- تب ۷: گزارشات -->
             <div id="page-reports" class="page-section">
                 <div class="card">
                     <div class="filter-btn-group" style="margin-bottom: 20px;">
@@ -302,9 +308,34 @@
                         <div id="attendance-reports-list" class="list-group"></div>
                     </div>
 
+                    <!-- بخش سوابق ارزشیابی (آپدیت شده) -->
                     <div id="records-report-section" style="display: none;">
-                        <h2 class="card-title">📝 سوابق ارزشیابی ثبت‌شده</h2>
-                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">در این بخش می‌توانید رکوردهای ارزشیابی را ویرایش یا حذف کنید.</p>
+                        <h2 class="card-title">📝 سوابق ارزشیابی</h2>
+                        
+                        <!-- فیلترها -->
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label class="form-label">فیلتر بر اساس درس</label>
+                            <select id="recordsFilterSubject" class="form-control" onchange="loadAssessmentRecords()">
+                                <option value="">همه دروس</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label class="form-label">فیلتر بر اساس دانش‌آموز</label>
+                            <select id="recordsFilterStudent" class="form-control" onchange="loadAssessmentRecords()">
+                                <option value="">همه دانش‌آموزان</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label class="form-label">جستجو در عنوان</label>
+                            <input type="text" id="recordsSearchText" class="form-control" placeholder="مثلاً: حفظ شعر..." oninput="loadAssessmentRecords()">
+                        </div>
+                        
+                        <button type="button" class="btn btn-secondary btn-block mb-4" onclick="clearRecordFilters()" style="margin-bottom: 15px;">🗑️ پاک کردن فیلترها</button>
+                        
+                        <p id="records-count" style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px;"></p>
+                        
                         <div id="assessment-records-list" class="list-group"></div>
                     </div>
 
@@ -366,7 +397,6 @@
         </div>
     </div>
 
-    <!-- مودال جدید: جزئیات آمار حضور -->
     <div id="attendance-details-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header" id="attendance-details-title">📋 جزئیات حضور</div>
