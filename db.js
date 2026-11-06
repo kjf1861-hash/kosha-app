@@ -3,7 +3,7 @@
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 2; // نسخه به 2 افزایش یافت تا دیتابیس قدیمی بازنشانی شود
+const DB_VERSION = 3; // نسخه به 3 افزایش یافت برای اضافه شدن جدول حضور و غیاب
 
 let db;
 
@@ -57,6 +57,13 @@ function initDB() {
             // 6. جدول تنظیمات جایگاه‌ها و نشان‌ها
             if (!db.objectStoreNames.contains('badgesSettings')) {
                 db.createObjectStore('badgesSettings', { keyPath: 'id' });
+            }
+
+            // 7. جدول جدید: حضور و غیاب
+            if (!db.objectStoreNames.contains('attendance')) {
+                const attStore = db.createObjectStore('attendance', { keyPath: 'id', autoIncrement: true });
+                attStore.createIndex('date', 'date', { unique: false });
+                attStore.createIndex('studentId', 'studentId', { unique: false });
             }
         };
     });
@@ -114,7 +121,7 @@ function clearStore(storeName) {
 
 async function exportAllData() {
     const data = {};
-    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings'];
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'attendance'];
     for (const store of stores) {
         try { data[store] = await getAllData(store); } catch (e) { data[store] = []; }
     }
@@ -122,7 +129,7 @@ async function exportAllData() {
 }
 
 async function importAllData(data) {
-    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings'];
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'attendance'];
     for (const store of stores) {
         if (data[store]) {
             await clearStore(store);
