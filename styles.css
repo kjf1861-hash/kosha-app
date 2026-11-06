@@ -122,6 +122,10 @@ h1, h2, h3, h4, p { margin-top: 0; }
     border-color: var(--primary); background-color: var(--input-focus-bg);
     box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.15); transform: translateY(-1px);
 }
+textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+}
 
 .input-error {
     border-color: #dc2626 !important;
@@ -184,6 +188,23 @@ select.form-control {
     gap: 10px; transition: all 0.2s;
 }
 .list-item:hover { background: var(--card-bg); box-shadow: var(--shadow-sm); }
+
+/* استایل برچسب گروه */
+.group-label {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    white-space: nowrap;
+    display: inline-block;
+    margin-right: 8px;
+}
+[data-theme="dark"] .group-label {
+    background: var(--input-bg);
+    color: var(--primary);
+}
 
 .arf-badge { background-color: var(--arf-bg); border-right: 4px solid var(--arf-border); padding: 8px 12px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 8px; font-weight: bold; color: var(--arf-border); margin-top: 8px; }
 .rank-badge { display: inline-flex; align-items: center; background: var(--primary-light); color: var(--text-main); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; white-space: nowrap; }
@@ -258,6 +279,7 @@ select.form-control {
 .student-checkbox-item:hover { background: var(--primary-light); }
 .student-checkbox-item:last-child { border-bottom: none; }
 .student-checkbox-item input { accent-color: var(--primary); width: 18px; height: 18px; }
+.student-checkbox-item-content { display: flex; justify-content: space-between; align-items: center; width: 100%; }
 
 .student-checkbox-list::-webkit-scrollbar { width: 6px; }
 .student-checkbox-list::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 3px; }
@@ -445,15 +467,9 @@ details.group-accordion[open] summary::after {
     visibility: visible;
     transform: translateX(-50%) translateY(0);
 }
-.custom-toast-success {
-    border-right: 4px solid #22c55e;
-}
-.custom-toast-error {
-    border-right: 4px solid #ef4444;
-}
-.custom-toast-info {
-    border-right: 4px solid #3b82f6;
-}
+.custom-toast-success { border-right: 4px solid #22c55e; }
+.custom-toast-error { border-right: 4px solid #ef4444; }
+.custom-toast-info { border-right: 4px solid #3b82f6; }
 
 /* =========================================
    تنظیمات چاپ
