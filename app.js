@@ -1562,3 +1562,131 @@ function showUpdateToast(newWorker) {
         setTimeout(() => window.location.reload(), 500);
     });
 }
+// ==========================================
+// 16. خروجی اکسل (CSV)
+// ==========================================
+async function exportCSV() {
+    try {
+        let csvContent = "";
+        let fileName = "";
+
+        if (currentReportType === 'scores') {
+            // خروجی امتیازات
+            const students = await getAllData('students');
+            const records = await getAllData('records');
+            
+            // هدر فایل CSV
+            csvContent = "ردیف,نام,نام خانوادگی,تعداد ارزشیابی,مجموع امتیاز\n";
+            
+            let studentScores = students.map(st => {
+                let total = 0;
+                let count = 0;
+                records.forEach(rec => {
+                    if (rec.students.includes(st.id)) { total += rec.finalScore; count++; }
+                });
+                return { ...st, totalScore: total, count: count };
+            });
+
+            if (currentReportFilter === 'subject') {
+                const subjectId = parseInt(document.getElementById('reportSubjectSelect').value);
+                if (subjectId) {
+                    const subjectRecords = records.filter(r => r.subjectId === subjectId);
+                    studentScores = students.map(st => {
+                        let total = 0;
+                        let count = 0;
+                        subjectRecords.forEach(rec => {
+                            if (rec.students.includes(st.id)) { total += rec.finalScore; count++; }
+                        });
+                        return { ...st, totalScore: total, count: count };
+                    });
+                }
+            }
+
+            studentScores.sort((a, b) => b.totalScore - a.totalScore);
+            studentScores.forEach((st, index) => {
+                csvContent += `${index + 1},${st.firstName},${st.lastName},${st.count},${st.totalScore}\n`;
+            });
+            fileName = `kosha_scores_${new Date().toISOString().slice(0,10)}.csv`;
+
+        } else if (currentReportType === 'attendance') {
+            // خروجی حضور و غیاب
+            const students = await getAllData('students');
+            const attendance = await getAllData('attendance');
+            
+            csvContent = "ردیف,نام,نام خانوادگی,تعداد حاضر,تعداد غایب,تعداد تأخیر\n";
+            
+            students.forEach((st, index) => {
+                let present = 0, absent = 0, late = 0;
+                attendance.forEach(att => {
+                    if (att.studentId === st.id) {
+                        if (att.status === 'present') present++;
+                        else if (att.status === 'absent') absent++;
+                        else if (att.status === 'late') late++;
+                    }
+                });
+                csvContent += `${index + 1},${st.firstName},${st.lastName},${present},${absent},${late}\n`;
+            });
+            fileName = `kosha_attendance_${new Date().toISOString().slice(0,10)}.csv`;
+
+        } else if (currentReportType === 'records') {
+            // خروجی سوابق ارزشیابی
+            const records = await getAllData('records');
+            const subjects = await getAllData('subjects');
+            
+            csvContent = "ردیف,عنوان,درس,آیتم,تاریخ,امتیاز,ارفاق\n";
+            
+            records.sort((a, b) => b.date.localeCompare(a.date));
+            records.forEach((rec, index) => {
+                const subject = subjects.find(s => s.id === rec.subjectId);
+                const subjectName = subject ? subject.name : 'نامشخص';
+                const arfStatus = rec.arf ? 'دارد' : 'ندارد';
+                // برای جلوگیری از خطای کاما، فیلدهای متنی را در گیومه قرار می‌دهیم
+                csvContent += `${index + 1},"${rec.title}","${subjectName}","${rec.itemName}","${rec.date}",${rec.finalScore},"${arfStatus}"\n`;
+            });
+            fileName = `kosha_records_${new Date().toISOString().slice(0,10)}.csv`;
+        }
+
+        // اضافه کردن BOM برای پشتیبانی از فارسی در اکسل
+        const BOM = "\uFEFF";
+        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+    } catch (e) {
+        console.error(e);
+        alert('خطا در تولید فایل اکسل: ' + e.message);
+    }
+}
+// ==========================================
+// 17. Service Worker
+// ==========================================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+            reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        showUpdateToast(newWorker);
+                    }
+                });
+            });
+        });
+    });
+}
+
+function showUpdateToast(newWorker) {
+    const toast = document.createElement('div');
+    toast.className = 'toast-container';
+    toast.innerHTML = `<span>🚀 نسخه جدید!</span><button class="toast-btn" id="update-btn">به‌روزرسانی</button>`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 100);
+    document.getElementById('update-btn').addEventListener('click', () => {
+        if (newWorker) newWorker.postMessage({ action: 'skipWaiting' });
+        setTimeout(() => window.location.reload(), 500);
+    });
+}
