@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kosha-cache-v8';
+const CACHE_NAME = 'kosha-cache-v9';
 const ASSETS_TO_CACHE = [
     './', './index.html', './styles.css', './app.js', './db.js', './manifest.json', './icon.svg'
 ];
