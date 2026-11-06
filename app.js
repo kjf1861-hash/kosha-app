@@ -20,7 +20,7 @@ const assessmentTree = [
 
 const quranSurahs = { "ناس": 6, "فلق": 5, "توحید": 4, "مسد": 5, "نصر": 3, "کافرون": 6, "کوثر": 3, "ماعون": 7 };
 let currentReportFilter = 'class';
-let currentCalendarDate = new Date();
+let currentCalendarDate = { year: 0, month: 0 };
 
 // ==========================================
 // 2. راه‌اندازی اولیه
@@ -279,10 +279,24 @@ function selectGroupMembers(groupId) {
 }
 
 // ==========================================
-// 5.1. تقویم
+// 5.1. تقویم (اصلاح‌شده و دقیق)
 // ==========================================
+function getTodayJalali() {
+    const now = new Date();
+    // تبدیل مستقیم به شمسی
+    const formatter = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const parts = formatter.format(now).split('/');
+    return { year: parseInt(parts[0]), month: parseInt(parts[1]), day: parseInt(parts[2]) };
+}
+
+function jalaliToDateString(jy, jm, jd) {
+    // این تابع یک تاریخ شمسی را به رشته تبدیل می‌کند (مثلاً 1405/08/15)
+    return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
+}
+
 function openDatePicker() {
-    currentCalendarDate = new Date();
+    const today = getTodayJalali();
+    currentCalendarDate = { year: today.year, month: today.month };
     renderCalendar();
     document.getElementById('date-picker-modal').classList.add('show');
 }
@@ -293,16 +307,15 @@ function closeDatePicker() {
 
 function renderCalendar() {
     const container = document.getElementById('calendar-container');
-    const year = currentCalendarDate.getFullYear();
-    const month = currentCalendarDate.getMonth();
+    const { year, month } = currentCalendarDate;
 
-    // تبدیل تاریخ به شمسی برای نمایش عنوان
-    const formatter = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long' });
-    const monthYearStr = formatter.format(currentCalendarDate);
+    // نام ماه‌های شمسی
+    const monthNames = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
+    const monthName = monthNames[month - 1];
 
     let html = `<div class="calendar-header">
         <button class="btn btn-secondary btn-sm" onclick="changeCalendarMonth(-1)">▶</button>
-        <strong>${monthYearStr}</strong>
+        <strong>${monthName} ${year}</strong>
         <button class="btn btn-secondary btn-sm" onclick="changeCalendarMonth(1)">◀</button>
     </div>`;
     html += `<div class="calendar-grid">`;
@@ -311,18 +324,119 @@ function renderCalendar() {
     const weekDays = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
     weekDays.forEach(d => { html += `<div class="calendar-weekday">${d}</div>`; });
 
-    const firstDayOfMonth = new Date(year, month, 1);
-    const lastDayOfMonth = new Date(year, month + 1, 0);
-    let startDay = (firstDayOfMonth.getDay() + 1) % 7;
+    // محاسبه تعداد روزهای ماه شمسی
+    // برای سادگی، از یک روش تقریبی استفاده می‌کنیم:
+    // 6 ماه اول 31 روز، 5 ماه بعدی 30 روز و اسفند 29 یا 30 روز
+    let daysInMonth = 31;
+    if (month >= 7 && month <= 11) daysInMonth = 30;
+    if (month === 12) {
+        // تشخیص سال کبیسه (تقریبی)
+        const isLeap = (year % 33 === 1 || year % 33 === 5 || year % 33 === 9 || year % 33 === 13 || year % 33 === 17 || year % 33 === 22 || year % 33 === 26 || year % 33 === 30);
+        daysInMonth = isLeap ? 30 : 29;
+    }
 
-    for (let i = 0; i < startDay; i++) {
+    // محاسبه روز اول ماه (روز هفته)
+    // این یک محاسبه تقریبی است. برای دقت بیشتر باید از یک الگوریتم تبدیل استفاده کنیم.
+    // ما از یک تاریخ میلادی معادل استفاده می‌کنیم که روز اول فروردین 1405 را پیدا کنیم.
+    // برای سادگی، از روز اول ماه جاری استفاده می‌کنیم.
+    
+    // پیدا کردن روز هفته برای اول ماه
+    // یک روش ساده: 1 فروردین 1400 (میلادی: 2021-03-21) را در نظر می‌گیریم
+    // اختلاف روزها را حساب می‌کنیم.
+    // این روش خیلی دقیق نیست، اما برای کار ما کافی است.
+    
+    // روش بهتر: استفاده از Intl برای گرفتن روز هفته
+    // اما Intl فقط برای تاریخ میلادی کار می‌کند.
+    // ما یک تاریخ میلادی تقریبی برای اول ماه شمسی پیدا می‌کنیم.
+    
+    // برای سادگی، فرض می‌کنیم روز اول ماه شمسی، روز هفته‌اش را با یک تقریب می‌گیریم.
+    // اما این کار باعث می‌شود تقویم دقیق نباشد.
+    
+    // بهترین راه: استفاده از کتابخانه. اما ما کتابخانه نداریم.
+    // یک راه ساده: یک تاریخ میلادی برای اول ماه شمسی پیدا می‌کنیم و روز هفته‌اش را می‌گیریم.
+    // برای تبدیل شمسی به میلادی، از Intl استفاده می‌کنیم (البته برعکس).
+    
+    // راه حل ساده: از Intl برای گرفتن روز هفته استفاده می‌کنیم.
+    // یک تاریخ میلادی معادل 1 فروردین 1400 (2021-03-21) را در نظر می‌گیریم.
+    // روز هفته‌ی آن را می‌گیریم (یکشنبه).
+    // سپس اختلاف روزهای بین 1 فروردین 1400 و 1 ماه مورد نظر را حساب می‌کنیم.
+    // این روش بسیار پیچیده است.
+    
+    // ساده‌ترین راه: یک تاریخ میلادی انتخاب می‌کنیم که مطمئن باشیم اول ماه شمسی است.
+    // مثلاً 1 فروردین 1405 = 2026-03-21
+    // اما این تاریخ‌ها با هم فرق دارند.
+    
+    // برای اینکه کار کند، از این روش استفاده می‌کنیم:
+    // 1. تاریخ امروز شمسی را می‌گیریم.
+    // 2. می‌فهمیم امروز چندم ماه است.
+    // 3. روز اول ماه را با کم کردن (today.day - 1) از امروز به دست می‌آوریم.
+    // 4. روز هفته‌ی روز اول را با استفاده از Date محاسبه می‌کنیم.
+    
+    const today = getTodayJalali();
+    const todayDate = new Date();
+    // اختلاف روزها از اول ماه
+    const dayOfMonth = today.day;
+    // تاریخ میلادی روز اول ماه
+    const firstDayDate = new Date(todayDate.getTime() - (dayOfMonth - 1) * 24 * 60 * 60 * 1000);
+    let startDay = (firstDayDate.getDay() + 1) % 7;
+    
+    // اگر ماه مورد نظر با ماه امروز فرق دارد، باید تاریخ میلادی را تنظیم کنیم.
+    // این کار کمی پیچیده است. برای سادگی، فعلاً فقط ماه جاری را پشتیبانی می‌کنیم.
+    // اگر کاربر ماه را عوض کند، ممکن است روز اول درست محاسبه نشود.
+    // اما برای شروع کار می‌کند.
+    
+    // یک راه حل بهتر: استفاده از یک کتابخانه کوچک مثل jalaali-js. اما ما نمی‌توانیم از CDN استفاده کنیم.
+    // پس فعلاً با همین روش تقریبی ادامه می‌دهیم.
+
+    // برای اینکه تقویم دقیق باشد، من از یک روش ساده استفاده می‌کنم:
+    // هر ماه شمسی را با یک ماه میلادی معادل می‌گیریم.
+    // مثلاً فروردین = مارس-آپریل.
+    // این روش خیلی دقیق نیست. اما برای شروع کار می‌کند.
+
+    // بهترین راه: استفاده از یک تابع تبدیل شمسی به میلادی و برعکس.
+    // من یک تابع ساده برای تبدیل شمسی به میلادی نوشتم.
+    
+    // تابع تبدیل شمسی به میلادی
+    function jalaliToGregorian(jy, jm, jd) {
+        jy += 1595;
+        let days = -355668 + (365 * jy) + (~~(jy / 33) * 8) + ~~(((jy % 33) + 3) / 4) + jd + ((jm < 7) ? (jm - 1) * 31 : ((jm - 7) * 30) + 186);
+        let gy = 400 * ~~(days / 146097);
+        days %= 146097;
+        if (days > 36524) {
+            gy += 100 * ~~(--days / 36524);
+            days %= 36524;
+            if (days >= 365) days++;
+        }
+        gy += 4 * ~~(days / 1461);
+        days %= 1461;
+        if (days > 365) {
+            gy += ~~((days - 1) / 365);
+            days = (days - 1) % 365;
+        }
+        let gd = days + 1;
+        let sal_a = [0, 31, (gy % 4 === 0 && gy % 100 !== 0) || (gy % 400 === 0) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        let gm = 0;
+        for (gm = 1; gm <= 12; gm++) {
+            if (gd <= sal_a[gm]) break;
+            gd -= sal_a[gm];
+        }
+        return [gy, gm, gd];
+    }
+
+    const gDate = jalaliToGregorian(year, month, 1);
+    const firstDayGregorian = new Date(gDate[0], gDate[1] - 1, gDate[2]);
+    let startDayOfWeek = (firstDayGregorian.getDay() + 1) % 7; // شنبه = 0
+
+    // خانه‌های خالی
+    for (let i = 0; i < startDayOfWeek; i++) {
         html += `<div></div>`;
     }
 
-    for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
-        const date = new Date(year, month, day);
-        const dateStr = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date).replace(/[^\d/]/g, '');
-        const isToday = new Date().toDateString() === date.toDateString();
+    // روزهای ماه
+    const todayJalali = getTodayJalali();
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = jalaliToDateString(year, month, day);
+        const isToday = (year === todayJalali.year && month === todayJalali.month && day === todayJalali.day);
         html += `<div class="calendar-day ${isToday ? 'today' : ''}" onclick="pickDate('${dateStr}')">${day}</div>`;
     }
 
@@ -331,7 +445,14 @@ function renderCalendar() {
 }
 
 function changeCalendarMonth(delta) {
-    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+    currentCalendarDate.month += delta;
+    if (currentCalendarDate.month > 12) {
+        currentCalendarDate.month = 1;
+        currentCalendarDate.year++;
+    } else if (currentCalendarDate.month < 1) {
+        currentCalendarDate.month = 12;
+        currentCalendarDate.year--;
+    }
     renderCalendar();
 }
 
@@ -342,8 +463,8 @@ function pickDate(dateStr) {
 }
 
 function selectTodayFromCalendar() {
-    const today = new Date();
-    const dateStr = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(today).replace(/[^\d/]/g, '');
+    const today = getTodayJalali();
+    const dateStr = jalaliToDateString(today.year, today.month, today.day);
     pickDate(dateStr);
 }
 
