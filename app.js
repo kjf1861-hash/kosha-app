@@ -19,10 +19,16 @@ const assessmentTree = [
 ];
 
 const quranSurahs = { "ناس": 6, "فلق": 5, "توحید": 4, "مسد": 5, "نصر": 3, "کافرون": 6, "کوثر": 3, "ماعون": 7 };
+
 let currentReportFilter = 'class';
 let currentStudentView = 'flat'; 
 let isSaveAndNext = false; 
-let currentAttendanceState = {}; // برای ذخیره وضعیت موقت حضور و غیاب
+
+// متغیرهای مربوط به حضور و غیاب
+let currentSessionId = null;
+let currentSessionDate = null;
+let currentAttView = 'flat'; // 'flat' or 'grouped'
+let currentAttendanceState = {}; // { studentId: 'present' | 'absent' | 'late' }
 
 // ==========================================
 // 2. راه‌اندازی اولیه
@@ -107,8 +113,11 @@ function initApp() {
         alert('ذخیره شد!'); loadBadgesSettings();
     });
 
+    // راه‌اندازی منوهای تاریخ برای ارزشیابی
     initDateDropdowns();
-    initAttendanceDateDropdowns(); // راه‌اندازی تاریخ حضور و غیاب
+    
+    // راه‌اندازی منوهای تاریخ برای حضور و غیاب
+    initAttendanceDateDropdowns();
 
     loadAllData();
 }
@@ -172,9 +181,105 @@ async function loadAllData() {
             });
         }
         
+        // رندر کردن لیست دانش‌آموزان در فرم ارزشیابی
         renderStudentCheckboxes();
 
+        // رندر کردن لیست جلسات (روزهای آموزشی)
+        loadSessions();
+
     } catch (e) { console.log('خطا', e); }
+}
+
+// ==========================================
+// 4. توابع ویرایش و حذف
+// ==========================================
+async function deleteItem(storeName, id) {
+    if (confirm('آیا مطمئن هستید؟')) {
+        await deleteData(storeName, id);
+        loadAllData();
+        if (storeName === 'groups') loadBadgesSettings();
+    }
+}
+
+async function editSubject(id) {
+    const subject = await getDataById('subjects', id);
+    if (subject) {
+        document.getElementById('subjectName').value = subject.name;
+        document.getElementById('editSubjectId').value = subject.id;
+        document.getElementById('subject-submit-btn').textContent = '💾 به‌روزرسانی درس';
+        document.getElementById('subject-form').scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+async function editGroup(id) {
+    const group = await getDataById('groups', id);
+    if (group) {
+        document.getElementById('groupName').value = group.name;
+        document.getElementById('groupSymbol').value = group.symbol;
+        document.getElementById('groupMotto').value = group.motto;
+        document.getElementById('editGroupId').value = group.id;
+        document.getElementById('group-submit-btn').textContent = '💾 به‌روزرسانی گروه';
+        document.getElementById('group-form').scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+async function editStudent(id) {
+    const student = await getDataById('students', id);
+    if (student) {
+        document.getElementById('studentFirstName').value = student.firstName;
+        document.getElementById('studentLastName').value = student.lastName;
+        document.getElementById('studentGroup').value = student.groupId;
+        document.getElementById('editStudentId').value = student.id;
+        document.getElementById('student-submit-btn').textContent = '💾 به‌روزرسانی دانش‌آموز';
+        document.getElementById('student-form').scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// ==========================================
+// 5. منطق امتیازدهی (ارزشیابی)
+// ==========================================
+function renderScoreInput(item) {
+    const section = document.getElementById('dynamic-score-section');
+    const container = document.getElementById('score-input-container');
+    
+    section.style.display = 'block';
+    container.innerHTML = '';
+
+    if (!item) return;
+
+    if (item.type === 'level1' || item.type === 'level2') {
+        const select = document.createElement('select');
+        select.className = 'form-control';
+        select.id = 'dynamicLevelInput';
+        select.required = true;
+        select.innerHTML = '<option value="" disabled selected>انتخاب سطح...</option>';
+        for (const [level, score] of Object.entries(item.levels)) {
+            select.innerHTML += `<option value="${score}">${level} (${score} امتیاز)</option>`;
+        }
+        container.appendChild(select);
+    } else if (item.type === 'count') {
+        const input = document.createElement('input');
+        input.type = 'number'; input.className = 'form-control'; input.id = 'dynamicCountInput'; input.min = '1'; input.placeholder = 'تعداد صفحات'; input.required = true;
+        container.appendChild(input);
+    } else if (item.type === 'fixed') {
+        container.innerHTML = `<p style="font-weight: bold; color: #4A90E2;">${item.score} امتیاز (خودکار)</p>`;
+    } else if (item.type === 'free') {
+        const input = document.createElement('input');
+        input.type = 'number'; input.className = 'form-control'; input.id = 'dynamicFreeInput'; input.min = '0'; input.placeholder = 'عدد امتیاز'; input.required = true;
+        container.appendChild(input);
+    } else if (item.type === 'quran') {
+        const select = document.createElement('select');
+        select.className = 'form-control'; select.id = 'quranSurahSelect';
+        select.innerHTML = '<option value="" disabled selected>انتخاب سوره...</option>';
+        for (const [surah, ayat] of Object.entries(quranSurahs)) {
+            select.innerHTML += `<option value="${ayat}">${surah} (${ayat} آیه)</option>`;
+        }
+        const input = document.createElement('input');
+        input.type = 'number'; input.className = 'form-control'; input.id = 'quranAyatInput'; input.placeholder = 'تعداد آیات'; input.min = '1';
+        container.appendChild(select);
+        container.appendChild(document.createElement('br'));
+        container.appendChild(input);
+    }
 }
 
 function renderStudentCheckboxes() {
@@ -241,98 +346,6 @@ function toggleGroupSelection(checkbox, groupId) {
     groupCheckboxes.forEach(cb => cb.checked = checkbox.checked);
 }
 
-// ==========================================
-// 4. توابع ویرایش و حذف
-// ==========================================
-async function deleteItem(storeName, id) {
-    if (confirm('آیا مطمئن هستید؟')) {
-        await deleteData(storeName, id);
-        loadAllData();
-        if (storeName === 'groups') loadBadgesSettings();
-    }
-}
-
-async function editSubject(id) {
-    const subject = await getDataById('subjects', id);
-    if (subject) {
-        document.getElementById('subjectName').value = subject.name;
-        document.getElementById('editSubjectId').value = subject.id;
-        document.getElementById('subject-submit-btn').textContent = '💾 به‌روزرسانی درس';
-        document.getElementById('subject-form').scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
-async function editGroup(id) {
-    const group = await getDataById('groups', id);
-    if (group) {
-        document.getElementById('groupName').value = group.name;
-        document.getElementById('groupSymbol').value = group.symbol;
-        document.getElementById('groupMotto').value = group.motto;
-        document.getElementById('editGroupId').value = group.id;
-        document.getElementById('group-submit-btn').textContent = '💾 به‌روزرسانی گروه';
-        document.getElementById('group-form').scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
-async function editStudent(id) {
-    const student = await getDataById('students', id);
-    if (student) {
-        document.getElementById('studentFirstName').value = student.firstName;
-        document.getElementById('studentLastName').value = student.lastName;
-        document.getElementById('studentGroup').value = student.groupId;
-        document.getElementById('editStudentId').value = student.id;
-        document.getElementById('student-submit-btn').textContent = '💾 به‌روزرسانی دانش‌آموز';
-        document.getElementById('student-form').scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
-// ==========================================
-// 5. منطق امتیازدهی
-// ==========================================
-function renderScoreInput(item) {
-    const section = document.getElementById('dynamic-score-section');
-    const container = document.getElementById('score-input-container');
-    
-    section.style.display = 'block';
-    container.innerHTML = '';
-
-    if (!item) return;
-
-    if (item.type === 'level1' || item.type === 'level2') {
-        const select = document.createElement('select');
-        select.className = 'form-control';
-        select.id = 'dynamicLevelInput';
-        select.required = true;
-        select.innerHTML = '<option value="" disabled selected>انتخاب سطح...</option>';
-        for (const [level, score] of Object.entries(item.levels)) {
-            select.innerHTML += `<option value="${score}">${level} (${score} امتیاز)</option>`;
-        }
-        container.appendChild(select);
-    } else if (item.type === 'count') {
-        const input = document.createElement('input');
-        input.type = 'number'; input.className = 'form-control'; input.id = 'dynamicCountInput'; input.min = '1'; input.placeholder = 'تعداد صفحات'; input.required = true;
-        container.appendChild(input);
-    } else if (item.type === 'fixed') {
-        container.innerHTML = `<p style="font-weight: bold; color: #4A90E2;">${item.score} امتیاز (خودکار)</p>`;
-    } else if (item.type === 'free') {
-        const input = document.createElement('input');
-        input.type = 'number'; input.className = 'form-control'; input.id = 'dynamicFreeInput'; input.min = '0'; input.placeholder = 'عدد امتیاز'; input.required = true;
-        container.appendChild(input);
-    } else if (item.type === 'quran') {
-        const select = document.createElement('select');
-        select.className = 'form-control'; select.id = 'quranSurahSelect';
-        select.innerHTML = '<option value="" disabled selected>انتخاب سوره...</option>';
-        for (const [surah, ayat] of Object.entries(quranSurahs)) {
-            select.innerHTML += `<option value="${ayat}">${surah} (${ayat} آیه)</option>`;
-        }
-        const input = document.createElement('input');
-        input.type = 'number'; input.className = 'form-control'; input.id = 'quranAyatInput'; input.placeholder = 'تعداد آیات'; input.min = '1';
-        container.appendChild(select);
-        container.appendChild(document.createElement('br'));
-        container.appendChild(input);
-    }
-}
-
 function toggleAllStudents(checked) { 
     document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = checked); 
     document.querySelectorAll('.group-select-all-checkbox').forEach(cb => cb.checked = checked);
@@ -352,7 +365,7 @@ function selectGroupMembers(groupId) {
 }
 
 // ==========================================
-// 5.1. تاریخ (انتخابگر روز، ماه، سال)
+// 6. تاریخ (انتخابگر روز، ماه، سال)
 // ==========================================
 function initDateDropdowns() {
     const daySelect = document.getElementById('dateDay');
@@ -392,7 +405,6 @@ function initDateDropdowns() {
     yearSelect.addEventListener('change', updateDate);
 }
 
-// تاریخ حضور و غیاب
 function initAttendanceDateDropdowns() {
     const daySelect = document.getElementById('attDateDay');
     const monthSelect = document.getElementById('attDateMonth');
@@ -413,25 +425,6 @@ function initAttendanceDateDropdowns() {
     daySelect.value = '';
     monthSelect.value = '';
     yearSelect.value = '';
-    document.getElementById('attendanceDate').value = '';
-
-    const updateDate = () => {
-        const d = daySelect.value;
-        const m = monthSelect.value;
-        const y = yearSelect.value;
-        if (d && m && y) {
-            document.getElementById('attendanceDate').value = jalaliToDateString(y, m, d);
-            loadAttendanceList(); // با تغییر تاریخ، لیست را آپدیت کن
-        }
-        
-        daySelect.classList.remove('input-error');
-        monthSelect.classList.remove('input-error');
-        yearSelect.classList.remove('input-error');
-    };
-
-    daySelect.addEventListener('change', updateDate);
-    monthSelect.addEventListener('change', updateDate);
-    yearSelect.addEventListener('change', updateDate);
 }
 
 function jalaliToDateString(jy, jm, jd) {
@@ -439,22 +432,113 @@ function jalaliToDateString(jy, jm, jd) {
 }
 
 // ==========================================
-// 5.2. منطق حضور و غیاب
+// 7. منطق جلسات (روزهای آموزشی)
 // ==========================================
-async function loadAttendanceList() {
-    const container = document.getElementById('attendance-students-list');
-    const dateStr = document.getElementById('attendanceDate').value;
-    
-    if (!container) return;
-    
-    // اگر تاریخ انتخاب نشده، لیست را خالی کن
-    if (!dateStr) {
-        container.innerHTML = '<p style="text-align:center; color:#64748b;">ابتدا تاریخ را انتخاب کنید.</p>';
+async function createSession() {
+    const d = document.getElementById('attDateDay').value;
+    const m = document.getElementById('attDateMonth').value;
+    const y = document.getElementById('attDateYear').value;
+
+    if (!d || !m || !y) {
+        document.getElementById('attDateDay').classList.add('input-error');
+        document.getElementById('attDateMonth').classList.add('input-error');
+        document.getElementById('attDateYear').classList.add('input-error');
+        alert('لطفاً ابتدا تاریخ روز آموزشی را به طور کامل انتخاب کنید.');
         return;
     }
 
-    container.innerHTML = '<p style="text-align:center;">در حال بارگذاری...</p>';
+    const dateStr = jalaliToDateString(y, m, d);
+
+    try {
+        // بررسی اینکه آیا این تاریخ قبلاً ثبت شده است یا خیر
+        const allSessions = await getAllData('sessions');
+        const existing = allSessions.find(s => s.date === dateStr);
+
+        if (existing) {
+            alert('این روز آموزشی قبلاً ثبت شده است.');
+            return;
+        }
+
+        await saveData('sessions', { date: dateStr });
+        alert('روز آموزشی با موفقیت ثبت شد!');
+        
+        // پاک کردن فیلدها
+        document.getElementById('attDateDay').value = '';
+        document.getElementById('attDateMonth').value = '';
+        document.getElementById('attDateYear').value = '';
+        document.getElementById('attDateDay').classList.remove('input-error');
+        document.getElementById('attDateMonth').classList.remove('input-error');
+        document.getElementById('attDateYear').classList.remove('input-error');
+
+        loadSessions();
+    } catch (e) {
+        console.error(e);
+        alert('خطا در ثبت روز آموزشی!');
+    }
+}
+
+async function loadSessions() {
+    const container = document.getElementById('sessions-list');
+    if (!container) return;
+
+    try {
+        const sessions = await getAllData('sessions');
+        // مرتب‌سازی بر اساس تاریخ (نزولی)
+        sessions.sort((a, b) => b.date.localeCompare(a.date));
+
+        if (sessions.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#64748b;">هنوز روز آموزشی ثبت نشده است.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        sessions.forEach(session => {
+            container.innerHTML += `
+                <div class="list-item" onclick="openAttendanceForm(${session.id}, '${session.date}')" style="cursor: pointer;">
+                    <span><strong>📅 ${session.date}</strong></span>
+                    <button class="btn btn-primary btn-sm">ثبت حضور و غیاب</button>
+                </div>
+            `;
+        });
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = '<p style="color:red; text-align:center;">خطا در بارگذاری روزها.</p>';
+    }
+}
+
+// ==========================================
+// 8. منطق حضور و غیاب در جلسه
+// ==========================================
+async function openAttendanceForm(sessionId, dateStr) {
+    currentSessionId = sessionId;
+    currentSessionDate = dateStr;
     
+    const formSection = document.getElementById('attendance-form-section');
+    const title = document.getElementById('attendance-form-title');
+    
+    title.textContent = `📝 ثبت حضور و غیاب - ${dateStr}`;
+    formSection.style.display = 'block';
+    
+    // اسکرول به فرم
+    formSection.scrollIntoView({ behavior: 'smooth' });
+
+    // بارگذاری وضعیت فعلی
+    await loadAttendanceStudents(sessionId);
+}
+
+function closeAttendanceForm() {
+    document.getElementById('attendance-form-section').style.display = 'none';
+    currentSessionId = null;
+    currentSessionDate = null;
+    currentAttendanceState = {};
+}
+
+async function loadAttendanceStudents(sessionId) {
+    const container = document.getElementById('attendance-students-list');
+    if (!container) return;
+
+    container.innerHTML = '<p style="text-align:center;">در حال بارگذاری...</p>';
+
     try {
         const students = await getAllData('students');
         if (students.length === 0) {
@@ -462,72 +546,124 @@ async function loadAttendanceList() {
             return;
         }
 
-        // دریافت رکوردهای حضور و غیاب برای این تاریخ
         const allAttendance = await getAllData('attendance');
-        const dateRecords = allAttendance.filter(a => a.date === dateStr);
-        
+        const sessionRecords = allAttendance.filter(a => a.sessionId === sessionId);
+
         // ذخیره وضعیت فعلی در متغیر سراسری
         currentAttendanceState = {};
-        dateRecords.forEach(r => {
+        sessionRecords.forEach(r => {
             currentAttendanceState[r.studentId] = r.status;
         });
 
-        container.innerHTML = '';
-        students.forEach(st => {
-            const currentStatus = currentAttendanceState[st.id] || 'present'; // پیش‌فرض حاضر
-            container.innerHTML += `
-                <div class="attendance-student-row">
-                    <div class="attendance-student-name">${st.firstName} ${st.lastName}</div>
-                    <div class="att-btn-group">
-                        <button type="button" class="att-btn present ${currentStatus === 'present' ? 'active' : ''}" onclick="setAttendanceStatus(${st.id}, 'present', this)">🟢 حاضر</button>
-                        <button type="button" class="att-btn absent ${currentStatus === 'absent' ? 'active' : ''}" onclick="setAttendanceStatus(${st.id}, 'absent', this)">🔴 غایب</button>
-                        <button type="button" class="att-btn late ${currentStatus === 'late' ? 'active' : ''}" onclick="setAttendanceStatus(${st.id}, 'late', this)">🟡 تأخیر</button>
-                    </div>
-                </div>
-            `;
-        });
+        // رندر دکمه‌ها
+        renderAttendanceButtons();
+
     } catch (e) {
         console.error(e);
-        container.innerHTML = '<p style="text-align:center; color:red;">خطا در بارگذاری.</p>';
+        container.innerHTML = '<p style="text-align:center; color:red;">خطا در بارگذاری لیست.</p>';
     }
 }
 
-function setAttendanceStatus(studentId, status, btnElement) {
-    // به‌روزرسانی متغیر موقت
-    currentAttendanceState[studentId] = status;
+// ادامه در قسمت ۲ (بخش ۳.۲)...
 
-    // به‌روزرسانی ظاهر دکمه‌ها
+// ==========================================
+// 8.1. رندر دکمه‌های حضور و غیاب
+// ==========================================
+function renderAttendanceButtons() {
+    const container = document.getElementById('attendance-students-list');
+    if (!container) return;
+
+    const students = window.allStudentsData || [];
+    const groups = window.allGroupsData || [];
+
+    if (students.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ دانش‌آموزی ثبت نشده است.</p>';
+        return;
+    }
+
+    container.innerHTML = '';
+
+    // تابع کمکی برای ساخت ردیف دانش‌آموز
+    const createStudentRow = (st) => {
+        const currentStatus = currentAttendanceState[st.id] || 'present'; // پیش‌فرض حاضر
+        return `
+            <div class="attendance-student-row">
+                <div class="attendance-student-name">${st.firstName} ${st.lastName}</div>
+                <div class="att-btn-group">
+                    <button type="button" class="att-btn present ${currentStatus === 'present' ? 'active' : ''}" onclick="setAttendanceStatus(${st.id}, 'present', this)">🟢 حاضر</button>
+                    <button type="button" class="att-btn absent ${currentStatus === 'absent' ? 'active' : ''}" onclick="setAttendanceStatus(${st.id}, 'absent', this)">🔴 غایب</button>
+                    <button type="button" class="att-btn late ${currentStatus === 'late' ? 'active' : ''}" onclick="setAttendanceStatus(${st.id}, 'late', this)">🟡 تأخیر</button>
+                </div>
+            </div>
+        `;
+    };
+
+    if (currentAttView === 'flat') {
+        students.forEach(st => { container.innerHTML += createStudentRow(st); });
+    } else {
+        // نمای گروهی
+        if (groups.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#dc2626;">هیچ گروهی ساخته نشده است.</p>';
+            return;
+        }
+
+        groups.forEach(g => {
+            const groupStudents = students.filter(st => st.groupId === g.id);
+            if (groupStudents.length === 0) return;
+
+            let groupHtml = `
+                <details class="group-accordion" open>
+                    <summary>${g.symbol} ${g.name} (${groupStudents.length} نفر)</summary>
+                    <div class="group-students-container">
+            `;
+            groupStudents.forEach(st => { groupHtml += createStudentRow(st); });
+            groupHtml += `</div></details>`;
+            container.innerHTML += groupHtml;
+        });
+    }
+}
+
+function switchAttView(view) {
+    currentAttView = view;
+    document.getElementById('btnAttFlatView').classList.toggle('active', view === 'flat');
+    document.getElementById('btnAttGroupView').classList.toggle('active', view === 'grouped');
+    renderAttendanceButtons();
+}
+
+function setAttendanceStatus(studentId, status, btnElement) {
+    currentAttendanceState[studentId] = status;
     const parent = btnElement.parentElement;
     parent.querySelectorAll('.att-btn').forEach(btn => btn.classList.remove('active'));
     btnElement.classList.add('active');
 }
 
+function setAllAttendance(status) {
+    const students = window.allStudentsData || [];
+    students.forEach(st => { currentAttendanceState[st.id] = status; });
+    renderAttendanceButtons();
+}
+
 async function saveAttendance() {
-    const dateStr = document.getElementById('attendanceDate').value;
-    if (!dateStr) {
-        alert('لطفاً ابتدا تاریخ را انتخاب کنید.');
-        document.getElementById('attDateDay').classList.add('input-error');
-        document.getElementById('attDateMonth').classList.add('input-error');
-        document.getElementById('attDateYear').classList.add('input-error');
+    if (!currentSessionId) {
+        alert('ابتدا یک روز آموزشی را از لیست انتخاب کنید.');
         return;
     }
 
     try {
         const allAttendance = await getAllData('attendance');
-        const existingRecords = allAttendance.filter(a => a.date === dateStr);
+        const sessionRecords = allAttendance.filter(a => a.sessionId === currentSessionId);
 
-        // برای هر دانش‌آموز، رکورد را ذخیره یا آپدیت کن
         for (const studentId in currentAttendanceState) {
             const status = currentAttendanceState[studentId];
-            const existing = existingRecords.find(r => r.studentId == studentId);
+            const existing = sessionRecords.find(r => r.studentId == studentId);
 
             if (existing) {
                 existing.status = status;
                 await saveData('attendance', existing);
             } else {
                 await saveData('attendance', {
+                    sessionId: currentSessionId,
                     studentId: parseInt(studentId),
-                    date: dateStr,
                     status: status
                 });
             }
@@ -540,10 +676,8 @@ async function saveAttendance() {
     }
 }
 
-// ادامه در قسمت ۲ (بخش ۳.۳)...
-
 // ==========================================
-// 6. پیش‌نمایش و ثبت (با پشتیبانی از ثبت و نفر بعدی)
+// 9. پیش‌نمایش و ثبت ارزشیابی (با پشتیبانی از ثبت و نفر بعدی)
 // ==========================================
 function showPreview(isFinal) {
     isSaveAndNext = !isFinal; 
@@ -664,7 +798,7 @@ async function confirmAndSaveRecord() {
 }
 
 // ==========================================
-// 7. سیستم جایگاه‌ها و نشان‌ها
+// 10. سیستم جایگاه‌ها و نشان‌ها
 // ==========================================
 async function loadBadgesSettings() {
     try {
@@ -842,7 +976,7 @@ async function loadQuranRewards() {
 }
 
 // ==========================================
-// 8. گزارشات (با مرتب‌سازی)
+// 11. گزارشات (با مرتب‌سازی)
 // ==========================================
 function changeReportFilter(filter, btn) {
     currentReportFilter = filter;
@@ -980,7 +1114,7 @@ async function generateReports() {
 }
 
 // ==========================================
-// 9. پشتیبان‌گیری
+// 12. پشتیبان‌گیری
 // ==========================================
 async function exportData() {
     try {
@@ -1006,7 +1140,7 @@ async function importData(event) {
 }
 
 // ==========================================
-// 10. Service Worker
+// 13. Service Worker
 // ==========================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
