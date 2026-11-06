@@ -402,8 +402,8 @@ function addLevelRow(name = '', score = '') {
     const row = document.createElement('div');
     row.className = 'level-row-input';
     row.innerHTML = `
-        <input type="text" class="form-control level-name" placeholder="نام سطح" value="${name}" required>
-        <input type="number" class="form-control level-score" placeholder="امتیاز" value="${score}" required>
+        <input type="text" class="form-control level-name" placeholder="نام سطح" value="${name}">
+        <input type="number" class="form-control level-score" placeholder="امتیاز" value="${score}">
         <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✖</button>
     `;
     container.appendChild(row);
@@ -448,17 +448,18 @@ async function saveItem(e) {
     
     let itemData = { title, type };
     if (id) itemData.id = parseInt(id);
-    else itemData.id = Date.now(); // تولید ID برای آیتم جدید
+    else itemData.id = Date.now();
     
     if (type === 'level') {
+        itemData.placeholder = document.getElementById('itemLevelPlaceholder').value || 'انتخاب سطح عملکرد:';
         const levels = [];
         const rows = document.querySelectorAll('#levels-container .level-row-input');
         rows.forEach(row => {
-            const name = row.querySelector('.level-name').value;
+            const name = row.querySelector('.level-name').value.trim();
             const score = parseInt(row.querySelector('.level-score').value);
             if (name && !isNaN(score)) levels.push({ name, score });
         });
-        if (levels.length === 0) { showToast('حداقل یک سطح تعریف کنید.', 'error'); return; }
+        if (levels.length === 0) { showToast('حداقل یک سطح با نام و امتیاز تعریف کنید.', 'error'); return; }
         itemData.levels = levels;
     } else if (type === 'count') {
         itemData.unitScore = parseInt(document.getElementById('itemUnitScore').value);
@@ -474,7 +475,7 @@ async function saveItem(e) {
         assessmentItems = await getAllData('assessmentItems');
         window.allAssessmentItems = assessmentItems;
         renderItemsList();
-        // آپدیت منوی انتخاب در فرم ثبت
+        
         const itemSelect = document.getElementById('recordItem');
         if (itemSelect) itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + assessmentItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
     } catch (error) {
