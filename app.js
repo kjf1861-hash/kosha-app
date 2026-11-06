@@ -318,7 +318,6 @@ function selectGroupMembers(groupId) {
         });
     }
 }
-
 // ==========================================
 // 6. تاریخ
 // ==========================================
@@ -730,7 +729,6 @@ async function confirmAndSaveRecord() {
         }
     } catch (error) { alert('خطا!'); closePreviewModal(); }
 }
-
 // ==========================================
 // 11. جایگاه‌ها و نشان‌ها
 // ==========================================
@@ -871,6 +869,12 @@ async function generateReports() {
     if (!container) return;
     container.innerHTML = '<p style="text-align:center;">در حال محاسبه...</p>';
     try {
+        // اصلاح بهینه‌سازی: بررسی خالی بودن متغیرهای سراسری
+        if (!window.allStudentsData || !window.allGroupsData) {
+            window.allStudentsData = await getAllData('students');
+            window.allGroupsData = await getAllData('groups');
+        }
+
         const students = await getAllData('students'), records = await getAllData('records'), groups = await getAllData('groups');
         const topStudent = await getDataById('badgesSettings', 'topStudent') || { icon: '👑', title: 'شاگرد اول' };
         const sortCriteria = document.getElementById('sortCriteriaSelect') ? document.getElementById('sortCriteriaSelect').value : 'score';
@@ -1048,7 +1052,7 @@ async function importData(event) {
     const reader = new FileReader();
     reader.onload = async (e) => {
         try { const data = JSON.parse(e.target.result); await importAllData(data); alert('بازیابی شد!'); loadAllData(); }
-        catch (err) { alert('فایل نامعتبر!'); }
+        catch (err) { alert('فایل نامعتبر! تغییرات لغو شد.'); }
     };
     reader.readAsText(file);
 }
