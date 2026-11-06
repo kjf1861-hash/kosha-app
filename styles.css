@@ -1,15 +1,19 @@
 /* =========================================
-   متغیرهای اصلی
+   متغیرهای اصلی (حالت روشن)
    ========================================= */
 :root {
     --primary: #4A90E2;
     --primary-dark: #357ABD;
     --primary-light: #eef2ff;
     --bg-color: #f0f4f8;
+    --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #e6eef8 100%);
     --card-bg: rgba(255, 255, 255, 0.85);
     --text-main: #1e293b;
     --text-muted: #64748b;
     --border-color: rgba(203, 213, 225, 0.6);
+    --input-bg: rgba(241, 245, 249, 0.8);
+    --input-focus-bg: #ffffff;
+    --nav-bg: rgba(255, 255, 255, 0.95);
     
     --arf-bg: #FFF8E1;
     --arf-border: #f59e0b;
@@ -22,16 +26,42 @@
     --radius-lg: 24px;
 }
 
+/* =========================================
+   متغیرهای حالت شب (Dark Mode)
+   ========================================= */
+[data-theme="dark"] {
+    --primary: #5AA1F5;
+    --primary-dark: #4A90E2;
+    --primary-light: #1e3a5f;
+    --bg-color: #0f172a;
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    --card-bg: rgba(30, 41, 59, 0.85);
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border-color: rgba(71, 85, 105, 0.6);
+    --input-bg: rgba(15, 23, 42, 0.6);
+    --input-focus-bg: #1e293b;
+    --nav-bg: rgba(15, 23, 42, 0.95);
+    
+    --arf-bg: rgba(245, 158, 11, 0.15);
+    --arf-border: #f59e0b;
+    
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 body {
     margin: 0; padding: 0;
     font-family: Tahoma, 'Segoe UI', Arial, sans-serif;
-    background: linear-gradient(135deg, #f0f4f8 0%, #e6eef8 100%);
+    background: var(--bg-gradient);
     background-attachment: fixed;
     color: var(--text-main);
     line-height: 1.7; direction: rtl;
     overflow-x: hidden; width: 100%; min-height: 100vh;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 h1, h2, h3, h4, p { margin-top: 0; }
@@ -39,6 +69,9 @@ h1, h2, h3, h4, p { margin-top: 0; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
 
+/* =========================================
+   هدر اپلیکیشن و دکمه تغییر تم
+   ========================================= */
 .app-header {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: white; padding: 28px 16px; text-align: center;
@@ -54,38 +87,66 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .app-header h1 { margin: 0; font-size: 1.9rem; position: relative; z-index: 1; letter-spacing: -0.5px; }
 .app-header p { margin: 6px 0 0 0; font-size: 1rem; opacity: 0.9; position: relative; z-index: 1; }
 
+.theme-toggle {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+}
+.theme-toggle:active { transform: scale(0.9); }
+.theme-toggle:hover { background: rgba(255, 255, 255, 0.3); }
+
 .container { padding: 0 16px 100px 16px; max-width: 600px; margin: 0 auto; width: 100%; }
 
+/* =========================================
+   کارت‌ها
+   ========================================= */
 .card {
     background: var(--card-bg);
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     border-radius: var(--radius-md); padding: 20px; margin-bottom: 16px;
     box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
-    width: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
 }
 .card-title {
-    font-size: 1.15rem; font-weight: bold; color: var(--primary-dark);
+    font-size: 1.15rem; font-weight: bold; color: var(--primary);
     margin-bottom: 16px; border-bottom: 2px dashed var(--primary-light);
     padding-bottom: 12px; display: flex; align-items: center; gap: 8px;
 }
 
+/* =========================================
+   فرم‌ها
+   ========================================= */
 .form-group { margin-bottom: 16px; width: 100%; }
 .form-label { display: block; margin-bottom: 8px; font-size: 0.95rem; font-weight: bold; color: var(--text-main); }
 .form-control {
     width: 100%; padding: 14px; border: 2px solid transparent;
     border-radius: var(--radius-sm); font-family: inherit; font-size: 1rem;
-    color: var(--text-main); background-color: rgba(241, 245, 249, 0.8);
+    color: var(--text-main); background-color: var(--input-bg);
     transition: all 0.25s ease; outline: none;
 }
 .form-control:focus {
-    border-color: var(--primary); background-color: #fff;
+    border-color: var(--primary); background-color: var(--input-focus-bg);
     box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.15); transform: translateY(-1px);
 }
 
 .input-error {
     border-color: #dc2626 !important;
-    background-color: #fef2f2 !important;
-    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1) !important;
+    background-color: rgba(220, 38, 38, 0.1) !important;
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15) !important;
     animation: shake 0.3s ease-in-out;
 }
 
@@ -102,6 +163,9 @@ select.form-control {
     background-size: 12px; padding-left: 36px;
 }
 
+/* =========================================
+   دکمه‌ها
+   ========================================= */
 .btn {
     display: inline-flex; align-items: center; justify-content: center;
     padding: 14px 22px; border: none; border-radius: var(--radius-sm);
@@ -120,39 +184,44 @@ select.form-control {
 .btn:active { transform: scale(0.97); }
 .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3); }
 .btn-primary:hover { box-shadow: 0 6px 18px rgba(74, 144, 226, 0.45); }
-.btn-secondary { background: rgba(203, 213, 225, 0.5); color: var(--text-main); }
-.btn-secondary:hover { background: rgba(203, 213, 225, 0.8); }
+.btn-secondary { background: var(--border-color); color: var(--text-main); }
+.btn-secondary:hover { opacity: 0.8; }
 .btn-danger { background: rgba(254, 226, 226, 0.8); color: #dc2626; }
+[data-theme="dark"] .btn-danger { background: rgba(220, 38, 38, 0.2); }
 .btn-block { width: 100%; }
 .btn-sm { padding: 6px 12px; font-size: 0.85rem; border-radius: 8px; }
 .mt-4 { margin-top: 12px; }
 
 .checkbox-group {
     display: flex; align-items: center; gap: 10px;
-    padding: 12px; background: rgba(255, 248, 225, 0.4);
+    padding: 12px; background: var(--arf-bg);
     border-radius: var(--radius-sm); border: 1px dashed var(--arf-border);
 }
 .checkbox-group input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--primary); cursor: pointer; }
 
 .list-group { display: flex; flex-direction: column; gap: 10px; }
 .list-item {
-    background: rgba(255, 255, 255, 0.7); padding: 14px 18px;
+    background: var(--card-bg); padding: 14px 18px;
     border-radius: var(--radius-sm); border: 1px solid var(--border-color);
     display: flex; justify-content: space-between; align-items: center;
     gap: 10px; transition: all 0.2s;
 }
-.list-item:hover { background: #fff; box-shadow: var(--shadow-sm); }
+.list-item:hover { background: var(--card-bg); box-shadow: var(--shadow-sm); }
 
-.arf-badge { background-color: var(--arf-bg); border-right: 4px solid var(--arf-border); padding: 8px 12px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 8px; font-weight: bold; color: #b45309; margin-top: 8px; }
-.rank-badge { display: inline-flex; align-items: center; background: var(--primary-light); color: var(--primary-dark); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; white-space: nowrap; }
-.top-student-row { background: linear-gradient(90deg, rgba(255, 248, 225, 0.9) 0%, rgba(255, 235, 195, 0.9) 100%) !important; border-right: 4px solid var(--arf-border) !important; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15); }
+.arf-badge { background-color: var(--arf-bg); border-right: 4px solid var(--arf-border); padding: 8px 12px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 8px; font-weight: bold; color: var(--arf-border); margin-top: 8px; }
+.rank-badge { display: inline-flex; align-items: center; background: var(--primary-light); color: var(--text-main); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; white-space: nowrap; }
+.top-student-row { background: linear-gradient(90deg, var(--arf-bg) 0%, rgba(245, 158, 11, 0.3) 100%) !important; border-right: 4px solid var(--arf-border) !important; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15); }
 
+/* =========================================
+   منوی پایین
+   ========================================= */
 .bottom-nav {
     position: fixed; bottom: 0; left: 0; right: 0;
-    background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px);
+    background: var(--nav-bg); backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px); display: flex; justify-content: space-around;
     padding: 8px 0 12px 0; box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
     z-index: 100; border-top: 1px solid var(--border-color);
+    transition: background 0.3s ease;
 }
 .nav-item {
     display: flex; flex-direction: column; align-items: center;
@@ -165,6 +234,9 @@ select.form-control {
 .nav-item.active .icon { transform: translateY(-3px) scale(1.15); }
 .nav-item.active::before { content: ''; position: absolute; top: 0; width: 30px; height: 3px; background: var(--primary); border-radius: 0 0 4px 4px; }
 
+/* =========================================
+   مودال‌ها
+   ========================================= */
 .modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
@@ -173,7 +245,7 @@ select.form-control {
 }
 .modal-overlay.show { opacity: 1; visibility: visible; }
 .modal-content {
-    background: #fff; width: 90%; max-width: 420px;
+    background: var(--input-focus-bg); width: 90%; max-width: 420px;
     border-radius: var(--radius-lg); padding: 24px;
     box-shadow: var(--shadow-lg); transform: scale(0.9) translateY(20px);
     transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -182,19 +254,19 @@ select.form-control {
 .modal-overlay.show .modal-content { transform: scale(1) translateY(0); }
 .modal-header {
     font-size: 1.3rem; font-weight: bold; margin-bottom: 20px;
-    text-align: center; color: var(--primary-dark);
+    text-align: center; color: var(--primary);
     padding-bottom: 12px; border-bottom: 2px dashed var(--primary-light);
 }
 .modal-footer { display: flex; gap: 10px; margin-top: 24px; }
 
 .preview-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border-color); font-size: 0.95rem; }
 .preview-row:last-child { border-bottom: none; }
-.preview-row strong { color: var(--primary-dark); }
+.preview-row strong { color: var(--primary); }
 
 .toast-container {
     position: fixed; bottom: 90px; left: 50%;
     transform: translateX(-50%) translateY(20px);
-    background: #1e293b; color: white; padding: 14px 22px;
+    background: var(--text-main); color: var(--bg-color); padding: 14px 22px;
     border-radius: 30px; box-shadow: var(--shadow-lg);
     display: flex; align-items: center; gap: 12px;
     z-index: 3000; opacity: 0; visibility: hidden; transition: all 0.3s ease;
@@ -202,17 +274,20 @@ select.form-control {
 .toast-container.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
 .toast-btn { background: var(--primary); border: none; color: white; padding: 8px 16px; border-radius: 20px; font-family: inherit; font-size: 0.9rem; cursor: pointer; font-weight: bold; }
 
+/* =========================================
+   لیست دانش‌آموزان و گروه‌ها
+   ========================================= */
 .student-checkbox-list {
     max-height: 300px; overflow-y: auto;
     border: 1px solid var(--border-color); border-radius: var(--radius-sm);
-    padding: 12px; background: rgba(248, 250, 252, 0.8);
+    padding: 12px; background: var(--input-bg);
 }
 .student-checkbox-item {
     display: flex; align-items: center; gap: 10px;
-    padding: 10px 8px; border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+    padding: 10px 8px; border-bottom: 1px solid var(--border-color);
     cursor: pointer; border-radius: 6px; transition: background 0.15s;
 }
-.student-checkbox-item:hover { background: rgba(74, 144, 226, 0.05); }
+.student-checkbox-item:hover { background: var(--primary-light); }
 .student-checkbox-item:last-child { border-bottom: none; }
 .student-checkbox-item input { accent-color: var(--primary); width: 18px; height: 18px; }
 
@@ -223,12 +298,12 @@ details.group-accordion {
     margin-bottom: 10px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    background: #fff;
+    background: var(--card-bg);
     overflow: hidden;
 }
 details.group-accordion summary {
     padding: 12px;
-    background: rgba(241, 245, 249, 0.7);
+    background: var(--input-bg);
     font-weight: bold;
     cursor: pointer;
     list-style: none;
@@ -246,84 +321,38 @@ details.group-accordion summary::after {
 details.group-accordion[open] summary::after {
     transform: rotate(180deg);
 }
-.group-header-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.group-students-container {
-    padding: 10px;
-    border-top: 1px solid var(--border-color);
-}
+.group-header-checkbox { display: flex; align-items: center; gap: 8px; }
+.group-students-container { padding: 10px; border-top: 1px solid var(--border-color); }
 
-/* استایل‌های حضور و غیاب */
-.attendance-list-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-height: 400px;
-    overflow-y: auto;
-    padding: 5px;
-}
-.attendance-student-row {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 12px;
-    background: #f8fafc;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-}
-@media (min-width: 400px) {
-    .attendance-student-row {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-    }
-}
-.attendance-student-name {
-    font-weight: bold;
-    font-size: 0.95rem;
-}
-.att-btn-group {
-    display: flex;
-    gap: 5px;
-    width: 100%;
-}
-.att-btn {
-    flex: 1;
-    padding: 8px 5px;
-    border: 2px solid #e2e8f0;
-    background: #fff;
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 0.85rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: var(--text-muted);
-    text-align: center;
-}
-.att-btn.present.active { background: #dcfce7; color: #15803d; border-color: #22c55e; }
-.att-btn.absent.active { background: #fee2e2; color: #b91c1c; border-color: #ef4444; }
-.att-btn.late.active { background: #fef3c7; color: #b45309; border-color: #f59e0b; }
+/* =========================================
+   حضور و غیاب
+   ========================================= */
+.attendance-list-container { display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding: 5px; }
+.attendance-student-row { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); }
+@media (min-width: 400px) { .attendance-student-row { flex-direction: row; justify-content: space-between; align-items: center; } }
+.attendance-student-name { font-weight: bold; font-size: 0.95rem; }
+.att-btn-group { display: flex; gap: 5px; width: 100%; }
+.att-btn { flex: 1; padding: 8px 5px; border: 2px solid var(--border-color); background: var(--card-bg); border-radius: 8px; font-family: inherit; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: all 0.2s; color: var(--text-muted); text-align: center; }
+.att-btn.present.active { background: rgba(34, 197, 94, 0.2); color: #15803d; border-color: #22c55e; }
+.att-btn.absent.active { background: rgba(239, 68, 68, 0.2); color: #b91c1c; border-color: #ef4444; }
+.att-btn.late.active { background: rgba(245, 158, 11, 0.2); color: #b45309; border-color: #f59e0b; }
+[data-theme="dark"] .att-btn.present.active { color: #4ade80; }
+[data-theme="dark"] .att-btn.absent.active { color: #f87171; }
+[data-theme="dark"] .att-btn.late.active { color: #fbbf24; }
 
-.att-report-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: bold;
-    margin: 2px;
-}
-.att-report-badge.present { background: #dcfce7; color: #15803d; }
-.att-report-badge.absent { background: #fee2e2; color: #b91c1c; }
-.att-report-badge.late { background: #fef3c7; color: #b45309; }
+.att-report-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; margin: 2px; }
+.att-report-badge.present { background: rgba(34, 197, 94, 0.2); color: #15803d; }
+.att-report-badge.absent { background: rgba(239, 68, 68, 0.2); color: #b91c1c; }
+.att-report-badge.late { background: rgba(245, 158, 11, 0.2); color: #b45309; }
+[data-theme="dark"] .att-report-badge.present { color: #4ade80; }
+[data-theme="dark"] .att-report-badge.absent { color: #f87171; }
+[data-theme="dark"] .att-report-badge.late { color: #fbbf24; }
 
-/* استایل‌های لیست سوابق ارزشیابی */
+/* =========================================
+   سوابق ارزشیابی
+   ========================================= */
 .record-item {
-    background: #fff;
+    background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     padding: 12px 15px;
@@ -332,143 +361,59 @@ details.group-accordion[open] summary::after {
     flex-direction: column;
     gap: 8px;
 }
-.record-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-weight: bold;
-}
-.record-title {
-    color: var(--primary-dark);
-    font-size: 1.05rem;
-}
-.record-score {
-    background: var(--primary-light);
-    color: var(--primary-dark);
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-}
-.record-details {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.record-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 5px;
-    justify-content: flex-end;
-}
+.record-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+.record-title { color: var(--primary); font-size: 1.05rem; }
+.record-score { background: var(--primary-light); color: var(--text-main); padding: 4px 10px; border-radius: 20px; font-size: 0.9rem; }
+.record-details { font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
+.record-actions { display: flex; gap: 8px; margin-top: 5px; justify-content: flex-end; }
 
 /* =========================================
-   استایل‌های کارنامه (Report Card)
+   کارنامه
    ========================================= */
-.report-card-modal {
-    max-width: 600px;
-    width: 95%;
-    padding: 30px;
-    background: #fff;
-}
-.rc-header {
-    text-align: center;
-    border-bottom: 2px solid var(--primary);
-    padding-bottom: 15px;
-    margin-bottom: 20px;
-}
-.rc-header h2 {
-    margin: 0 0 5px 0;
-    color: var(--primary-dark);
-}
-.rc-header p {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: 0.9rem;
-}
-.rc-student-info {
-    background: var(--primary-light);
-    padding: 15px;
-    border-radius: var(--radius-sm);
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.rc-student-info strong {
-    font-size: 1.2rem;
-    color: var(--primary-dark);
-}
-.rc-section-title {
-    font-weight: bold;
-    color: var(--text-main);
-    margin: 20px 0 10px 0;
-    border-bottom: 1px dashed var(--border-color);
-    padding-bottom: 5px;
-}
-.rc-stats-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-.rc-stat-box {
-    flex: 1;
-    min-width: 100px;
-    text-align: center;
-    padding: 10px;
-    border-radius: var(--radius-sm);
-    background: #f8fafc;
-    border: 1px solid var(--border-color);
-}
-.rc-stat-box span {
-    display: block;
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-top: 5px;
-}
+.report-card-modal { max-width: 600px; width: 95%; padding: 30px; background: var(--input-focus-bg); }
+.rc-header { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 15px; margin-bottom: 20px; }
+.rc-header h2 { margin: 0 0 5px 0; color: var(--primary); }
+.rc-header p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
+.rc-student-info { background: var(--primary-light); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+.rc-student-info strong { font-size: 1.2rem; color: var(--primary); }
+.rc-section-title { font-weight: bold; color: var(--text-main); margin: 20px 0 10px 0; border-bottom: 1px dashed var(--border-color); padding-bottom: 5px; }
+.rc-stats-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.rc-stat-box { flex: 1; min-width: 100px; text-align: center; padding: 10px; border-radius: var(--radius-sm); background: var(--input-bg); border: 1px solid var(--border-color); }
+.rc-stat-box span { display: block; font-size: 1.5rem; font-weight: bold; margin-top: 5px; }
 .rc-stat-box.present span { color: #15803d; }
 .rc-stat-box.absent span { color: #b91c1c; }
 .rc-stat-box.late span { color: #b45309; }
-.rc-subject-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px dotted var(--border-color);
-}
-.rc-subject-row:last-child {
-    border-bottom: none;
-}
+[data-theme="dark"] .rc-stat-box.present span { color: #4ade80; }
+[data-theme="dark"] .rc-stat-box.absent span { color: #f87171; }
+[data-theme="dark"] .rc-stat-box.late span { color: #fbbf24; }
+.rc-subject-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted var(--border-color); }
+.rc-subject-row:last-child { border-bottom: none; }
 
 /* =========================================
    تنظیمات چاپ
    ========================================= */
 @media print {
-    body * {
-        visibility: hidden;
+    /* در حالت شب، حتماً باید پس‌زمینه سفید و متن سیاه چاپ شود */
+    :root, [data-theme="dark"] {
+        --bg-color: #ffffff;
+        --card-bg: #ffffff;
+        --input-bg: #ffffff;
+        --input-focus-bg: #ffffff;
+        --text-main: #000000;
+        --text-muted: #333333;
+        --border-color: #cccccc;
+        --primary: #000000;
+        --primary-dark: #000000;
+        --primary-light: #f0f0f0;
     }
-    #report-card-modal, #report-card-modal * {
-        visibility: visible;
-    }
-    #report-card-modal {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        background: white;
-    }
-    .modal-content.report-card-modal {
-        transform: none;
-        max-height: none;
-        overflow: visible;
-        box-shadow: none;
-        border: none;
-        padding: 0;
-    }
-    .no-print {
-        display: none !important;
-    }
-    /* سایر تنظیمات چاپ برای صفحات دیگر */
+
+    body * { visibility: hidden; }
+    #report-card-modal, #report-card-modal * { visibility: visible; }
+    #report-card-modal { position: absolute; left: 0; top: 0; width: 100%; background: white; }
+    .modal-content.report-card-modal { transform: none; max-height: none; overflow: visible; box-shadow: none; border: none; padding: 0; }
+    .no-print { display: none !important; }
+    
+    /* برای چاپ سایر صفحات */
     .bottom-nav, .app-header, button, .filter-btn-group, #subject-filter-container, #sortCriteriaSelect, select { display: none !important; }
     .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
     .container { padding: 0; max-width: 100%; }
