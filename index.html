@@ -216,10 +216,9 @@
                 </div>
             </div>
 
-            <!-- تب ۵: حضور و غیاب (طراحی جدید) -->
+            <!-- تب ۵: حضور و غیاب -->
             <div id="page-attendance" class="page-section">
-                
-                <!-- بخش ۱: ثبت روز آموزشی -->
+                <!-- بخش ثبت روز آموزشی -->
                 <div class="card">
                     <h2 class="card-title">📅 ثبت روز آموزشی جدید</h2>
                     <div class="form-group">
@@ -233,7 +232,7 @@
                     <button type="button" class="btn btn-primary btn-block" onclick="createSession()">➕ ثبت روز آموزشی</button>
                 </div>
 
-                <!-- بخش ۲: لیست روزهای ثبت‌شده -->
+                <!-- لیست روزهای ثبت‌شده -->
                 <div class="card">
                     <h2 class="card-title">📋 لیست روزهای ثبت‌شده</h2>
                     <div id="sessions-list" class="list-group">
@@ -241,7 +240,7 @@
                     </div>
                 </div>
 
-                <!-- بخش ۳: فرم حضور و غیاب (در ابتدا مخفی) -->
+                <!-- فرم حضور و غیاب (مخفی در ابتدا) -->
                 <div id="attendance-form-section" class="card" style="display: none;">
                     <h2 class="card-title" id="attendance-form-title">📝 ثبت حضور و غیاب</h2>
                     
@@ -291,40 +290,64 @@
                 </div>
             </div>
 
-            <!-- تب ۷: گزارشات -->
+            <!-- تب ۷: گزارشات (آپدیت شده) -->
             <div id="page-reports" class="page-section">
                 <div class="card">
-                    <h2 class="card-title">📊 گزارش امتیازات</h2>
-                    <div class="filter-btn-group">
-                        <button class="filter-btn active" data-filter="class" onclick="changeReportFilter('class', this)">🏫 کلاسی</button>
-                        <button class="filter-btn" data-filter="group" onclick="changeReportFilter('group', this)">👥 گروهی</button>
-                        <button class="filter-btn" data-filter="subject" onclick="changeReportFilter('subject', this)">📚 درسی</button>
+                    <div class="filter-btn-group" style="margin-bottom: 20px;">
+                        <button class="filter-btn active" id="btnReportScores" onclick="switchReportType('scores')">📈 گزارش امتیازات</button>
+                        <button class="filter-btn" id="btnReportAttendance" onclick="switchReportType('attendance')">📅 گزارش حضور و غیاب</button>
                     </div>
-                    <div id="subject-filter-container" style="display:none; margin-bottom: 10px;">
-                        <select id="reportSubjectSelect" class="form-control" onchange="generateReports()"></select>
+
+                    <!-- بخش گزارش امتیازات -->
+                    <div id="score-report-section">
+                        <h2 class="card-title">📊 گزارش امتیازات</h2>
+                        <div class="filter-btn-group">
+                            <button class="filter-btn active" data-filter="class" onclick="changeReportFilter('class', this)">🏫 کلاسی</button>
+                            <button class="filter-btn" data-filter="group" onclick="changeReportFilter('group', this)">👥 گروهی</button>
+                            <button class="filter-btn" data-filter="subject" onclick="changeReportFilter('subject', this)">📚 درسی</button>
+                        </div>
+                        <div id="subject-filter-container" style="display:none; margin-bottom: 10px;">
+                            <select id="reportSubjectSelect" class="form-control" onchange="generateReports()"></select>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label class="form-label">مرتب‌سازی بر اساس:</label>
+                            <select id="sortCriteriaSelect" class="form-control" onchange="generateReports()">
+                                <option value="score">📈 مجموع امتیاز (نزولی)</option>
+                                <option value="level">🏅 سطح غالب</option>
+                                <option value="count">🔢 تعداد ارزشیابی‌ها</option>
+                            </select>
+                        </div>
+                        <div id="reports-list" class="list-group"></div>
                     </div>
-                    <div style="margin-bottom: 15px;">
-                        <label class="form-label">مرتب‌سازی بر اساس:</label>
-                        <select id="sortCriteriaSelect" class="form-control" onchange="generateReports()">
-                            <option value="score">📈 مجموع امتیاز (نزولی)</option>
-                            <option value="level">🏅 سطح غالب</option>
-                            <option value="count">🔢 تعداد ارزشیابی‌ها</option>
-                        </select>
+
+                    <!-- بخش گزارش حضور و غیاب -->
+                    <div id="attendance-report-section" style="display: none;">
+                        <h2 class="card-title">📅 گزارش حضور و غیاب</h2>
+                        <div class="filter-btn-group">
+                            <button class="filter-btn active" onclick="changeAttReportFilter('class', this)">🏫 کلاسی</button>
+                            <button class="filter-btn" onclick="changeAttReportFilter('group', this)">👥 گروهی</button>
+                        </div>
+                        
+                        <div class="card" style="background: #eef2ff; margin-bottom: 15px; border: none;">
+                            <h3 style="margin: 0; text-align: center; color: var(--primary-dark);">تعداد کل روزهای آموزشی: <span id="total-sessions-count">0</span></h3>
+                        </div>
+                        
+                        <div id="attendance-reports-list" class="list-group"></div>
                     </div>
-                    <div id="reports-list" class="list-group"></div>
-                </div>
-                <div class="card">
-                    <h2 class="card-title">⚙️ پشتیبان‌گیری و چاپ</h2>
-                    <button type="button" class="btn btn-primary mt-4" onclick="exportData()">📤 خروجی JSON</button>
-                    <button type="button" class="btn btn-secondary mt-4" onclick="window.print()">🖨️ چاپ / ذخیره PDF</button>
-                    <div style="margin-top: 10px;"><label class="form-label">بازیابی:</label><input type="file" id="importFile" accept=".json" class="form-control" onchange="importData(event)"></div>
+
+                    <!-- بخش پشتیبان‌گیری -->
+                    <div class="card" style="margin-top: 20px;">
+                        <h2 class="card-title">⚙️ پشتیبان‌گیری و چاپ</h2>
+                        <button type="button" class="btn btn-primary mt-4" onclick="exportData()">📤 خروجی JSON</button>
+                        <button type="button" class="btn btn-secondary mt-4" onclick="window.print()">🖨️ چاپ / ذخیره PDF</button>
+                        <div style="margin-top: 10px;"><label class="form-label">بازیابی:</label><input type="file" id="importFile" accept=".json" class="form-control" onchange="importData(event)"></div>
+                    </div>
                 </div>
             </div>
 
         </div>
     </div>
 
-    <!-- منوی ناوبری -->
     <nav class="bottom-nav">
         <a href="#" class="nav-item active" onclick="switchPage('page-class', this)"><span class="icon">🏫</span><span>کلاس</span></a>
         <a href="#" class="nav-item" onclick="switchPage('page-subjects', this)"><span class="icon">📚</span><span>دروس</span></a>
@@ -366,7 +389,7 @@
             document.getElementById(pageId).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
             navElement.classList.add('active');
-            if (pageId === 'page-reports' && typeof generateReports === 'function') generateReports();
+            if (pageId === 'page-reports' && typeof switchReportType === 'function') switchReportType(currentReportType);
             if (pageId === 'page-badges' && typeof loadBadgesSettings === 'function') loadBadgesSettings();
             if (pageId === 'page-subjects' && typeof loadSubjectBadgeList === 'function') loadSubjectBadgeList();
             if (pageId === 'page-attendance' && typeof loadSessions === 'function') loadSessions();
