@@ -69,9 +69,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
 
-/* =========================================
-   هدر اپلیکیشن و دکمه تغییر تم
-   ========================================= */
 .app-header {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: white; padding: 28px 16px; text-align: center;
@@ -88,22 +85,11 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .app-header p { margin: 6px 0 0 0; font-size: 1rem; opacity: 0.9; position: relative; z-index: 1; }
 
 .theme-toggle {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    z-index: 10;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: white;
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.3rem;
-    cursor: pointer;
-    transition: all 0.2s;
+    position: absolute; top: 15px; left: 15px; z-index: 10;
+    background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white; width: 42px; height: 42px; border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 1.3rem; cursor: pointer; transition: all 0.2s;
     backdrop-filter: blur(4px);
 }
 .theme-toggle:active { transform: scale(0.9); }
@@ -111,9 +97,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
 
 .container { padding: 0 16px 100px 16px; max-width: 600px; margin: 0 auto; width: 100%; }
 
-/* =========================================
-   کارت‌ها
-   ========================================= */
 .card {
     background: var(--card-bg);
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -127,9 +110,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
     padding-bottom: 12px; display: flex; align-items: center; gap: 8px;
 }
 
-/* =========================================
-   فرم‌ها
-   ========================================= */
 .form-group { margin-bottom: 16px; width: 100%; }
 .form-label { display: block; margin-bottom: 8px; font-size: 0.95rem; font-weight: bold; color: var(--text-main); }
 .form-control {
@@ -163,9 +143,6 @@ select.form-control {
     background-size: 12px; padding-left: 36px;
 }
 
-/* =========================================
-   دکمه‌ها
-   ========================================= */
 .btn {
     display: inline-flex; align-items: center; justify-content: center;
     padding: 14px 22px; border: none; border-radius: var(--radius-sm);
@@ -212,9 +189,6 @@ select.form-control {
 .rank-badge { display: inline-flex; align-items: center; background: var(--primary-light); color: var(--text-main); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; white-space: nowrap; }
 .top-student-row { background: linear-gradient(90deg, var(--arf-bg) 0%, rgba(245, 158, 11, 0.3) 100%) !important; border-right: 4px solid var(--arf-border) !important; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15); }
 
-/* =========================================
-   منوی پایین
-   ========================================= */
 .bottom-nav {
     position: fixed; bottom: 0; left: 0; right: 0;
     background: var(--nav-bg); backdrop-filter: blur(12px);
@@ -234,9 +208,6 @@ select.form-control {
 .nav-item.active .icon { transform: translateY(-3px) scale(1.15); }
 .nav-item.active::before { content: ''; position: absolute; top: 0; width: 30px; height: 3px; background: var(--primary); border-radius: 0 0 4px 4px; }
 
-/* =========================================
-   مودال‌ها
-   ========================================= */
 .modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
@@ -274,9 +245,6 @@ select.form-control {
 .toast-container.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
 .toast-btn { background: var(--primary); border: none; color: white; padding: 8px 16px; border-radius: 20px; font-family: inherit; font-size: 0.9rem; cursor: pointer; font-weight: bold; }
 
-/* =========================================
-   لیست دانش‌آموزان و گروه‌ها
-   ========================================= */
 .student-checkbox-list {
     max-height: 300px; overflow-y: auto;
     border: 1px solid var(--border-color); border-radius: var(--radius-sm);
@@ -324,9 +292,6 @@ details.group-accordion[open] summary::after {
 .group-header-checkbox { display: flex; align-items: center; gap: 8px; }
 .group-students-container { padding: 10px; border-top: 1px solid var(--border-color); }
 
-/* =========================================
-   حضور و غیاب
-   ========================================= */
 .attendance-list-container { display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding: 5px; }
 .attendance-student-row { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); }
 @media (min-width: 400px) { .attendance-student-row { flex-direction: row; justify-content: space-between; align-items: center; } }
@@ -348,9 +313,6 @@ details.group-accordion[open] summary::after {
 [data-theme="dark"] .att-report-badge.absent { color: #f87171; }
 [data-theme="dark"] .att-report-badge.late { color: #fbbf24; }
 
-/* =========================================
-   سوابق ارزشیابی
-   ========================================= */
 .record-item {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
@@ -367,9 +329,6 @@ details.group-accordion[open] summary::after {
 .record-details { font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
 .record-actions { display: flex; gap: 8px; margin-top: 5px; justify-content: flex-end; }
 
-/* =========================================
-   کارنامه
-   ========================================= */
 .report-card-modal { max-width: 600px; width: 95%; padding: 30px; background: var(--input-focus-bg); }
 .rc-header { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 15px; margin-bottom: 20px; }
 .rc-header h2 { margin: 0 0 5px 0; color: var(--primary); }
@@ -390,10 +349,76 @@ details.group-accordion[open] summary::after {
 .rc-subject-row:last-child { border-bottom: none; }
 
 /* =========================================
+   استایل نمودارها (جدید)
+   ========================================= */
+.score-bar-container {
+    width: 100%;
+    height: 10px;
+    background-color: var(--border-color);
+    border-radius: 5px;
+    margin-top: 8px;
+    overflow: hidden;
+    direction: ltr; /* نوار از چپ به راست پر شود */
+}
+.score-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: 5px;
+    transition: width 0.8s ease-out;
+}
+.score-bar-fill.is-first {
+    background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%); /* طلایی برای نفر اول */
+}
+
+.att-stacked-bar-container {
+    width: 100%;
+    height: 25px;
+    background-color: var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    overflow: hidden;
+    margin-bottom: 15px;
+    direction: ltr;
+}
+.att-stacked-segment {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+    transition: width 0.8s ease-out;
+}
+.att-stacked-segment.present { background-color: #22c55e; }
+.att-stacked-segment.absent { background-color: #ef4444; }
+.att-stacked-segment.late { background-color: #f59e0b; }
+
+.att-legend {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    font-size: 0.85rem;
+}
+.att-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.att-legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+.att-legend-color.present { background-color: #22c55e; }
+.att-legend-color.absent { background-color: #ef4444; }
+.att-legend-color.late { background-color: #f59e0b; }
+
+/* =========================================
    تنظیمات چاپ
    ========================================= */
 @media print {
-    /* در حالت شب، حتماً باید پس‌زمینه سفید و متن سیاه چاپ شود */
     :root, [data-theme="dark"] {
         --bg-color: #ffffff;
         --card-bg: #ffffff;
@@ -413,7 +438,6 @@ details.group-accordion[open] summary::after {
     .modal-content.report-card-modal { transform: none; max-height: none; overflow: visible; box-shadow: none; border: none; padding: 0; }
     .no-print { display: none !important; }
     
-    /* برای چاپ سایر صفحات */
     .bottom-nav, .app-header, button, .filter-btn-group, #subject-filter-container, #sortCriteriaSelect, select { display: none !important; }
     .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
     .container { padding: 0; max-width: 100%; }
