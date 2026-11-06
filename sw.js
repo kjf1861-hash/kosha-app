@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kosha-cache-v5'; // نسخه به 5 افزایش یافت تا کش جدید لود شود
+const CACHE_NAME = 'kosha-cache-v6';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
