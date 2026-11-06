@@ -430,3 +430,1135 @@ function jalaliToDateString(jy, jm, jd) {
 }
 
 // ادامه در بخش ۲...
+
+// ==========================================
+// 7. منطق جلسات (روزهای آموزشی)
+// ==========================================
+async function createSession() {
+    const d = document.getElementById('attDateDay').value;
+    const m = document.getElementById('attDateMonth').value;
+    const y = document.getElementById('attDateYear').value;
+
+    if (!d || !m || !y) {
+        document.getElementById('attDateDay').classList.add('input-error');
+        document.getElementById('attDateMonth').classList.add('input-error');
+        document.getElementById('attDateYear').classList.add('input-error');
+        alert('لطفاً ابتدا تاریخ روز آموزشی را به طور کامل انتخاب کنید.');
+        return;
+    }
+
+    const dateStr = jalaliToDateString(y, m, d);
+
+    try {
+        const allSessions = await getAllData('sessions');
+        const existing = allSessions.find(s => s.date === dateStr);
+
+        if (existing) {
+            alert('این روز آموزشی قبلاً ثبت شده است.');
+            return;
+        }
+
+        await saveData('sessions', { date: dateStr });
+        alert('روز آموزشی با موفقیت ثبت شد!');
+        
+        document.getElementById('attDateDay').value = '';
+        document.getElementById('attDateMonth').value = '';
+        document.getElementById('attDateYear').value = '';
+        document.getElementById('attDateDay').classList.remove('input-error');
+        document.getElementById('attDateMonth').classList.remove('input-error');
+        document.getElementById('attDateYear').classList.remove('input-error');
+
+        loadSessions();
+    } catch (e) {
+        console.error(e);
+        alert('خطا در ثبت روز آموزشی!');
+    }
+}
+
+async function loadSessions() {
+    const container = document.getElementById('sessions-list');
+    if (!container) return;
+
+    try {
+        const sessions = await getAllData('sessions');
+        sessions.sort((a, b) => b.date.localeCompare(a.date));
+
+        if (sessions.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#64748b;">هنوز روز آموزشی ثبت نشده است.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        sessions.forEach(session => {
+            container.innerHTML += `
+                <div class="list-item" onclick="openAttendanceForm(${session.id}, '${session.date}')" style="cursor: pointer;">
+                    <span><strong>📅 ${session.date}</strong></span>
+                    <button class="btn btn-primary btn-sm">ثبت حضور و غیاب</button>
+                </div>
+            `;
+        });
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = '<p style="color:red; text-align:center;">خطا در بارگذاری روزها.</p>';
+    }
+}
+
+// ==========================================
+// 8. منطق حضور و غیاب در جلسه
+// ==========================================
+async function openAttendanceForm(sessionId, dateStr) {
+    currentSessionId = sessionId;
+    currentSessionDate = dateStr;
+    
+    const formSection = document.getElementById('attendance-form-section');
+    const title = document.getElementById('attendance-form-title');
+    
+    title.textContent = `📝 ثبت حضور و غیاب - ${dateStr}`;
+    formSection.style.display = 'block';
+    
+    formSection.scrollIntoView({ behavior: 'smooth' });
+    await loadAttendanceStudents(sessionId);
+}
+
+function closeAttendanceForm() {
+    document.getElementById('attendance-form-section').style.display = 'none';
+    currentSessionId = null;
+    currentSessionDate = null;
+    currentAttendanceState = {};
+}
+
+async function loadAttendanceStudents(sessionId) {
+    const container = document.getElementById('attendance-students-list');
+    if (!container) return;
+
+    container.innerHTML = '<p style="text-align:center;">در حال بارگذاری...</p>';
+
+    try {
+        const students = await getAllData('students');
+        if (students.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ دانش‌آموزی ثبت نشده است.</p>';
+            return;
+        }
+
+        const allAttendance = await getAllData('attendance');
+        const sessionRecords = allAttendance.filter(a => a.sessionId === sessionId);
+
+        currentAttendanceState = {};
+        sessionRecords.forEach(r => {
+            currentAttendanceState[r.studentId] = r.status;
+        });
+
+        renderAttendanceButtons();
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = '<p style="text-align:center; color:red;">خطا در بارگذاری لیست.</p>';
+    }
+}
+
+function renderAttendanceButtons() {
+    const container = document.getElementById('attendance-students-list');
+    if (!container) return;
+
+    const students = window.allStudentsData || [];
+    const groups = window.allGroupsData || [];
+
+    if (students.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ دانش‌آموزی ثبت نشده است.</p>';
+        return;
+    }
+
+    container.innerHTML = '';
+
+    const createStudentRow = (st) => {
+        const currentStatus = currentAttendanceState[st.id] || 'present'; 
+        return `
+            <div class="attendance-student-row">
+                <div class="attendance-student-name">${st.firstName} ${st.lastName}</div>
+                <div class="att-btn-group">
+                    <button type="button" class="att-btn present ${currentStatus === 'present' ? 'active' : ''}" onclick="setAttendanceStatus(${st.id}, 'present', this)">🟢 حاضر</button>
+                    <button type="button" class="att-btn absent ${currentStatus === 'absent' ? 'active' : ''}" onclick="setAttendanceStatus(${st.id}, 'absent', this)">🔴 غایب</button>
+                    <button type="button" class="att-btn late ${currentStatus === 'late' ? 'active' : ''}" onclick="setAttendanceStatus(${st.id}, 'late', this)">🟡 تأخیر</button>
+                </div>
+            </div>
+        `;
+    };
+
+    if (currentAttView === 'flat') {
+        students.forEach(st => { container.innerHTML += createStudentRow(st); });
+    } else {
+        if (groups.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#dc2626;">هیچ گروهی ساخته نشده است.</p>';
+            return;
+        }
+
+        groups.forEach(g => {
+            const groupStudents = students.filter(st => st.groupId === g.id);
+            if (groupStudents.length === 0) return;
+
+            let groupHtml = `
+                <details class="group-accordion" open>
+                    <summary>${g.symbol} ${g.name} (${groupStudents.length} نفر)</summary>
+                    <div class="group-students-container">
+            `;
+            groupStudents.forEach(st => { groupHtml += createStudentRow(st); });
+            groupHtml += `</div></details>`;
+            container.innerHTML += groupHtml;
+        });
+    }
+}
+
+function switchAttView(view) {
+    currentAttView = view;
+    document.getElementById('btnAttFlatView').classList.toggle('active', view === 'flat');
+    document.getElementById('btnAttGroupView').classList.toggle('active', view === 'grouped');
+    renderAttendanceButtons();
+}
+
+function setAttendanceStatus(studentId, status, btnElement) {
+    currentAttendanceState[studentId] = status;
+    const parent = btnElement.parentElement;
+    parent.querySelectorAll('.att-btn').forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
+}
+
+function setAllAttendance(status) {
+    const students = window.allStudentsData || [];
+    students.forEach(st => { currentAttendanceState[st.id] = status; });
+    renderAttendanceButtons();
+}
+
+async function saveAttendance() {
+    if (!currentSessionId) {
+        alert('ابتدا یک روز آموزشی را از لیست انتخاب کنید.');
+        return;
+    }
+
+    try {
+        const allAttendance = await getAllData('attendance');
+        const sessionRecords = allAttendance.filter(a => a.sessionId === currentSessionId);
+
+        for (const studentId in currentAttendanceState) {
+            const status = currentAttendanceState[studentId];
+            const existing = sessionRecords.find(r => r.studentId == studentId);
+
+            if (existing) {
+                existing.status = status;
+                await saveData('attendance', existing);
+            } else {
+                await saveData('attendance', {
+                    sessionId: currentSessionId,
+                    studentId: parseInt(studentId),
+                    status: status
+                });
+            }
+        }
+
+        alert('حضور و غیاب با موفقیت ذخیره شد!');
+    } catch (e) {
+        console.error(e);
+        alert('خطا در ذخیره حضور و غیاب!');
+    }
+}
+
+// ==========================================
+// 9. مدیریت سوابق ارزشیابی
+// ==========================================
+async function loadAssessmentRecords() {
+    const container = document.getElementById('assessment-records-list');
+    if (!container) return;
+
+    container.innerHTML = '<p style="text-align:center;">در حال بارگذاری...</p>';
+
+    try {
+        const records = await getAllData('records');
+        const subjects = await getAllData('subjects');
+        
+        records.sort((a, b) => b.date.localeCompare(a.date));
+
+        if (records.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#64748b;">هنوز هیچ ارزشیابی ثبت نشده است.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        records.forEach(rec => {
+            const subject = subjects.find(s => s.id === rec.subjectId);
+            const subjectName = subject ? subject.name : 'نامشخص';
+            
+            let studentNames = '';
+            if (rec.students && rec.students.length > 0) {
+                const names = rec.students.map(id => {
+                    const st = window.allStudentsData.find(s => s.id === id);
+                    return st ? `${st.firstName} ${st.lastName}` : '';
+                }).filter(n => n !== '');
+                studentNames = names.join('، ');
+            }
+
+            container.innerHTML += `
+                <div class="record-item ${rec.arf ? 'arf-list-item' : ''}">
+                    <div class="record-header">
+                        <span class="record-title">${rec.title} ${rec.arf ? '🎁' : ''}</span>
+                        <span class="record-score">${rec.finalScore} امتیاز</span>
+                    </div>
+                    <div class="record-details">
+                        <span>📚 ${subjectName} | ${rec.itemName}</span>
+                        <span>📅 ${rec.date}</span>
+                    </div>
+                    <div class="record-details" style="font-size: 0.8rem; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        👥 ${studentNames}
+                    </div>
+                    <div class="record-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="openEditRecordModal(${rec.id})">✏️ ویرایش</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteRecord(${rec.id})">🗑️ حذف</button>
+                    </div>
+                </div>
+            `;
+        });
+
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = '<p style="color:red; text-align:center;">خطا در بارگذاری سوابق.</p>';
+    }
+}
+
+async function deleteRecord(id) {
+    if (!confirm('آیا از حذف این رکورد ارزشیابی مطمئن هستید؟')) return;
+    try {
+        await deleteData('records', id);
+        alert('رکورد با موفقیت حذف شد.');
+        loadAssessmentRecords();
+        loadAllData();
+    } catch (e) {
+        console.error(e);
+        alert('خطا در حذف رکورد.');
+    }
+}
+
+async function openEditRecordModal(id) {
+    try {
+        const record = await getDataById('records', id);
+        if (!record) return;
+
+        document.getElementById('editRecordId').value = record.id;
+        document.getElementById('editRecordTitle').value = record.title;
+        document.getElementById('editRecordDate').value = record.date;
+        document.getElementById('editRecordScore').value = record.finalScore;
+
+        document.getElementById('edit-record-modal').classList.add('show');
+    } catch (e) {
+        console.error(e);
+        alert('خطا در باز کردن فرم ویرایش.');
+    }
+}
+
+function closeEditModal() {
+    document.getElementById('edit-record-modal').classList.remove('show');
+}
+
+async function saveEditedRecord() {
+    const id = parseInt(document.getElementById('editRecordId').value);
+    const newTitle = document.getElementById('editRecordTitle').value;
+    const newDate = document.getElementById('editRecordDate').value;
+    const newScore = parseInt(document.getElementById('editRecordScore').value);
+
+    if (!newTitle || !newDate || isNaN(newScore)) {
+        alert('لطفاً تمام فیلدها را به درستی پر کنید.');
+        return;
+    }
+
+    try {
+        const record = await getDataById('records', id);
+        if (!record) return;
+
+        record.title = newTitle;
+        record.date = newDate;
+        record.finalScore = newScore;
+
+        await saveData('records', record);
+        
+        alert('تغییرات با موفقیت ذخیره شد.');
+        closeEditModal();
+        loadAssessmentRecords();
+        loadAllData();
+
+    } catch (e) {
+        console.error(e);
+        alert('خطا در ذخیره تغییرات.');
+    }
+}
+
+// ادامه در بخش ۳...
+
+// ==========================================
+// 10. پیش‌نمایش و ثبت ارزشیابی
+// ==========================================
+function showPreview(isFinal) {
+    isSaveAndNext = !isFinal; 
+
+    const selectedIndex = document.getElementById('recordItem').value;
+    if (selectedIndex === "") { alert('لطفاً آیتم ارزشیابی را انتخاب کنید.'); return; }
+    const selectedItem = assessmentTree[selectedIndex];
+    let finalScore = 0;
+
+    try {
+        if (selectedItem.type === 'level1' || selectedItem.type === 'level2') {
+            const levelInput = document.getElementById('dynamicLevelInput');
+            if (!levelInput || !levelInput.value) { alert('لطفاً سطح را انتخاب کنید.'); return; }
+            finalScore = parseInt(levelInput.value) || 0;
+        } else if (selectedItem.type === 'count') {
+            finalScore = (parseInt(document.getElementById('dynamicCountInput').value) || 0) * selectedItem.factor;
+        } else if (selectedItem.type === 'fixed') {
+            finalScore = selectedItem.score;
+        } else if (selectedItem.type === 'free') {
+            finalScore = parseInt(document.getElementById('dynamicFreeInput').value) || 0;
+        } else if (selectedItem.type === 'quran') {
+            const ayat = parseInt(document.getElementById('quranAyatInput').value) || 0;
+            const total = parseInt(document.getElementById('quranSurahSelect').value) || 0;
+            const threshold = Math.ceil((total / 2) + 1);
+            finalScore = (ayat >= threshold && total > 0) ? ayat * 5 : 0;
+        }
+    } catch (e) { alert('لطفاً فیلدها را کامل کنید.'); return; }
+
+    const studentCheckboxes = document.querySelectorAll('.student-checkbox:checked');
+    if (studentCheckboxes.length === 0) { alert('لطفاً دانش‌آموز انتخاب کنید.'); return; }
+
+    const daySelect = document.getElementById('dateDay');
+    const monthSelect = document.getElementById('dateMonth');
+    const yearSelect = document.getElementById('dateYear');
+    const dateStr = document.getElementById('recordDate').value;
+    
+    daySelect.classList.remove('input-error');
+    monthSelect.classList.remove('input-error');
+    yearSelect.classList.remove('input-error');
+
+    if (!daySelect.value || !monthSelect.value || !yearSelect.value || !dateStr) {
+        if (!daySelect.value) daySelect.classList.add('input-error');
+        if (!monthSelect.value) monthSelect.classList.add('input-error');
+        if (!yearSelect.value) yearSelect.classList.add('input-error');
+        alert('لطفاً تاریخ را به طور کامل (روز، ماه و سال) انتخاب کنید.');
+        return;
+    }
+
+    document.getElementById('preview-content').innerHTML = `
+        <div class="preview-row"><strong>آیتم:</strong> <span>${selectedItem.value}</span></div>
+        <div class="preview-row"><strong>تعداد:</strong> <span>${studentCheckboxes.length} نفر</span></div>
+        <div class="preview-row"><strong>تاریخ:</strong> <span>${dateStr}</span></div>
+        <div class="preview-row" style="background: #eef2ff; padding: 10px; border-radius: 8px; margin-top: 10px;"><strong>امتیاز:</strong> <span style="font-size: 1.2rem; color: #4A90E2;">${finalScore}</span></div>
+    `;
+
+    window.tempRecordData = {
+        subjectId: parseInt(document.getElementById('recordSubject').value),
+        itemName: selectedItem.value,
+        title: document.getElementById('recordTitle').value,
+        date: dateStr,
+        students: Array.from(studentCheckboxes).map(cb => parseInt(cb.value)),
+        arf: document.getElementById('recordArf').checked,
+        finalScore: finalScore
+    };
+    document.getElementById('preview-modal').classList.add('show');
+}
+
+function closePreviewModal() { document.getElementById('preview-modal').classList.remove('show'); }
+
+async function confirmAndSaveRecord() {
+    if (!window.tempRecordData) return;
+    try {
+        await saveData('records', window.tempRecordData);
+
+        if (window.tempRecordData.itemName === "پویش حفظ قرآن کریم" && window.tempRecordData.finalScore > 0) {
+            for (const studentId of window.tempRecordData.students) {
+                const allRecords = await getAllData('records');
+                let totalSurahs = 0;
+                let totalAyats = 0;
+                allRecords.forEach(rec => {
+                    if (rec.itemName === "پویش حفظ قرآن کریم" && rec.students.includes(studentId)) {
+                        totalSurahs += 1;
+                        const match = rec.title.match(/\d+/);
+                        if (match) totalAyats += parseInt(match[0]);
+                    }
+                });
+
+                await saveData('badgesSettings', {
+                    id: `quranReward_${studentId}_${Date.now()}`,
+                    studentId: studentId,
+                    title: "تشویق شرکت در پویش حفظ جزء سی قرآن",
+                    totalSurahs: totalSurahs,
+                    totalAyats: totalAyats,
+                    date: window.tempRecordData.date
+                });
+            }
+        }
+
+        alert('ذخیره شد!'); 
+        closePreviewModal(); 
+        
+        if (isSaveAndNext) {
+            toggleAllStudents(false);
+            
+            const scoreInput = document.getElementById('dynamicLevelInput') || document.getElementById('dynamicCountInput') || document.getElementById('dynamicFreeInput');
+            if (scoreInput) scoreInput.value = '';
+            if (document.getElementById('quranSurahSelect')) document.getElementById('quranSurahSelect').value = '';
+            if (document.getElementById('quranAyatInput')) document.getElementById('quranAyatInput').value = '';
+            
+            document.getElementById('record-form').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            document.getElementById('record-form').reset(); 
+            initDateDropdowns();
+            document.getElementById('dynamic-score-section').style.display = 'none'; 
+            loadAllData();
+        }
+    } catch (error) { alert('خطا!'); closePreviewModal(); }
+}
+
+// ==========================================
+// 11. سیستم جایگاه‌ها و نشان‌ها
+// ==========================================
+async function loadBadgesSettings() {
+    try {
+        const groups = await getAllData('groups');
+        const students = await getAllData('students');
+        const records = await getAllData('records');
+
+        let maxGroupSize = 0;
+        if (groups.length > 0) { maxGroupSize = Math.max(...groups.map(g => students.filter(s => s.groupId === g.id).length)); }
+        document.getElementById('max-group-size').textContent = maxGroupSize;
+
+        const ranksSettings = await getDataById('badgesSettings', 'groupRanks') || { id: 'groupRanks', ranks: [] };
+        const container = document.getElementById('group-ranks-form-container');
+        
+        if (maxGroupSize > 0) {
+            container.innerHTML = '';
+            for (let i = 1; i <= maxGroupSize; i++) {
+                const existing = ranksSettings.ranks.find(r => r.rankNumber === i) || { rankNumber: i, icon: '', title: '', motto: '' };
+                container.innerHTML += `
+                    <div class="card" style="background: var(--input-bg); padding: 12px; margin-bottom: 10px;">
+                        <h4 style="margin: 0 0 10px 0; color: var(--primary);">جایگاه ${i}</h4>
+                        <div class="form-group"><input type="text" id="rankIcon_${i}" class="form-control" placeholder="آیکون" value="${existing.icon}" required></div>
+                        <div class="form-group"><input type="text" id="rankTitle_${i}" class="form-control" placeholder="عنوان" value="${existing.title}" required></div>
+                        <div class="form-group"><input type="text" id="rankMotto_${i}" class="form-control" placeholder="شعار" value="${existing.motto}" required></div>
+                    </div>
+                `;
+            }
+            container.innerHTML += `<button type="button" class="btn btn-primary mt-4" onclick="saveGroupRanks(${maxGroupSize})">💾 ذخیره</button>`;
+        } else {
+            container.innerHTML = '<p style="color:#64748b;">ابتدا گروه بسازید.</p>';
+        }
+
+        const topStudent = await getDataById('badgesSettings', 'topStudent');
+        if (topStudent) {
+            document.getElementById('topStudentIcon').value = topStudent.icon || '';
+            document.getElementById('topStudentTitle').value = topStudent.title || '';
+            document.getElementById('topStudentMotto').value = topStudent.motto || '';
+        }
+
+        renderLiveRanks(groups, students, records, ranksSettings.ranks, topStudent);
+        loadQuranRewards();
+
+    } catch (e) { console.log('خطا', e); }
+}
+
+async function saveGroupRanks(maxGroupSize) {
+    const ranks = [];
+    for (let i = 1; i <= maxGroupSize; i++) {
+        ranks.push({ rankNumber: i, icon: document.getElementById(`rankIcon_${i}`).value, title: document.getElementById(`rankTitle_${i}`).value, motto: document.getElementById(`rankMotto_${i}`).value });
+    }
+    await saveData('badgesSettings', { id: 'groupRanks', ranks: ranks });
+    alert('ذخیره شد!'); loadBadgesSettings();
+}
+
+async function loadSubjectBadgeList() {
+    const subjects = await getAllData('subjects');
+    const select = document.getElementById('badgeSubjectSelect');
+    if (select) select.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+}
+
+async function loadSubjectBadgeSettings() {
+    const subjectId = document.getElementById('badgeSubjectSelect').value;
+    if (!subjectId) return;
+    const badge = await getDataById('badgesSettings', `subject_${subjectId}`);
+    if (badge) {
+        document.getElementById('subjectBadgeIcon').value = badge.icon || '';
+        document.getElementById('subjectBadgeTitle').value = badge.title || '';
+        document.getElementById('subjectBadgeMotto').value = badge.motto || '';
+    } else {
+        document.getElementById('subjectBadgeIcon').value = '';
+        document.getElementById('subjectBadgeTitle').value = '';
+        document.getElementById('subjectBadgeMotto').value = '';
+    }
+}
+
+async function renderLiveRanks(groups, students, records, ranksSettings, topStudent) {
+    const container = document.getElementById('live-ranks-list');
+    if (!container) return;
+
+    const groupScores = groups.map(g => {
+        let total = 0;
+        const groupStudents = students.filter(s => s.groupId === g.id);
+        records.forEach(rec => { rec.students.forEach(id => { if (groupStudents.find(s => s.id === id)) total += rec.finalScore; }); });
+        return { ...g, totalScore: total };
+    });
+    groupScores.sort((a, b) => b.totalScore - a.totalScore);
+
+    let html = '<h3>🏆 جایگاه گروه‌ها</h3>';
+    groupScores.forEach((g, index) => {
+        const rankSetting = ranksSettings.find(r => r.rankNumber === index + 1);
+        const badge = rankSetting ? `${rankSetting.icon} ${rankSetting.title}` : '—';
+        html += `<div class="list-item"><span>${g.symbol} <strong>${g.name}</strong></span><span class="rank-badge">${badge} (${g.totalScore} امتیاز)</span></div>`;
+    });
+
+    if (students.length > 0 && topStudent) {
+        const studentScores = students.map(st => {
+            let total = 0;
+            records.forEach(rec => { if (rec.students.includes(st.id)) total += rec.finalScore; });
+            return { ...st, totalScore: total };
+        });
+        const maxScore = Math.max(...studentScores.map(s => s.totalScore));
+        const topStudents = studentScores.filter(s => s.totalScore === maxScore && maxScore > 0);
+
+        html += `<h3 style="margin-top: 20px;">🎓 شاگرد اول کلاس</h3>`;
+        if (topStudents.length > 0) {
+            topStudents.forEach(st => {
+                html += `<div class="list-item top-student-row"><span>${topStudent.icon} <strong>${st.firstName} ${st.lastName}</strong></span><span class="rank-badge">${topStudent.title} (${st.totalScore} امتیاز)</span></div>`;
+            });
+        } else { html += '<p style="color:#64748b;">هنوز امتیازی ثبت نشده است.</p>'; }
+    }
+
+    html += `<h3 style="margin-top: 20px;">🏅 شاگردان اول دروس</h3>`;
+    const subjects = await getAllData('subjects');
+    let hasSubjectBadges = false;
+    for (const subject of subjects) {
+        const badge = await getDataById('badgesSettings', `subject_${subject.id}`);
+        if (!badge) continue;
+
+        const subjectRecords = records.filter(r => r.subjectId === subject.id);
+        const subjectScores = students.map(st => {
+            let total = 0;
+            subjectRecords.forEach(rec => { if (rec.students.includes(st.id)) total += rec.finalScore; });
+            return { ...st, totalScore: total };
+        });
+        const maxScore = Math.max(...subjectScores.map(s => s.totalScore));
+        if (maxScore === 0) continue;
+        const topStudents = subjectScores.filter(s => s.totalScore === maxScore);
+        
+        hasSubjectBadges = true;
+        html += `<div class="card" style="padding: 10px; margin-bottom: 10px; background: var(--input-bg);"><h4 style="margin: 0 0 8px 0; color: var(--primary);">📖 ${subject.name}</h4>`;
+        topStudents.forEach(st => {
+            html += `<div class="list-item" style="margin-bottom: 5px;"><span>${badge.icon} <strong>${st.firstName} ${st.lastName}</strong></span><span class="rank-badge">${badge.title} (${st.totalScore} امتیاز)</span></div>`;
+        });
+        html += `</div>`;
+    }
+    if (!hasSubjectBadges) {
+        html += '<p style="color:#64748b;">برای دروس نشان تعریف نشده است.</p>';
+    }
+
+    container.innerHTML = html;
+}
+
+async function loadQuranRewards() {
+    const container = document.getElementById('quran-rewards-list');
+    if (!container) return;
+
+    try {
+        const allBadges = await getAllData('badgesSettings');
+        const quranRewards = allBadges.filter(b => b.id && b.id.startsWith('quranReward_'));
+        const students = await getAllData('students');
+
+        if (quranRewards.length === 0) {
+            container.innerHTML = '<p style="color:#64748b;">هنوز تشویقی صادر نشده است.</p>';
+            return;
+        }
+
+        const grouped = {};
+        quranRewards.forEach(reward => {
+            if (!grouped[reward.studentId]) grouped[reward.studentId] = [];
+            grouped[reward.studentId].push(reward);
+        });
+
+        let html = '';
+        for (const studentId in grouped) {
+            const student = students.find(s => s.id == studentId);
+            const studentName = student ? `${student.firstName} ${student.lastName}` : `دانش‌آموز ${studentId}`;
+            const latest = grouped[studentId][grouped[studentId].length - 1];
+            html += `<div class="list-item" style="flex-direction: column; align-items: flex-start; padding: 15px; background: var(--arf-bg); border-right: 4px solid var(--arf-border);">
+                <strong style="font-size: 1.1rem;">🏅 ${studentName}</strong>
+                <span style="font-size: 0.9rem; color: var(--arf-border);">تعداد سوره‌ها: ${latest.totalSurahs} | تعداد آیات: ${latest.totalAyats}</span>
+            </div>`;
+        }
+        container.innerHTML = html;
+    } catch (e) { container.innerHTML = '<p style="color:red;">خطا</p>'; }
+}
+
+// ==========================================
+// 12. گزارشات (تعویض نوع گزارش و نمایش نمودار)
+// ==========================================
+function switchReportType(type) {
+    currentReportType = type;
+    
+    document.getElementById('score-report-section').style.display = 'none';
+    document.getElementById('attendance-report-section').style.display = 'none';
+    document.getElementById('records-report-section').style.display = 'none';
+    
+    document.getElementById('btnReportScores').classList.remove('active');
+    document.getElementById('btnReportAttendance').classList.remove('active');
+    document.getElementById('btnReportRecords').classList.remove('active');
+
+    if (type === 'scores') {
+        document.getElementById('score-report-section').style.display = 'block';
+        document.getElementById('btnReportScores').classList.add('active');
+        generateReports();
+    } else if (type === 'attendance') {
+        document.getElementById('attendance-report-section').style.display = 'block';
+        document.getElementById('btnReportAttendance').classList.add('active');
+        generateAttendanceReports();
+    } else if (type === 'records') {
+        document.getElementById('records-report-section').style.display = 'block';
+        document.getElementById('btnReportRecords').classList.add('active');
+        loadAssessmentRecords();
+    }
+}
+
+// ------------------------------------------
+// گزارش امتیازات (با نمودار میله‌ای)
+// ------------------------------------------
+function changeReportFilter(filter, btn) {
+    currentReportFilter = filter;
+    document.querySelectorAll('#score-report-section .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    if (filter === 'subject') {
+        document.getElementById('subject-filter-container').style.display = 'block';
+    } else {
+        document.getElementById('subject-filter-container').style.display = 'none';
+    }
+    generateReports();
+}
+
+async function generateReports() {
+    const container = document.getElementById('reports-list');
+    if (!container) return;
+    container.innerHTML = '<p style="text-align:center;">در حال محاسبه...</p>';
+
+    try {
+        const students = await getAllData('students');
+        const records = await getAllData('records');
+        const groups = await getAllData('groups');
+        const topStudent = await getDataById('badgesSettings', 'topStudent') || { icon: '👑', title: 'شاگرد اول' };
+
+        const sortCriteria = document.getElementById('sortCriteriaSelect') ? document.getElementById('sortCriteriaSelect').value : 'score';
+
+        if (students.length === 0) { container.innerHTML = '<p style="text-align:center;">لیست خالی است.</p>'; return; }
+
+        const getDominantLevel = (studentRecords) => {
+            const levelCounts = { "خیلی خوب": 0, "خوب": 0, "قابل قبول": 0, "نیازمند تلاش": 0 };
+            studentRecords.forEach(rec => {
+                const item = assessmentTree.find(i => i.value === rec.itemName);
+                if (item && item.levels) {
+                    for (const [level, score] of Object.entries(item.levels)) {
+                        if (score === rec.finalScore) { levelCounts[level]++; break; }
+                    }
+                }
+            });
+            
+            let dominantLevel = null, maxFreq = 0;
+            const levelOrder = { "خیلی خوب": 4, "خوب": 3, "قابل قبول": 2, "نیازمند تلاش": 1 };
+            for (const [level, freq] of Object.entries(levelCounts)) {
+                if (freq > maxFreq || (freq === maxFreq && levelOrder[level] > (levelOrder[dominantLevel] || 0))) {
+                    maxFreq = freq; dominantLevel = level;
+                }
+            }
+            return dominantLevel;
+        };
+
+        if (currentReportFilter === 'subject') {
+            const subjectId = parseInt(document.getElementById('reportSubjectSelect').value);
+            if (!subjectId) { container.innerHTML = '<p style="text-align:center; color:#64748b;">لطفاً یک درس انتخاب کنید.</p>'; return; }
+            
+            const subjectRecords = records.filter(r => r.subjectId === subjectId);
+            let studentScores = students.map(st => {
+                let total = 0;
+                const myRecords = subjectRecords.filter(rec => rec.students.includes(st.id));
+                myRecords.forEach(rec => { total += rec.finalScore; });
+                return { ...st, totalScore: total, count: myRecords.length, dominantLevel: getDominantLevel(myRecords) };
+            });
+
+            if (sortCriteria === 'level') {
+                const order = { "خیلی خوب": 4, "خوب": 3, "قابل قبول": 2, "نیازمند تلاش": 1, null: 0 };
+                studentScores.sort((a, b) => (order[b.dominantLevel] || 0) - (order[a.dominantLevel] || 0));
+            } else if (sortCriteria === 'count') {
+                studentScores.sort((a, b) => b.count - a.count);
+            } else {
+                studentScores.sort((a, b) => b.totalScore - a.totalScore);
+            }
+
+            const maxScore = studentScores.length > 0 ? Math.max(...studentScores.map(s => s.totalScore)) : 0;
+
+            container.innerHTML = '<h3>📚 گزارش درسی</h3>' + studentScores.map((st, index) => {
+                let displayValue = sortCriteria === 'level' ? (st.dominantLevel || '—') : (sortCriteria === 'count' ? `${st.count} ارزشیابی` : `${st.totalScore} امتیاز`);
+                const isFirst = sortCriteria === 'score' && st.totalScore === maxScore && maxScore > 0;
+                const percentage = maxScore > 0 ? (st.totalScore / maxScore) * 100 : 0;
+
+                return `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span><strong>${index + 1}. ${st.firstName} ${st.lastName}</strong> ${isFirst ? topStudent.icon : ''}</span>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${displayValue}</span>
+                            <button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})" title="چاپ کارنامه">🖨️</button>
+                        </div>
+                    </div>
+                    ${sortCriteria === 'score' ? `<div class="score-bar-container"><div class="score-bar-fill ${isFirst ? 'is-first' : ''}" style="width: ${percentage}%;"></div></div>` : ''}
+                </div>`;
+            }).join('');
+
+        } else if (currentReportFilter === 'group') {
+            let groupScores = groups.map(g => {
+                let total = 0;
+                let count = 0;
+                const groupStudents = students.filter(s => s.groupId === g.id);
+                records.forEach(rec => { rec.students.forEach(id => { if (groupStudents.find(s => s.id === id)) { total += rec.finalScore; count++; } }); });
+                return { ...g, totalScore: total, count: count };
+            });
+            
+            if (sortCriteria === 'count') groupScores.sort((a, b) => b.count - a.count);
+            else groupScores.sort((a, b) => b.totalScore - a.totalScore);
+
+            const maxScore = groupScores.length > 0 ? Math.max(...groupScores.map(s => s.totalScore)) : 0;
+
+            container.innerHTML = '<h3>👥 گزارش گروهی</h3>' + groupScores.map((g, index) => {
+                let displayValue = sortCriteria === 'count' ? `${g.count} ارزشیابی` : `${g.totalScore} امتیاز`;
+                const isFirst = sortCriteria === 'score' && g.totalScore === maxScore && maxScore > 0;
+                const percentage = maxScore > 0 ? (g.totalScore / maxScore) * 100 : 0;
+
+                return `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span><strong>${g.symbol} ${g.name}</strong> ${isFirst ? '🏆' : ''}</span>
+                        <span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${displayValue}</span>
+                    </div>
+                    ${sortCriteria === 'score' ? `<div class="score-bar-container"><div class="score-bar-fill ${isFirst ? 'is-first' : ''}" style="width: ${percentage}%;"></div></div>` : ''}
+                </div>`;
+            }).join('');
+
+        } else {
+            let studentScores = students.map(st => {
+                const myRecords = records.filter(rec => rec.students.includes(st.id));
+                let total = 0;
+                myRecords.forEach(rec => { total += rec.finalScore; });
+                return { ...st, totalScore: total, count: myRecords.length, dominantLevel: getDominantLevel(myRecords) };
+            });
+
+            if (sortCriteria === 'level') {
+                const order = { "خیلی خوب": 4, "خوب": 3, "قابل قبول": 2, "نیازمند تلاش": 1, null: 0 };
+                studentScores.sort((a, b) => (order[b.dominantLevel] || 0) - (order[a.dominantLevel] || 0));
+            } else if (sortCriteria === 'count') {
+                studentScores.sort((a, b) => b.count - a.count);
+            } else {
+                studentScores.sort((a, b) => b.totalScore - a.totalScore);
+            }
+
+            const maxScore = studentScores.length > 0 ? Math.max(...studentScores.map(s => s.totalScore)) : 0;
+
+            container.innerHTML = '<h3>🏫 گزارش کلاسی</h3>' + studentScores.map((st, index) => {
+                let displayValue = sortCriteria === 'level' ? (st.dominantLevel || '—') : (sortCriteria === 'count' ? `${st.count} ارزشیابی` : `${st.totalScore} امتیاز`);
+                const isFirst = sortCriteria === 'score' && st.totalScore === maxScore && maxScore > 0;
+                const percentage = maxScore > 0 ? (st.totalScore / maxScore) * 100 : 0;
+
+                return `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span><strong>${index + 1}. ${st.firstName} ${st.lastName}</strong> ${isFirst ? topStudent.icon : ''}</span>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <span class="rank-badge" style="font-size: 1rem; ${isFirst ? 'background: var(--arf-border); color: white;' : ''}">${displayValue}</span>
+                            <button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})" title="چاپ کارنامه">🖨️</button>
+                        </div>
+                    </div>
+                    ${sortCriteria === 'score' ? `<div class="score-bar-container"><div class="score-bar-fill ${isFirst ? 'is-first' : ''}" style="width: ${percentage}%;"></div></div>` : ''}
+                </div>`;
+            }).join('');
+        }
+    } catch (e) { console.error(e); container.innerHTML = '<p style="text-align:center; color:red;">خطا</p>'; }
+}
+
+// ------------------------------------------
+// گزارش حضور و غیاب (با نمودار انباشته)
+// ------------------------------------------
+function changeAttReportFilter(filter, btn) {
+    currentAttReportFilter = filter;
+    const btns = btn.parentElement.querySelectorAll('.filter-btn');
+    btns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    generateAttendanceReports();
+}
+
+async function generateAttendanceReports() {
+    const container = document.getElementById('attendance-reports-list');
+    const totalSessionsEl = document.getElementById('total-sessions-count');
+    if (!container || !totalSessionsEl) return;
+
+    container.innerHTML = '<p style="text-align:center;">در حال محاسبه...</p>';
+
+    try {
+        const students = await getAllData('students');
+        const groups = await getAllData('groups');
+        const sessions = await getAllData('sessions');
+        const attendance = await getAllData('attendance');
+
+        totalSessionsEl.textContent = sessions.length;
+
+        if (students.length === 0) {
+            container.innerHTML = '<p style="text-align:center;">لیست خالی است.</p>';
+            return;
+        }
+
+        let totalPresent = 0, totalAbsent = 0, totalLate = 0;
+        attendance.forEach(att => {
+            if (att.status === 'present') totalPresent++;
+            else if (att.status === 'absent') totalAbsent++;
+            else if (att.status === 'late') totalLate++;
+        });
+        const totalAll = totalPresent + totalAbsent + totalLate;
+
+        let html = '';
+
+        if (totalAll > 0) {
+            const presentPct = (totalPresent / totalAll) * 100;
+            const absentPct = (totalAbsent / totalAll) * 100;
+            const latePct = (totalLate / totalAll) * 100;
+
+            html += `
+                <div class="card" style="background: var(--input-bg); margin-bottom: 20px; border: 1px solid var(--border-color);">
+                    <h4 style="margin: 0 0 10px 0; color: var(--primary); text-align: center;">📊 نمودار کلی حضور کلاس</h4>
+                    <div class="att-stacked-bar-container">
+                        ${presentPct > 0 ? `<div class="att-stacked-segment present" style="width: ${presentPct}%;">${Math.round(presentPct)}%</div>` : ''}
+                        ${absentPct > 0 ? `<div class="att-stacked-segment absent" style="width: ${absentPct}%;">${Math.round(absentPct)}%</div>` : ''}
+                        ${latePct > 0 ? `<div class="att-stacked-segment late" style="width: ${latePct}%;">${Math.round(latePct)}%</div>` : ''}
+                    </div>
+                    <div class="att-legend">
+                        <div class="att-legend-item"><div class="att-legend-color present"></div>حاضر</div>
+                        <div class="att-legend-item"><div class="att-legend-color absent"></div>غایب</div>
+                        <div class="att-legend-item"><div class="att-legend-color late"></div>تأخیر</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        if (currentAttReportFilter === 'class') {
+            html += '<h3 style="margin-bottom: 15px;">👦 گزارش حضور کلاسی</h3>';
+            students.forEach(st => {
+                let present = 0, absent = 0, late = 0;
+                attendance.forEach(att => {
+                    if (att.studentId === st.id) {
+                        if (att.status === 'present') present++;
+                        else if (att.status === 'absent') absent++;
+                        else if (att.status === 'late') late++;
+                    }
+                });
+                html += `
+                    <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-weight: bold; font-size: 1.05rem;">${st.firstName} ${st.lastName}</div>
+                            <button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})" title="چاپ کارنامه">🖨️ کارنامه</button>
+                        </div>
+                        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                            <span class="att-report-badge present">حاضر: ${present}</span>
+                            <span class="att-report-badge absent">غایب: ${absent}</span>
+                            <span class="att-report-badge late">تأخیر: ${late}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            html += '<h3 style="margin-bottom: 15px;">👥 گزارش حضور گروهی</h3>';
+            groups.forEach(g => {
+                let present = 0, absent = 0, late = 0;
+                const groupStudents = students.filter(s => s.groupId === g.id);
+                const groupStudentIds = groupStudents.map(s => s.id);
+
+                attendance.forEach(att => {
+                    if (groupStudentIds.includes(att.studentId)) {
+                        if (att.status === 'present') present++;
+                        else if (att.status === 'absent') absent++;
+                        else if (att.status === 'late') late++;
+                    }
+                });
+
+                html += `
+                    <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px;">
+                        <div style="font-weight: bold; font-size: 1.05rem;">${g.symbol} ${g.name} (${groupStudents.length} نفر)</div>
+                        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                            <span class="att-report-badge present">حاضر: ${present}</span>
+                            <span class="att-report-badge absent">غایب: ${absent}</span>
+                            <span class="att-report-badge late">تأخیر: ${late}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        container.innerHTML = html;
+
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = '<p style="color:red; text-align:center;">خطا در تولید گزارش.</p>';
+    }
+}
+
+// ==========================================
+// 13. کارنامه اختصاصی دانش‌آموز
+// ==========================================
+async function openReportCard(studentId) {
+    try {
+        const student = window.allStudentsData.find(s => s.id === studentId);
+        if (!student) { alert('دانش‌آموز یافت نشد.'); return; }
+
+        const classData = await getDataById('classProfile', 1) || { name: 'کلاس من', teacherName: 'معلم' };
+        const groups = await getAllData('groups');
+        const subjects = await getAllData('subjects');
+        const records = await getAllData('records');
+        const sessions = await getAllData('sessions');
+        const attendance = await getAllData('attendance');
+        const topStudentBadge = await getDataById('badgesSettings', 'topStudent');
+
+        const group = groups.find(g => g.id === student.groupId);
+        const groupName = group ? `${group.symbol} ${group.name}` : 'بدون گروه';
+
+        let presentCount = 0, absentCount = 0, lateCount = 0;
+        attendance.forEach(att => {
+            if (att.studentId === studentId) {
+                if (att.status === 'present') presentCount++;
+                else if (att.status === 'absent') absentCount++;
+                else if (att.status === 'late') lateCount++;
+            }
+        });
+
+        const studentRecords = records.filter(rec => rec.students.includes(studentId));
+        let subjectScoresHtml = '';
+        let totalOverallScore = 0;
+
+        for (const subject of subjects) {
+            const subRecords = studentRecords.filter(r => r.subjectId === subject.id);
+            let subjectTotal = 0;
+            subRecords.forEach(r => subjectTotal += r.finalScore);
+            totalOverallScore += subjectTotal;
+            
+            if (subjectTotal > 0) {
+                subjectScoresHtml += `<div class="rc-subject-row"><span>📚 ${subject.name}</span><strong>${subjectTotal} امتیاز</strong></div>`;
+            }
+        }
+
+        if (subjectScoresHtml === '') {
+            subjectScoresHtml = '<p style="color:#64748b; text-align:center; font-size:0.9rem;">هنوز نمره‌ای برای این دانش‌آموز ثبت نشده است.</p>';
+        }
+
+        let badgesHtml = '';
+        const allStudentScores = window.allStudentsData.map(st => {
+            let total = 0;
+            records.forEach(rec => { if (rec.students.includes(st.id)) total += rec.finalScore; });
+            return { id: st.id, score: total };
+        });
+        const maxScore = Math.max(...allStudentScores.map(s => s.score));
+        
+        if (maxScore > 0 && totalOverallScore === maxScore && topStudentBadge) {
+            badgesHtml += `<div class="arf-badge" style="margin-top: 10px;">${topStudentBadge.icon} <strong>${topStudentBadge.title}</strong> - ${topStudentBadge.motto}</div>`;
+        }
+
+        const html = `
+            <div class="rc-header">
+                <h2>🏫 ${classData.name}</h2>
+                <p>کارنامه دانش‌آموز</p>
+            </div>
+            
+            <div class="rc-student-info">
+                <div>
+                    <strong>👤 ${student.firstName} ${student.lastName}</strong>
+                    <div style="font-size: 0.9rem; margin-top: 5px;">گروه: ${groupName}</div>
+                </div>
+                <div style="text-align: left;">
+                    <div style="font-size: 0.9rem;">آموزگار: ${classData.teacherName}</div>
+                    <div style="font-size: 0.9rem;">پایه: ${classData.grade || '-'}</div>
+                </div>
+            </div>
+
+            <div class="rc-section-title">📅 وضعیت حضور و غیاب (از ${sessions.length} روز آموزشی)</div>
+            <div class="rc-stats-row">
+                <div class="rc-stat-box present">حاضر <span>${presentCount}</span></div>
+                <div class="rc-stat-box absent">غایب <span>${absentCount}</span></div>
+                <div class="rc-stat-box late">تأخیر <span>${lateCount}</span></div>
+            </div>
+
+            <div class="rc-section-title">📊 کارنامه دروس</div>
+            ${subjectScoresHtml}
+            
+            <div class="rc-subject-row" style="margin-top: 10px; background: var(--primary-light); padding: 10px; border-radius: 8px; border-bottom: none;">
+                <strong>مجموع کل امتیازات:</strong>
+                <strong style="color: var(--primary); font-size: 1.1rem;">${totalOverallScore} امتیاز</strong>
+            </div>
+
+            ${badgesHtml}
+        `;
+
+        document.getElementById('report-card-content').innerHTML = html;
+        document.getElementById('report-card-modal').classList.add('show');
+
+    } catch (e) {
+        console.error(e);
+        alert('خطا در تولید کارنامه.');
+    }
+}
+
+function closeReportCard() {
+    document.getElementById('report-card-modal').classList.remove('show');
+}
+
+// ==========================================
+// 14. پشتیبان‌گیری
+// ==========================================
+async function exportData() {
+    try {
+        const data = await exportAllData();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = `kosha_backup.json`; a.click();
+        URL.revokeObjectURL(url);
+    } catch (e) { alert('خطا: ' + e.message); }
+}
+
+async function importData(event) {
+    const file = event.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            await importAllData(data);
+            alert('بازیابی شد!'); loadAllData();
+        } catch (err) { alert('فایل نامعتبر!'); }
+    };
+    reader.readAsText(file);
+}
+
+// ==========================================
+// 15. Service Worker
+// ==========================================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+            reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        showUpdateToast(newWorker);
+                    }
+                });
+            });
+        });
+    });
+}
+
+function showUpdateToast(newWorker) {
+    const toast = document.createElement('div');
+    toast.className = 'toast-container';
+    toast.innerHTML = `<span>🚀 نسخه جدید!</span><button class="toast-btn" id="update-btn">به‌روزرسانی</button>`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 100);
+    document.getElementById('update-btn').addEventListener('click', () => {
+        if (newWorker) newWorker.postMessage({ action: 'skipWaiting' });
+        setTimeout(() => window.location.reload(), 500);
+    });
+}
