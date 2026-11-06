@@ -3,7 +3,7 @@
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 3; // نسخه به 3 افزایش یافت برای اضافه شدن جدول حضور و غیاب
+const DB_VERSION = 4; // نسخه به 4 افزایش یافت برای اضافه شدن جدول جلسات
 
 let db;
 
@@ -59,10 +59,16 @@ function initDB() {
                 db.createObjectStore('badgesSettings', { keyPath: 'id' });
             }
 
-            // 7. جدول جدید: حضور و غیاب
+            // 7. جدول جدید: جلسات (روزهای آموزشی)
+            if (!db.objectStoreNames.contains('sessions')) {
+                const sessionStore = db.createObjectStore('sessions', { keyPath: 'id', autoIncrement: true });
+                sessionStore.createIndex('date', 'date', { unique: false });
+            }
+
+            // 8. جدول جدید: حضور و غیاب (متصل به جلسه)
             if (!db.objectStoreNames.contains('attendance')) {
                 const attStore = db.createObjectStore('attendance', { keyPath: 'id', autoIncrement: true });
-                attStore.createIndex('date', 'date', { unique: false });
+                attStore.createIndex('sessionId', 'sessionId', { unique: false });
                 attStore.createIndex('studentId', 'studentId', { unique: false });
             }
         };
@@ -121,7 +127,7 @@ function clearStore(storeName) {
 
 async function exportAllData() {
     const data = {};
-    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'attendance'];
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance'];
     for (const store of stores) {
         try { data[store] = await getAllData(store); } catch (e) { data[store] = []; }
     }
@@ -129,7 +135,7 @@ async function exportAllData() {
 }
 
 async function importAllData(data) {
-    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'attendance'];
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance'];
     for (const store of stores) {
         if (data[store]) {
             await clearStore(store);
