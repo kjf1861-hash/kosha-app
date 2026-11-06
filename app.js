@@ -62,7 +62,7 @@ function initApp() {
     document.getElementById('class-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         await saveData('classProfile', { id: 1, name: document.getElementById('className').value, grade: document.getElementById('classGrade').value, motto: document.getElementById('classMotto').value, teacherName: document.getElementById('teacherName').value });
-        showToast('ذخیره شد!', 'success');
+        showToast('اطلاعات کلاس شما ذخیره شد!', 'success');
         document.getElementById('header-subtitle').textContent = document.getElementById('className').value;
     });
 
@@ -75,6 +75,7 @@ function initApp() {
         document.getElementById('subject-form').reset();
         document.getElementById('editSubjectId').value = '';
         document.getElementById('subject-submit-btn').textContent = '➕ ثبت درس';
+        showToast(editId ? 'درس با موفقیت ویرایش شد!' : 'درس با موفقیت ثبت شد!', 'success');
         loadAllData();
     });
 
@@ -87,6 +88,7 @@ function initApp() {
         document.getElementById('group-form').reset();
         document.getElementById('editGroupId').value = '';
         document.getElementById('group-submit-btn').textContent = '➕ ثبت گروه';
+        showToast(editId ? 'گروه با موفقیت ویرایش شد!' : 'گروه با موفقیت ثبت شد!', 'success');
         loadAllData();
     });
 
@@ -99,24 +101,44 @@ function initApp() {
         document.getElementById('student-form').reset();
         document.getElementById('editStudentId').value = '';
         document.getElementById('student-submit-btn').textContent = '➕ ثبت دانش‌آموز';
+        showToast(editId ? 'دانش‌آموز با موفقیت ویرایش شد!' : 'دانش‌آموز با موفقیت ثبت شد!', 'success');
         loadAllData();
     });
 
+    // محدود کردن فیلد نماد گروه به یک ایموجی
+    const symbolInput = document.getElementById('groupSymbol');
+    if (symbolInput) {
+        symbolInput.addEventListener('input', function() {
+            const val = this.value;
+            const emojis = val.match(/\p{Extended_Pictographic}/gu); 
+            if (emojis && emojis.length > 0) {
+                this.value = emojis[0];
+            } else {
+                this.value = '';
+            }
+        });
+    }
+
     const itemSelect = document.getElementById('recordItem');
     if (itemSelect) {
+        itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>';
         assessmentTree.forEach((item, index) => {
             const opt = document.createElement('option'); opt.value = index; opt.textContent = item.value;
             itemSelect.appendChild(opt);
         });
-        itemSelect.selectedIndex = 0;
-        setTimeout(() => { renderScoreInput(assessmentTree[0]); }, 100);
-        itemSelect.addEventListener('change', (e) => { renderScoreInput(assessmentTree[e.target.value]); });
+        itemSelect.addEventListener('change', (e) => { 
+            if (e.target.value !== "") {
+                renderScoreInput(assessmentTree[e.target.value]); 
+            } else {
+                document.getElementById('dynamic-score-section').style.display = 'none';
+            }
+        });
     }
 
     document.getElementById('top-student-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         await saveData('badgesSettings', { id: 'topStudent', icon: document.getElementById('topStudentIcon').value, title: document.getElementById('topStudentTitle').value, motto: document.getElementById('topStudentMotto').value });
-        showToast('ذخیره شد!', 'success'); loadBadgesSettings();
+        showToast('نشان شاگرد اول ذخیره شد!', 'success'); loadBadgesSettings();
     });
 
     document.getElementById('subject-badge-form').addEventListener('submit', async (e) => {
@@ -130,7 +152,7 @@ function initApp() {
             title: document.getElementById('subjectBadgeTitle').value,
             motto: document.getElementById('subjectBadgeMotto').value
         });
-        showToast('ذخیره شد!', 'success'); loadBadgesSettings();
+        showToast('نشان درس ذخیره شد!', 'success'); loadBadgesSettings();
     });
 
     initDateDropdowns();
@@ -166,7 +188,7 @@ async function loadAllData() {
             });
         }
         
-        if (recordSubjectSelect) recordSubjectSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        if (recordSubjectSelect) recordSubjectSelect.innerHTML = '<option value="" disabled selected>درسی را انتخاب کنید!</option>' + subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
         if (badgeSubjectSelect) badgeSubjectSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
         if (reportSubjectSelect) reportSubjectSelect.innerHTML = '<option value="" disabled selected>انتخاب درس...</option>' + subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
         if (recordsFilterSubject) recordsFilterSubject.innerHTML = '<option value="">همه دروس</option>' + subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
@@ -178,7 +200,7 @@ async function loadAllData() {
             groupsList.innerHTML = groups.length === 0 ? '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>' : '';
             groups.forEach(g => { groupsList.innerHTML += `<div class="list-item"><span>${g.symbol} <strong>${g.name}</strong></span><div style="display:flex; gap:5px;"><button class="btn btn-secondary btn-sm" onclick="editGroup(${g.id})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteItem('groups', ${g.id})">🗑️</button></div></div>`; });
         }
-        if (studentGroupSelect) studentGroupSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + groups.map(g => `<option value="${g.id}">${g.symbol} ${g.name}</option>`).join('');
+        if (studentGroupSelect) studentGroupSelect.innerHTML = '<option value="" disabled selected>گروهی را انتخاب کنید!</option>' + groups.map(g => `<option value="${g.id}">${g.symbol} ${g.name}</option>`).join('');
 
         const groupFilterSelect = document.getElementById('groupFilterSelect');
         if (groupFilterSelect) groupFilterSelect.innerHTML = '<option value="">انتخاب گروه...</option>' + groups.map(g => `<option value="${g.id}">${g.symbol} ${g.name}</option>`).join('');
@@ -194,7 +216,7 @@ async function loadAllData() {
             studentsList.innerHTML = students.length === 0 ? '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>' : '';
             students.forEach(st => {
                 const g = groups.find(x => x.id === st.groupId);
-                studentsList.innerHTML += `<div class="list-item"><span><strong>${st.firstName} ${st.lastName}</strong></span><div style="display:flex; gap:5px; align-items:center;"><span class="rank-badge">${g ? g.symbol+' '+g.name : 'بدون گروه'}</span><button class="btn btn-secondary btn-sm" onclick="editStudent(${st.id})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteItem('students', ${st.id})">🗑️</button></div></div>`;
+                studentsList.innerHTML += `<div class="list-item"><span><strong>${st.firstName} ${st.lastName}</strong></span><div style="display:flex; gap:5px; align-items:center;"><span class="group-label">${g ? g.symbol+' '+g.name : 'بدون گروه'}</span><button class="btn btn-secondary btn-sm" onclick="editStudent(${st.id})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteItem('students', ${st.id})">🗑️</button></div></div>`;
             });
         }
         
@@ -213,6 +235,7 @@ async function loadAllData() {
 async function deleteItem(storeName, id) {
     if (confirm('آیا مطمئن هستید؟')) {
         await deleteData(storeName, id);
+        showToast('با موفقیت حذف شد!', 'success');
         loadAllData();
         if (storeName === 'groups') loadBadgesSettings();
     }
@@ -258,9 +281,26 @@ async function editStudent(id) {
 function renderScoreInput(item) {
     const section = document.getElementById('dynamic-score-section');
     const container = document.getElementById('score-input-container');
+    const label = document.getElementById('score-label');
     section.style.display = 'block';
     container.innerHTML = '';
-    if (!item) return;
+    if (!item) {
+        section.style.display = 'none';
+        return;
+    }
+
+    // تعیین متن پویا برای برچسب بخش امتیازدهی
+    if (item.type === 'level1' || item.type === 'level2') {
+        label.textContent = 'انتخاب سطح عملکرد:';
+    } else if (item.type === 'count') {
+        label.textContent = 'تعداد برگه را وارد کنید:';
+    } else if (item.type === 'quran') {
+        label.textContent = 'جزئیات حفظ:';
+    } else if (item.type === 'fixed') {
+        label.textContent = 'امتیاز اختصاص‌یافته:';
+    } else if (item.type === 'free') {
+        label.textContent = 'امتیاز تشویقی را وارد کنید:';
+    }
 
     if (item.type === 'level1' || item.type === 'level2') {
         const select = document.createElement('select');
@@ -300,15 +340,23 @@ function renderStudentCheckboxes() {
     if (students.length === 0) { container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ دانش‌آموزی ثبت نشده است.</p>'; return; }
     container.innerHTML = '';
 
+    const createStudentLabel = (st) => {
+        const g = groups.find(x => x.id === st.groupId);
+        const badge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
+        return `<label class="student-checkbox-item"><input type="checkbox" class="student-checkbox" value="${st.id}"><div class="student-checkbox-item-content"><span>${st.firstName} ${st.lastName}</span>${badge}</div></label>`;
+    };
+
     if (currentStudentView === 'flat') {
-        students.forEach(st => { container.innerHTML += `<label class="student-checkbox-item"><input type="checkbox" class="student-checkbox" value="${st.id}"><span>${st.firstName} ${st.lastName}</span></label>`; });
+        students.forEach(st => { container.innerHTML += createStudentLabel(st); });
     } else {
         if (groups.length === 0) { container.innerHTML = '<p style="text-align:center; color:#dc2626;">هیچ گروهی ساخته نشده است.</p>'; return; }
         groups.forEach(g => {
             const groupStudents = students.filter(st => st.groupId === g.id);
             let groupHtml = `<details class="group-accordion"><summary><div class="group-header-checkbox"><input type="checkbox" class="group-select-all-checkbox" onchange="toggleGroupSelection(this, ${g.id})"><span>${g.symbol} ${g.name} (${groupStudents.length} نفر)</span></div></summary><div class="group-students-container">`;
             if (groupStudents.length === 0) groupHtml += `<p style="color:#64748b; font-size:0.85rem; text-align:center;">هیچ دانش‌آموزی در این گروه نیست.</p>`;
-            else groupStudents.forEach(st => { groupHtml += `<label class="student-checkbox-item"><input type="checkbox" class="student-checkbox group-student-${g.id}" value="${st.id}"><span>${st.firstName} ${st.lastName}</span></label>`; });
+            else groupStudents.forEach(st => { 
+                groupHtml += `<label class="student-checkbox-item"><input type="checkbox" class="student-checkbox group-student-${g.id}" value="${st.id}"><div class="student-checkbox-item-content"><span>${st.firstName} ${st.lastName}</span><span class="group-label">${g.symbol} ${g.name}</span></div></label>`; 
+            });
             groupHtml += `</div></details>`;
             container.innerHTML += groupHtml;
         });
@@ -513,8 +561,17 @@ function renderAttendanceButtons() {
     container.innerHTML = '';
 
     const createStudentRow = (st) => {
+        const g = groups.find(x => x.id === st.groupId);
+        const badge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
         const currentStatus = currentAttendanceState[st.id] || 'present'; 
-        return `<div class="attendance-student-row"><div class="attendance-student-name">${st.firstName} ${st.lastName}</div><div class="att-btn-group"><button type="button" class="att-btn present ${currentStatus === 'present' ? 'active' : ''}" onclick="setAttendanceStatus(${st.id}, 'present', this)">🟢 حاضر</button><button type="button" class="att-btn absent ${currentStatus === 'absent' ? 'active' : ''}" onclick="setAttendanceStatus(${st.id}, 'absent', this)">🔴 غایب</button><button type="button" class="att-btn late ${currentStatus === 'late' ? 'active' : ''}" onclick="setAttendanceStatus(${st.id}, 'late', this)">🟡 تأخیر</button></div></div>`;
+        return `<div class="attendance-student-row">
+                    <div class="attendance-student-name">${st.firstName} ${st.lastName} ${badge}</div>
+                    <div class="att-btn-group">
+                        <button type="button" class="att-btn present ${currentStatus === 'present' ? 'active' : ''}" onclick="setAttendanceStatus(${st.id}, 'present', this)">🟢 حاضر</button>
+                        <button type="button" class="att-btn absent ${currentStatus === 'absent' ? 'active' : ''}" onclick="setAttendanceStatus(${st.id}, 'absent', this)">🔴 غایب</button>
+                        <button type="button" class="att-btn late ${currentStatus === 'late' ? 'active' : ''}" onclick="setAttendanceStatus(${st.id}, 'late', this)">🟡 تأخیر</button>
+                    </div>
+                </div>`;
     };
 
     if (currentAttView === 'flat') {
@@ -686,7 +743,7 @@ async function saveEditedRecord() {
 function showPreview(isFinal) {
     isSaveAndNext = !isFinal;
     const selectedIndex = document.getElementById('recordItem').value;
-    if (selectedIndex === "") { showToast('آیتم را انتخاب کنید.', 'error'); return; }
+    if (selectedIndex === "") { showToast('آیتم ارزشیابی را انتخاب کنید.', 'error'); return; }
     const selectedItem = assessmentTree[selectedIndex];
     let finalScore = 0;
     try {
@@ -796,7 +853,8 @@ async function saveGroupRanks(maxGroupSize) {
     const ranks = [];
     for (let i = 1; i <= maxGroupSize; i++) ranks.push({ rankNumber: i, icon: document.getElementById(`rankIcon_${i}`).value, title: document.getElementById(`rankTitle_${i}`).value, motto: document.getElementById(`rankMotto_${i}`).value });
     await saveData('badgesSettings', { id: 'groupRanks', ranks: ranks });
-    showToast('ذخیره شد!', 'success'); loadBadgesSettings();
+    showToast('تنظیمات جایگاه‌ها ذخیره شد!', 'success'); 
+    loadBadgesSettings();
 }
 
 async function loadSubjectBadgeList() {
@@ -938,7 +996,9 @@ async function generateReports() {
                 const dv = sortCriteria === 'level' ? (st.dominantLevel || '—') : (sortCriteria === 'count' ? `${st.count} ارزشیابی` : `${st.totalScore} امتیاز`);
                 const isF = sortCriteria === 'score' && st.totalScore === ms && ms > 0;
                 const pct = ms > 0 ? (st.totalScore / ms) * 100 : 0;
-                return `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;"><div style="display: flex; justify-content: space-between; align-items: center;"><span><strong>${i + 1}. ${st.firstName} ${st.lastName}</strong> ${isF ? topStudent.icon : ''}</span><div style="display: flex; gap: 5px; align-items: center;"><span class="rank-badge" style="font-size: 1rem; ${isF ? 'background: var(--arf-border); color: white;' : ''}">${dv}</span><button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})">🖨️</button></div></div>${sortCriteria === 'score' ? `<div class="score-bar-container"><div class="score-bar-fill ${isF ? 'is-first' : ''}" style="width: ${pct}%;"></div></div>` : ''}</div>`;
+                const g = groups.find(x => x.id === st.groupId);
+                const badge = g ? `<span class="group-label" style="margin-right:5px;">${g.symbol} ${g.name}</span>` : '';
+                return `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;"><div style="display: flex; justify-content: space-between; align-items: center;"><span><strong>${i + 1}. ${st.firstName} ${st.lastName}</strong> ${badge} ${isF ? topStudent.icon : ''}</span><div style="display: flex; gap: 5px; align-items: center;"><span class="rank-badge" style="font-size: 1rem; ${isF ? 'background: var(--arf-border); color: white;' : ''}">${dv}</span><button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})">🖨️</button></div></div>${sortCriteria === 'score' ? `<div class="score-bar-container"><div class="score-bar-fill ${isF ? 'is-first' : ''}" style="width: ${pct}%;"></div></div>` : ''}</div>`;
             }).join('');
         } else if (currentReportFilter === 'group') {
             let gs = groups.map(g => { let t = 0, c = 0; const gst = students.filter(s => s.groupId === g.id); records.forEach(rec => { rec.students.forEach(id => { if (gst.find(s => s.id === id)) { t += rec.finalScore; c++; } }); }); return { ...g, totalScore: t, count: c }; });
@@ -960,7 +1020,9 @@ async function generateReports() {
                 const dv = sortCriteria === 'level' ? (st.dominantLevel || '—') : (sortCriteria === 'count' ? `${st.count} ارزشیابی` : `${st.totalScore} امتیاز`);
                 const isF = sortCriteria === 'score' && st.totalScore === ms && ms > 0;
                 const pct = ms > 0 ? (st.totalScore / ms) * 100 : 0;
-                return `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;"><div style="display: flex; justify-content: space-between; align-items: center;"><span><strong>${i + 1}. ${st.firstName} ${st.lastName}</strong> ${isF ? topStudent.icon : ''}</span><div style="display: flex; gap: 5px; align-items: center;"><span class="rank-badge" style="font-size: 1rem; ${isF ? 'background: var(--arf-border); color: white;' : ''}">${dv}</span><button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})">🖨️</button></div></div>${sortCriteria === 'score' ? `<div class="score-bar-container"><div class="score-bar-fill ${isF ? 'is-first' : ''}" style="width: ${pct}%;"></div></div>` : ''}</div>`;
+                const g = groups.find(x => x.id === st.groupId);
+                const badge = g ? `<span class="group-label" style="margin-right:5px;">${g.symbol} ${g.name}</span>` : '';
+                return `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;"><div style="display: flex; justify-content: space-between; align-items: center;"><span><strong>${i + 1}. ${st.firstName} ${st.lastName}</strong> ${badge} ${isF ? topStudent.icon : ''}</span><div style="display: flex; gap: 5px; align-items: center;"><span class="rank-badge" style="font-size: 1rem; ${isF ? 'background: var(--arf-border); color: white;' : ''}">${dv}</span><button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})">🖨️</button></div></div>${sortCriteria === 'score' ? `<div class="score-bar-container"><div class="score-bar-fill ${isF ? 'is-first' : ''}" style="width: ${pct}%;"></div></div>` : ''}</div>`;
             }).join('');
         }
     } catch (e) { console.error(e); container.innerHTML = '<p style="text-align:center; color:red;">خطا</p>'; }
@@ -995,7 +1057,9 @@ async function generateAttendanceReports() {
             students.forEach(st => {
                 let p = 0, a = 0, l = 0;
                 attendance.forEach(att => { if (att.studentId === st.id) { if (att.status === 'present') p++; else if (att.status === 'absent') a++; else if (att.status === 'late') l++; } });
-                html += `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px;"><div style="display: flex; justify-content: space-between; align-items: center;"><div style="font-weight: bold; font-size: 1.05rem;">${st.firstName} ${st.lastName}</div><button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})">🖨️ کارنامه</button></div><div style="display: flex; gap: 5px; flex-wrap: wrap;"><span class="att-report-badge present clickable" onclick="showAttendanceDetails(${st.id}, 'present')">حاضر: ${p}</span><span class="att-report-badge absent clickable" onclick="showAttendanceDetails(${st.id}, 'absent')">غایب: ${a}</span><span class="att-report-badge late clickable" onclick="showAttendanceDetails(${st.id}, 'late')">تأخیر: ${l}</span></div></div>`;
+                const g = groups.find(x => x.id === st.groupId);
+                const badge = g ? `<span class="group-label" style="margin-right:5px;">${g.symbol} ${g.name}</span>` : '';
+                html += `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px;"><div style="display: flex; justify-content: space-between; align-items: center;"><div style="font-weight: bold; font-size: 1.05rem;">${st.firstName} ${st.lastName} ${badge}</div><button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})">🖨️ کارنامه</button></div><div style="display: flex; gap: 5px; flex-wrap: wrap;"><span class="att-report-badge present clickable" onclick="showAttendanceDetails(${st.id}, 'present')">حاضر: ${p}</span><span class="att-report-badge absent clickable" onclick="showAttendanceDetails(${st.id}, 'absent')">غایب: ${a}</span><span class="att-report-badge late clickable" onclick="showAttendanceDetails(${st.id}, 'late')">تأخیر: ${l}</span></div></div>`;
             });
         } else {
             html += '<h3 style="margin-bottom: 15px;">👥 گزارش حضور گروهی</h3>';
@@ -1063,7 +1127,7 @@ async function openReportCard(studentId) {
         const ms = Math.max(...ass.map(s => s.score));
         if (ms > 0 && tos === ms && topStudentBadge) bh += `<div class="arf-badge" style="margin-top: 10px;">${topStudentBadge.icon} <strong>${topStudentBadge.title}</strong> - ${topStudentBadge.motto}</div>`;
         
-        const html = `<div id="report-card-text-to-copy" style="background: white; padding: 10px; border-radius: 8px;"><div class="rc-header"><h2>🏫 ${classData.name}</h2><p>کارنامه دانش‌آموز</p></div><div class="rc-student-info"><div><strong>👤 ${student.firstName} ${student.lastName}</strong><div style="font-size: 0.9rem; margin-top: 5px;">گروه: ${groupName}</div></div><div style="text-align: left;"><div style="font-size: 0.9rem;">آموزگار: ${classData.teacherName}</div><div style="font-size: 0.9rem;">پایه: ${classData.grade || '-'}</div></div></div><div class="rc-section-title">📅 وضعیت حضور و غیاب (از ${sessions.length} روز آموزشی)</div><div class="rc-stats-row"><div class="rc-stat-box present">حاضر <span>${pc}</span></div><div class="rc-stat-box absent">غایب <span>${ac}</span></div><div class="rc-stat-box late">تأخیر <span>${lc}</span></div></div><div class="rc-section-title">📊 کارنامه دروس</div>${ssh}<div class="rc-subject-row" style="margin-top: 10px; background: var(--primary-light); padding: 10px; border-radius: 8px; border-bottom: none;"><strong>مجموع کل امتیازات:</strong><strong style="color: var(--primary); font-size: 1.1rem;">${tos} امتیاز</strong></div>${bh}</div>`;
+        const html = `<div id="report-card-text-to-copy" style="background: white; padding: 10px; border-radius: 8px;"><div class="rc-header"><h2>🏫 ${classData.name}</h2><p>کارنامه دانش‌آموز</p></div><div class="rc-student-info"><div><strong>👤 ${student.firstName} ${student.lastName}</strong><div style="font-size: 0.9rem; margin-top: 5px;">گروه: <span class="group-label">${groupName}</span></div></div><div style="text-align: left;"><div style="font-size: 0.9rem;">آموزگار: ${classData.teacherName}</div><div style="font-size: 0.9rem;">پایه: ${classData.grade || '-'}</div></div></div><div class="rc-section-title">📅 وضعیت حضور و غیاب (از ${sessions.length} روز آموزشی)</div><div class="rc-stats-row"><div class="rc-stat-box present">حاضر <span>${pc}</span></div><div class="rc-stat-box absent">غایب <span>${ac}</span></div><div class="rc-stat-box late">تأخیر <span>${lc}</span></div></div><div class="rc-section-title">📊 کارنامه دروس</div>${ssh}<div class="rc-subject-row" style="margin-top: 10px; background: var(--primary-light); padding: 10px; border-radius: 8px; border-bottom: none;"><strong>مجموع کل امتیازات:</strong><strong style="color: var(--primary); font-size: 1.1rem;">${tos} امتیاز</strong></div>${bh}</div>`;
         
         document.getElementById('report-card-content').innerHTML = html;
         document.getElementById('report-card-modal').classList.add('show');
