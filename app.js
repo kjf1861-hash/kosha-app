@@ -507,7 +507,7 @@ function renderScoreInput(item) {
     if (!item) { section.style.display = 'none'; return; }
 
     if (item.type === 'level') {
-        label.textContent = 'انتخاب سطح عملکرد:';
+        label.textContent = item.placeholder || 'انتخاب سطح عملکرد:';
         const select = document.createElement('select');
         select.className = 'form-control'; select.id = 'dynamicLevelInput'; select.required = true;
         select.innerHTML = '<option value="" disabled selected>انتخاب سطح...</option>';
@@ -520,7 +520,7 @@ function renderScoreInput(item) {
         const input = document.createElement('input');
         input.type = 'number'; input.className = 'form-control'; input.id = 'dynamicCountInput'; input.min = '1'; input.placeholder = 'تعداد'; input.required = true;
         container.appendChild(input);
-    } else if (item.type === 'fixed') { // برای آیتم‌های ثابت قدیمی
+    } else if (item.type === 'fixed') {
         label.textContent = 'امتیاز اختصاص‌یافته:';
         container.innerHTML = `<p style="font-weight: bold; color: #4A90E2;">${item.score} امتیاز (خودکار)</p>`;
     } else if (item.type === 'free') {
