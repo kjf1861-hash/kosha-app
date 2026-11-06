@@ -419,13 +419,13 @@ async function editItem(id) {
     document.getElementById('itemType').value = item.type;
     document.getElementById('item-form-title').textContent = '✏️ ویرایش آیتم';
     
-    // مخفی کردن فیلدها و نمایش فیلد مربوطه
     document.getElementById('item-type-level').style.display = 'none';
     document.getElementById('item-type-count').style.display = 'none';
     document.getElementById('item-type-free').style.display = 'none';
     
     if (item.type === 'level') {
         document.getElementById('item-type-level').style.display = 'block';
+        document.getElementById('itemLevelPlaceholder').value = item.placeholder || 'انتخاب سطح عملکرد:';
         const container = document.getElementById('levels-container');
         container.innerHTML = '';
         item.levels.forEach(l => addLevelRow(l.name, l.score));
