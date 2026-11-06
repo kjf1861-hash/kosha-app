@@ -21,19 +21,19 @@ const assessmentTree = [
 const quranSurahs = { "ناس": 6, "فلق": 5, "توحید": 4, "مسد": 5, "نصر": 3, "کافرون": 6, "کوثر": 3, "ماعون": 7 };
 
 // متغیرهای سراسری
-let currentReportFilter = 'class'; // برای گزارش امتیازات
+let currentReportFilter = 'class'; 
 let currentStudentView = 'flat'; 
 let isSaveAndNext = false; 
 
-// متغیرهای مربوط به حضور و غیاب
+// متغیرهای حضور و غیاب
 let currentSessionId = null;
 let currentSessionDate = null;
 let currentAttView = 'flat'; 
 let currentAttendanceState = {}; 
 
-// متغیرهای جدید برای گزارشات
-let currentReportType = 'scores'; // 'scores' or 'attendance'
-let currentAttReportFilter = 'class'; // 'class' or 'group'
+// متغیرهای گزارشات
+let currentReportType = 'scores'; // 'scores', 'attendance', or 'records'
+let currentAttReportFilter = 'class'; 
 
 // ==========================================
 // 2. راه‌اندازی اولیه
@@ -185,12 +185,13 @@ async function loadAllData() {
         
         renderStudentCheckboxes();
         loadSessions();
+        loadAssessmentRecords(); // لود سوابق ارزشیابی
 
     } catch (e) { console.log('خطا', e); }
 }
 
 // ==========================================
-// 4. توابع ویرایش و حذف
+// 4. توابع ویرایش و حذف پایه
 // ==========================================
 async function deleteItem(storeName, id) {
     if (confirm('آیا مطمئن هستید؟')) {
@@ -235,7 +236,7 @@ async function editStudent(id) {
 }
 
 // ==========================================
-// 5. منطق امتیازدهی و رندر لیست دانش‌آموزان
+// 5. منطق امتیازدهی (رندر اولیه)
 // ==========================================
 function renderScoreInput(item) {
     const section = document.getElementById('dynamic-score-section');
@@ -659,10 +660,154 @@ async function saveAttendance() {
     }
 }
 
+// ==========================================
+// 9. مدیریت سوابق ارزشیابی (نمایش، ویرایش، حذف)
+// ==========================================
+async function loadAssessmentRecords() {
+    const container = document.getElementById('assessment-records-list');
+    if (!container) return;
+
+    container.innerHTML = '<p style="text-align:center;">در حال بارگذاری...</p>';
+
+    try {
+        const records = await getAllData('records');
+        const subjects = await getAllData('subjects');
+        
+        // مرتب‌سازی بر اساس تاریخ نزولی
+        records.sort((a, b) => b.date.localeCompare(a.date));
+
+        if (records.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#64748b;">هنوز هیچ ارزشیابی ثبت نشده است.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        records.forEach(rec => {
+            const subject = subjects.find(s => s.id === rec.subjectId);
+            const subjectName = subject ? subject.name : 'نامشخص';
+            
+            // پیدا کردن نام دانش‌آموزان
+            let studentNames = '';
+            if (rec.students && rec.students.length > 0) {
+                const names = rec.students.map(id => {
+                    const st = window.allStudentsData.find(s => s.id === id);
+                    return st ? `${st.firstName} ${st.lastName}` : '';
+                }).filter(n => n !== '');
+                studentNames = names.join('، ');
+            }
+
+            container.innerHTML += `
+                <div class="record-item ${rec.arf ? 'arf-list-item' : ''}">
+                    <div class="record-header">
+                        <span class="record-title">${rec.title} ${rec.arf ? '🎁' : ''}</span>
+                        <span class="record-score">${rec.finalScore} امتیاز</span>
+                    </div>
+                    <div class="record-details">
+                        <span>📚 ${subjectName} | ${rec.itemName}</span>
+                        <span>📅 ${rec.date}</span>
+                    </div>
+                    <div class="record-details" style="font-size: 0.8rem; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        👥 ${studentNames}
+                    </div>
+                    <div class="record-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="openEditRecordModal(${rec.id})">✏️ ویرایش</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteRecord(${rec.id})">🗑️ حذف</button>
+                    </div>
+                </div>
+            `;
+        });
+
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = '<p style="color:red; text-align:center;">خطا در بارگذاری سوابق.</p>';
+    }
+}
+
+async function deleteRecord(id) {
+    if (!confirm('آیا از حذف این رکورد ارزشیابی مطمئن هستید؟ (در صورت وجود تشویق مرتبط، آن نیز حذف خواهد شد)')) return;
+
+    try {
+        // پیدا کردن رکورد برای بررسی نوع آن
+        const record = await getDataById('records', id);
+        
+        // حذف رکورد اصلی
+        await deleteData('records', id);
+
+        // اگر رکورد پویش قرآن بود، تشویق‌های مرتبط را پیدا و حذف کن
+        if (record && record.itemName === "پویش حفظ قرآن کریم") {
+            const allBadges = await getAllData('badgesSettings');
+            // پیدا کردن تشویق‌هایی که به این رکورد اشاره دارند (تشویق‌های پویش معمولاً با تاریخ و دانش‌آموز مشخص می‌شوند)
+            // در نسخه فعلی، تشویق‌ها شناسه رکورد مبدأ را ذخیره نمی‌کنند، بنابراین برای سادگی فعلاً آن‌ها را حذف نمی‌کنیم.
+            // در توسعه‌های بعدی این ارتباط قوی‌تر خواهد شد.
+        }
+
+        alert('رکورد با موفقیت حذف شد.');
+        loadAssessmentRecords(); // آپدیت لیست
+        loadAllData(); // آپدیت گزارشات
+        
+    } catch (e) {
+        console.error(e);
+        alert('خطا در حذف رکورد.');
+    }
+}
+
+async function openEditRecordModal(id) {
+    try {
+        const record = await getDataById('records', id);
+        if (!record) return;
+
+        document.getElementById('editRecordId').value = record.id;
+        document.getElementById('editRecordTitle').value = record.title;
+        document.getElementById('editRecordDate').value = record.date;
+        document.getElementById('editRecordScore').value = record.finalScore;
+
+        document.getElementById('edit-record-modal').classList.add('show');
+    } catch (e) {
+        console.error(e);
+        alert('خطا در باز کردن فرم ویرایش.');
+    }
+}
+
+function closeEditModal() {
+    document.getElementById('edit-record-modal').classList.remove('show');
+}
+
+async function saveEditedRecord() {
+    const id = parseInt(document.getElementById('editRecordId').value);
+    const newTitle = document.getElementById('editRecordTitle').value;
+    const newDate = document.getElementById('editRecordDate').value;
+    const newScore = parseInt(document.getElementById('editRecordScore').value);
+
+    if (!newTitle || !newDate || isNaN(newScore)) {
+        alert('لطفاً تمام فیلدها را به درستی پر کنید.');
+        return;
+    }
+
+    try {
+        const record = await getDataById('records', id);
+        if (!record) return;
+
+        record.title = newTitle;
+        record.date = newDate;
+        record.finalScore = newScore;
+
+        await saveData('records', record);
+        
+        alert('تغییرات با موفقیت ذخیره شد.');
+        closeEditModal();
+        loadAssessmentRecords();
+        loadAllData(); // آپدیت گزارشات
+
+    } catch (e) {
+        console.error(e);
+        alert('خطا در ذخیره تغییرات.');
+    }
+}
+
 // ادامه در قسمت ۲ (بخش ۳.۲)...
 
 // ==========================================
-// 9. پیش‌نمایش و ثبت ارزشیابی (با پشتیبانی از ثبت و نفر بعدی)
+// 10. پیش‌نمایش و ثبت ارزشیابی (با پشتیبانی از ثبت و نفر بعدی)
 // ==========================================
 function showPreview(isFinal) {
     isSaveAndNext = !isFinal; 
@@ -737,6 +882,7 @@ async function confirmAndSaveRecord() {
     try {
         await saveData('records', window.tempRecordData);
 
+        // منطق تشویق پویش
         if (window.tempRecordData.itemName === "پویش حفظ قرآن کریم" && window.tempRecordData.finalScore > 0) {
             for (const studentId of window.tempRecordData.students) {
                 const allRecords = await getAllData('records');
@@ -783,7 +929,7 @@ async function confirmAndSaveRecord() {
 }
 
 // ==========================================
-// 10. سیستم جایگاه‌ها و نشان‌ها
+// 11. سیستم جایگاه‌ها و نشان‌ها
 // ==========================================
 async function loadBadgesSettings() {
     try {
@@ -961,27 +1107,38 @@ async function loadQuranRewards() {
 }
 
 // ==========================================
-// 11. گزارشات (تعویض نوع گزارش و نمایش آمار)
+// 12. گزارشات (تعویض نوع گزارش و نمایش آمار)
 // ==========================================
 function switchReportType(type) {
     currentReportType = type;
     
+    // مخفی کردن همه بخش‌ها
+    document.getElementById('score-report-section').style.display = 'none';
+    document.getElementById('attendance-report-section').style.display = 'none';
+    document.getElementById('records-report-section').style.display = 'none';
+    
+    // حذف کلاس اکتیو از همه دکمه‌ها
+    document.getElementById('btnReportScores').classList.remove('active');
+    document.getElementById('btnReportAttendance').classList.remove('active');
+    document.getElementById('btnReportRecords').classList.remove('active');
+
+    // نمایش بخش انتخاب شده
     if (type === 'scores') {
         document.getElementById('score-report-section').style.display = 'block';
-        document.getElementById('attendance-report-section').style.display = 'none';
         document.getElementById('btnReportScores').classList.add('active');
-        document.getElementById('btnReportAttendance').classList.remove('active');
         generateReports();
-    } else {
-        document.getElementById('score-report-section').style.display = 'none';
+    } else if (type === 'attendance') {
         document.getElementById('attendance-report-section').style.display = 'block';
-        document.getElementById('btnReportScores').classList.remove('active');
         document.getElementById('btnReportAttendance').classList.add('active');
         generateAttendanceReports();
+    } else if (type === 'records') {
+        document.getElementById('records-report-section').style.display = 'block';
+        document.getElementById('btnReportRecords').classList.add('active');
+        loadAssessmentRecords();
     }
 }
 
-// گزارش امتیازات (همانند قبل)
+// گزارش امتیازات
 function changeReportFilter(filter, btn) {
     currentReportFilter = filter;
     document.querySelectorAll('#score-report-section .filter-btn').forEach(b => b.classList.remove('active'));
@@ -1117,9 +1274,7 @@ async function generateReports() {
     } catch (e) { console.error(e); container.innerHTML = '<p style="text-align:center; color:red;">خطا</p>'; }
 }
 
-// ------------------------------------------
-// گزارش حضور و غیاب (جدید)
-// ------------------------------------------
+// گزارش حضور و غیاب
 function changeAttReportFilter(filter, btn) {
     currentAttReportFilter = filter;
     const btns = btn.parentElement.querySelectorAll('.filter-btn');
@@ -1209,7 +1364,7 @@ async function generateAttendanceReports() {
 }
 
 // ==========================================
-// 12. پشتیبان‌گیری
+// 13. پشتیبان‌گیری
 // ==========================================
 async function exportData() {
     try {
@@ -1235,7 +1390,7 @@ async function importData(event) {
 }
 
 // ==========================================
-// 13. Service Worker
+// 14. Service Worker
 // ==========================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
