@@ -362,7 +362,7 @@ select.form-control {
 }
 
 /* =========================================
-   مودال (پیش‌نمایش)
+   مودال (پیش‌نمایش و تقویم)
    ========================================= */
 .modal-overlay {
     position: fixed;
@@ -501,4 +501,48 @@ select.form-control {
     body { background: white; }
     .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
     .container { padding: 0; max-width: 100%; }
+}
+
+/* =========================================
+   استایل‌های تقویم (جدید)
+   ========================================= */
+#calendar-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    text-align: center;
+}
+.calendar-day {
+    padding: 10px 5px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+}
+.calendar-day:hover {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+.calendar-day.today {
+    background: var(--primary);
+    color: white;
+    font-weight: bold;
+}
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 0 5px;
+}
+.calendar-weekday {
+    font-weight: bold;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    padding: 5px 0;
 }
