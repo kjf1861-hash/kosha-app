@@ -498,3 +498,58 @@ details.group-accordion[open] summary::after {
     .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
     .container { padding: 0; max-width: 100%; }
 }
+/* =========================================
+   استایل صفحه‌بندی (Pagination)
+   ========================================= */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+.pagination-btn {
+    padding: 8px 15px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+.pagination-btn:disabled {
+    background: var(--border-color);
+    cursor: not-allowed;
+    color: var(--text-muted);
+}
+.pagination-info {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--text-main);
+}
+
+/* =========================================
+   استایل مودال مدیریت آیتم‌ها
+   ========================================= */
+.item-management-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+.item-management-row:last-child {
+    border-bottom: none;
+}
+.level-row-input {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+}
+.level-row-input input {
+    flex: 1;
+}
