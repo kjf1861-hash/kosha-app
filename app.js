@@ -106,6 +106,9 @@ function initApp() {
         alert('ذخیره شد!'); loadBadgesSettings();
     });
 
+    // راه‌اندازی منوهای تاریخ
+    initDateDropdowns();
+
     loadAllData();
 }
 
@@ -282,105 +285,56 @@ function selectGroupMembers(groupId) {
 }
 
 // ==========================================
-// 5.1. تقویم (کاملاً بازنویسی‌شده و دقیق)
+// 5.1. تاریخ (انتخابگر روز، ماه، سال)
 // ==========================================
-function getTodayJalali() {
-    const now = new Date();
-    const formatter = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' });
-    const parts = formatter.format(now).split('/');
-    return { year: parseInt(parts[0]), month: parseInt(parts[1]), day: parseInt(parts[2]) };
-}
+function initDateDropdowns() {
+    const daySelect = document.getElementById('dateDay');
+    const monthSelect = document.getElementById('dateMonth');
+    const yearSelect = document.getElementById('dateYear');
 
-function jalaliToDateString(jy, jm, jd) {
-    return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
-}
+    if (!daySelect || !monthSelect || !yearSelect) return;
 
-function openDatePicker() {
-    const today = getTodayJalali();
-    currentCalendarDate = { year: today.year, month: today.month };
-    renderCalendar();
-    document.getElementById('date-picker-modal').classList.add('show');
-}
+    // پر کردن روزها (1 تا 31)
+    daySelect.innerHTML = '<option value="" disabled selected>روز</option>';
+    for (let i = 1; i <= 31; i++) {
+        daySelect.innerHTML += `<option value="${i}">${i}</option>`;
+    }
 
-function closeDatePicker() {
-    document.getElementById('date-picker-modal').classList.remove('show');
-}
-
-function renderCalendar() {
-    const container = document.getElementById('calendar-container');
-    const { year, month } = currentCalendarDate;
-
+    // پر کردن ماه‌ها
     const monthNames = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
-    const monthName = monthNames[month - 1];
+    monthSelect.innerHTML = '<option value="" disabled selected>ماه</option>';
+    monthNames.forEach((name, index) => {
+        monthSelect.innerHTML += `<option value="${index + 1}">${name}</option>`;
+    });
 
-    let html = `<div class="calendar-header">
-        <button class="btn btn-secondary" onclick="changeCalendarMonth(-1)">▶</button>
-        <strong>${monthName} ${year}</strong>
-        <button class="btn btn-secondary" onclick="changeCalendarMonth(1)">◀</button>
-    </div>`;
-    html += `<div class="calendar-grid">`;
-
-    const weekDays = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
-    weekDays.forEach(d => { html += `<div class="calendar-weekday">${d}</div>`; });
-
-    let daysInMonth = 31;
-    if (month >= 7 && month <= 11) daysInMonth = 30;
-    if (month === 12) {
-        const isLeap = (year % 33 === 1 || year % 33 === 5 || year % 33 === 9 || year % 33 === 13 || year % 33 === 17 || year % 33 === 22 || year % 33 === 26 || year % 33 === 30);
-        daysInMonth = isLeap ? 30 : 29;
+    // پر کردن سال‌ها (1300 تا 1500)
+    yearSelect.innerHTML = '<option value="" disabled selected>سال</option>';
+    for (let i = 1300; i <= 1500; i++) {
+        yearSelect.innerHTML += `<option value="${i}">${i}</option>`;
     }
 
-    function jalaliToGregorian(jy, jm, jd) {
-        jy += 1595;
-        let days = -355668 + (365 * jy) + (~~(jy / 33) * 8) + ~~(((jy % 33) + 3) / 4) + jd + ((jm < 7) ? (jm - 1) * 31 : ((jm - 7) * 30) + 186);
-        let gy = 400 * ~~(days / 146097);
-        days %= 146097;
-        if (days > 36524) { gy += 100 * ~~(--days / 36524); days %= 36524; if (days >= 365) days++; }
-        gy += 4 * ~~(days / 1461);
-        days %= 1461;
-        if (days > 365) { gy += ~~((days - 1) / 365); days = (days - 1) % 365; }
-        let gd = days + 1;
-        let sal_a = [0, 31, (gy % 4 === 0 && gy % 100 !== 0) || (gy % 400 === 0) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-        let gm = 0;
-        for (gm = 1; gm <= 12; gm++) { if (gd <= sal_a[gm]) break; gd -= sal_a[gm]; }
-        return [gy, gm, gd];
-    }
-
-    const gDate = jalaliToGregorian(year, month, 1);
-    const firstDayGregorian = new Date(gDate[0], gDate[1] - 1, gDate[2]);
-    let startDayOfWeek = (firstDayGregorian.getDay() + 1) % 7;
-
-    for (let i = 0; i < startDayOfWeek; i++) {
-        html += `<div class="calendar-day empty"></div>`;
-    }
-
-    const todayJalali = getTodayJalali();
-    for (let day = 1; day <= daysInMonth; day++) {
-        const dateStr = jalaliToDateString(year, month, day);
-        const isToday = (year === todayJalali.year && month === todayJalali.month && day === todayJalali.day);
-        html += `<div class="calendar-day ${isToday ? 'today' : ''}" onclick="pickDate('${dateStr}')">${day}</div>`;
-    }
-
-    html += `</div>`;
-    container.innerHTML = html;
-}
-
-function changeCalendarMonth(delta) {
-    currentCalendarDate.month += delta;
-    if (currentCalendarDate.month > 12) { currentCalendarDate.month = 1; currentCalendarDate.year++; }
-    else if (currentCalendarDate.month < 1) { currentCalendarDate.month = 12; currentCalendarDate.year--; }
-    renderCalendar();
-}
-
-function pickDate(dateStr) {
-    document.getElementById('recordDateDisplay').value = dateStr;
-    document.getElementById('recordDate').value = dateStr;
-    closeDatePicker();
-}
-
-function selectTodayFromCalendar() {
+    // تنظیم مقدار پیش‌فرض روی تاریخ امروز
     const today = getTodayJalali();
-    pickDate(jalaliToDateString(today.year, today.month, today.day));
+    daySelect.value = today.day;
+    monthSelect.value = today.month;
+    yearSelect.value = today.year;
+
+    // با هر تغییر، فیلد مخفی را به‌روزرسانی کن
+    const updateDate = () => {
+        const d = daySelect.value;
+        const m = monthSelect.value;
+        const y = yearSelect.value;
+        if (d && m && y) {
+            document.getElementById('recordDate').value = jalaliToDateString(y, m, d);
+        }
+    };
+
+    daySelect.addEventListener('change', updateDate);
+    monthSelect.addEventListener('change', updateDate);
+    yearSelect.addEventListener('change', updateDate);
+
+    // مقدار اولیه
+    updateDate();
 }
 
 // ==========================================
@@ -470,8 +424,8 @@ async function confirmAndSaveRecord() {
         alert('ذخیره شد!'); 
         closePreviewModal(); 
         document.getElementById('record-form').reset(); 
-        document.getElementById('recordDateDisplay').value = '';
-        document.getElementById('recordDate').value = '';
+        // بازنشانی تاریخ به امروز
+        initDateDropdowns();
         document.getElementById('dynamic-score-section').style.display = 'none'; 
         loadAllData();
     } catch (error) { alert('خطا!'); closePreviewModal(); }
@@ -848,3 +802,15 @@ function showUpdateToast(newWorker) {
         setTimeout(() => window.location.reload(), 500);
     });
 }
+function getTodayJalali() {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const parts = formatter.format(now).split('/');
+    return { year: parseInt(parts[0]), month: parseInt(parts[1]), day: parseInt(parts[2]) };
+}
+
+function jalaliToDateString(jy, jm, jd) {
+    return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
+}
+
+// ادامه در قسمت ۲...
