@@ -218,7 +218,6 @@
 
             <!-- تب ۵: حضور و غیاب -->
             <div id="page-attendance" class="page-section">
-                <!-- بخش ثبت روز آموزشی -->
                 <div class="card">
                     <h2 class="card-title">📅 ثبت روز آموزشی جدید</h2>
                     <div class="form-group">
@@ -231,34 +230,22 @@
                     </div>
                     <button type="button" class="btn btn-primary btn-block" onclick="createSession()">➕ ثبت روز آموزشی</button>
                 </div>
-
-                <!-- لیست روزهای ثبت‌شده -->
                 <div class="card">
                     <h2 class="card-title">📋 لیست روزهای ثبت‌شده</h2>
-                    <div id="sessions-list" class="list-group">
-                        <!-- با JS پر می‌شود -->
-                    </div>
+                    <div id="sessions-list" class="list-group"></div>
                 </div>
-
-                <!-- فرم حضور و غیاب (مخفی در ابتدا) -->
                 <div id="attendance-form-section" class="card" style="display: none;">
                     <h2 class="card-title" id="attendance-form-title">📝 ثبت حضور و غیاب</h2>
-                    
                     <div class="view-toggle-group">
                         <button type="button" id="btnAttFlatView" class="view-toggle-btn active" onclick="switchAttView('flat')">👦 نمای کلاسی</button>
                         <button type="button" id="btnAttGroupView" class="view-toggle-btn" onclick="switchAttView('grouped')">👥 نمای گروهی</button>
                     </div>
-
                     <div style="margin-bottom: 10px; display: flex; gap: 5px; flex-wrap: wrap;">
                         <button type="button" class="btn btn-secondary btn-sm" onclick="setAllAttendance('present')">همه حاضر 🟢</button>
                         <button type="button" class="btn btn-secondary btn-sm" onclick="setAllAttendance('absent')">همه غایب 🔴</button>
                         <button type="button" class="btn btn-secondary btn-sm" onclick="setAllAttendance('late')">همه تأخیر 🟡</button>
                     </div>
-
-                    <div id="attendance-students-list" class="attendance-list-container">
-                        <!-- با JS پر می‌شود -->
-                    </div>
-
+                    <div id="attendance-students-list" class="attendance-list-container"></div>
                     <button type="button" class="btn btn-primary btn-block mt-4" onclick="saveAttendance()">💾 ذخیره حضور و غیاب</button>
                     <button type="button" class="btn btn-secondary btn-block mt-4" onclick="closeAttendanceForm()">بستن فرم</button>
                 </div>
@@ -290,12 +277,14 @@
                 </div>
             </div>
 
-            <!-- تب ۷: گزارشات (آپدیت شده) -->
+            <!-- تب ۷: گزارشات -->
             <div id="page-reports" class="page-section">
                 <div class="card">
+                    <!-- دکمه‌های تعویض نوع گزارش -->
                     <div class="filter-btn-group" style="margin-bottom: 20px;">
                         <button class="filter-btn active" id="btnReportScores" onclick="switchReportType('scores')">📈 گزارش امتیازات</button>
                         <button class="filter-btn" id="btnReportAttendance" onclick="switchReportType('attendance')">📅 گزارش حضور و غیاب</button>
+                        <button class="filter-btn" id="btnReportRecords" onclick="switchReportType('records')">📝 سوابق ارزشیابی</button>
                     </div>
 
                     <!-- بخش گزارش امتیازات -->
@@ -327,12 +316,17 @@
                             <button class="filter-btn active" onclick="changeAttReportFilter('class', this)">🏫 کلاسی</button>
                             <button class="filter-btn" onclick="changeAttReportFilter('group', this)">👥 گروهی</button>
                         </div>
-                        
                         <div class="card" style="background: #eef2ff; margin-bottom: 15px; border: none;">
                             <h3 style="margin: 0; text-align: center; color: var(--primary-dark);">تعداد کل روزهای آموزشی: <span id="total-sessions-count">0</span></h3>
                         </div>
-                        
                         <div id="attendance-reports-list" class="list-group"></div>
+                    </div>
+
+                    <!-- بخش سوابق ارزشیابی (جدید) -->
+                    <div id="records-report-section" style="display: none;">
+                        <h2 class="card-title">📝 سوابق ارزشیابی ثبت‌شده</h2>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">در این بخش می‌توانید رکوردهای ارزشیابی را ویرایش یا حذف کنید.</p>
+                        <div id="assessment-records-list" class="list-group"></div>
                     </div>
 
                     <!-- بخش پشتیبان‌گیری -->
@@ -358,6 +352,7 @@
         <a href="#" class="nav-item" onclick="switchPage('page-reports', this)"><span class="icon">📊</span><span>گزارشات</span></a>
     </nav>
 
+    <!-- مودال پیش‌نمایش ارزشیابی -->
     <div id="preview-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">👁️ پیش‌نمایش</div>
@@ -365,6 +360,30 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closePreviewModal()">انصراف</button>
                 <button type="button" class="btn btn-primary" onclick="confirmAndSaveRecord()">✅ تأیید و ذخیره</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال ویرایش رکورد ارزشیابی (جدید) -->
+    <div id="edit-record-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">✏️ ویرایش رکورد ارزشیابی</div>
+            <div class="form-group">
+                <label class="form-label">عنوان</label>
+                <input type="text" id="editRecordTitle" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">تاریخ</label>
+                <input type="text" id="editRecordDate" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">امتیاز</label>
+                <input type="number" id="editRecordScore" class="form-control" required>
+            </div>
+            <input type="hidden" id="editRecordId">
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeEditModal()">انصراف</button>
+                <button type="button" class="btn btn-primary" onclick="saveEditedRecord()">💾 ذخیره تغییرات</button>
             </div>
         </div>
     </div>
