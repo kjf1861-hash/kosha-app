@@ -75,8 +75,12 @@ function initApp() {
             itemSelect.appendChild(opt);
         });
         
+        // این بخش مهم است: تنظیم مقدار پیش‌فرض و رندر اولیه
         itemSelect.selectedIndex = 0;
-        renderScoreInput(assessmentTree[0]);
+        // استفاده از setTimeout برای اطمینان از اینکه DOM کاملاً آماده است
+        setTimeout(() => {
+            renderScoreInput(assessmentTree[0]);
+        }, 100);
 
         itemSelect.addEventListener('change', (e) => {
             const selectedItem = assessmentTree[e.target.value];
@@ -313,12 +317,10 @@ function initDateDropdowns() {
         yearSelect.innerHTML += `<option value="${i}">${i}</option>`;
     }
 
-    // مهم: مقدار پیش‌فرض را روی خالی تنظیم می‌کنیم تا کلمات راهنما نمایش داده شوند
+    // مقدار پیش‌فرض خالی است
     daySelect.value = '';
     monthSelect.value = '';
     yearSelect.value = '';
-
-    // فیلد مخفی را پاک کن
     document.getElementById('recordDate').value = '';
 
     // با هر تغییر، فیلد مخفی را به‌روزرسانی کن و هشدار را بردار
@@ -454,8 +456,7 @@ async function confirmAndSaveRecord() {
         alert('ذخیره شد!'); 
         closePreviewModal(); 
         document.getElementById('record-form').reset(); 
-        // بازنشانی منوهای تاریخ به حالت اولیه (خالی)
-        initDateDropdowns();
+        initDateDropdowns(); // بازنشانی تاریخ به حالت خالی
         document.getElementById('dynamic-score-section').style.display = 'none'; 
         loadAllData();
     } catch (error) { alert('خطا!'); closePreviewModal(); }
