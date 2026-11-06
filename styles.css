@@ -442,3 +442,42 @@ details.group-accordion[open] summary::after {
     .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
     .container { padding: 0; max-width: 100%; }
 }
+/* =========================================
+   استایل پیام‌های شناور (Toast Notifications)
+   ========================================= */
+.custom-toast-container {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text-main);
+    color: var(--bg-color);
+    padding: 12px 20px;
+    border-radius: 30px;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 3500;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: bold;
+    direction: rtl;
+}
+.custom-toast-container.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+.custom-toast-success {
+    border-right: 4px solid #22c55e;
+}
+.custom-toast-error {
+    border-right: 4px solid #ef4444;
+}
+.custom-toast-info {
+    border-right: 4px solid #3b82f6;
+}
