@@ -1524,4 +1524,292 @@ async function showAttendanceDetails(studentId, statusType) {
         
         const statusLabels = { present: 'حاضر', absent: 'غایب', late: 'تأخیر' };
         const statusIcons = { present: '🟢', absent: '🔴', late: '🟡' };
-        const label = statusLabels[statusType
+        const label = statusLabels[statusType] || 'نامشخص';
+        const icon = statusIcons[statusType] || '';
+
+        const title = document.getElementById('attendance-details-title');
+        const content = document.getElementById('attendance-details-content');
+        const modal = document.getElementById('attendance-details-modal');
+
+        title.textContent = `${icon} تاریخ‌های ${label} - ${student.firstName} ${student.lastName}`;
+
+        if (records.length === 0) {
+            content.innerHTML = `<p style="color:#64748b; text-align:center; padding: 20px;">هیچ تاریخ ${label} برای این دانش‌آموز ثبت نشده است.</p>`;
+        } else {
+            const dates = records.map(r => {
+                const session = sessions.find(s => s.id === r.sessionId);
+                return session ? session.date : 'تاریخ نامشخص';
+            }).filter(d => d !== 'تاریخ نامشخص');
+            
+            dates.sort((a, b) => b.localeCompare(a));
+
+            let html = `<p style="text-align:center; font-weight:bold; margin-bottom: 15px;">تعداد: ${dates.length} روز</p>`;
+            html += '<div class="list-group">';
+            dates.forEach(d => {
+                html += `<div class="list-item"><span>📅 ${d}</span><span class="att-report-badge ${statusType}">${label}</span></div>`;
+            });
+            html += '</div>';
+            content.innerHTML = html;
+        }
+
+        modal.classList.add('show');
+
+    } catch (e) {
+        console.error(e);
+        alert('خطا در بارگذاری جزئیات.');
+    }
+}
+
+function closeAttendanceDetails() {
+    document.getElementById('attendance-details-modal').classList.remove('show');
+}
+
+// ==========================================
+// 13. کارنامه اختصاصی دانش‌آموز
+// ==========================================
+async function openReportCard(studentId) {
+    try {
+        const student = window.allStudentsData.find(s => s.id === studentId);
+        if (!student) { alert('دانش‌آموز یافت نشد.'); return; }
+
+        const classData = await getDataById('classProfile', 1) || { name: 'کلاس من', teacherName: 'معلم' };
+        const groups = await getAllData('groups');
+        const subjects = await getAllData('subjects');
+        const records = await getAllData('records');
+        const sessions = await getAllData('sessions');
+        const attendance = await getAllData('attendance');
+        const topStudentBadge = await getDataById('badgesSettings', 'topStudent');
+
+        const group = groups.find(g => g.id === student.groupId);
+        const groupName = group ? `${group.symbol} ${group.name}` : 'بدون گروه';
+
+        let presentCount = 0, absentCount = 0, lateCount = 0;
+        attendance.forEach(att => {
+            if (att.studentId === studentId) {
+                if (att.status === 'present') presentCount++;
+                else if (att.status === 'absent') absentCount++;
+                else if (att.status === 'late') lateCount++;
+            }
+        });
+
+        const studentRecords = records.filter(rec => rec.students.includes(studentId));
+        let subjectScoresHtml = '';
+        let totalOverallScore = 0;
+
+        for (const subject of subjects) {
+            const subRecords = studentRecords.filter(r => r.subjectId === subject.id);
+            let subjectTotal = 0;
+            subRecords.forEach(r => subjectTotal += r.finalScore);
+            totalOverallScore += subjectTotal;
+            
+            if (subjectTotal > 0) {
+                subjectScoresHtml += `<div class="rc-subject-row"><span>📚 ${subject.name}</span><strong>${subjectTotal} امتیاز</strong></div>`;
+            }
+        }
+
+        if (subjectScoresHtml === '') {
+            subjectScoresHtml = '<p style="color:#64748b; text-align:center; font-size:0.9rem;">هنوز نمره‌ای برای این دانش‌آموز ثبت نشده است.</p>';
+        }
+
+        let badgesHtml = '';
+        const allStudentScores = window.allStudentsData.map(st => {
+            let total = 0;
+            records.forEach(rec => { if (rec.students.includes(st.id)) total += rec.finalScore; });
+            return { id: st.id, score: total };
+        });
+        const maxScore = Math.max(...allStudentScores.map(s => s.score));
+        
+        if (maxScore > 0 && totalOverallScore === maxScore && topStudentBadge) {
+            badgesHtml += `<div class="arf-badge" style="margin-top: 10px;">${topStudentBadge.icon} <strong>${topStudentBadge.title}</strong> - ${topStudentBadge.motto}</div>`;
+        }
+
+        const html = `
+            <div class="rc-header">
+                <h2>🏫 ${classData.name}</h2>
+                <p>کارنامه دانش‌آموز</p>
+            </div>
+            
+            <div class="rc-student-info">
+                <div>
+                    <strong>👤 ${student.firstName} ${student.lastName}</strong>
+                    <div style="font-size: 0.9rem; margin-top: 5px;">گروه: ${groupName}</div>
+                </div>
+                <div style="text-align: left;">
+                    <div style="font-size: 0.9rem;">آموزگار: ${classData.teacherName}</div>
+                    <div style="font-size: 0.9rem;">پایه: ${classData.grade || '-'}</div>
+                </div>
+            </div>
+
+            <div class="rc-section-title">📅 وضعیت حضور و غیاب (از ${sessions.length} روز آموزشی)</div>
+            <div class="rc-stats-row">
+                <div class="rc-stat-box present">حاضر <span>${presentCount}</span></div>
+                <div class="rc-stat-box absent">غایب <span>${absentCount}</span></div>
+                <div class="rc-stat-box late">تأخیر <span>${lateCount}</span></div>
+            </div>
+
+            <div class="rc-section-title">📊 کارنامه دروس</div>
+            ${subjectScoresHtml}
+            
+            <div class="rc-subject-row" style="margin-top: 10px; background: var(--primary-light); padding: 10px; border-radius: 8px; border-bottom: none;">
+                <strong>مجموع کل امتیازات:</strong>
+                <strong style="color: var(--primary); font-size: 1.1rem;">${totalOverallScore} امتیاز</strong>
+            </div>
+
+            ${badgesHtml}
+        `;
+
+        document.getElementById('report-card-content').innerHTML = html;
+        document.getElementById('report-card-modal').classList.add('show');
+
+    } catch (e) {
+        console.error(e);
+        alert('خطا در تولید کارنامه.');
+    }
+}
+
+function closeReportCard() {
+    document.getElementById('report-card-modal').classList.remove('show');
+}
+
+// ==========================================
+// 14. پشتیبان‌گیری و خروجی اکسل
+// ==========================================
+async function exportData() {
+    try {
+        const data = await exportAllData();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = `kosha_backup.json`; a.click();
+        URL.revokeObjectURL(url);
+    } catch (e) { alert('خطا: ' + e.message); }
+}
+
+async function importData(event) {
+    const file = event.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            await importAllData(data);
+            alert('بازیابی شد!'); loadAllData();
+        } catch (err) { alert('فایل نامعتبر!'); }
+    };
+    reader.readAsText(file);
+}
+
+async function exportCSV() {
+    try {
+        let csvContent = "";
+        let fileName = "";
+
+        if (currentReportType === 'scores') {
+            const students = await getAllData('students');
+            const records = await getAllData('records');
+            csvContent = "ردیف,نام,نام خانوادگی,تعداد ارزشیابی,مجموع امتیاز\n";
+            
+            let studentScores = students.map(st => {
+                let total = 0, count = 0;
+                records.forEach(rec => {
+                    if (rec.students.includes(st.id)) { total += rec.finalScore; count++; }
+                });
+                return { ...st, totalScore: total, count: count };
+            });
+
+            if (currentReportFilter === 'subject') {
+                const subjectId = parseInt(document.getElementById('reportSubjectSelect').value);
+                if (subjectId) {
+                    const subjectRecords = records.filter(r => r.subjectId === subjectId);
+                    studentScores = students.map(st => {
+                        let total = 0, count = 0;
+                        subjectRecords.forEach(rec => {
+                            if (rec.students.includes(st.id)) { total += rec.finalScore; count++; }
+                        });
+                        return { ...st, totalScore: total, count: count };
+                    });
+                }
+            }
+
+            studentScores.sort((a, b) => b.totalScore - a.totalScore);
+            studentScores.forEach((st, index) => {
+                csvContent += `${index + 1},${st.firstName},${st.lastName},${st.count},${st.totalScore}\n`;
+            });
+            fileName = `kosha_scores_${new Date().toISOString().slice(0,10)}.csv`;
+
+        } else if (currentReportType === 'attendance') {
+            const students = await getAllData('students');
+            const attendance = await getAllData('attendance');
+            csvContent = "ردیف,نام,نام خانوادگی,تعداد حاضر,تعداد غایب,تعداد تأخیر\n";
+            
+            students.forEach((st, index) => {
+                let present = 0, absent = 0, late = 0;
+                attendance.forEach(att => {
+                    if (att.studentId === st.id) {
+                        if (att.status === 'present') present++;
+                        else if (att.status === 'absent') absent++;
+                        else if (att.status === 'late') late++;
+                    }
+                });
+                csvContent += `${index + 1},${st.firstName},${st.lastName},${present},${absent},${late}\n`;
+            });
+            fileName = `kosha_attendance_${new Date().toISOString().slice(0,10)}.csv`;
+
+        } else if (currentReportType === 'records') {
+            const records = await getAllData('records');
+            const subjects = await getAllData('subjects');
+            csvContent = "ردیف,عنوان,درس,آیتم,تاریخ,امتیاز,ارفاق\n";
+            
+            records.sort((a, b) => b.date.localeCompare(a.date));
+            records.forEach((rec, index) => {
+                const subject = subjects.find(s => s.id === rec.subjectId);
+                const subjectName = subject ? subject.name : 'نامشخص';
+                const arfStatus = rec.arf ? 'دارد' : 'ندارد';
+                csvContent += `${index + 1},"${rec.title}","${subjectName}","${rec.itemName}","${rec.date}",${rec.finalScore},"${arfStatus}"\n`;
+            });
+            fileName = `kosha_records_${new Date().toISOString().slice(0,10)}.csv`;
+        }
+
+        const BOM = "\uFEFF";
+        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+    } catch (e) {
+        console.error(e);
+        alert('خطا در تولید فایل اکسل: ' + e.message);
+    }
+}
+
+// ==========================================
+// 15. Service Worker
+// ==========================================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+            reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        showUpdateToast(newWorker);
+                    }
+                });
+            });
+        });
+    });
+}
+
+function showUpdateToast(newWorker) {
+    const toast = document.createElement('div');
+    toast.className = 'toast-container';
+    toast.innerHTML = `<span>🚀 نسخه جدید!</span><button class="toast-btn" id="update-btn">به‌روزرسانی</button>`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 100);
+    document.getElementById('update-btn').addEventListener('click', () => {
+        if (newWorker) newWorker.postMessage({ action: 'skipWaiting' });
+        setTimeout(() => window.location.reload(), 500);
+    });
+}
+
