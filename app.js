@@ -380,6 +380,7 @@ function resetItemForm() {
     document.getElementById('editItemId').value = '';
     document.getElementById('item-form-title').textContent = '➕ افزودن آیتم جدید';
     document.getElementById('levels-container').innerHTML = '';
+    document.getElementById('itemLevelPlaceholder').value = '';
     document.getElementById('item-type-level').style.display = 'none';
     document.getElementById('item-type-count').style.display = 'none';
     document.getElementById('item-type-free').style.display = 'none';
