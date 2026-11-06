@@ -294,30 +294,32 @@ function initDateDropdowns() {
 
     if (!daySelect || !monthSelect || !yearSelect) return;
 
-    // پر کردن روزها (1 تا 31)
+    // پر کردن روزها (1 تا 31) - با گزینه پیش‌فرض "روز"
     daySelect.innerHTML = '<option value="" disabled selected>روز</option>';
     for (let i = 1; i <= 31; i++) {
         daySelect.innerHTML += `<option value="${i}">${i}</option>`;
     }
 
-    // پر کردن ماه‌ها
+    // پر کردن ماه‌ها - با گزینه پیش‌فرض "ماه"
     const monthNames = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
     monthSelect.innerHTML = '<option value="" disabled selected>ماه</option>';
     monthNames.forEach((name, index) => {
         monthSelect.innerHTML += `<option value="${index + 1}">${name}</option>`;
     });
 
-    // پر کردن سال‌ها (1405 تا 1409)
+    // پر کردن سال‌ها (1405 تا 1409) - با گزینه پیش‌فرض "سال"
     yearSelect.innerHTML = '<option value="" disabled selected>سال</option>';
     for (let i = 1405; i <= 1409; i++) {
         yearSelect.innerHTML += `<option value="${i}">${i}</option>`;
     }
 
-    // تنظیم مقدار پیش‌فرض روی تاریخ امروز
-    const today = getTodayJalali();
-    daySelect.value = today.day;
-    monthSelect.value = today.month;
-    yearSelect.value = today.year;
+    // مهم: مقدار پیش‌فرض را روی خالی تنظیم می‌کنیم تا کلمات راهنما نمایش داده شوند
+    daySelect.value = '';
+    monthSelect.value = '';
+    yearSelect.value = '';
+
+    // فیلد مخفی را پاک کن
+    document.getElementById('recordDate').value = '';
 
     // با هر تغییر، فیلد مخفی را به‌روزرسانی کن و هشدار را بردار
     const updateDate = () => {
@@ -336,9 +338,6 @@ function initDateDropdowns() {
     daySelect.addEventListener('change', updateDate);
     monthSelect.addEventListener('change', updateDate);
     yearSelect.addEventListener('change', updateDate);
-
-    // مقدار اولیه
-    updateDate();
 }
 
 function getTodayJalali() {
@@ -455,7 +454,8 @@ async function confirmAndSaveRecord() {
         alert('ذخیره شد!'); 
         closePreviewModal(); 
         document.getElementById('record-form').reset(); 
-        initDateDropdowns(); // بازنشانی تاریخ به امروز
+        // بازنشانی منوهای تاریخ به حالت اولیه (خالی)
+        initDateDropdowns();
         document.getElementById('dynamic-score-section').style.display = 'none'; 
         loadAllData();
     } catch (error) { alert('خطا!'); closePreviewModal(); }
