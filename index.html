@@ -82,6 +82,9 @@
 
     <div id="app-container">
         <header class="app-header">
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="تغییر حالت شب و روز" aria-label="تغییر حالت شب و روز">
+                <span id="themeIcon">🌙</span>
+            </button>
             <h1>کوشا</h1>
             <p id="header-subtitle">همیار پرتلاش معلم</p>
         </header>
@@ -280,14 +283,12 @@
             <!-- تب ۷: گزارشات -->
             <div id="page-reports" class="page-section">
                 <div class="card">
-                    <!-- دکمه‌های تعویض نوع گزارش -->
                     <div class="filter-btn-group" style="margin-bottom: 20px;">
                         <button class="filter-btn active" id="btnReportScores" onclick="switchReportType('scores')">📈 گزارش امتیازات</button>
                         <button class="filter-btn" id="btnReportAttendance" onclick="switchReportType('attendance')">📅 گزارش حضور و غیاب</button>
                         <button class="filter-btn" id="btnReportRecords" onclick="switchReportType('records')">📝 سوابق ارزشیابی</button>
                     </div>
 
-                    <!-- بخش گزارش امتیازات -->
                     <div id="score-report-section">
                         <h2 class="card-title">📊 گزارش امتیازات</h2>
                         <div class="filter-btn-group">
@@ -309,7 +310,6 @@
                         <div id="reports-list" class="list-group"></div>
                     </div>
 
-                    <!-- بخش گزارش حضور و غیاب -->
                     <div id="attendance-report-section" style="display: none;">
                         <h2 class="card-title">📅 گزارش حضور و غیاب</h2>
                         <div class="filter-btn-group">
@@ -322,14 +322,12 @@
                         <div id="attendance-reports-list" class="list-group"></div>
                     </div>
 
-                    <!-- بخش سوابق ارزشیابی -->
                     <div id="records-report-section" style="display: none;">
                         <h2 class="card-title">📝 سوابق ارزشیابی ثبت‌شده</h2>
                         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">در این بخش می‌توانید رکوردهای ارزشیابی را ویرایش یا حذف کنید.</p>
                         <div id="assessment-records-list" class="list-group"></div>
                     </div>
 
-                    <!-- بخش پشتیبان‌گیری -->
                     <div class="card" style="margin-top: 20px;">
                         <h2 class="card-title">⚙️ پشتیبان‌گیری و چاپ</h2>
                         <button type="button" class="btn btn-primary mt-4" onclick="exportData()">📤 خروجی JSON</button>
@@ -352,7 +350,6 @@
         <a href="#" class="nav-item" onclick="switchPage('page-reports', this)"><span class="icon">📊</span><span>گزارشات</span></a>
     </nav>
 
-    <!-- مودال پیش‌نمایش ارزشیابی -->
     <div id="preview-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">👁️ پیش‌نمایش</div>
@@ -364,7 +361,6 @@
         </div>
     </div>
 
-    <!-- مودال ویرایش رکورد ارزشیابی -->
     <div id="edit-record-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">✏️ ویرایش رکورد ارزشیابی</div>
@@ -388,22 +384,60 @@
         </div>
     </div>
 
-    <!-- مودال کارنامه (جدید) -->
     <div id="report-card-modal" class="modal-overlay">
         <div class="modal-content report-card-modal">
             <div class="no-print" style="display: flex; justify-content: space-between; margin-bottom: 15px;">
                 <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">🖨️ چاپ کارنامه</button>
                 <button type="button" class="btn btn-secondary btn-sm" onclick="closeReportCard()">✖️ بستن</button>
             </div>
-            <div id="report-card-content">
-                <!-- محتوای کارنامه توسط JS تولید می‌شود -->
-            </div>
+            <div id="report-card-content"></div>
         </div>
     </div>
 
     <script src="db.js"></script>
     <script src="app.js"></script>
     <script>
+        // ==========================================
+        // مدیریت حالت شب/روز
+        // ==========================================
+        function initTheme() {
+            let savedTheme = null;
+            try {
+                savedTheme = localStorage.getItem('kosha-theme');
+            } catch (e) {
+                console.warn('localStorage در دسترس نیست');
+            }
+
+            if (!savedTheme) {
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    savedTheme = 'dark';
+                } else {
+                    savedTheme = 'light';
+                }
+            }
+
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            try {
+                localStorage.setItem('kosha-theme', newTheme);
+            } catch (e) {}
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+
+        // شروع
+        initTheme();
+
         window.addEventListener('load', async () => {
             try { await initDB(); } catch (error) { console.warn('دیتابیس محلی غیرفعال است.'); }
             if (typeof initApp === 'function') initApp();
