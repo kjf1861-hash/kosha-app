@@ -19,8 +19,8 @@ const assessmentTree = [
 ];
 
 const quranSurahs = { "ناس": 6, "فلق": 5, "توحید": 4, "مسد": 5, "نصر": 3, "کافرون": 6, "کوثر": 3, "ماعون": 7 };
-
 let currentReportFilter = 'class';
+let currentCalendarDate = new Date();
 
 // ==========================================
 // 2. راه‌اندازی اولیه
@@ -70,10 +70,16 @@ function initApp() {
     });
 
     const itemSelect = document.getElementById('recordItem');
-    assessmentTree.forEach((item, index) => {
-        const opt = document.createElement('option'); opt.value = index; opt.textContent = item.value; itemSelect.appendChild(opt);
-    });
-    itemSelect.addEventListener('change', (e) => renderScoreInput(assessmentTree[e.target.value]));
+    if (itemSelect) {
+        assessmentTree.forEach((item, index) => {
+            const opt = document.createElement('option'); opt.value = index; opt.textContent = item.value;
+            itemSelect.appendChild(opt);
+        });
+        itemSelect.addEventListener('change', (e) => {
+            const selectedItem = assessmentTree[e.target.value];
+            renderScoreInput(selectedItem);
+        });
+    }
 
     document.getElementById('record-form').addEventListener('submit', (e) => { e.preventDefault(); showPreview(); });
 
@@ -216,25 +222,44 @@ async function editStudent(id) {
 function renderScoreInput(item) {
     const section = document.getElementById('dynamic-score-section');
     const container = document.getElementById('score-input-container');
-    section.style.display = 'block'; container.innerHTML = '';
+    
+    section.style.display = 'block';
+    container.innerHTML = '';
+
+    if (!item) return;
 
     if (item.type === 'level1' || item.type === 'level2') {
-        const select = document.createElement('select'); select.className = 'form-control'; select.id = 'dynamicLevelInput'; select.required = true;
+        const select = document.createElement('select');
+        select.className = 'form-control';
+        select.id = 'dynamicLevelInput';
+        select.required = true;
         select.innerHTML = '<option value="" disabled selected>انتخاب سطح...</option>';
-        for (const [level, score] of Object.entries(item.levels)) select.innerHTML += `<option value="${score}">${level} (${score} امتیاز)</option>`;
+        for (const [level, score] of Object.entries(item.levels)) {
+            select.innerHTML += `<option value="${score}">${level} (${score} امتیاز)</option>`;
+        }
         container.appendChild(select);
     } else if (item.type === 'count') {
-        const input = document.createElement('input'); input.type = 'number'; input.className = 'form-control'; input.id = 'dynamicCountInput'; input.min = '1'; input.placeholder = 'تعداد صفحات'; input.required = true; container.appendChild(input);
+        const input = document.createElement('input');
+        input.type = 'number'; input.className = 'form-control'; input.id = 'dynamicCountInput'; input.min = '1'; input.placeholder = 'تعداد صفحات'; input.required = true;
+        container.appendChild(input);
     } else if (item.type === 'fixed') {
         container.innerHTML = `<p style="font-weight: bold; color: #4A90E2;">${item.score} امتیاز (خودکار)</p>`;
     } else if (item.type === 'free') {
-        const input = document.createElement('input'); input.type = 'number'; input.className = 'form-control'; input.id = 'dynamicFreeInput'; input.min = '0'; input.placeholder = 'عدد'; input.required = true; container.appendChild(input);
+        const input = document.createElement('input');
+        input.type = 'number'; input.className = 'form-control'; input.id = 'dynamicFreeInput'; input.min = '0'; input.placeholder = 'عدد امتیاز'; input.required = true;
+        container.appendChild(input);
     } else if (item.type === 'quran') {
-        const select = document.createElement('select'); select.className = 'form-control'; select.id = 'quranSurahSelect';
+        const select = document.createElement('select');
+        select.className = 'form-control'; select.id = 'quranSurahSelect';
         select.innerHTML = '<option value="" disabled selected>انتخاب سوره...</option>';
-        for (const [surah, ayat] of Object.entries(quranSurahs)) select.innerHTML += `<option value="${ayat}">${surah} (${ayat} آیه)</option>`;
-        const input = document.createElement('input'); input.type = 'number'; input.className = 'form-control'; input.id = 'quranAyatInput'; input.placeholder = 'تعداد آیات'; input.min = '1';
-        container.appendChild(select); container.appendChild(document.createElement('br')); container.appendChild(input);
+        for (const [surah, ayat] of Object.entries(quranSurahs)) {
+            select.innerHTML += `<option value="${ayat}">${surah} (${ayat} آیه)</option>`;
+        }
+        const input = document.createElement('input');
+        input.type = 'number'; input.className = 'form-control'; input.id = 'quranAyatInput'; input.placeholder = 'تعداد آیات'; input.min = '1';
+        container.appendChild(select);
+        container.appendChild(document.createElement('br'));
+        container.appendChild(input);
     }
 }
 
@@ -253,21 +278,93 @@ function selectGroupMembers(groupId) {
     }
 }
 
-function setTodayDate() {
-    const formatter = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' });
-    document.getElementById('recordDate').value = formatter.format(new Date()).replace(/[^\d/]/g, '');
+// ==========================================
+// 5.1. تقویم
+// ==========================================
+function openDatePicker() {
+    currentCalendarDate = new Date();
+    renderCalendar();
+    document.getElementById('date-picker-modal').classList.add('show');
+}
+
+function closeDatePicker() {
+    document.getElementById('date-picker-modal').classList.remove('show');
+}
+
+function renderCalendar() {
+    const container = document.getElementById('calendar-container');
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+
+    // تبدیل تاریخ به شمسی برای نمایش عنوان
+    const formatter = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long' });
+    const monthYearStr = formatter.format(currentCalendarDate);
+
+    let html = `<div class="calendar-header">
+        <button class="btn btn-secondary btn-sm" onclick="changeCalendarMonth(-1)">▶</button>
+        <strong>${monthYearStr}</strong>
+        <button class="btn btn-secondary btn-sm" onclick="changeCalendarMonth(1)">◀</button>
+    </div>`;
+    html += `<div class="calendar-grid">`;
+
+    // نام روزهای هفته
+    const weekDays = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
+    weekDays.forEach(d => { html += `<div class="calendar-weekday">${d}</div>`; });
+
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+    let startDay = (firstDayOfMonth.getDay() + 1) % 7;
+
+    for (let i = 0; i < startDay; i++) {
+        html += `<div></div>`;
+    }
+
+    for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
+        const date = new Date(year, month, day);
+        const dateStr = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date).replace(/[^\d/]/g, '');
+        const isToday = new Date().toDateString() === date.toDateString();
+        html += `<div class="calendar-day ${isToday ? 'today' : ''}" onclick="pickDate('${dateStr}')">${day}</div>`;
+    }
+
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+function changeCalendarMonth(delta) {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+    renderCalendar();
+}
+
+function pickDate(dateStr) {
+    document.getElementById('recordDateDisplay').value = dateStr;
+    document.getElementById('recordDate').value = dateStr;
+    closeDatePicker();
+}
+
+function selectTodayFromCalendar() {
+    const today = new Date();
+    const dateStr = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(today).replace(/[^\d/]/g, '');
+    pickDate(dateStr);
 }
 
 function showPreview() {
-    const selectedItem = assessmentTree[document.getElementById('recordItem').value];
+    const selectedIndex = document.getElementById('recordItem').value;
+    if (selectedIndex === "") { alert('لطفاً آیتم ارزشیابی را انتخاب کنید.'); return; }
+    const selectedItem = assessmentTree[selectedIndex];
     let finalScore = 0;
 
     try {
-        if (selectedItem.type === 'level1' || selectedItem.type === 'level2') finalScore = parseInt(document.getElementById('dynamicLevelInput').value) || 0;
-        else if (selectedItem.type === 'count') finalScore = (parseInt(document.getElementById('dynamicCountInput').value) || 0) * selectedItem.factor;
-        else if (selectedItem.type === 'fixed') finalScore = selectedItem.score;
-        else if (selectedItem.type === 'free') finalScore = parseInt(document.getElementById('dynamicFreeInput').value) || 0;
-        else if (selectedItem.type === 'quran') {
+        if (selectedItem.type === 'level1' || selectedItem.type === 'level2') {
+            const levelInput = document.getElementById('dynamicLevelInput');
+            if (!levelInput || !levelInput.value) { alert('لطفاً سطح را انتخاب کنید.'); return; }
+            finalScore = parseInt(levelInput.value) || 0;
+        } else if (selectedItem.type === 'count') {
+            finalScore = (parseInt(document.getElementById('dynamicCountInput').value) || 0) * selectedItem.factor;
+        } else if (selectedItem.type === 'fixed') {
+            finalScore = selectedItem.score;
+        } else if (selectedItem.type === 'free') {
+            finalScore = parseInt(document.getElementById('dynamicFreeInput').value) || 0;
+        } else if (selectedItem.type === 'quran') {
             const ayat = parseInt(document.getElementById('quranAyatInput').value) || 0;
             const total = parseInt(document.getElementById('quranSurahSelect').value) || 0;
             const threshold = Math.ceil((total / 2) + 1);
@@ -278,9 +375,13 @@ function showPreview() {
     const studentCheckboxes = document.querySelectorAll('.student-checkbox:checked');
     if (studentCheckboxes.length === 0) { alert('لطفاً دانش‌آموز انتخاب کنید.'); return; }
 
+    const dateStr = document.getElementById('recordDate').value;
+    if (!dateStr) { alert('لطفاً تاریخ را انتخاب کنید.'); return; }
+
     document.getElementById('preview-content').innerHTML = `
         <div class="preview-row"><strong>آیتم:</strong> <span>${selectedItem.value}</span></div>
         <div class="preview-row"><strong>تعداد:</strong> <span>${studentCheckboxes.length} نفر</span></div>
+        <div class="preview-row"><strong>تاریخ:</strong> <span>${dateStr}</span></div>
         <div class="preview-row" style="background: #eef2ff; padding: 10px; border-radius: 8px; margin-top: 10px;"><strong>امتیاز:</strong> <span style="font-size: 1.2rem; color: #4A90E2;">${finalScore}</span></div>
     `;
 
@@ -288,7 +389,7 @@ function showPreview() {
         subjectId: parseInt(document.getElementById('recordSubject').value),
         itemName: selectedItem.value,
         title: document.getElementById('recordTitle').value,
-        date: document.getElementById('recordDate').value,
+        date: dateStr,
         students: Array.from(studentCheckboxes).map(cb => parseInt(cb.value)),
         arf: document.getElementById('recordArf').checked,
         finalScore: finalScore
@@ -327,7 +428,13 @@ async function confirmAndSaveRecord() {
             }
         }
 
-        alert('ذخیره شد!'); closePreviewModal(); document.getElementById('record-form').reset(); document.getElementById('dynamic-score-section').style.display = 'none'; loadAllData();
+        alert('ذخیره شد!'); 
+        closePreviewModal(); 
+        document.getElementById('record-form').reset(); 
+        document.getElementById('recordDateDisplay').value = '';
+        document.getElementById('recordDate').value = '';
+        document.getElementById('dynamic-score-section').style.display = 'none'; 
+        loadAllData();
     } catch (error) { alert('خطا!'); closePreviewModal(); }
 }
 
@@ -510,7 +617,7 @@ async function loadQuranRewards() {
 }
 
 // ==========================================
-// 7. گزارشات (آپدیت شده با مرتب‌سازی)
+// 7. گزارشات (با مرتب‌سازی)
 // ==========================================
 function changeReportFilter(filter, btn) {
     currentReportFilter = filter;
@@ -540,7 +647,6 @@ async function generateReports() {
 
         if (students.length === 0) { container.innerHTML = '<p style="text-align:center;">لیست خالی است.</p>'; return; }
 
-        // تابع کمکی برای یافتن سطح غالب
         const getDominantLevel = (studentRecords) => {
             const levelCounts = { "خیلی خوب": 0, "خوب": 0, "قابل قبول": 0, "نیازمند تلاش": 0 };
             studentRecords.forEach(rec => {
