@@ -1,25 +1,6 @@
 // ==========================================
-// 1. ساختار درخت ارزشیابی
+// 1. متغیرهای سراسری
 // ==========================================
-const assessmentTree = [
-    { value: "پرسش و پاسخ", type: "level1", levels: { "خیلی خوب": 25, "خوب": 16, "قابل قبول": 9, "نیازمند تلاش": 0 } },
-    { value: "حفظ و قرائت", type: "level1", levels: { "خیلی خوب": 25, "خوب": 16, "قابل قبول": 9, "نیازمند تلاش": 0 } },
-    { value: "پویش حفظ قرآن کریم", type: "quran", levels: {} },
-    { value: "آزمون مداد و کاغذی", type: "level2", levels: { "خیلی خوب": 100, "خوب": 66, "قابل قبول": 33, "نیازمند تلاش": 0 } },
-    { value: "کاربرگ", type: "count", factor: 10, levels: {} },
-    { value: "آزمون الکترونیکی", type: "level1", levels: { "خیلی خوب": 25, "خوب": 16, "قابل قبول": 9, "نیازمند تلاش": 0 } },
-    { value: "کاردستی و مهارت دست‌ورزی", type: "fixed", score: 25, levels: {} },
-    { value: "نمایش و ایفای نقش", type: "fixed", score: 50, levels: {} },
-    { value: "پروژه و آزمایش علمی", type: "fixed", score: 20, levels: {} },
-    { value: "بازی آموزشی تعاملی", type: "fixed", score: 5, levels: {} },
-    { value: "آزمون مهارت حرکتی", type: "level2", levels: { "خیلی خوب": 100, "خوب": 66, "قابل قبول": 33, "نیازمند تلاش": 0 } },
-    { value: "مشاهده", type: "level2", levels: { "خیلی خوب": 100, "خوب": 66, "قابل قبول": 33, "نیازمند تلاش": 0 } },
-    { value: "تشویق ویژه", type: "free", levels: {} },
-    { value: "تشویق خوش‌خط‌نویسی", type: "fixed", score: 4, levels: {} }
-];
-
-const quranSurahs = { "ناس": 6, "فلق": 5, "توحید": 4, "مسد": 5, "نصر": 3, "کافرون": 6, "کوثر": 3, "ماعون": 7 };
-
 let currentReportFilter = 'class'; 
 let currentStudentView = 'flat'; 
 let isSaveAndNext = false; 
@@ -30,8 +11,16 @@ let currentAttendanceState = {};
 let currentReportType = 'scores'; 
 let currentAttReportFilter = 'class'; 
 
+// متغیرهای صفحه‌بندی
+let currentPage = { students: 1, reports: 1, records: 1 };
+const itemsPerPage = 10;
+
+// آرایه آیتم‌های ارزشیابی (از دیتابیس خوانده می‌شود)
+let assessmentItems = [];
+const quranSurahs = { "ناس": 6, "فلق": 5, "توحید": 4, "مسد": 5, "نصر": 3, "کافرون": 6, "کوثر": 3, "ماعون": 7 };
+
 // ==========================================
-// تابع جدید: نمایش پیام شناور (Toast)
+// 2. توابع کمکی و پیام شناور
 // ==========================================
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast-container');
@@ -55,10 +44,30 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
+// بررسی و یادآوری پشتیبان‌گیری
+function checkBackupReminder() {
+    try {
+        const lastBackup = localStorage.getItem('kosha-last-backup');
+        const statusEl = document.getElementById('backup-status');
+        
+        if (!lastBackup) {
+            if (statusEl) statusEl.innerHTML = 'آخرین پشتیبان‌گیری: <strong style="color:red;">هرگز!</strong>';
+            setTimeout(() => showToast('لطفاً از داده‌های خود نسخه پشتیبان تهیه کنید.', 'info'), 4000);
+        } else {
+            const daysDiff = Math.floor((Date.now() - parseInt(lastBackup)) / (1000 * 60 * 60 * 24));
+            if (statusEl) statusEl.innerHTML = `آخرین پشتیبان‌گیری: <strong>${daysDiff} روز پیش</strong>`;
+            if (daysDiff >= 7) {
+                setTimeout(() => showToast('یک هفته از آخرین پشتیبان‌گیری گذشته است. لطفاً نسخه پشتیبان بگیرید.', 'info'), 4000);
+            }
+        }
+    } catch (e) { console.log(e); }
+}
+
 // ==========================================
-// 2. راه‌اندازی اولیه
+// 3. راه‌اندازی اولیه
 // ==========================================
 function initApp() {
+    // فرم‌های اصلی
     document.getElementById('class-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         await saveData('classProfile', { id: 1, name: document.getElementById('className').value, grade: document.getElementById('classGrade').value, motto: document.getElementById('classMotto').value, teacherName: document.getElementById('teacherName').value });
@@ -111,30 +120,28 @@ function initApp() {
         symbolInput.addEventListener('input', function() {
             const val = this.value;
             const emojis = val.match(/\p{Extended_Pictographic}/gu); 
-            if (emojis && emojis.length > 0) {
-                this.value = emojis[0];
-            } else {
-                this.value = '';
-            }
+            if (emojis && emojis.length > 0) { this.value = emojis[0]; } else { this.value = ''; }
         });
     }
 
+    // تنظیمات آیتم ارزشیابی در فرم ثبت
     const itemSelect = document.getElementById('recordItem');
     if (itemSelect) {
-        itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>';
-        assessmentTree.forEach((item, index) => {
-            const opt = document.createElement('option'); opt.value = index; opt.textContent = item.value;
-            itemSelect.appendChild(opt);
-        });
         itemSelect.addEventListener('change', (e) => { 
             if (e.target.value !== "") {
-                renderScoreInput(assessmentTree[e.target.value]); 
+                const item = window.allAssessmentItems.find(i => i.id == e.target.value);
+                renderScoreInput(item); 
             } else {
                 document.getElementById('dynamic-score-section').style.display = 'none';
             }
         });
     }
 
+    // تنظیمات مدیریت آیتم‌ها (مودال جدید)
+    document.getElementById('item-manager-form').addEventListener('submit', saveItem);
+    document.getElementById('itemType').addEventListener('change', toggleItemTypeFields);
+
+    // نشان‌ها
     document.getElementById('top-student-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         await saveData('badgesSettings', { id: 'topStudent', icon: document.getElementById('topStudentIcon').value, title: document.getElementById('topStudentTitle').value, motto: document.getElementById('topStudentMotto').value });
@@ -146,11 +153,8 @@ function initApp() {
         const selectedSubjectId = document.getElementById('badgeSubjectSelect').value;
         if (!selectedSubjectId) { showToast('لطفاً یک درس انتخاب کنید.', 'error'); return; }
         await saveData('badgesSettings', {
-            id: `subject_${selectedSubjectId}`,
-            subjectId: parseInt(selectedSubjectId),
-            icon: document.getElementById('subjectBadgeIcon').value,
-            title: document.getElementById('subjectBadgeTitle').value,
-            motto: document.getElementById('subjectBadgeMotto').value
+            id: `subject_${selectedSubjectId}`, subjectId: parseInt(selectedSubjectId),
+            icon: document.getElementById('subjectBadgeIcon').value, title: document.getElementById('subjectBadgeTitle').value, motto: document.getElementById('subjectBadgeMotto').value
         });
         showToast('نشان درس ذخیره شد!', 'success'); loadBadgesSettings();
     });
@@ -158,13 +162,15 @@ function initApp() {
     initDateDropdowns();
     initAttendanceDateDropdowns();
     loadAllData();
+    checkBackupReminder();
 }
 
 // ==========================================
-// 3. بارگذاری داده‌ها
+// 4. بارگذاری داده‌ها
 // ==========================================
 async function loadAllData() {
     try {
+        // کلاس
         const classData = await getDataById('classProfile', 1);
         if (classData) {
             document.getElementById('className').value = classData.name || '';
@@ -174,12 +180,28 @@ async function loadAllData() {
             document.getElementById('header-subtitle').textContent = classData.name || 'همیار پرتلاش معلم';
         }
 
+        // آیتم‌های ارزشیابی
+        assessmentItems = await getAllData('assessmentItems');
+        window.allAssessmentItems = assessmentItems; 
+        
+        const recordSubjectSelect = document.getElementById('recordSubject');
+        const itemSelect = document.getElementById('recordItem');
+        const editRecordItemSelect = document.getElementById('editRecordItem');
+        
+        if (itemSelect) {
+            itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + assessmentItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
+        }
+        if (editRecordItemSelect) {
+            editRecordItemSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + assessmentItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
+        }
+
+        // دروس
         const subjects = await getAllData('subjects');
         const subjectsList = document.getElementById('subjects-list');
-        const recordSubjectSelect = document.getElementById('recordSubject');
         const badgeSubjectSelect = document.getElementById('badgeSubjectSelect');
         const reportSubjectSelect = document.getElementById('reportSubjectSelect');
         const recordsFilterSubject = document.getElementById('recordsFilterSubject');
+        const editRecordSubject = document.getElementById('editRecordSubject');
         
         if (subjectsList) {
             subjectsList.innerHTML = subjects.length === 0 ? '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>' : '';
@@ -189,10 +211,12 @@ async function loadAllData() {
         }
         
         if (recordSubjectSelect) recordSubjectSelect.innerHTML = '<option value="" disabled selected>درسی را انتخاب کنید!</option>' + subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        if (editRecordSubject) editRecordSubject.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
         if (badgeSubjectSelect) badgeSubjectSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
         if (reportSubjectSelect) reportSubjectSelect.innerHTML = '<option value="" disabled selected>انتخاب درس...</option>' + subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
         if (recordsFilterSubject) recordsFilterSubject.innerHTML = '<option value="">همه دروس</option>' + subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
 
+        // گروه‌ها
         const groups = await getAllData('groups');
         const groupsList = document.getElementById('groups-list');
         const studentGroupSelect = document.getElementById('studentGroup');
@@ -202,26 +226,16 @@ async function loadAllData() {
         }
         if (studentGroupSelect) studentGroupSelect.innerHTML = '<option value="" disabled selected>گروهی را انتخاب کنید!</option>' + groups.map(g => `<option value="${g.id}">${g.symbol} ${g.name}</option>`).join('');
 
-        const groupFilterSelect = document.getElementById('groupFilterSelect');
-        if (groupFilterSelect) groupFilterSelect.innerHTML = '<option value="">انتخاب گروه...</option>' + groups.map(g => `<option value="${g.id}">${g.symbol} ${g.name}</option>`).join('');
-
+        // دانش‌آموزان
         const students = await getAllData('students');
-        const studentsList = document.getElementById('students-list');
         const recordsFilterStudent = document.getElementById('recordsFilterStudent');
         
         window.allStudentsData = students;
         window.allGroupsData = groups;
 
-        if (studentsList) {
-            studentsList.innerHTML = students.length === 0 ? '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>' : '';
-            students.forEach(st => {
-                const g = groups.find(x => x.id === st.groupId);
-                studentsList.innerHTML += `<div class="list-item"><span><strong>${st.firstName} ${st.lastName}</strong></span><div style="display:flex; gap:5px; align-items:center;"><span class="group-label">${g ? g.symbol+' '+g.name : 'بدون گروه'}</span><button class="btn btn-secondary btn-sm" onclick="editStudent(${st.id})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteItem('students', ${st.id})">🗑️</button></div></div>`;
-            });
-        }
-        
         if (recordsFilterStudent) recordsFilterStudent.innerHTML = '<option value="">همه دانش‌آموزان</option>' + students.map(st => `<option value="${st.id}">${st.firstName} ${st.lastName}</option>`).join('');
         
+        renderStudentsListWithPagination(); // لیست با صفحه‌بندی
         renderStudentCheckboxes();
         loadSessions();
         loadAssessmentRecords();
@@ -230,7 +244,57 @@ async function loadAllData() {
 }
 
 // ==========================================
-// 4. توابع ویرایش و حذف
+// 5. توابع صفحه‌بندی و لیست‌ها
+// ==========================================
+function renderStudentsListWithPagination() {
+    const students = window.allStudentsData || [];
+    const groups = window.allGroupsData || [];
+    const studentsList = document.getElementById('students-list');
+    const pagination = document.getElementById('students-pagination');
+    
+    if (!studentsList) return;
+    
+    if (students.length === 0) { 
+        studentsList.innerHTML = '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>'; 
+        if(pagination) pagination.style.display = 'none';
+        return; 
+    }
+
+    // محاسبه صفحه‌بندی
+    const totalPages = Math.ceil(students.length / itemsPerPage);
+    if (currentPage.students > totalPages) currentPage.students = totalPages;
+    if (currentPage.students < 1) currentPage.students = 1;
+    
+    const startIndex = (currentPage.students - 1) * itemsPerPage;
+    const paginatedStudents = students.slice(startIndex, startIndex + itemsPerPage);
+
+    studentsList.innerHTML = '';
+    paginatedStudents.forEach(st => {
+        const g = groups.find(x => x.id === st.groupId);
+        studentsList.innerHTML += `<div class="list-item"><span><strong>${st.firstName} ${st.lastName}</strong></span><div style="display:flex; gap:5px; align-items:center;"><span class="group-label">${g ? g.symbol+' '+g.name : 'بدون گروه'}</span><button class="btn btn-secondary btn-sm" onclick="editStudent(${st.id})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteItem('students', ${st.id})">🗑️</button></div></div>`;
+    });
+
+    // آپدیت UI صفحه‌بندی
+    if (pagination) {
+        if (totalPages > 1) {
+            pagination.style.display = 'flex';
+            document.getElementById('studentsPageInfo').textContent = `صفحه ${currentPage.students} از ${totalPages}`;
+            document.getElementById('btnPrevStudents').disabled = (currentPage.students === 1);
+            document.getElementById('btnNextStudents').disabled = (currentPage.students === totalPages);
+        } else {
+            pagination.style.display = 'none';
+        }
+    }
+}
+
+function changePage(section, direction) {
+    if (section === 'students') { currentPage.students += direction; renderStudentsListWithPagination(); }
+    else if (section === 'reports') { currentPage.reports += direction; generateReports(); }
+    else if (section === 'records') { currentPage.records += direction; loadAssessmentRecords(); }
+}
+
+// ==========================================
+// 6. توابع ویرایش و حذف پایه
 // ==========================================
 async function deleteItem(storeName, id) {
     if (confirm('آیا مطمئن هستید؟')) {
@@ -276,7 +340,161 @@ async function editStudent(id) {
 }
 
 // ==========================================
-// 5. منطق امتیازدهی و رندر لیست
+// 7. مدیریت آیتم‌های ارزشیابی (سیستم پویا)
+// ==========================================
+function openItemManagementModal() {
+    document.getElementById('item-management-modal').classList.add('show');
+    renderItemsList();
+    resetItemForm();
+}
+
+function closeItemManagementModal() {
+    document.getElementById('item-management-modal').classList.remove('show');
+    loadAllData(); // آپدیت فرم‌های ثبت ارزشیابی
+}
+
+function renderItemsList() {
+    const container = document.getElementById('items-list-container');
+    if (!container) return;
+    if (assessmentItems.length === 0) {
+        container.innerHTML = '<p style="text-align:center;">هیچ آیتمی یافت نشد.</p>';
+        return;
+    }
+    container.innerHTML = '';
+    assessmentItems.forEach(item => {
+        let typeName = item.type === 'level' ? 'سطح محور' : item.type === 'count' ? 'شمارشی' : item.type === 'free' ? 'آزاد' : 'ویژه (قرآن)';
+        container.innerHTML += `
+            <div class="item-management-row">
+                <div><strong>${item.title}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">(${typeName})</span></div>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn btn-secondary btn-sm" onclick="editItem(${item.id})" ${item.type === 'quran' ? 'disabled title="این آیتم سیستمی است"' : ''}>✏️</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteCustomItem(${item.id})" ${item.type === 'quran' ? 'disabled title="این آیتم سیستمی است"' : ''}>🗑️</button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function resetItemForm() {
+    document.getElementById('item-manager-form').reset();
+    document.getElementById('editItemId').value = '';
+    document.getElementById('item-form-title').textContent = '➕ افزودن آیتم جدید';
+    document.getElementById('levels-container').innerHTML = '';
+    document.getElementById('item-type-level').style.display = 'none';
+    document.getElementById('item-type-count').style.display = 'none';
+    document.getElementById('item-type-free').style.display = 'none';
+    document.getElementById('itemTitle').readOnly = false;
+}
+
+function toggleItemTypeFields() {
+    const type = document.getElementById('itemType').value;
+    document.getElementById('item-type-level').style.display = type === 'level' ? 'block' : 'none';
+    document.getElementById('item-type-count').style.display = type === 'count' ? 'block' : 'none';
+    document.getElementById('item-type-free').style.display = type === 'free' ? 'block' : 'none';
+    
+    if (type === 'level' && document.getElementById('levels-container').children.length === 0) {
+        addLevelRow(); addLevelRow(); // دو ردیف پیش‌فرض
+    }
+}
+
+function addLevelRow(name = '', score = '') {
+    const container = document.getElementById('levels-container');
+    const row = document.createElement('div');
+    row.className = 'level-row-input';
+    row.innerHTML = `
+        <input type="text" class="form-control level-name" placeholder="نام سطح" value="${name}" required>
+        <input type="number" class="form-control level-score" placeholder="امتیاز" value="${score}" required>
+        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✖</button>
+    `;
+    container.appendChild(row);
+}
+
+async function editItem(id) {
+    const item = assessmentItems.find(i => i.id === id);
+    if (!item) return;
+    
+    document.getElementById('editItemId').value = item.id;
+    document.getElementById('itemTitle').value = item.title;
+    document.getElementById('itemType').value = item.type;
+    document.getElementById('item-form-title').textContent = '✏️ ویرایش آیتم';
+    
+    // مخفی کردن فیلدها و نمایش فیلد مربوطه
+    document.getElementById('item-type-level').style.display = 'none';
+    document.getElementById('item-type-count').style.display = 'none';
+    document.getElementById('item-type-free').style.display = 'none';
+    
+    if (item.type === 'level') {
+        document.getElementById('item-type-level').style.display = 'block';
+        const container = document.getElementById('levels-container');
+        container.innerHTML = '';
+        item.levels.forEach(l => addLevelRow(l.name, l.score));
+    } else if (item.type === 'count') {
+        document.getElementById('item-type-count').style.display = 'block';
+        document.getElementById('itemUnitScore').value = item.unitScore;
+        document.getElementById('itemCountPlaceholder').value = item.placeholder || '';
+    } else if (item.type === 'free') {
+        document.getElementById('item-type-free').style.display = 'block';
+        document.getElementById('itemFreePlaceholder').value = item.placeholder || '';
+    }
+}
+
+async function saveItem(e) {
+    e.preventDefault();
+    const id = document.getElementById('editItemId').value;
+    const title = document.getElementById('itemTitle').value;
+    const type = document.getElementById('itemType').value;
+    
+    if (!title || !type) { showToast('عنوان و نوع را مشخص کنید.', 'error'); return; }
+    
+    let itemData = { title, type };
+    if (id) itemData.id = parseInt(id);
+    else itemData.id = Date.now(); // تولید ID برای آیتم جدید
+    
+    if (type === 'level') {
+        const levels = [];
+        const rows = document.querySelectorAll('#levels-container .level-row-input');
+        rows.forEach(row => {
+            const name = row.querySelector('.level-name').value;
+            const score = parseInt(row.querySelector('.level-score').value);
+            if (name && !isNaN(score)) levels.push({ name, score });
+        });
+        if (levels.length === 0) { showToast('حداقل یک سطح تعریف کنید.', 'error'); return; }
+        itemData.levels = levels;
+    } else if (type === 'count') {
+        itemData.unitScore = parseInt(document.getElementById('itemUnitScore').value);
+        itemData.placeholder = document.getElementById('itemCountPlaceholder').value;
+    } else if (type === 'free') {
+        itemData.placeholder = document.getElementById('itemFreePlaceholder').value;
+    }
+    
+    try {
+        await saveData('assessmentItems', itemData);
+        showToast('آیتم با موفقیت ذخیره شد!', 'success');
+        resetItemForm();
+        assessmentItems = await getAllData('assessmentItems');
+        window.allAssessmentItems = assessmentItems;
+        renderItemsList();
+        // آپدیت منوی انتخاب در فرم ثبت
+        const itemSelect = document.getElementById('recordItem');
+        if (itemSelect) itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + assessmentItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
+    } catch (error) {
+        showToast('خطا در ذخیره آیتم!', 'error');
+    }
+}
+
+async function deleteCustomItem(id) {
+    if(!confirm('آیا از حذف این آیتم مطمئن هستید؟ (رکوردهای قبلی ثبت شده با این آیتم حذف نمی‌شوند)')) return;
+    await deleteData('assessmentItems', id);
+    showToast('آیتم حذف شد.', 'success');
+    assessmentItems = await getAllData('assessmentItems');
+    window.allAssessmentItems = assessmentItems;
+    renderItemsList();
+    const itemSelect = document.getElementById('recordItem');
+    if (itemSelect) itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + assessmentItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
+}
+
+// ==========================================
+// 8. منطق امتیازدهی بر اساس آیتم‌های جدید
 // ==========================================
 function renderScoreInput(item) {
     const section = document.getElementById('dynamic-score-section');
@@ -284,41 +502,32 @@ function renderScoreInput(item) {
     const label = document.getElementById('score-label');
     section.style.display = 'block';
     container.innerHTML = '';
-    if (!item) {
-        section.style.display = 'none';
-        return;
-    }
+    if (!item) { section.style.display = 'none'; return; }
 
-    // تعیین متن پویا برای برچسب بخش امتیازدهی
-    if (item.type === 'level1' || item.type === 'level2') {
+    if (item.type === 'level') {
         label.textContent = 'انتخاب سطح عملکرد:';
-    } else if (item.type === 'count') {
-        label.textContent = 'تعداد برگه را وارد کنید:';
-    } else if (item.type === 'quran') {
-        label.textContent = 'جزئیات حفظ:';
-    } else if (item.type === 'fixed') {
-        label.textContent = 'امتیاز اختصاص‌یافته:';
-    } else if (item.type === 'free') {
-        label.textContent = 'امتیاز تشویقی را وارد کنید:';
-    }
-
-    if (item.type === 'level1' || item.type === 'level2') {
         const select = document.createElement('select');
         select.className = 'form-control'; select.id = 'dynamicLevelInput'; select.required = true;
         select.innerHTML = '<option value="" disabled selected>انتخاب سطح...</option>';
-        for (const [level, score] of Object.entries(item.levels)) select.innerHTML += `<option value="${score}">${level} (${score} امتیاز)</option>`;
+        item.levels.forEach(level => {
+            select.innerHTML += `<option value="${level.score}">${level.name} (${level.score} امتیاز)</option>`;
+        });
         container.appendChild(select);
     } else if (item.type === 'count') {
+        label.textContent = item.placeholder || 'تعداد واحد را وارد کنید:';
         const input = document.createElement('input');
-        input.type = 'number'; input.className = 'form-control'; input.id = 'dynamicCountInput'; input.min = '1'; input.placeholder = 'تعداد صفحات'; input.required = true;
+        input.type = 'number'; input.className = 'form-control'; input.id = 'dynamicCountInput'; input.min = '1'; input.placeholder = 'تعداد'; input.required = true;
         container.appendChild(input);
-    } else if (item.type === 'fixed') {
+    } else if (item.type === 'fixed') { // برای آیتم‌های ثابت قدیمی
+        label.textContent = 'امتیاز اختصاص‌یافته:';
         container.innerHTML = `<p style="font-weight: bold; color: #4A90E2;">${item.score} امتیاز (خودکار)</p>`;
     } else if (item.type === 'free') {
+        label.textContent = item.placeholder || 'امتیاز را وارد کنید:';
         const input = document.createElement('input');
         input.type = 'number'; input.className = 'form-control'; input.id = 'dynamicFreeInput'; input.min = '0'; input.placeholder = 'عدد امتیاز'; input.required = true;
         container.appendChild(input);
     } else if (item.type === 'quran') {
+        label.textContent = 'جزئیات حفظ:';
         const select = document.createElement('select');
         select.className = 'form-control'; select.id = 'quranSurahSelect';
         select.innerHTML = '<option value="" disabled selected>انتخاب سوره...</option>';
@@ -340,10 +549,11 @@ function renderStudentCheckboxes() {
     if (students.length === 0) { container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ دانش‌آموزی ثبت نشده است.</p>'; return; }
     container.innerHTML = '';
 
-    const createStudentLabel = (st) => {
+    const createStudentLabel = (st, isEdit = false) => {
         const g = groups.find(x => x.id === st.groupId);
         const badge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
-        return `<label class="student-checkbox-item"><input type="checkbox" class="student-checkbox" value="${st.id}"><div class="student-checkbox-item-content"><span>${st.firstName} ${st.lastName}</span>${badge}</div></label>`;
+        const checkboxClass = isEdit ? 'edit-student-checkbox' : 'student-checkbox';
+        return `<label class="student-checkbox-item"><input type="checkbox" class="${checkboxClass}" value="${st.id}"><div class="student-checkbox-item-content"><span>${st.firstName} ${st.lastName}</span>${badge}</div></label>`;
     };
 
     if (currentStudentView === 'flat') {
@@ -378,21 +588,8 @@ function toggleAllStudents(checked) {
     document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = checked); 
     document.querySelectorAll('.group-select-all-checkbox').forEach(cb => cb.checked = checked);
 }
-
-function selectGroupMembers(groupId) {
-    if (!groupId) return;
-    document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = false);
-    if (window.allStudentsData) {
-        window.allStudentsData.forEach(st => {
-            if (st.groupId == groupId) {
-                const checkbox = document.querySelector(`.student-checkbox[value="${st.id}"]`);
-                if (checkbox) checkbox.checked = true;
-            }
-        });
-    }
-}
 // ==========================================
-// 6. تاریخ
+// 9. تاریخ
 // ==========================================
 function initDateDropdowns() {
     const daySelect = document.getElementById('dateDay');
@@ -443,7 +640,7 @@ function jalaliToDateString(jy, jm, jd) {
 }
 
 // ==========================================
-// 7. جلسات
+// 10. جلسات (روزهای آموزشی)
 // ==========================================
 async function createSession() {
     const d = document.getElementById('attDateDay').value;
@@ -522,7 +719,7 @@ async function deleteSession(sessionId) {
 }
 
 // ==========================================
-// 8. حضور و غیاب
+// 11. حضور و غیاب
 // ==========================================
 async function openAttendanceForm(sessionId, dateStr) {
     currentSessionId = sessionId; currentSessionDate = dateStr;
@@ -619,142 +816,38 @@ async function saveAttendance() {
         for (const studentId in currentAttendanceState) {
             const status = currentAttendanceState[studentId];
             const existing = sessionRecords.find(r => r.studentId == studentId);
-            if (existing) { 
-                existing.status = status; 
-                recordsToSave.push(existing); 
-            }
-            else { 
-                recordsToSave.push({ sessionId: currentSessionId, studentId: parseInt(studentId), status: status }); 
-            }
+            if (existing) { existing.status = status; recordsToSave.push(existing); }
+            else { recordsToSave.push({ sessionId: currentSessionId, studentId: parseInt(studentId), status: status }); }
         }
         
         await saveBulkData('attendance', recordsToSave);
         showToast('حضور و غیاب با موفقیت ذخیره شد!', 'success');
-    } catch (e) { 
-        console.error(e); 
-        showToast('خطا در ذخیره حضور و غیاب!', 'error'); 
-    }
+    } catch (e) { console.error(e); showToast('خطا در ذخیره حضور و غیاب!', 'error'); }
 }
 
 // ==========================================
-// 9. سوابق ارزشیابی
-// ==========================================
-async function loadAssessmentRecords() {
-    const container = document.getElementById('assessment-records-list');
-    if (!container) return;
-    container.innerHTML = '<p style="text-align:center;">در حال بارگذاری...</p>';
-    try {
-        const records = await getAllData('records');
-        const subjects = await getAllData('subjects');
-        const filterSubjectEl = document.getElementById('recordsFilterSubject');
-        const filterStudentEl = document.getElementById('recordsFilterStudent');
-        const searchTextEl = document.getElementById('recordsSearchText');
-        const filterSubject = filterSubjectEl ? filterSubjectEl.value : '';
-        const filterStudent = filterStudentEl ? filterStudentEl.value : '';
-        const searchText = searchTextEl ? searchTextEl.value.trim() : '';
-
-        let filteredRecords = records.filter(rec => {
-            if (filterSubject && rec.subjectId != filterSubject) return false;
-            if (filterStudent && (!rec.students || !rec.students.includes(parseInt(filterStudent)))) return false;
-            if (searchText && !rec.title.includes(searchText)) return false;
-            return true;
-        });
-
-        filteredRecords.sort((a, b) => b.date.localeCompare(a.date));
-        const countEl = document.getElementById('records-count');
-        if (countEl) countEl.textContent = `تعداد نتایج: ${filteredRecords.length} رکورد`;
-
-        if (filteredRecords.length === 0) { container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ رکوردی با این فیلترها یافت نشد.</p>'; return; }
-        container.innerHTML = '';
-        filteredRecords.forEach(rec => {
-            const subject = subjects.find(s => s.id === rec.subjectId);
-            const subjectName = subject ? subject.name : 'نامشخص';
-            let studentNames = '';
-            if (rec.students && rec.students.length > 0) {
-                const names = rec.students.map(id => {
-                    const st = window.allStudentsData.find(s => s.id === id);
-                    return st ? `${st.firstName} ${st.lastName}` : '';
-                }).filter(n => n !== '');
-                studentNames = names.join('، ');
-            }
-            container.innerHTML += `
-                <div class="record-item ${rec.arf ? 'arf-list-item' : ''}">
-                    <div class="record-header">
-                        <span class="record-title">${rec.title} ${rec.arf ? '🎁' : ''}</span>
-                        <span class="record-score">${rec.finalScore} امتیاز</span>
-                    </div>
-                    <div class="record-details"><span>📚 ${subjectName} | ${rec.itemName}</span><span>📅 ${rec.date}</span></div>
-                    <div class="record-details" style="font-size: 0.8rem; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">👥 ${studentNames}</div>
-                    <div class="record-actions">
-                        <button class="btn btn-secondary btn-sm" onclick="openEditRecordModal(${rec.id})">✏️ ویرایش</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteRecord(${rec.id})">🗑️ حذف</button>
-                    </div>
-                </div>`;
-        });
-    } catch (e) { console.error(e); container.innerHTML = '<p style="color:red; text-align:center;">خطا در بارگذاری سوابق.</p>'; }
-}
-
-function clearRecordFilters() {
-    document.getElementById('recordsFilterSubject').value = '';
-    document.getElementById('recordsFilterStudent').value = '';
-    document.getElementById('recordsSearchText').value = '';
-    loadAssessmentRecords();
-}
-
-async function deleteRecord(id) {
-    if (!confirm('آیا از حذف این رکورد مطمئن هستید؟')) return;
-    try { await deleteData('records', id); showToast('رکورد حذف شد.', 'success'); loadAssessmentRecords(); loadAllData(); }
-    catch (e) { console.error(e); showToast('خطا در حذف رکورد.', 'error'); }
-}
-
-async function openEditRecordModal(id) {
-    try {
-        const record = await getDataById('records', id);
-        if (!record) return;
-        document.getElementById('editRecordId').value = record.id;
-        document.getElementById('editRecordTitle').value = record.title;
-        document.getElementById('editRecordDate').value = record.date;
-        document.getElementById('editRecordScore').value = record.finalScore;
-        document.getElementById('edit-record-modal').classList.add('show');
-    } catch (e) { console.error(e); showToast('خطا در باز کردن فرم ویرایش.', 'error'); }
-}
-
-function closeEditModal() { document.getElementById('edit-record-modal').classList.remove('show'); }
-
-async function saveEditedRecord() {
-    const id = parseInt(document.getElementById('editRecordId').value);
-    const newTitle = document.getElementById('editRecordTitle').value;
-    const newDate = document.getElementById('editRecordDate').value;
-    const newScore = parseInt(document.getElementById('editRecordScore').value);
-    if (!newTitle || !newDate || isNaN(newScore)) { showToast('لطفاً تمام فیلدها را پر کنید.', 'error'); return; }
-    try {
-        const record = await getDataById('records', id);
-        if (!record) return;
-        record.title = newTitle; record.date = newDate; record.finalScore = newScore;
-        await saveData('records', record);
-        showToast('تغییرات ذخیره شد.', 'success');
-        closeEditModal(); loadAssessmentRecords(); loadAllData();
-    } catch (e) { console.error(e); showToast('خطا در ذخیره.', 'error'); }
-}
-
-// ==========================================
-// 10. پیش‌نمایش و ثبت ارزشیابی
+// 12. ثبت ارزشیابی جدید (پیش‌نمایش و ذخیره)
 // ==========================================
 function showPreview(isFinal) {
     isSaveAndNext = !isFinal;
     const selectedIndex = document.getElementById('recordItem').value;
     if (selectedIndex === "") { showToast('آیتم ارزشیابی را انتخاب کنید.', 'error'); return; }
-    const selectedItem = assessmentTree[selectedIndex];
+    const selectedItem = assessmentItems.find(i => i.id == selectedIndex);
+    if (!selectedItem) { showToast('آیتم یافت نشد.', 'error'); return; }
+    
     let finalScore = 0;
     try {
-        if (selectedItem.type === 'level1' || selectedItem.type === 'level2') {
+        if (selectedItem.type === 'level') {
             const l = document.getElementById('dynamicLevelInput');
             if (!l || !l.value) { showToast('سطح را انتخاب کنید.', 'error'); return; }
             finalScore = parseInt(l.value) || 0;
-        } else if (selectedItem.type === 'count') { finalScore = (parseInt(document.getElementById('dynamicCountInput').value) || 0) * selectedItem.factor; }
-        else if (selectedItem.type === 'fixed') { finalScore = selectedItem.score; }
-        else if (selectedItem.type === 'free') { finalScore = parseInt(document.getElementById('dynamicFreeInput').value) || 0; }
-        else if (selectedItem.type === 'quran') {
+        } else if (selectedItem.type === 'count') { 
+            finalScore = (parseInt(document.getElementById('dynamicCountInput').value) || 0) * selectedItem.unitScore; 
+        } else if (selectedItem.type === 'fixed') { 
+            finalScore = selectedItem.score; 
+        } else if (selectedItem.type === 'free') { 
+            finalScore = parseInt(document.getElementById('dynamicFreeInput').value) || 0; 
+        } else if (selectedItem.type === 'quran') {
             const ayat = parseInt(document.getElementById('quranAyatInput').value) || 0;
             const total = parseInt(document.getElementById('quranSurahSelect').value) || 0;
             const threshold = Math.ceil((total / 2) + 1);
@@ -775,14 +868,15 @@ function showPreview(isFinal) {
     }
 
     document.getElementById('preview-content').innerHTML = `
-        <div class="preview-row"><strong>آیتم:</strong> <span>${selectedItem.value}</span></div>
+        <div class="preview-row"><strong>آیتم:</strong> <span>${selectedItem.title}</span></div>
         <div class="preview-row"><strong>تعداد:</strong> <span>${studentCheckboxes.length} نفر</span></div>
         <div class="preview-row"><strong>تاریخ:</strong> <span>${dateStr}</span></div>
         <div class="preview-row" style="background: #eef2ff; padding: 10px; border-radius: 8px; margin-top: 10px;"><strong>امتیاز:</strong> <span style="font-size: 1.2rem; color: #4A90E2;">${finalScore}</span></div>
     `;
     window.tempRecordData = {
         subjectId: parseInt(document.getElementById('recordSubject').value),
-        itemName: selectedItem.value, title: document.getElementById('recordTitle').value, date: dateStr,
+        itemName: selectedItem.title, // ذخیره عنوان آیتم برای گزارشات
+        title: document.getElementById('recordTitle').value, date: dateStr,
         students: Array.from(studentCheckboxes).map(cb => parseInt(cb.value)),
         arf: document.getElementById('recordArf').checked, finalScore: finalScore
     };
@@ -796,8 +890,8 @@ async function confirmAndSaveRecord() {
     try {
         await saveData('records', window.tempRecordData);
         if (window.tempRecordData.itemName === "پویش حفظ قرآن کریم" && window.tempRecordData.finalScore > 0) {
+            const allRecords = await getAllData('records'); // خواندن یک‌باره در بیرون حلقه
             for (const studentId of window.tempRecordData.students) {
-                const allRecords = await getAllData('records');
                 let totalSurahs = 0, totalAyats = 0;
                 allRecords.forEach(rec => {
                     if (rec.itemName === "پویش حفظ قرآن کریم" && rec.students.includes(studentId)) {
@@ -823,8 +917,177 @@ async function confirmAndSaveRecord() {
         }
     } catch (error) { showToast('خطا در ذخیره!', 'error'); closePreviewModal(); }
 }
+
 // ==========================================
-// 11. جایگاه‌ها و نشان‌ها
+// 13. سوابق ارزشیابی و ویرایش کامل
+// ==========================================
+async function loadAssessmentRecords() {
+    const container = document.getElementById('assessment-records-list');
+    const pagination = document.getElementById('records-pagination');
+    if (!container) return;
+    container.innerHTML = '<p style="text-align:center;">در حال بارگذاری...</p>';
+    try {
+        const records = await getAllData('records');
+        const subjects = await getAllData('subjects');
+        const filterSubjectEl = document.getElementById('recordsFilterSubject');
+        const filterStudentEl = document.getElementById('recordsFilterStudent');
+        const searchTextEl = document.getElementById('recordsSearchText');
+        const filterSubject = filterSubjectEl ? filterSubjectEl.value : '';
+        const filterStudent = filterStudentEl ? filterStudentEl.value : '';
+        const searchText = searchTextEl ? searchTextEl.value.trim() : '';
+
+        let filteredRecords = records.filter(rec => {
+            if (filterSubject && rec.subjectId != filterSubject) return false;
+            if (filterStudent && (!rec.students || !rec.students.includes(parseInt(filterStudent)))) return false;
+            if (searchText && !rec.title.includes(searchText)) return false;
+            return true;
+        });
+
+        filteredRecords.sort((a, b) => b.date.localeCompare(a.date));
+        const countEl = document.getElementById('records-count');
+        if (countEl) countEl.textContent = `تعداد نتایج: ${filteredRecords.length} رکورد`;
+
+        if (filteredRecords.length === 0) { 
+            container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ رکوردی یافت نشد.</p>'; 
+            if(pagination) pagination.style.display = 'none';
+            return; 
+        }
+
+        // اعمال صفحه‌بندی
+        const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+        if (currentPage.records > totalPages) currentPage.records = totalPages;
+        if (currentPage.records < 1) currentPage.records = 1;
+        const startIndex = (currentPage.records - 1) * itemsPerPage;
+        const paginatedRecords = filteredRecords.slice(startIndex, startIndex + itemsPerPage);
+
+        container.innerHTML = '';
+        paginatedRecords.forEach(rec => {
+            const subject = subjects.find(s => s.id === rec.subjectId);
+            const subjectName = subject ? subject.name : 'نامشخص';
+            let studentNames = '';
+            if (rec.students && rec.students.length > 0) {
+                const names = rec.students.map(id => {
+                    const st = window.allStudentsData.find(s => s.id === id);
+                    return st ? `${st.firstName} ${st.lastName}` : '';
+                }).filter(n => n !== '');
+                studentNames = names.join('، ');
+            }
+            container.innerHTML += `
+                <div class="record-item ${rec.arf ? 'arf-list-item' : ''}">
+                    <div class="record-header">
+                        <span class="record-title">${rec.title} ${rec.arf ? '🎁' : ''}</span>
+                        <span class="record-score">${rec.finalScore} امتیاز</span>
+                    </div>
+                    <div class="record-details"><span>📚 ${subjectName} | ${rec.itemName}</span><span>📅 ${rec.date}</span></div>
+                    <div class="record-details" style="font-size: 0.8rem; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">👥 ${studentNames}</div>
+                    <div class="record-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="openEditRecordModal(${rec.id})">✏️ ویرایش کامل</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteRecord(${rec.id})">🗑️ حذف</button>
+                    </div>
+                </div>`;
+        });
+
+        // آپدیت UI صفحه‌بندی
+        if (pagination) {
+            if (totalPages > 1) {
+                pagination.style.display = 'flex';
+                document.getElementById('recordsPageInfo').textContent = `صفحه ${currentPage.records} از ${totalPages}`;
+                document.getElementById('btnPrevRecords').disabled = (currentPage.records === 1);
+                document.getElementById('btnNextRecords').disabled = (currentPage.records === totalPages);
+            } else { pagination.style.display = 'none'; }
+        }
+
+    } catch (e) { console.error(e); container.innerHTML = '<p style="color:red; text-align:center;">خطا در بارگذاری سوابق.</p>'; }
+}
+
+function clearRecordFilters() {
+    document.getElementById('recordsFilterSubject').value = '';
+    document.getElementById('recordsFilterStudent').value = '';
+    document.getElementById('recordsSearchText').value = '';
+    currentPage.records = 1;
+    loadAssessmentRecords();
+}
+
+async function deleteRecord(id) {
+    if (!confirm('آیا از حذف این رکورد مطمئن هستید؟')) return;
+    try { await deleteData('records', id); showToast('رکورد حذف شد.', 'success'); loadAssessmentRecords(); loadAllData(); }
+    catch (e) { console.error(e); showToast('خطا در حذف رکورد.', 'error'); }
+}
+
+// مودال ویرایش کامل رکورد
+async function openEditRecordModal(id) {
+    try {
+        const record = await getDataById('records', id);
+        if (!record) return;
+        document.getElementById('editRecordId').value = record.id;
+        document.getElementById('editRecordTitle').value = record.title;
+        document.getElementById('editRecordDate').value = record.date;
+        document.getElementById('editRecordScore').value = record.finalScore;
+        
+        // پر کردن سلکت‌ها
+        document.getElementById('editRecordSubject').value = record.subjectId;
+        document.getElementById('editRecordItem').value = record.itemName; // از عنوان استفاده می‌کنیم چون ID نداریم
+        
+        // پر کردن چک‌باکس دانش‌آموزان
+        const container = document.getElementById('edit-record-students-container');
+        container.innerHTML = '';
+        const groups = window.allGroupsData || [];
+        
+        window.allStudentsData.forEach(st => {
+            const g = groups.find(x => x.id === st.groupId);
+            const badge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
+            const isChecked = record.students.includes(st.id) ? 'checked' : '';
+            container.innerHTML += `
+                <label class="student-checkbox-item">
+                    <input type="checkbox" class="edit-student-checkbox" value="${st.id}" ${isChecked}>
+                    <div class="student-checkbox-item-content"><span>${st.firstName} ${st.lastName}</span>${badge}</div>
+                </label>
+            `;
+        });
+
+        document.getElementById('edit-record-modal').classList.add('show');
+    } catch (e) { console.error(e); showToast('خطا در باز کردن فرم ویرایش.', 'error'); }
+}
+
+function closeEditModal() { document.getElementById('edit-record-modal').classList.remove('show'); }
+
+async function saveEditedRecord(event) {
+    if(event) event.preventDefault();
+    const id = parseInt(document.getElementById('editRecordId').value);
+    const subjectId = parseInt(document.getElementById('editRecordSubject').value);
+    const itemName = document.getElementById('editRecordItem').value;
+    const newTitle = document.getElementById('editRecordTitle').value;
+    const newDate = document.getElementById('editRecordDate').value;
+    const newScore = parseInt(document.getElementById('editRecordScore').value);
+    
+    const studentCheckboxes = document.querySelectorAll('.edit-student-checkbox:checked');
+    const students = Array.from(studentCheckboxes).map(cb => parseInt(cb.value));
+
+    if (!newTitle || !newDate || isNaN(newScore) || !subjectId || !itemName) { 
+        showToast('لطفاً تمام فیلدهای الزامی را پر کنید.', 'error'); return; 
+    }
+    if (students.length === 0) {
+        showToast('حداقل یک دانش‌آموز را انتخاب کنید.', 'error'); return;
+    }
+
+    try {
+        const record = await getDataById('records', id);
+        if (!record) return;
+        
+        record.subjectId = subjectId;
+        record.itemName = itemName;
+        record.title = newTitle; 
+        record.date = newDate; 
+        record.finalScore = newScore;
+        record.students = students;
+        
+        await saveData('records', record);
+        showToast('رکورد با موفقیت ویرایش شد.', 'success');
+        closeEditModal(); loadAssessmentRecords(); loadAllData();
+    } catch (e) { console.error(e); showToast('خطا در ذخیره.', 'error'); }
+}
+// ==========================================
+// 14. جایگاه‌ها و نشان‌ها
 // ==========================================
 async function loadBadgesSettings() {
     try {
@@ -936,7 +1199,7 @@ async function loadQuranRewards() {
 }
 
 // ==========================================
-// 12. گزارشات
+// 15. گزارشات (با صفحه‌بندی)
 // ==========================================
 function switchReportType(type) {
     currentReportType = type;
@@ -946,6 +1209,9 @@ function switchReportType(type) {
     document.getElementById('btnReportScores').classList.remove('active');
     document.getElementById('btnReportAttendance').classList.remove('active');
     document.getElementById('btnReportRecords').classList.remove('active');
+    
+    currentPage.reports = 1; // ریست صفحه
+    
     if (type === 'scores') { document.getElementById('score-report-section').style.display = 'block'; document.getElementById('btnReportScores').classList.add('active'); generateReports(); }
     else if (type === 'attendance') { document.getElementById('attendance-report-section').style.display = 'block'; document.getElementById('btnReportAttendance').classList.add('active'); generateAttendanceReports(); }
     else if (type === 'records') { document.getElementById('records-report-section').style.display = 'block'; document.getElementById('btnReportRecords').classList.add('active'); loadAssessmentRecords(); }
@@ -956,11 +1222,13 @@ function changeReportFilter(filter, btn) {
     document.querySelectorAll('#score-report-section .filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('subject-filter-container').style.display = filter === 'subject' ? 'block' : 'none';
+    currentPage.reports = 1;
     generateReports();
 }
 
 async function generateReports() {
     const container = document.getElementById('reports-list');
+    const pagination = document.getElementById('reports-pagination');
     if (!container) return;
     container.innerHTML = '<p style="text-align:center;">در حال محاسبه...</p>';
     try {
@@ -972,59 +1240,84 @@ async function generateReports() {
         const students = await getAllData('students'), records = await getAllData('records'), groups = await getAllData('groups');
         const topStudent = await getDataById('badgesSettings', 'topStudent') || { icon: '👑', title: 'شاگرد اول' };
         const sortCriteria = document.getElementById('sortCriteriaSelect') ? document.getElementById('sortCriteriaSelect').value : 'score';
-        if (students.length === 0) { container.innerHTML = '<p style="text-align:center;">لیست خالی است.</p>'; return; }
+        if (students.length === 0) { container.innerHTML = '<p style="text-align:center;">لیست خالی است.</p>'; if(pagination) pagination.style.display='none'; return; }
         
         const getDominantLevel = (sr) => {
             const lc = { "خیلی خوب": 0, "خوب": 0, "قابل قبول": 0, "نیازمند تلاش": 0 };
-            sr.forEach(rec => { const item = assessmentTree.find(i => i.value === rec.itemName); if (item && item.levels) for (const [level, score] of Object.entries(item.levels)) if (score === rec.finalScore) { lc[level]++; break; } });
+            // استفاده از آیتم‌های داینامیک برای تشخیص سطح
+            sr.forEach(rec => { 
+                const item = assessmentItems.find(i => i.title === rec.itemName); 
+                if (item && item.type === 'level' && item.levels) {
+                    item.levels.forEach(level => {
+                        if (level.score === rec.finalScore) lc[level.name] = (lc[level.name] || 0) + 1;
+                    });
+                }
+            });
             let dl = null, mf = 0;
             const lo = { "خیلی خوب": 4, "خوب": 3, "قابل قبول": 2, "نیازمند تلاش": 1 };
-            for (const [level, freq] of Object.entries(lc)) if (freq > mf || (freq === mf && lo[level] > (lo[dl] || 0))) { mf = freq; dl = level; }
+            for (const [level, freq] of Object.entries(lc)) if (freq > mf || (freq === mf && (lo[level] || 0) > (lo[dl] || 0))) { mf = freq; dl = level; }
             return dl;
         };
 
+        let reportData = [];
+        let isGroup = false;
+
         if (currentReportFilter === 'subject') {
             const subjectId = parseInt(document.getElementById('reportSubjectSelect').value);
-            if (!subjectId) { container.innerHTML = '<p style="text-align:center; color:#64748b;">لطفاً یک درس انتخاب کنید.</p>'; return; }
+            if (!subjectId) { container.innerHTML = '<p style="text-align:center; color:#64748b;">لطفاً یک درس انتخاب کنید.</p>'; if(pagination) pagination.style.display='none'; return; }
             const sr = records.filter(r => r.subjectId === subjectId);
-            let ss = students.map(st => { let t = 0; const mr = sr.filter(rec => rec.students.includes(st.id)); mr.forEach(rec => t += rec.finalScore); return { ...st, totalScore: t, count: mr.length, dominantLevel: getDominantLevel(mr) }; });
-            if (sortCriteria === 'level') { const o = { "خیلی خوب": 4, "خوب": 3, "قابل قبول": 2, "نیازمند تلاش": 1, null: 0 }; ss.sort((a, b) => (o[b.dominantLevel] || 0) - (o[a.dominantLevel] || 0)); }
-            else if (sortCriteria === 'count') ss.sort((a, b) => b.count - a.count);
-            else ss.sort((a, b) => b.totalScore - a.totalScore);
-            const ms = ss.length > 0 ? Math.max(...ss.map(s => s.totalScore)) : 0;
-            container.innerHTML = '<h3>📚 گزارش درسی</h3>' + ss.map((st, i) => {
-                const dv = sortCriteria === 'level' ? (st.dominantLevel || '—') : (sortCriteria === 'count' ? `${st.count} ارزشیابی` : `${st.totalScore} امتیاز`);
-                const isF = sortCriteria === 'score' && st.totalScore === ms && ms > 0;
-                const pct = ms > 0 ? (st.totalScore / ms) * 100 : 0;
-                const g = groups.find(x => x.id === st.groupId);
-                const badge = g ? `<span class="group-label" style="margin-right:5px;">${g.symbol} ${g.name}</span>` : '';
-                return `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;"><div style="display: flex; justify-content: space-between; align-items: center;"><span><strong>${i + 1}. ${st.firstName} ${st.lastName}</strong> ${badge} ${isF ? topStudent.icon : ''}</span><div style="display: flex; gap: 5px; align-items: center;"><span class="rank-badge" style="font-size: 1rem; ${isF ? 'background: var(--arf-border); color: white;' : ''}">${dv}</span><button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})">🖨️</button></div></div>${sortCriteria === 'score' ? `<div class="score-bar-container"><div class="score-bar-fill ${isF ? 'is-first' : ''}" style="width: ${pct}%;"></div></div>` : ''}</div>`;
-            }).join('');
+            reportData = students.map(st => { let t = 0; const mr = sr.filter(rec => rec.students.includes(st.id)); mr.forEach(rec => t += rec.finalScore); return { ...st, totalScore: t, count: mr.length, dominantLevel: getDominantLevel(mr) }; });
+            container.innerHTML = '<h3>📚 گزارش درسی</h3>';
         } else if (currentReportFilter === 'group') {
-            let gs = groups.map(g => { let t = 0, c = 0; const gst = students.filter(s => s.groupId === g.id); records.forEach(rec => { rec.students.forEach(id => { if (gst.find(s => s.id === id)) { t += rec.finalScore; c++; } }); }); return { ...g, totalScore: t, count: c }; });
-            if (sortCriteria === 'count') gs.sort((a, b) => b.count - a.count); else gs.sort((a, b) => b.totalScore - a.totalScore);
-            const ms = gs.length > 0 ? Math.max(...gs.map(s => s.totalScore)) : 0;
-            container.innerHTML = '<h3>👥 گزارش گروهی</h3>' + gs.map((g, i) => {
-                const dv = sortCriteria === 'count' ? `${g.count} ارزشیابی` : `${g.totalScore} امتیاز`;
-                const isF = sortCriteria === 'score' && g.totalScore === ms && ms > 0;
-                const pct = ms > 0 ? (g.totalScore / ms) * 100 : 0;
-                return `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;"><div style="display: flex; justify-content: space-between; align-items: center;"><span><strong>${g.symbol} ${g.name}</strong> ${isF ? '🏆' : ''}</span><span class="rank-badge" style="font-size: 1rem; ${isF ? 'background: var(--arf-border); color: white;' : ''}">${dv}</span></div>${sortCriteria === 'score' ? `<div class="score-bar-container"><div class="score-bar-fill ${isF ? 'is-first' : ''}" style="width: ${pct}%;"></div></div>` : ''}</div>`;
-            }).join('');
+            isGroup = true;
+            reportData = groups.map(g => { let t = 0, c = 0; const gst = students.filter(s => s.groupId === g.id); records.forEach(rec => { rec.students.forEach(id => { if (gst.find(s => s.id === id)) { t += rec.finalScore; c++; } }); }); return { ...g, totalScore: t, count: c }; });
+            container.innerHTML = '<h3>👥 گزارش گروهی</h3>';
         } else {
-            let ss = students.map(st => { const mr = records.filter(rec => rec.students.includes(st.id)); let t = 0; mr.forEach(rec => t += rec.finalScore); return { ...st, totalScore: t, count: mr.length, dominantLevel: getDominantLevel(mr) }; });
-            if (sortCriteria === 'level') { const o = { "خیلی خوب": 4, "خوب": 3, "قابل قبول": 2, "نیازمند تلاش": 1, null: 0 }; ss.sort((a, b) => (o[b.dominantLevel] || 0) - (o[a.dominantLevel] || 0)); }
-            else if (sortCriteria === 'count') ss.sort((a, b) => b.count - a.count);
-            else ss.sort((a, b) => b.totalScore - a.totalScore);
-            const ms = ss.length > 0 ? Math.max(...ss.map(s => s.totalScore)) : 0;
-            container.innerHTML = '<h3>🏫 گزارش کلاسی</h3>' + ss.map((st, i) => {
-                const dv = sortCriteria === 'level' ? (st.dominantLevel || '—') : (sortCriteria === 'count' ? `${st.count} ارزشیابی` : `${st.totalScore} امتیاز`);
-                const isF = sortCriteria === 'score' && st.totalScore === ms && ms > 0;
-                const pct = ms > 0 ? (st.totalScore / ms) * 100 : 0;
-                const g = groups.find(x => x.id === st.groupId);
-                const badge = g ? `<span class="group-label" style="margin-right:5px;">${g.symbol} ${g.name}</span>` : '';
-                return `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;"><div style="display: flex; justify-content: space-between; align-items: center;"><span><strong>${i + 1}. ${st.firstName} ${st.lastName}</strong> ${badge} ${isF ? topStudent.icon : ''}</span><div style="display: flex; gap: 5px; align-items: center;"><span class="rank-badge" style="font-size: 1rem; ${isF ? 'background: var(--arf-border); color: white;' : ''}">${dv}</span><button class="btn btn-secondary btn-sm" onclick="openReportCard(${st.id})">🖨️</button></div></div>${sortCriteria === 'score' ? `<div class="score-bar-container"><div class="score-bar-fill ${isF ? 'is-first' : ''}" style="width: ${pct}%;"></div></div>` : ''}</div>`;
-            }).join('');
+            reportData = students.map(st => { const mr = records.filter(rec => rec.students.includes(st.id)); let t = 0; mr.forEach(rec => t += rec.finalScore); return { ...st, totalScore: t, count: mr.length, dominantLevel: getDominantLevel(mr) }; });
+            container.innerHTML = '<h3>🏫 گزارش کلاسی</h3>';
         }
+
+        // مرتب‌سازی
+        if (sortCriteria === 'level') { const o = { "خیلی خوب": 4, "خوب": 3, "قابل قبول": 2, "نیازمند تلاش": 1, null: 0 }; reportData.sort((a, b) => (o[b.dominantLevel] || 0) - (o[a.dominantLevel] || 0)); }
+        else if (sortCriteria === 'count') reportData.sort((a, b) => b.count - a.count);
+        else reportData.sort((a, b) => b.totalScore - a.totalScore);
+
+        const ms = reportData.length > 0 ? Math.max(...reportData.map(s => s.totalScore)) : 0;
+
+        // صفحه‌بندی
+        const totalPages = Math.ceil(reportData.length / itemsPerPage);
+        if (currentPage.reports > totalPages) currentPage.reports = totalPages;
+        if (currentPage.reports < 1) currentPage.reports = 1;
+        const startIndex = (currentPage.reports - 1) * itemsPerPage;
+        const paginatedData = reportData.slice(startIndex, startIndex + itemsPerPage);
+
+        let htmlStr = '';
+        paginatedData.forEach((item, i) => {
+            const globalIndex = startIndex + i + 1;
+            const dv = sortCriteria === 'level' ? (item.dominantLevel || '—') : (sortCriteria === 'count' ? `${item.count} ارزشیابی` : `${item.totalScore} امتیاز`);
+            const isF = sortCriteria === 'score' && item.totalScore === ms && ms > 0;
+            const pct = ms > 0 ? (item.totalScore / ms) * 100 : 0;
+            
+            if (isGroup) {
+                htmlStr += `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;"><div style="display: flex; justify-content: space-between; align-items: center;"><span><strong>${item.symbol} ${item.name}</strong> ${isF ? '🏆' : ''}</span><span class="rank-badge" style="font-size: 1rem; ${isF ? 'background: var(--arf-border); color: white;' : ''}">${dv}</span></div>${sortCriteria === 'score' ? `<div class="score-bar-container"><div class="score-bar-fill ${isF ? 'is-first' : ''}" style="width: ${pct}%;"></div></div>` : ''}</div>`;
+            } else {
+                const g = groups.find(x => x.id === item.groupId);
+                const badge = g ? `<span class="group-label" style="margin-right:5px;">${g.symbol} ${g.name}</span>` : '';
+                htmlStr += `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;"><div style="display: flex; justify-content: space-between; align-items: center;"><span><strong>${globalIndex}. ${item.firstName} ${item.lastName}</strong> ${badge} ${isF ? topStudent.icon : ''}</span><div style="display: flex; gap: 5px; align-items: center;"><span class="rank-badge" style="font-size: 1rem; ${isF ? 'background: var(--arf-border); color: white;' : ''}">${dv}</span><button class="btn btn-secondary btn-sm" onclick="openReportCard(${item.id})">🖨️</button></div></div>${sortCriteria === 'score' ? `<div class="score-bar-container"><div class="score-bar-fill ${isF ? 'is-first' : ''}" style="width: ${pct}%;"></div></div>` : ''}</div>`;
+            }
+        });
+        container.innerHTML += htmlStr;
+
+        // UI صفحه‌بندی
+        if (pagination) {
+            if (totalPages > 1) {
+                pagination.style.display = 'flex';
+                document.getElementById('reportsPageInfo').textContent = `صفحه ${currentPage.reports} از ${totalPages}`;
+                document.getElementById('btnPrevReports').disabled = (currentPage.reports === 1);
+                document.getElementById('btnNextReports').disabled = (currentPage.reports === totalPages);
+            } else { pagination.style.display = 'none'; }
+        }
+
     } catch (e) { console.error(e); container.innerHTML = '<p style="text-align:center; color:red;">خطا</p>'; }
 }
 
@@ -1101,7 +1394,7 @@ async function showAttendanceDetails(studentId, statusType) {
 function closeAttendanceDetails() { document.getElementById('attendance-details-modal').classList.remove('show'); }
 
 // ==========================================
-// 13. کارنامه
+// 16. کارنامه
 // ==========================================
 async function openReportCard(studentId) {
     try {
@@ -1161,7 +1454,7 @@ async function copyReportText() {
 }
 
 // ==========================================
-// 14. پشتیبان‌گیری و CSV
+// 17. پشتیبان‌گیری و CSV
 // ==========================================
 async function exportData() {
     try {
@@ -1173,6 +1466,11 @@ async function exportData() {
         a.download = `kosha_backup_${new Date().toISOString().slice(0,10)}.json`; 
         a.click();
         URL.revokeObjectURL(url);
+        
+        // ثبت تاریخ آخرین پشتیبان‌گیری
+        localStorage.setItem('kosha-last-backup', Date.now());
+        checkBackupReminder(); // آپدیت UI
+        
         showToast('فایل پشتیبان دانلود شد. آن را در جای امنی نگه دارید.', 'info');
     } catch (e) { 
         showToast('خطا در تولید فایل پشتیبان!', 'error'); 
@@ -1228,7 +1526,7 @@ async function exportCSV() {
 }
 
 // ==========================================
-// 15. Service Worker
+// 18. Service Worker
 // ==========================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
