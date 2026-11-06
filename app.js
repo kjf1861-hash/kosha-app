@@ -20,6 +20,8 @@ const assessmentTree = [
 
 const quranSurahs = { "ناس": 6, "فلق": 5, "توحید": 4, "مسد": 5, "نصر": 3, "کافرون": 6, "کوثر": 3, "ماعون": 7 };
 let currentReportFilter = 'class';
+let currentStudentView = 'flat'; // 'flat' or 'grouped'
+let isSaveAndNext = false; // For form submission logic
 
 // ==========================================
 // 2. راه‌اندازی اولیه
@@ -75,20 +77,14 @@ function initApp() {
             itemSelect.appendChild(opt);
         });
         
-        // این بخش مهم است: تنظیم مقدار پیش‌فرض و رندر اولیه
         itemSelect.selectedIndex = 0;
-        // استفاده از setTimeout برای اطمینان از اینکه DOM کاملاً آماده است
-        setTimeout(() => {
-            renderScoreInput(assessmentTree[0]);
-        }, 100);
+        setTimeout(() => { renderScoreInput(assessmentTree[0]); }, 100);
 
         itemSelect.addEventListener('change', (e) => {
             const selectedItem = assessmentTree[e.target.value];
             renderScoreInput(selectedItem);
         });
     }
-
-    document.getElementById('record-form').addEventListener('submit', (e) => { e.preventDefault(); showPreview(); });
 
     document.getElementById('top-student-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -110,14 +106,12 @@ function initApp() {
         alert('ذخیره شد!'); loadBadgesSettings();
     });
 
-    // راه‌اندازی منوهای تاریخ
     initDateDropdowns();
-
     loadAllData();
 }
 
 // ==========================================
-// 3. بارگذاری داده‌ها
+// 3. بارگذاری داده‌ها و رندر لیست دانش‌آموزان
 // ==========================================
 async function loadAllData() {
     try {
@@ -166,6 +160,7 @@ async function loadAllData() {
         const checkboxContainer = document.getElementById('students-checkbox-container');
         
         window.allStudentsData = students;
+        window.allGroupsData = groups;
 
         if (studentsList) {
             studentsList.innerHTML = students.length === 0 ? '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>' : '';
@@ -174,13 +169,73 @@ async function loadAllData() {
                 studentsList.innerHTML += `<div class="list-item"><span><strong>${st.firstName} ${st.lastName}</strong></span><div style="display:flex; gap:5px; align-items:center;"><span class="rank-badge">${g ? g.symbol+' '+g.name : 'بدون گروه'}</span><button class="btn btn-secondary btn-sm" onclick="editStudent(${st.id})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteItem('students', ${st.id})">🗑️</button></div></div>`;
             });
         }
-        if (checkboxContainer) {
-            checkboxContainer.innerHTML = students.length === 0 ? '<p style="text-align:center; color:#64748b;">هیچ دانش‌آموزی نیست.</p>' : '';
-            students.forEach(st => { checkboxContainer.innerHTML += `<label class="student-checkbox-item"><input type="checkbox" class="student-checkbox" value="${st.id}"><span>${st.firstName} ${st.lastName}</span></label>`; });
-        }
+        
+        // رندر کردن لیست دانش‌آموزان بر اساس نمای انتخابی
+        renderStudentCheckboxes();
+
     } catch (e) { console.log('خطا', e); }
 }
 
+function renderStudentCheckboxes() {
+    const container = document.getElementById('students-checkbox-container');
+    if (!container) return;
+
+    const students = window.allStudentsData || [];
+    const groups = window.allGroupsData || [];
+
+    if (students.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ دانش‌آموزی نیست.</p>';
+        return;
+    }
+
+    container.innerHTML = '';
+
+    if (currentStudentView === 'flat') {
+        students.forEach(st => {
+            container.innerHTML += `<label class="student-checkbox-item"><input type="checkbox" class="student-checkbox" value="${st.id}"><span>${st.firstName} ${st.lastName}</span></label>`;
+        });
+    } else {
+        // نمای گروهی
+        groups.forEach(g => {
+            const groupStudents = students.filter(st => st.groupId === g.id);
+            if (groupStudents.length === 0) return;
+
+            let groupHtml = `
+                <details class="group-accordion">
+                    <summary>
+                        <div class="group-header-checkbox">
+                            <input type="checkbox" class="group-select-all-checkbox" onchange="toggleGroupSelection(this, ${g.id})">
+                            <span>${g.symbol} ${g.name}</span>
+                        </div>
+                    </summary>
+                    <div class="group-students-container">
+            `;
+            
+            groupStudents.forEach(st => {
+                groupHtml += `<label class="student-checkbox-item"><input type="checkbox" class="student-checkbox group-student-${g.id}" value="${st.id}"><span>${st.firstName} ${st.lastName}</span></label>`;
+            });
+
+            groupHtml += `</div></details>`;
+            container.innerHTML += groupHtml;
+        });
+    }
+}
+
+function switchStudentView(view) {
+    currentStudentView = view;
+    document.getElementById('btnFlatView').classList.toggle('active', view === 'flat');
+    document.getElementById('btnGroupView').classList.toggle('active', view === 'grouped');
+    renderStudentCheckboxes();
+}
+
+function toggleGroupSelection(checkbox, groupId) {
+    const groupCheckboxes = document.querySelectorAll(`.group-student-${groupId}`);
+    groupCheckboxes.forEach(cb => cb.checked = checkbox.checked);
+}
+
+// ==========================================
+// 4. توابع کمکی (ویرایش، حذف، ...)
+// ==========================================
 async function deleteItem(storeName, id) {
     if (confirm('آیا مطمئن هستید؟')) {
         await deleteData(storeName, id);
@@ -189,9 +244,6 @@ async function deleteItem(storeName, id) {
     }
 }
 
-// ==========================================
-// 4. توابع ویرایش
-// ==========================================
 async function editSubject(id) {
     const subject = await getDataById('subjects', id);
     if (subject) {
@@ -273,7 +325,10 @@ function renderScoreInput(item) {
     }
 }
 
-function toggleAllStudents(checked) { document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = checked); }
+function toggleAllStudents(checked) { 
+    document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = checked); 
+    document.querySelectorAll('.group-select-all-checkbox').forEach(cb => cb.checked = checked);
+}
 
 function selectGroupMembers(groupId) {
     if (!groupId) return;
@@ -298,40 +353,27 @@ function initDateDropdowns() {
 
     if (!daySelect || !monthSelect || !yearSelect) return;
 
-    // پر کردن روزها (1 تا 31) - با گزینه پیش‌فرض "روز"
     daySelect.innerHTML = '<option value="" disabled selected>روز</option>';
-    for (let i = 1; i <= 31; i++) {
-        daySelect.innerHTML += `<option value="${i}">${i}</option>`;
-    }
+    for (let i = 1; i <= 31; i++) daySelect.innerHTML += `<option value="${i}">${i}</option>`;
 
-    // پر کردن ماه‌ها - با گزینه پیش‌فرض "ماه"
     const monthNames = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
     monthSelect.innerHTML = '<option value="" disabled selected>ماه</option>';
-    monthNames.forEach((name, index) => {
-        monthSelect.innerHTML += `<option value="${index + 1}">${name}</option>`;
-    });
+    monthNames.forEach((name, index) => monthSelect.innerHTML += `<option value="${index + 1}">${name}</option>`);
 
-    // پر کردن سال‌ها (1405 تا 1409) - با گزینه پیش‌فرض "سال"
     yearSelect.innerHTML = '<option value="" disabled selected>سال</option>';
-    for (let i = 1405; i <= 1409; i++) {
-        yearSelect.innerHTML += `<option value="${i}">${i}</option>`;
-    }
+    for (let i = 1405; i <= 1409; i++) yearSelect.innerHTML += `<option value="${i}">${i}</option>`;
 
-    // مقدار پیش‌فرض خالی است
     daySelect.value = '';
     monthSelect.value = '';
     yearSelect.value = '';
     document.getElementById('recordDate').value = '';
 
-    // با هر تغییر، فیلد مخفی را به‌روزرسانی کن و هشدار را بردار
     const updateDate = () => {
         const d = daySelect.value;
         const m = monthSelect.value;
         const y = yearSelect.value;
-        if (d && m && y) {
-            document.getElementById('recordDate').value = jalaliToDateString(y, m, d);
-        }
-        // حذف کلاس خطا
+        if (d && m && y) document.getElementById('recordDate').value = jalaliToDateString(y, m, d);
+        
         daySelect.classList.remove('input-error');
         monthSelect.classList.remove('input-error');
         yearSelect.classList.remove('input-error');
@@ -342,21 +384,16 @@ function initDateDropdowns() {
     yearSelect.addEventListener('change', updateDate);
 }
 
-function getTodayJalali() {
-    const now = new Date();
-    const formatter = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' });
-    const parts = formatter.format(now).split('/');
-    return { year: parseInt(parts[0]), month: parseInt(parts[1]), day: parseInt(parts[2]) };
-}
-
 function jalaliToDateString(jy, jm, jd) {
     return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
 }
 
 // ==========================================
-// 6. پیش‌نمایش و ثبت
+// 6. پیش‌نمایش و ثبت (با پشتیبانی از ثبت و نفر بعدی)
 // ==========================================
-function showPreview() {
+function showPreview(isFinal) {
+    isSaveAndNext = !isFinal; // اگر نهایی نبود، یعنی ثبت و نفر بعدی
+
     const selectedIndex = document.getElementById('recordItem').value;
     if (selectedIndex === "") { alert('لطفاً آیتم ارزشیابی را انتخاب کنید.'); return; }
     const selectedItem = assessmentTree[selectedIndex];
@@ -384,13 +421,11 @@ function showPreview() {
     const studentCheckboxes = document.querySelectorAll('.student-checkbox:checked');
     if (studentCheckboxes.length === 0) { alert('لطفاً دانش‌آموز انتخاب کنید.'); return; }
 
-    // اعتبارسنجی تاریخ
     const daySelect = document.getElementById('dateDay');
     const monthSelect = document.getElementById('dateMonth');
     const yearSelect = document.getElementById('dateYear');
     const dateStr = document.getElementById('recordDate').value;
     
-    // پاک کردن خطاهای قبلی
     daySelect.classList.remove('input-error');
     monthSelect.classList.remove('input-error');
     yearSelect.classList.remove('input-error');
@@ -399,7 +434,7 @@ function showPreview() {
         if (!daySelect.value) daySelect.classList.add('input-error');
         if (!monthSelect.value) monthSelect.classList.add('input-error');
         if (!yearSelect.value) yearSelect.classList.add('input-error');
-        alert('لطفاً تاریخ را به طور کامل (روز، ماه و سال) انتخاب کنید.');
+        alert('لطفاً تاریخ را به طور کامل انتخاب کنید.');
         return;
     }
 
@@ -455,15 +490,31 @@ async function confirmAndSaveRecord() {
 
         alert('ذخیره شد!'); 
         closePreviewModal(); 
-        document.getElementById('record-form').reset(); 
-        initDateDropdowns(); // بازنشانی تاریخ به حالت خالی
-        document.getElementById('dynamic-score-section').style.display = 'none'; 
-        loadAllData();
+        
+        if (isSaveAndNext) {
+            // اگر دکمه "ثبت و نفر بعدی" زده شده باشد:
+            // فقط دانش آموزان و امتیاز را پاک می‌کنیم. بقیه فیلدها می‌مانند.
+            toggleAllStudents(false);
+            // پاک کردن مقدار امتیاز
+            const scoreInput = document.getElementById('dynamicLevelInput') || document.getElementById('dynamicCountInput') || document.getElementById('dynamicFreeInput');
+            if (scoreInput) scoreInput.value = '';
+            if (document.getElementById('quranSurahSelect')) document.getElementById('quranSurahSelect').value = '';
+            if (document.getElementById('quranAyatInput')) document.getElementById('quranAyatInput').value = '';
+            
+            // اسکرول به بالای فرم برای انتخاب نفر بعدی
+            document.getElementById('record-form').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            // ثبت نهایی: کل فرم را پاک کن
+            document.getElementById('record-form').reset(); 
+            initDateDropdowns();
+            document.getElementById('dynamic-score-section').style.display = 'none'; 
+            loadAllData();
+        }
     } catch (error) { alert('خطا!'); closePreviewModal(); }
 }
 
 // ==========================================
-// 7. سیستم جایگاه‌ها و نشان‌ها
+// 7. سیستم جایگاه‌ها و نشان‌ها (بدون تغییر)
 // ==========================================
 async function loadBadgesSettings() {
     try {
