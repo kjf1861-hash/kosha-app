@@ -307,9 +307,9 @@ function initDateDropdowns() {
         monthSelect.innerHTML += `<option value="${index + 1}">${name}</option>`;
     });
 
-    // پر کردن سال‌ها (1300 تا 1500)
+    // پر کردن سال‌ها (1405 تا 1409)
     yearSelect.innerHTML = '<option value="" disabled selected>سال</option>';
-    for (let i = 1300; i <= 1500; i++) {
+    for (let i = 1405; i <= 1409; i++) {
         yearSelect.innerHTML += `<option value="${i}">${i}</option>`;
     }
 
@@ -319,7 +319,7 @@ function initDateDropdowns() {
     monthSelect.value = today.month;
     yearSelect.value = today.year;
 
-    // با هر تغییر، فیلد مخفی را به‌روزرسانی کن
+    // با هر تغییر، فیلد مخفی را به‌روزرسانی کن و هشدار را بردار
     const updateDate = () => {
         const d = daySelect.value;
         const m = monthSelect.value;
@@ -327,6 +327,10 @@ function initDateDropdowns() {
         if (d && m && y) {
             document.getElementById('recordDate').value = jalaliToDateString(y, m, d);
         }
+        // حذف کلاس خطا
+        daySelect.classList.remove('input-error');
+        monthSelect.classList.remove('input-error');
+        yearSelect.classList.remove('input-error');
     };
 
     daySelect.addEventListener('change', updateDate);
@@ -335,6 +339,17 @@ function initDateDropdowns() {
 
     // مقدار اولیه
     updateDate();
+}
+
+function getTodayJalali() {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const parts = formatter.format(now).split('/');
+    return { year: parseInt(parts[0]), month: parseInt(parts[1]), day: parseInt(parts[2]) };
+}
+
+function jalaliToDateString(jy, jm, jd) {
+    return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
 }
 
 // ==========================================
@@ -368,8 +383,24 @@ function showPreview() {
     const studentCheckboxes = document.querySelectorAll('.student-checkbox:checked');
     if (studentCheckboxes.length === 0) { alert('لطفاً دانش‌آموز انتخاب کنید.'); return; }
 
+    // اعتبارسنجی تاریخ
+    const daySelect = document.getElementById('dateDay');
+    const monthSelect = document.getElementById('dateMonth');
+    const yearSelect = document.getElementById('dateYear');
     const dateStr = document.getElementById('recordDate').value;
-    if (!dateStr) { alert('لطفاً تاریخ را انتخاب کنید.'); return; }
+    
+    // پاک کردن خطاهای قبلی
+    daySelect.classList.remove('input-error');
+    monthSelect.classList.remove('input-error');
+    yearSelect.classList.remove('input-error');
+
+    if (!daySelect.value || !monthSelect.value || !yearSelect.value || !dateStr) {
+        if (!daySelect.value) daySelect.classList.add('input-error');
+        if (!monthSelect.value) monthSelect.classList.add('input-error');
+        if (!yearSelect.value) yearSelect.classList.add('input-error');
+        alert('لطفاً تاریخ را به طور کامل (روز، ماه و سال) انتخاب کنید.');
+        return;
+    }
 
     document.getElementById('preview-content').innerHTML = `
         <div class="preview-row"><strong>آیتم:</strong> <span>${selectedItem.value}</span></div>
@@ -424,8 +455,7 @@ async function confirmAndSaveRecord() {
         alert('ذخیره شد!'); 
         closePreviewModal(); 
         document.getElementById('record-form').reset(); 
-        // بازنشانی تاریخ به امروز
-        initDateDropdowns();
+        initDateDropdowns(); // بازنشانی تاریخ به امروز
         document.getElementById('dynamic-score-section').style.display = 'none'; 
         loadAllData();
     } catch (error) { alert('خطا!'); closePreviewModal(); }
@@ -802,15 +832,3 @@ function showUpdateToast(newWorker) {
         setTimeout(() => window.location.reload(), 500);
     });
 }
-function getTodayJalali() {
-    const now = new Date();
-    const formatter = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' });
-    const parts = formatter.format(now).split('/');
-    return { year: parseInt(parts[0]), month: parseInt(parts[1]), day: parseInt(parts[2]) };
-}
-
-function jalaliToDateString(jy, jm, jd) {
-    return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
-}
-
-// ادامه در قسمت ۲...
