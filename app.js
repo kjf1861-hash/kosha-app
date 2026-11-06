@@ -31,13 +31,38 @@ let currentReportType = 'scores';
 let currentAttReportFilter = 'class'; 
 
 // ==========================================
+// تابع جدید: نمایش پیام شناور (Toast)
+// ==========================================
+function showToast(message, type = 'success') {
+    const existingToast = document.querySelector('.custom-toast-container');
+    if (existingToast) existingToast.remove();
+
+    const toast = document.createElement('div');
+    toast.className = `custom-toast-container custom-toast-${type}`;
+    
+    let icon = 'ℹ️';
+    if (type === 'success') icon = '✅';
+    else if (type === 'error') icon = '❌';
+
+    toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 100);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// ==========================================
 // 2. راه‌اندازی اولیه
 // ==========================================
 function initApp() {
     document.getElementById('class-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         await saveData('classProfile', { id: 1, name: document.getElementById('className').value, grade: document.getElementById('classGrade').value, motto: document.getElementById('classMotto').value, teacherName: document.getElementById('teacherName').value });
-        alert('ذخیره شد!');
+        showToast('ذخیره شد!', 'success');
         document.getElementById('header-subtitle').textContent = document.getElementById('className').value;
     });
 
@@ -91,13 +116,13 @@ function initApp() {
     document.getElementById('top-student-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         await saveData('badgesSettings', { id: 'topStudent', icon: document.getElementById('topStudentIcon').value, title: document.getElementById('topStudentTitle').value, motto: document.getElementById('topStudentMotto').value });
-        alert('ذخیره شد!'); loadBadgesSettings();
+        showToast('ذخیره شد!', 'success'); loadBadgesSettings();
     });
 
     document.getElementById('subject-badge-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const selectedSubjectId = document.getElementById('badgeSubjectSelect').value;
-        if (!selectedSubjectId) { alert('لطفاً یک درس انتخاب کنید.'); return; }
+        if (!selectedSubjectId) { showToast('لطفاً یک درس انتخاب کنید.', 'error'); return; }
         await saveData('badgesSettings', {
             id: `subject_${selectedSubjectId}`,
             subjectId: parseInt(selectedSubjectId),
@@ -105,7 +130,7 @@ function initApp() {
             title: document.getElementById('subjectBadgeTitle').value,
             motto: document.getElementById('subjectBadgeMotto').value
         });
-        alert('ذخیره شد!'); loadBadgesSettings();
+        showToast('ذخیره شد!', 'success'); loadBadgesSettings();
     });
 
     initDateDropdowns();
@@ -378,18 +403,18 @@ async function createSession() {
     const y = document.getElementById('attDateYear').value;
     if (!d || !m || !y) {
         document.getElementById('attDateDay').classList.add('input-error'); document.getElementById('attDateMonth').classList.add('input-error'); document.getElementById('attDateYear').classList.add('input-error');
-        alert('لطفاً ابتدا تاریخ روز آموزشی را به طور کامل انتخاب کنید.'); return;
+        showToast('لطفاً ابتدا تاریخ روز آموزشی را انتخاب کنید.', 'error'); return;
     }
     const dateStr = jalaliToDateString(y, m, d);
     try {
         const allSessions = await getAllData('sessions');
-        if (allSessions.find(s => s.date === dateStr)) { alert('این روز آموزشی قبلاً ثبت شده است.'); return; }
+        if (allSessions.find(s => s.date === dateStr)) { showToast('این روز آموزشی قبلاً ثبت شده است.', 'error'); return; }
         await saveData('sessions', { date: dateStr });
-        alert('روز آموزشی با موفقیت ثبت شد!');
+        showToast('روز آموزشی با موفقیت ثبت شد!', 'success');
         document.getElementById('attDateDay').value = ''; document.getElementById('attDateMonth').value = ''; document.getElementById('attDateYear').value = '';
         document.getElementById('attDateDay').classList.remove('input-error'); document.getElementById('attDateMonth').classList.remove('input-error'); document.getElementById('attDateYear').classList.remove('input-error');
         loadSessions();
-    } catch (e) { console.error(e); alert('خطا در ثبت روز آموزشی!'); }
+    } catch (e) { console.error(e); showToast('خطا در ثبت روز آموزشی!', 'error'); }
 }
 
 async function loadSessions() {
@@ -421,18 +446,18 @@ async function editSessionDate(sessionId, currentDate) {
     const newDate = prompt('تاریخ جدید را وارد کنید (مثلاً 1405/08/20):', currentDate);
     if (newDate === null) return;
     const trimmed = newDate.trim();
-    if (!/^\d{4}\/\d{2}\/\d{2}$/.test(trimmed)) { alert('فرمت تاریخ نامعتبر است.'); return; }
-    if (trimmed === currentDate) { alert('تاریخ جدید با تاریخ قبلی یکسان است.'); return; }
+    if (!/^\d{4}\/\d{2}\/\d{2}$/.test(trimmed)) { showToast('فرمت تاریخ نامعتبر است.', 'error'); return; }
+    if (trimmed === currentDate) { showToast('تاریخ جدید با تاریخ قبلی یکسان است.', 'error'); return; }
     try {
         const allSessions = await getAllData('sessions');
-        if (allSessions.find(s => s.date === trimmed && s.id !== sessionId)) { alert('این تاریخ قبلاً ثبت شده است.'); return; }
+        if (allSessions.find(s => s.date === trimmed && s.id !== sessionId)) { showToast('این تاریخ قبلاً ثبت شده است.', 'error'); return; }
         const session = await getDataById('sessions', sessionId);
         if (!session) return;
         session.date = trimmed;
         await saveData('sessions', session);
-        alert('تاریخ روز آموزشی با موفقیت به‌روزرسانی شد.');
+        showToast('تاریخ با موفقیت به‌روزرسانی شد.', 'success');
         loadSessions();
-    } catch (e) { console.error(e); alert('خطا در ویرایش تاریخ.'); }
+    } catch (e) { console.error(e); showToast('خطا در ویرایش تاریخ.', 'error'); }
 }
 
 async function deleteSession(sessionId) {
@@ -442,10 +467,10 @@ async function deleteSession(sessionId) {
         const sessionAttendance = allAttendance.filter(a => a.sessionId === sessionId);
         for (const att of sessionAttendance) await deleteData('attendance', att.id);
         await deleteData('sessions', sessionId);
-        alert('روز آموزشی و تمام رکوردهای حضور مرتبط با آن حذف شد.');
+        showToast('روز آموزشی و رکوردهای آن حذف شد.', 'success');
         loadSessions();
         if (currentSessionId === sessionId) closeAttendanceForm();
-    } catch (e) { console.error(e); alert('خطا در حذف روز آموزشی.'); }
+    } catch (e) { console.error(e); showToast('خطا در حذف روز آموزشی.', 'error'); }
 }
 
 // ==========================================
@@ -528,18 +553,30 @@ function setAllAttendance(status) {
 }
 
 async function saveAttendance() {
-    if (!currentSessionId) { alert('ابتدا یک روز آموزشی را انتخاب کنید.'); return; }
+    if (!currentSessionId) { showToast('ابتدا یک روز آموزشی را انتخاب کنید.', 'error'); return; }
     try {
         const allAttendance = await getAllData('attendance');
         const sessionRecords = allAttendance.filter(a => a.sessionId === currentSessionId);
+        const recordsToSave = [];
+
         for (const studentId in currentAttendanceState) {
             const status = currentAttendanceState[studentId];
             const existing = sessionRecords.find(r => r.studentId == studentId);
-            if (existing) { existing.status = status; await saveData('attendance', existing); }
-            else { await saveData('attendance', { sessionId: currentSessionId, studentId: parseInt(studentId), status: status }); }
+            if (existing) { 
+                existing.status = status; 
+                recordsToSave.push(existing); 
+            }
+            else { 
+                recordsToSave.push({ sessionId: currentSessionId, studentId: parseInt(studentId), status: status }); 
+            }
         }
-        alert('حضور و غیاب با موفقیت ذخیره شد!');
-    } catch (e) { console.error(e); alert('خطا در ذخیره حضور و غیاب!'); }
+        
+        await saveBulkData('attendance', recordsToSave);
+        showToast('حضور و غیاب با موفقیت ذخیره شد!', 'success');
+    } catch (e) { 
+        console.error(e); 
+        showToast('خطا در ذخیره حضور و غیاب!', 'error'); 
+    }
 }
 
 // ==========================================
@@ -609,8 +646,8 @@ function clearRecordFilters() {
 
 async function deleteRecord(id) {
     if (!confirm('آیا از حذف این رکورد مطمئن هستید؟')) return;
-    try { await deleteData('records', id); alert('رکورد حذف شد.'); loadAssessmentRecords(); loadAllData(); }
-    catch (e) { console.error(e); alert('خطا در حذف رکورد.'); }
+    try { await deleteData('records', id); showToast('رکورد حذف شد.', 'success'); loadAssessmentRecords(); loadAllData(); }
+    catch (e) { console.error(e); showToast('خطا در حذف رکورد.', 'error'); }
 }
 
 async function openEditRecordModal(id) {
@@ -622,7 +659,7 @@ async function openEditRecordModal(id) {
         document.getElementById('editRecordDate').value = record.date;
         document.getElementById('editRecordScore').value = record.finalScore;
         document.getElementById('edit-record-modal').classList.add('show');
-    } catch (e) { console.error(e); alert('خطا در باز کردن فرم ویرایش.'); }
+    } catch (e) { console.error(e); showToast('خطا در باز کردن فرم ویرایش.', 'error'); }
 }
 
 function closeEditModal() { document.getElementById('edit-record-modal').classList.remove('show'); }
@@ -632,15 +669,15 @@ async function saveEditedRecord() {
     const newTitle = document.getElementById('editRecordTitle').value;
     const newDate = document.getElementById('editRecordDate').value;
     const newScore = parseInt(document.getElementById('editRecordScore').value);
-    if (!newTitle || !newDate || isNaN(newScore)) { alert('لطفاً تمام فیلدها را پر کنید.'); return; }
+    if (!newTitle || !newDate || isNaN(newScore)) { showToast('لطفاً تمام فیلدها را پر کنید.', 'error'); return; }
     try {
         const record = await getDataById('records', id);
         if (!record) return;
         record.title = newTitle; record.date = newDate; record.finalScore = newScore;
         await saveData('records', record);
-        alert('تغییرات ذخیره شد.');
+        showToast('تغییرات ذخیره شد.', 'success');
         closeEditModal(); loadAssessmentRecords(); loadAllData();
-    } catch (e) { console.error(e); alert('خطا در ذخیره.'); }
+    } catch (e) { console.error(e); showToast('خطا در ذخیره.', 'error'); }
 }
 
 // ==========================================
@@ -649,13 +686,13 @@ async function saveEditedRecord() {
 function showPreview(isFinal) {
     isSaveAndNext = !isFinal;
     const selectedIndex = document.getElementById('recordItem').value;
-    if (selectedIndex === "") { alert('آیتم را انتخاب کنید.'); return; }
+    if (selectedIndex === "") { showToast('آیتم را انتخاب کنید.', 'error'); return; }
     const selectedItem = assessmentTree[selectedIndex];
     let finalScore = 0;
     try {
         if (selectedItem.type === 'level1' || selectedItem.type === 'level2') {
             const l = document.getElementById('dynamicLevelInput');
-            if (!l || !l.value) { alert('سطح را انتخاب کنید.'); return; }
+            if (!l || !l.value) { showToast('سطح را انتخاب کنید.', 'error'); return; }
             finalScore = parseInt(l.value) || 0;
         } else if (selectedItem.type === 'count') { finalScore = (parseInt(document.getElementById('dynamicCountInput').value) || 0) * selectedItem.factor; }
         else if (selectedItem.type === 'fixed') { finalScore = selectedItem.score; }
@@ -666,10 +703,10 @@ function showPreview(isFinal) {
             const threshold = Math.ceil((total / 2) + 1);
             finalScore = (ayat >= threshold && total > 0) ? ayat * 5 : 0;
         }
-    } catch (e) { alert('فیلدها را کامل کنید.'); return; }
+    } catch (e) { showToast('فیلدها را کامل کنید.', 'error'); return; }
 
     const studentCheckboxes = document.querySelectorAll('.student-checkbox:checked');
-    if (studentCheckboxes.length === 0) { alert('دانش‌آموز انتخاب کنید.'); return; }
+    if (studentCheckboxes.length === 0) { showToast('دانش‌آموز انتخاب کنید.', 'error'); return; }
     const daySelect = document.getElementById('dateDay'), monthSelect = document.getElementById('dateMonth'), yearSelect = document.getElementById('dateYear');
     const dateStr = document.getElementById('recordDate').value;
     daySelect.classList.remove('input-error'); monthSelect.classList.remove('input-error'); yearSelect.classList.remove('input-error');
@@ -677,7 +714,7 @@ function showPreview(isFinal) {
         if (!daySelect.value) daySelect.classList.add('input-error');
         if (!monthSelect.value) monthSelect.classList.add('input-error');
         if (!yearSelect.value) yearSelect.classList.add('input-error');
-        alert('تاریخ را کامل انتخاب کنید.'); return;
+        showToast('تاریخ را کامل انتخاب کنید.', 'error'); return;
     }
 
     document.getElementById('preview-content').innerHTML = `
@@ -714,7 +751,7 @@ async function confirmAndSaveRecord() {
                 await saveData('badgesSettings', { id: `quranReward_${studentId}_${Date.now()}`, studentId: studentId, title: "تشویق شرکت در پویش حفظ جزء سی قرآن", totalSurahs: totalSurahs, totalAyats: totalAyats, date: window.tempRecordData.date });
             }
         }
-        alert('ذخیره شد!');
+        showToast('ارزشیابی با موفقیت ذخیره شد!', 'success');
         closePreviewModal();
         if (isSaveAndNext) {
             toggleAllStudents(false);
@@ -727,7 +764,7 @@ async function confirmAndSaveRecord() {
             document.getElementById('record-form').reset(); initDateDropdowns();
             document.getElementById('dynamic-score-section').style.display = 'none'; loadAllData();
         }
-    } catch (error) { alert('خطا!'); closePreviewModal(); }
+    } catch (error) { showToast('خطا در ذخیره!', 'error'); closePreviewModal(); }
 }
 // ==========================================
 // 11. جایگاه‌ها و نشان‌ها
@@ -759,7 +796,7 @@ async function saveGroupRanks(maxGroupSize) {
     const ranks = [];
     for (let i = 1; i <= maxGroupSize; i++) ranks.push({ rankNumber: i, icon: document.getElementById(`rankIcon_${i}`).value, title: document.getElementById(`rankTitle_${i}`).value, motto: document.getElementById(`rankMotto_${i}`).value });
     await saveData('badgesSettings', { id: 'groupRanks', ranks: ranks });
-    alert('ذخیره شد!'); loadBadgesSettings();
+    showToast('ذخیره شد!', 'success'); loadBadgesSettings();
 }
 
 async function loadSubjectBadgeList() {
@@ -994,7 +1031,7 @@ async function showAttendanceDetails(studentId, statusType) {
             content.innerHTML = html;
         }
         document.getElementById('attendance-details-modal').classList.add('show');
-    } catch (e) { console.error(e); alert('خطا در بارگذاری جزئیات.'); }
+    } catch (e) { console.error(e); showToast('خطا در بارگذاری جزئیات.', 'error'); }
 }
 
 function closeAttendanceDetails() { document.getElementById('attendance-details-modal').classList.remove('show'); }
@@ -1005,7 +1042,7 @@ function closeAttendanceDetails() { document.getElementById('attendance-details-
 async function openReportCard(studentId) {
     try {
         const student = window.allStudentsData.find(s => s.id === studentId);
-        if (!student) { alert('دانش‌آموز یافت نشد.'); return; }
+        if (!student) { showToast('دانش‌آموز یافت نشد.', 'error'); return; }
         const classData = await getDataById('classProfile', 1) || { name: 'کلاس من', teacherName: 'معلم' };
         const groups = await getAllData('groups'), subjects = await getAllData('subjects'), records = await getAllData('records'), sessions = await getAllData('sessions'), attendance = await getAllData('attendance');
         const topStudentBadge = await getDataById('badgesSettings', 'topStudent');
@@ -1026,34 +1063,37 @@ async function openReportCard(studentId) {
         const ms = Math.max(...ass.map(s => s.score));
         if (ms > 0 && tos === ms && topStudentBadge) bh += `<div class="arf-badge" style="margin-top: 10px;">${topStudentBadge.icon} <strong>${topStudentBadge.title}</strong> - ${topStudentBadge.motto}</div>`;
         
-        // بسته‌بندی کارنامه در یک div با آی‌دی برای کپی کردن
         const html = `<div id="report-card-text-to-copy" style="background: white; padding: 10px; border-radius: 8px;"><div class="rc-header"><h2>🏫 ${classData.name}</h2><p>کارنامه دانش‌آموز</p></div><div class="rc-student-info"><div><strong>👤 ${student.firstName} ${student.lastName}</strong><div style="font-size: 0.9rem; margin-top: 5px;">گروه: ${groupName}</div></div><div style="text-align: left;"><div style="font-size: 0.9rem;">آموزگار: ${classData.teacherName}</div><div style="font-size: 0.9rem;">پایه: ${classData.grade || '-'}</div></div></div><div class="rc-section-title">📅 وضعیت حضور و غیاب (از ${sessions.length} روز آموزشی)</div><div class="rc-stats-row"><div class="rc-stat-box present">حاضر <span>${pc}</span></div><div class="rc-stat-box absent">غایب <span>${ac}</span></div><div class="rc-stat-box late">تأخیر <span>${lc}</span></div></div><div class="rc-section-title">📊 کارنامه دروس</div>${ssh}<div class="rc-subject-row" style="margin-top: 10px; background: var(--primary-light); padding: 10px; border-radius: 8px; border-bottom: none;"><strong>مجموع کل امتیازات:</strong><strong style="color: var(--primary); font-size: 1.1rem;">${tos} امتیاز</strong></div>${bh}</div>`;
         
         document.getElementById('report-card-content').innerHTML = html;
         document.getElementById('report-card-modal').classList.add('show');
-    } catch (e) { console.error(e); alert('خطا در تولید کارنامه.'); }
+    } catch (e) { console.error(e); showToast('خطا در تولید کارنامه.', 'error'); }
 }
 
 function closeReportCard() { document.getElementById('report-card-modal').classList.remove('show'); }
 
-// تابع جدید برای کپی کردن متن کارنامه
-function copyReportText() {
+async function copyReportText() {
     const textToCopy = document.getElementById('report-card-text-to-copy');
     if (!textToCopy) return;
     
-    // ایجاد یک المان موقت برای کپی کردن به صورت متنی
-    const range = document.createRange();
-    range.selectNode(textToCopy);
-    window.getSelection().removeAllRanges();
-    window.getSelection().addRange(range);
+    const text = textToCopy.innerText;
     
     try {
-        document.execCommand('copy');
-        alert('متن کارنامه کپی شد!');
+        await navigator.clipboard.writeText(text);
+        showToast('متن کارنامه کپی شد!', 'success');
     } catch (err) {
-        alert('مرورگر شما از کپی خودکار پشتیبانی نمی‌کند. لطفاً متن را دستی انتخاب کنید.');
+        const range = document.createRange();
+        range.selectNode(textToCopy);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        try {
+            document.execCommand('copy');
+            showToast('متن کارنامه کپی شد!', 'success');
+        } catch (e) {
+            showToast('مرورگر شما از کپی خودکار پشتیبانی نمی‌کند.', 'error');
+        }
+        window.getSelection().removeAllRanges();
     }
-    window.getSelection().removeAllRanges();
 }
 
 // ==========================================
@@ -1064,17 +1104,23 @@ async function exportData() {
         const data = await exportAllData();
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = `kosha_backup.json`; a.click();
+        const a = document.createElement('a'); 
+        a.href = url; 
+        a.download = `kosha_backup_${new Date().toISOString().slice(0,10)}.json`; 
+        a.click();
         URL.revokeObjectURL(url);
-    } catch (e) { alert('خطا: ' + e.message); }
+        showToast('فایل پشتیبان دانلود شد. آن را در جای امنی نگه دارید.', 'info');
+    } catch (e) { 
+        showToast('خطا در تولید فایل پشتیبان!', 'error'); 
+    }
 }
 
 async function importData(event) {
     const file = event.target.files[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = async (e) => {
-        try { const data = JSON.parse(e.target.result); await importAllData(data); alert('بازیابی شد!'); loadAllData(); }
-        catch (err) { alert('فایل نامعتبر! تغییرات لغو شد.'); }
+        try { const data = JSON.parse(e.target.result); await importAllData(data); showToast('بازیابی شد!', 'success'); loadAllData(); }
+        catch (err) { showToast('فایل نامعتبر! تغییرات لغو شد.', 'error'); }
     };
     reader.readAsText(file);
 }
@@ -1113,7 +1159,8 @@ async function exportCSV() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url; a.download = fileName; a.click();
         URL.revokeObjectURL(url);
-    } catch (e) { console.error(e); alert('خطا در تولید فایل اکسل.'); }
+        showToast('فایل اکسل دانلود شد!', 'success');
+    } catch (e) { console.error(e); showToast('خطا در تولید فایل اکسل.', 'error'); }
 }
 
 // ==========================================
