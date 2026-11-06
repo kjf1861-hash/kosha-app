@@ -216,31 +216,52 @@
                 </div>
             </div>
 
-            <!-- تب ۵: حضور و غیاب (جدید) -->
+            <!-- تب ۵: حضور و غیاب (طراحی جدید) -->
             <div id="page-attendance" class="page-section">
+                
+                <!-- بخش ۱: ثبت روز آموزشی -->
                 <div class="card">
-                    <h2 class="card-title">📅 ثبت حضور و غیاب</h2>
-                    
-                    <!-- انتخاب تاریخ -->
+                    <h2 class="card-title">📅 ثبت روز آموزشی جدید</h2>
                     <div class="form-group">
-                        <label class="form-label">تاریخ (الزامی)</label>
+                        <label class="form-label">تاریخ</label>
                         <div style="display: flex; gap: 8px;">
                             <select id="attDateDay" class="form-control" style="flex: 1;" required></select>
                             <select id="attDateMonth" class="form-control" style="flex: 1.5;" required></select>
                             <select id="attDateYear" class="form-control" style="flex: 1.2;" required></select>
                         </div>
-                        <input type="hidden" id="attendanceDate" value="">
+                    </div>
+                    <button type="button" class="btn btn-primary btn-block" onclick="createSession()">➕ ثبت روز آموزشی</button>
+                </div>
+
+                <!-- بخش ۲: لیست روزهای ثبت‌شده -->
+                <div class="card">
+                    <h2 class="card-title">📋 لیست روزهای ثبت‌شده</h2>
+                    <div id="sessions-list" class="list-group">
+                        <!-- با JS پر می‌شود -->
+                    </div>
+                </div>
+
+                <!-- بخش ۳: فرم حضور و غیاب (در ابتدا مخفی) -->
+                <div id="attendance-form-section" class="card" style="display: none;">
+                    <h2 class="card-title" id="attendance-form-title">📝 ثبت حضور و غیاب</h2>
+                    
+                    <div class="view-toggle-group">
+                        <button type="button" id="btnAttFlatView" class="view-toggle-btn active" onclick="switchAttView('flat')">👦 نمای کلاسی</button>
+                        <button type="button" id="btnAttGroupView" class="view-toggle-btn" onclick="switchAttView('grouped')">👥 نمای گروهی</button>
                     </div>
 
-                    <!-- لیست دانش‌آموزان برای حضور و غیاب -->
-                    <div class="form-group">
-                        <label class="form-label">وضعیت دانش‌آموزان</label>
-                        <div id="attendance-students-list" class="attendance-list-container">
-                            <!-- اینجا با جاوااسکریپت پر می‌شود -->
-                        </div>
+                    <div style="margin-bottom: 10px; display: flex; gap: 5px; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="setAllAttendance('present')">همه حاضر 🟢</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="setAllAttendance('absent')">همه غایب 🔴</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="setAllAttendance('late')">همه تأخیر 🟡</button>
+                    </div>
+
+                    <div id="attendance-students-list" class="attendance-list-container">
+                        <!-- با JS پر می‌شود -->
                     </div>
 
                     <button type="button" class="btn btn-primary btn-block mt-4" onclick="saveAttendance()">💾 ذخیره حضور و غیاب</button>
+                    <button type="button" class="btn btn-secondary btn-block mt-4" onclick="closeAttendanceForm()">بستن فرم</button>
                 </div>
             </div>
 
@@ -303,7 +324,7 @@
         </div>
     </div>
 
-    <!-- منوی ناوبری (آپدیت شده با تب حضور و غیاب) -->
+    <!-- منوی ناوبری -->
     <nav class="bottom-nav">
         <a href="#" class="nav-item active" onclick="switchPage('page-class', this)"><span class="icon">🏫</span><span>کلاس</span></a>
         <a href="#" class="nav-item" onclick="switchPage('page-subjects', this)"><span class="icon">📚</span><span>دروس</span></a>
@@ -348,7 +369,7 @@
             if (pageId === 'page-reports' && typeof generateReports === 'function') generateReports();
             if (pageId === 'page-badges' && typeof loadBadgesSettings === 'function') loadBadgesSettings();
             if (pageId === 'page-subjects' && typeof loadSubjectBadgeList === 'function') loadSubjectBadgeList();
-            if (pageId === 'page-attendance' && typeof loadAttendanceList === 'function') loadAttendanceList();
+            if (pageId === 'page-attendance' && typeof loadSessions === 'function') loadSessions();
         }
     </script>
 </body>
