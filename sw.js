@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kosha-cache-v18';
+const CACHE_NAME = 'kosha-cache-v20';
 const ASSETS_TO_CACHE = [
     './', './index.html', './styles.css', './app.js', './db.js', './manifest.json', './icon.svg', './class.js', './lesson.js', './group.js', './session.js', './score.js'
 ];
@@ -14,7 +14,17 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    event.respondWith(fetch(event.request).then((r) => caches.open(CACHE_NAME).then((c) => { c.put(event.request, r.clone()); return r; })).catch(() => caches.match(event.request)));
+    event.respondWith(
+        fetch(event.request)
+        .then((response) => {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, responseClone);
+            });
+            return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
 });
 
 self.addEventListener('message', (event) => {
