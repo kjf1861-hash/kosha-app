@@ -65,6 +65,7 @@
             
             <!-- تب ۱: کلاس -->
             <div id="page-class" class="page-section active">
+                <!-- بخش ۱: مشخصات کلاس -->
                 <div class="card">
                     <h2 class="card-title">🏫 مشخصات کلاس</h2>
                     <form id="class-form">
@@ -78,6 +79,7 @@
                     </form>
                 </div>
 
+                <!-- بخش ۲: دانش‌آموزان (فرم افزودن) -->
                 <div class="card">
                     <h2 class="card-title">👦 افزودن دانش‌آموز</h2>
                     <form id="student-form">
@@ -88,16 +90,13 @@
                     </form>
                 </div>
 
+                <!-- بخش ۳: فهرست دانش‌آموزان -->
                 <div class="card">
                     <h2 class="card-title">📋 فهرست دانش‌آموزان</h2>
                     <div id="students-list" class="list-group"></div>
-                    <div id="students-pagination" class="pagination-container" style="display:none;">
-                        <button class="pagination-btn" id="btnPrevStudents" onclick="changePage('students', -1)">قبلی</button>
-                        <span class="pagination-info" id="studentsPageInfo">صفحه ۱</span>
-                        <button class="pagination-btn" id="btnNextStudents" onclick="changePage('students', 1)">بعدی</button>
-                    </div>
                 </div>
 
+                <!-- بخش گزارش امتیازات کلاسی -->
                 <div class="card">
                     <h2 class="card-title">📈 گزارش امتیازات</h2>
                     <div id="class-score-report-section">
@@ -109,6 +108,7 @@
                     </div>
                 </div>
 
+                <!-- پشتیبان‌گیری و بازیابی -->
                 <div class="card">
                     <h2 class="card-title">⚙️ پشتیبان‌گیری و بازیابی</h2>
                     <div id="backup-status" style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 10px; padding: 8px; background: var(--input-bg); border-radius: 8px;">
@@ -125,6 +125,7 @@
 
             <!-- تب ۲: درس -->
             <div id="page-lesson" class="page-section">
+                <!-- بخش ۱: افزودن ماده درسی -->
                 <div class="card">
                     <h2 class="card-title">📚 افزودن مادهٔ درسی</h2>
                     <form id="lesson-form">
@@ -136,6 +137,7 @@
                     </form>
                 </div>
 
+                <!-- بخش ۲: فهرست مواد درسی -->
                 <div class="card">
                     <h2 class="card-title">📋 فهرست مواد درسی</h2>
                     <div id="lessons-list" class="list-group"></div>
@@ -144,6 +146,7 @@
 
             <!-- تب ۳: گروه -->
             <div id="page-group" class="page-section">
+                <!-- بخش ۱: افزودن گروه -->
                 <div class="card">
                     <h2 class="card-title">👥 افزودن گروه</h2>
                     <form id="group-form">
@@ -158,6 +161,7 @@
                     </form>
                 </div>
 
+                <!-- بخش ۲: فهرست گروه‌ها -->
                 <div class="card">
                     <h2 class="card-title">📋 فهرست گروه‌ها</h2>
                     <div id="groups-list" class="list-group"></div>
@@ -166,6 +170,7 @@
 
             <!-- تب ۴: جلسه -->
             <div id="page-session" class="page-section">
+                <!-- بخش ۱: برنامه هفتگی -->
                 <div class="card">
                     <h2 class="card-title">📅 برنامهٔ هفتگی</h2>
                     <div class="form-group">
@@ -185,6 +190,7 @@
                     <button type="button" class="btn btn-primary btn-block mt-4" onclick="saveWeeklySchedule()">💾 ذخیره برنامه هفتگی</button>
                 </div>
 
+                <!-- بخش ۲: ثبت جلسه آموزشی -->
                 <div class="card">
                     <h2 class="card-title">📝 ثبت جلسهٔ آموزشی جدید</h2>
                     <div class="form-group">
@@ -211,16 +217,18 @@
                     <button type="button" class="btn btn-primary btn-block" onclick="createNewSession()">➕ ثبت جلسه</button>
                 </div>
 
+                <!-- بخش ۳: فهرست جلسات آموزشی -->
                 <div class="card">
                     <h2 class="card-title">📋 فهرست جلسات آموزشی</h2>
                     <div id="sessions-list" class="list-group"></div>
                 </div>
 
+                <!-- بخش گزارش حضور و غیاب -->
                 <div class="card">
                     <h2 class="card-title">📅 گزارش حضور و غیاب</h2>
                     <div class="filter-btn-group">
-                        <button class="filter-btn active" onclick="changeAttReportFilter('class', this)">🏫 کلاسی</button>
-                        <button class="filter-btn" onclick="changeAttReportFilter('group', this)">👥 گروهی</button>
+                        <button type="button" class="filter-btn active" onclick="changeAttReportFilter('class', this)">🏫 کلاسی</button>
+                        <button type="button" class="filter-btn" onclick="changeAttReportFilter('group', this)">👥 گروهی</button>
                     </div>
                     <div class="card" style="background: var(--primary-light); margin-bottom: 15px; border: none;">
                         <h3 style="margin: 0; text-align: center; color: var(--primary-dark);">تعداد کل روزهای آموزشی: <span id="total-sessions-count">0</span></h3>
@@ -276,6 +284,7 @@
                     </form>
                 </div>
 
+                <!-- بخش سوابق ارزشیابی -->
                 <div class="card" style="margin-top: 20px;">
                     <h2 class="card-title">📝 سوابق ارزشیابی</h2>
                     <div class="form-group" style="margin-bottom: 10px;">
@@ -294,9 +303,9 @@
                     <p id="records-count" style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px;"></p>
                     <div id="assessment-records-list" class="list-group"></div>
                     <div id="records-pagination" class="pagination-container" style="display:none;">
-                        <button class="pagination-btn" id="btnPrevRecords" onclick="changePage('records', -1)">قبلی</button>
+                        <button type="button" class="pagination-btn" id="btnPrevRecords" onclick="changePage('records', -1)">قبلی</button>
                         <span class="pagination-info" id="recordsPageInfo">صفحه ۱</span>
-                        <button class="pagination-btn" id="btnNextRecords" onclick="changePage('records', 1)">بعدی</button>
+                        <button type="button" class="pagination-btn" id="btnNextRecords" onclick="changePage('records', 1)">بعدی</button>
                     </div>
                     <div style="margin-top: 15px; display: flex; gap: 10px;">
                         <button type="button" class="btn btn-secondary btn-block" onclick="exportScoreCSV()">📗 خروجی اکسل</button>
@@ -304,6 +313,7 @@
                     </div>
                 </div>
 
+                <!-- بخش تشویق‌های پویش قرآن -->
                 <div class="card" style="margin-top: 20px;">
                     <h2 class="card-title">🏅 تشویق‌های پویش قرآن</h2>
                     <div id="quran-rewards-list" class="list-group"></div>
@@ -313,6 +323,7 @@
         </div> <!-- پایان container -->
     </div> <!-- پایان app-container -->
 
+    <!-- منوی پایین (۵ تب) -->
     <nav class="bottom-nav">
         <a href="#" class="nav-item active" onclick="switchPage('page-class', this)"><span class="icon">🏫</span><span>کلاس</span></a>
         <a href="#" class="nav-item" onclick="switchPage('page-lesson', this)"><span class="icon">📚</span><span>درس</span></a>
@@ -321,7 +332,6 @@
         <a href="#" class="nav-item" onclick="switchPage('page-score', this)"><span class="icon">📝</span><span>امتیاز</span></a>
     </nav>
 
-    <!-- مودال‌ها (این بخش تغییری نکرده و همان کدهای قبلی است) -->
     <!-- مودال پیش‌نمایش ارزشیابی -->
     <div id="preview-modal" class="modal-overlay">
         <div class="modal-content">
@@ -420,7 +430,7 @@
         </div>
     </div>
 
-    <!-- مودال مشاهده جزئیات درس -->
+    <!-- مودال جدید: مشاهده جزئیات درس (مدال‌دهی) -->
     <div id="lesson-details-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header" id="lesson-details-title">📊 جزئیات درس</div>
@@ -435,7 +445,7 @@
         </div>
     </div>
 
-    <!-- مودال مشاهده جزئیات گروه -->
+    <!-- مودال جدید: مشاهده جزئیات گروه (مدال‌دهی) -->
     <div id="group-details-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header" id="group-details-title">📊 جزئیات گروه</div>
@@ -446,7 +456,7 @@
         </div>
     </div>
 
-    <!-- مودال مشاهده جزئیات جلسه -->
+    <!-- مودال جدید: مشاهده جزئیات جلسه (حضور و غیاب زنگ‌ها) -->
     <div id="session-details-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header" id="session-details-title">📅 جزئیات جلسه</div>
@@ -458,7 +468,7 @@
         </div>
     </div>
 
-    <!-- مودال مشاهده جزئیات دانش‌آموز -->
+    <!-- مودال جدید: مشاهده جزئیات دانش‌آموز -->
     <div id="student-details-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header" id="student-details-title">👤 جزئیات دانش‌آموز</div>
@@ -471,7 +481,7 @@
 
     <!-- بارگذاری فایل‌های ماژولار جاوااسکریپت -->
     <script src="db.js"></script>
-    <script src="app.js"></script> <!-- هسته اصلی -->
+    <script src="app.js"></script>
     <script src="class.js"></script>
     <script src="lesson.js"></script>
     <script src="group.js"></script>
