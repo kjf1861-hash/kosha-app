@@ -488,7 +488,7 @@
     <script src="score.js"></script>
     
     <script>
-        // توابع تم (شب/روز) در اینجا باقی می‌مانند
+        // توابع تم (شب/روز)
         function initTheme() {
             let savedTheme = null;
             try { savedTheme = localStorage.getItem('kosha-theme'); } catch (e) {}
@@ -531,12 +531,12 @@
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
             navElement.classList.add('active');
             
-            // فراخوانی توابع لود دیتای مربوط به هر تب
-            if (pageId === 'page-class' && typeof loadClassData === 'function') loadClassData();
-            if (pageId === 'page-lesson' && typeof loadLessonData === 'function') loadLessonData();
-            if (pageId === 'page-group' && typeof loadGroupData === 'function') loadGroupData();
-            if (pageId === 'page-session' && typeof loadSessionData === 'function') loadSessionData();
-            if (pageId === 'page-score' && typeof loadScoreData === 'function') loadScoreData();
+            // فراخوانی صحیح توابع رندر
+            if (pageId === 'page-class' && typeof renderClassData === 'function') renderClassData();
+            if (pageId === 'page-lesson' && typeof renderLessonData === 'function') renderLessonData();
+            if (pageId === 'page-group' && typeof renderGroupData === 'function') renderGroupData();
+            if (pageId === 'page-session' && typeof renderSessionData === 'function') renderSessionData();
+            if (pageId === 'page-score' && typeof renderScoreData === 'function') renderScoreData();
         }
     </script>
 </body>
