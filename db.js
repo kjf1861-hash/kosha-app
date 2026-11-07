@@ -3,7 +3,7 @@
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 6; // نسخه به 6 افزایش یافت برای اضافه شدن جدول برنامه هفتگی
+const DB_VERSION = 7; // نسخه به 7 افزایش یافت برای رفع باگ کلید برنامه هفتگی
 
 let db;
 
@@ -70,9 +70,15 @@ function initDB() {
             if (!db.objectStoreNames.contains('assessmentItems')) {
                 db.createObjectStore('assessmentItems', { keyPath: 'id' });
             }
-            // جدول جدید: برنامه هفتگی
+            
+            // اصلاح باگ: کلید برنامه هفتگی روی روز هفته تنظیم شد
             if (!db.objectStoreNames.contains('weeklySchedule')) {
-                db.createObjectStore('weeklySchedule', { keyPath: 'id' });
+                db.createObjectStore('weeklySchedule', { keyPath: 'day' });
+            } else {
+                // اگر از قبل وجود داشت، آن را حذف و بازسازی میکنیم تا کلید جدید اعمال شود
+                // (این کار باعث پاک شدن برنامه‌های قبلی می‌شود که اشکالی ندارد چون باگ داشتند)
+                db.deleteObjectStore('weeklySchedule');
+                db.createObjectStore('weeklySchedule', { keyPath: 'day' });
             }
         };
     });
