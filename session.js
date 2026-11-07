@@ -29,12 +29,10 @@ async function renderScheduleForDay() {
     if (!container) return;
 
     const schedules = await getAllData('weeklySchedule');
-    let schedule = schedules.find(s => s.day === day);
+    let schedule = schedules.find(s => s.day === day); // پیدا کردن رکورد همان روز
 
     let periods = schedule ? schedule.periods : [null, null, null, null, null]; // 5 زنگ پیش‌فرض
     if (periods.length < 5) periods = [...periods, ...Array(5 - periods.length).fill(null)];
-
-    const subjectsOptions = window.allSubjectsData.map(s => `<option value="${s.id}">${s.symbol || ''} ${s.name}</option>`).join('');
 
     container.innerHTML = '';
     periods.forEach((subjectId, index) => {
@@ -82,6 +80,7 @@ async function saveWeeklySchedule() {
         periods.push(sel.value ? parseInt(sel.value) : null);
     });
 
+    // ذخیره با کلید روز
     await saveData('weeklySchedule', { day: day, periods: periods });
     showToast(`برنامه هفتگی روز ${day} ذخیره شد!`, 'success');
 }
