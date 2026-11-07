@@ -81,39 +81,34 @@ function initApp() {
     initDateDropdowns();
     initSessionDateDropdowns();
     
-    // اتصال مستقیم رویدادها (بدون نیاز به توابع init... در فایل‌های دیگر)
-    // تب کلاس
-    if(document.getElementById('class-form')) document.getElementById('class-form').addEventListener('submit', saveClassProfile);
-    if(document.getElementById('student-form')) document.getElementById('student-form').addEventListener('submit', saveStudent);
+    // اتصال مستقیم رویدادها با مدیریت خطا
+    try {
+        if(document.getElementById('class-form')) document.getElementById('class-form').addEventListener('submit', saveClassProfile);
+        if(document.getElementById('student-form')) document.getElementById('student-form').addEventListener('submit', saveStudent);
+        if(document.getElementById('lesson-form')) document.getElementById('lesson-form').addEventListener('submit', saveLesson);
+        if(document.getElementById('group-form')) document.getElementById('group-form').addEventListener('submit', saveGroup);
+        
+        if(document.getElementById('scheduleDaySelect')) document.getElementById('scheduleDaySelect').addEventListener('change', renderScheduleForDay);
+        if(document.getElementById('sessionDayOfWeek')) document.getElementById('sessionDayOfWeek').addEventListener('change', checkScheduleExists);
 
-    // تب درس
-    if(document.getElementById('lesson-form')) document.getElementById('lesson-form').addEventListener('submit', saveLesson);
-
-    // تب گروه
-    if(document.getElementById('group-form')) document.getElementById('group-form').addEventListener('submit', saveGroup);
-
-    // تب جلسه
-    if(document.getElementById('scheduleDaySelect')) document.getElementById('scheduleDaySelect').addEventListener('change', renderScheduleForDay);
-    if(document.getElementById('sessionDayOfWeek')) document.getElementById('sessionDayOfWeek').addEventListener('change', checkScheduleExists);
-
-    // تب امتیاز
-    if(document.getElementById('recordItem')) {
-        document.getElementById('recordItem').addEventListener('change', (e) => {
-            if (e.target.value !== "") {
-                const item = window.allAssessmentItems.find(i => i.id == e.target.value);
-                if(item) renderScoreInput(item);
-            } else {
-                document.getElementById('dynamic-score-section').style.display = 'none';
-            }
-        });
+        if(document.getElementById('recordItem')) {
+            document.getElementById('recordItem').addEventListener('change', (e) => {
+                if (e.target.value !== "") {
+                    const item = window.allAssessmentItems.find(i => i.id == e.target.value);
+                    if(item) renderScoreInput(item);
+                } else {
+                    document.getElementById('dynamic-score-section').style.display = 'none';
+                }
+            });
+        }
+        if(document.getElementById('edit-record-form')) document.getElementById('edit-record-form').addEventListener('submit', saveEditedRecord);
+        if(document.getElementById('item-manager-form')) document.getElementById('item-manager-form').addEventListener('submit', saveItem);
+        if(document.getElementById('itemType')) document.getElementById('itemType').addEventListener('change', toggleItemTypeFields);
+    } catch (error) {
+        console.error("خطا در اتصال رویدادها:", error);
     }
-    if(document.getElementById('edit-record-form')) document.getElementById('edit-record-form').addEventListener('submit', saveEditedRecord);
 
-    // مودال آیتم‌ها
-    if(document.getElementById('item-manager-form')) document.getElementById('item-manager-form').addEventListener('submit', saveItem);
-    if(document.getElementById('itemType')) document.getElementById('itemType').addEventListener('change', toggleItemTypeFields);
-
-    // بارگذاری داده‌ها
+    // بارگذاری اولیه داده‌ها
     loadAllData();
     checkBackupReminder();
 }
@@ -145,7 +140,6 @@ async function loadAllData() {
         assessmentItems = await getAllData('assessmentItems');
         window.allAssessmentItems = assessmentItems;
 
-        // رندر تب‌ها
         if (typeof renderClassData === 'function') renderClassData();
         if (typeof renderLessonData === 'function') renderLessonData();
         if (typeof renderGroupData === 'function') renderGroupData();
