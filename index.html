@@ -157,6 +157,20 @@
                     <h2 class="card-title">📋 فهرست گروه‌ها</h2>
                     <div id="groups-list" class="list-group"></div>
                 </div>
+
+                <!-- بخش جدید: اختصاص دانش‌آموزان -->
+                <div class="card">
+                    <h2 class="card-title">🔗 اختصاص دانش‌آموزان به گروه</h2>
+                    <div class="form-group">
+                        <label class="form-label">انتخاب دانش‌آموز</label>
+                        <select id="assignStudentSelect" class="form-control"></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">انتخاب گروه</label>
+                        <select id="assignGroupSelect" class="form-control"></select>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-block" onclick="assignStudentToGroup()">💾 ثبت گروه‌بندی</button>
+                </div>
             </div>
 
             <!-- تب ۴: جلسه -->
@@ -317,7 +331,7 @@
         <a href="#" class="nav-item" onclick="switchPage('page-score', this)"><span class="icon">📝</span><span>امتیاز</span></a>
     </nav>
 
-    <!-- مودال‌ها (بدون تغییر) -->
+    <!-- مودال‌ها -->
     <div id="preview-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header">👁️ پیش‌نمایش</div><div id="preview-content"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closePreviewModal()">انصراف</button><button type="button" class="btn btn-primary" onclick="confirmAndSaveRecord()">✅ تأیید و ذخیره</button></div></div></div>
     <div id="edit-record-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header">✏️ ویرایش کامل رکورد ارزشیابی</div><form id="edit-record-form"><input type="hidden" id="editRecordId"><div class="form-group"><label class="form-label">درس</label><select id="editRecordSubject" class="form-control" required></select></div><div class="form-group"><label class="form-label">آیتم ارزشیابی</label><select id="editRecordItem" class="form-control" required></select></div><div class="form-group"><label class="form-label">عنوان</label><input type="text" id="editRecordTitle" class="form-control" required></div><div class="form-group"><label class="form-label">تاریخ</label><input type="text" id="editRecordDate" class="form-control" required></div><div class="form-group"><label class="form-label">امتیاز</label><input type="number" id="editRecordScore" class="form-control" required></div><div class="form-group"><label class="form-label">دانش‌آموزان</label><div id="edit-record-students-container" class="student-checkbox-list"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeEditModal()">انصراف</button><button type="submit" class="btn btn-primary" onclick="saveEditedRecord(event)">💾 ذخیره تغییرات</button></div></form></div></div>
     <div id="item-management-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header">⚙️ مدیریت آیتم‌های ارزشیابی</div><div id="items-list-container" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px;"></div><hr style="margin: 20px 0; border-top: 1px dashed var(--border-color);"><h4 id="item-form-title" style="margin-bottom: 15px; color: var(--primary);">➕ افزودن آیتم جدید</h4><form id="item-manager-form"><input type="hidden" id="editItemId" value=""><div class="form-group"><label class="form-label">عنوان آیتم</label><input type="text" id="itemTitle" class="form-control" placeholder="مثلاً: تکلیف شب" required></div><div class="form-group"><label class="form-label">نوع آیتم</label><select id="itemType" class="form-control" onchange="toggleItemTypeFields()" required><option value="" disabled selected>انتخاب کنید...</option><option value="level">سطح محور (مثل آزمون مداد و کاغذی)</option><option value="count">شمارشی (مثل کاربرگ)</option><option value="free">آزاد (مثل تشویق ویژه)</option></select></div><div id="item-type-level" style="display:none; background: var(--input-bg); padding: 10px; border-radius: 8px;"><div class="form-group"><label class="form-label">متن راهنما (Label)</label><input type="text" id="itemLevelPlaceholder" class="form-control" placeholder="مثلاً: انتخاب سطح عملکرد:" required></div><label class="form-label">سطوح و امتیازات</label><div id="levels-container"></div><button type="button" class="btn btn-secondary btn-sm mt-4" onclick="addLevelRow()">➕ افزودن سطح</button></div><div id="item-type-count" style="display:none; background: var(--input-bg); padding: 10px; border-radius: 8px;"><div class="form-group"><label class="form-label">امتیاز هر واحد</label><input type="number" id="itemUnitScore" class="form-control" value="10" min="1" required></div><div class="form-group"><label class="form-label">متن راهنما (Placeholder)</label><input type="text" id="itemCountPlaceholder" class="form-control" placeholder="مثلاً: تعداد برگه را وارد کنید:" required></div></div><div id="item-type-free" style="display:none; background: var(--input-bg); padding: 10px; border-radius: 8px;"><div class="form-group"><label class="form-label">متن راهنما (Placeholder)</label><input type="text" id="itemFreePlaceholder" class="form-control" placeholder="مثلاً: امتیاز تشویقی را وارد کنید:" required></div></div><div class="modal-footer" style="justify-content: space-between;"><button type="button" class="btn btn-secondary" onclick="resetItemForm()">لغو / آیتم جدید</button><button type="submit" class="btn btn-primary">💾 ذخیره آیتم</button></div></form><div class="modal-footer" style="margin-top: 10px;"><button type="button" class="btn btn-secondary btn-block" onclick="closeItemManagementModal()">بستن پنجره</button></div></div></div>
@@ -328,7 +342,6 @@
     <div id="session-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="session-details-title">📅 جزئیات جلسه</div><div id="session-details-content"></div><div class="modal-footer" style="flex-direction: column; gap: 10px;"><button type="button" class="btn btn-primary btn-block" onclick="saveAllSessionAttendance()">💾 ذخیره کل حضور و غیاب</button><button type="button" class="btn btn-secondary btn-block" onclick="closeSessionDetails()">بستن</button></div></div></div>
     <div id="student-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="student-details-title">👤 جزئیات دانش‌آموز</div><div id="student-details-content" style="max-height: 60vh; overflow-y: auto;"></div><div class="modal-footer"><button type="button" class="btn btn-secondary btn-block" onclick="closeStudentDetails()">بستن</button></div></div></div>
 
-    <!-- بارگذاری فایل‌های ماژولار جاوااسکریپت -->
     <script src="db.js"></script>
     <script src="app.js"></script>
     <script src="class.js"></script>
@@ -361,7 +374,6 @@
         }
         initTheme();
 
-        // 1. ابتدا برنامه را راه اندازی میکنیم (در پس زمینه)
         window.addEventListener('load', async () => {
             try { await initDB(); } catch (error) { console.warn('دیتابیس محلی غیرفعال است.'); }
             try {
@@ -371,7 +383,6 @@
             }
         });
 
-        // 2. جدا کردن منطق لودینگ صفحه (صفحه لوگو حتما برداشته میشود)
         window.addEventListener('load', () => {
             setTimeout(() => {
                 const splash = document.getElementById('splash-screen');
