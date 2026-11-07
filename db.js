@@ -3,24 +3,24 @@
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 5; // نسخه به 5 افزایش یافت برای اضافه شدن جدول آیتم‌های ارزشیابی
+const DB_VERSION = 6; // نسخه به 6 افزایش یافت برای اضافه شدن جدول برنامه هفتگی
 
 let db;
 
 // آرایه آیتم‌های پیش‌فرض (۱۴ آیتم)
 const defaultAssessmentItems = [
-    { id: 1, title: "پرسش و پاسخ", type: "level", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
-    { id: 2, title: "حفظ و قرائت", type: "level", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
+    { id: 1, title: "پرسش و پاسخ", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
+    { id: 2, title: "حفظ و قرائت", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
     { id: 3, title: "پویش حفظ قرآن کریم", type: "quran" },
-    { id: 4, title: "آزمون مداد و کاغذی", type: "level", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
+    { id: 4, title: "آزمون مداد و کاغذی", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
     { id: 5, title: "کاربرگ", type: "count", unitScore: 10, placeholder: "تعداد برگه را وارد کنید:" },
-    { id: 6, title: "آزمون الکترونیکی", type: "level", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
+    { id: 6, title: "آزمون الکترونیکی", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
     { id: 7, title: "کاردستی و مهارت دست‌ورزی", type: "fixed", score: 25 },
     { id: 8, title: "نمایش و ایفای نقش", type: "fixed", score: 50 },
     { id: 9, title: "پروژه و آزمایش علمی", type: "fixed", score: 20 },
     { id: 10, title: "بازی آموزشی تعاملی", type: "fixed", score: 5 },
-    { id: 11, title: "آزمون مهارت حرکتی", type: "level", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
-    { id: 12, title: "مشاهده", type: "level", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
+    { id: 11, title: "آزمون مهارت حرکتی", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
+    { id: 12, title: "مشاهده", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
     { id: 13, title: "تشویق ویژه", type: "free", placeholder: "امتیاز تشویقی را وارد کنید:" },
     { id: 14, title: "تشویق خوش‌خط‌نویسی", type: "fixed", score: 4 }
 ];
@@ -37,7 +37,7 @@ function initDB() {
         request.onsuccess = (event) => {
             db = event.target.result;
             console.log('پایگاه داده با موفقیت راه‌اندازی شد.');
-            seedAssessmentItems(); // مقداردهی اولیه آیتم‌ها
+            seedAssessmentItems(); 
             resolve(db);
         };
 
@@ -67,15 +67,17 @@ function initDB() {
                 attStore.createIndex('sessionId', 'sessionId', { unique: false });
                 attStore.createIndex('studentId', 'studentId', { unique: false });
             }
-            // جدول جدید: آیتم‌های ارزشیابی
             if (!db.objectStoreNames.contains('assessmentItems')) {
                 db.createObjectStore('assessmentItems', { keyPath: 'id' });
+            }
+            // جدول جدید: برنامه هفتگی
+            if (!db.objectStoreNames.contains('weeklySchedule')) {
+                db.createObjectStore('weeklySchedule', { keyPath: 'id' });
             }
         };
     });
 }
 
-// تابع جدید: مقداردهی اولیه ۱۴ آیتم پیش‌فرض
 async function seedAssessmentItems() {
     try {
         const items = await getAllData('assessmentItems');
@@ -157,7 +159,7 @@ function clearStore(storeName) {
 
 async function exportAllData() {
     const data = {};
-    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems'];
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule'];
     for (const store of stores) {
         try { data[store] = await getAllData(store); } catch (e) { data[store] = []; }
     }
@@ -167,7 +169,7 @@ async function exportAllData() {
 async function importAllData(data) {
     if (!data || typeof data !== 'object') throw new Error('داده‌های نامعتبر');
     
-    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems'];
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule'];
     const backup = {};
     for (const store of stores) { backup[store] = await getAllData(store); }
     
