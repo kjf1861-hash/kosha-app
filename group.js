@@ -29,6 +29,11 @@ async function saveGroup(e) {
 }
 
 function renderGroupData() {
+    renderGroupsList();
+    renderGroupAssignmentUI();
+}
+
+function renderGroupsList() {
     const container = document.getElementById('groups-list');
     if (!container) return;
 
@@ -95,6 +100,46 @@ function renderGroupData() {
             </div>
         `;
     });
+}
+
+function renderGroupAssignmentUI() {
+    const studentSelect = document.getElementById('assignStudentSelect');
+    const groupSelect = document.getElementById('assignGroupSelect');
+    if (!studentSelect || !groupSelect) return;
+
+    // Populate students
+    studentSelect.innerHTML = '<option value="" disabled selected>انتخاب دانش‌آموز...</option>' + 
+        window.allStudentsData.map(st => {
+            const g = window.allGroupsData.find(x => x.id === st.groupId);
+            const groupName = g ? ` (در گروه ${g.name})` : ' (بدون گروه)';
+            return `<option value="${st.id}">${st.firstName} ${st.lastName}${groupName}</option>`;
+        }).join('');
+
+    // Populate groups
+    groupSelect.innerHTML = '<option value="" disabled selected>انتخاب گروه...</option>' + 
+        window.allGroupsData.map(g => `<option value="${g.id}">${g.symbol} ${g.name}</option>`).join('');
+}
+
+async function assignStudentToGroup() {
+    const studentId = document.getElementById('assignStudentSelect').value;
+    const groupId = document.getElementById('assignGroupSelect').value;
+
+    if (!studentId || !groupId) {
+        showToast('لطفاً دانش‌آموز و گروه را انتخاب کنید.', 'error');
+        return;
+    }
+
+    try {
+        const student = await getDataById('students', parseInt(studentId));
+        if (student) {
+            student.groupId = parseInt(groupId);
+            await saveData('students', student);
+            showToast('دانش‌آموز با موفقیت به گروه اختصاص یافت.', 'success');
+            loadAllData(); 
+        }
+    } catch (error) {
+        showToast('خطا در اختصاص گروه!', 'error');
+    }
 }
 
 async function editGroup(id) {
@@ -188,10 +233,30 @@ function renderGroupDetails() {
                     <span class="medal-badge" style="font-size:1.2rem;">${medal}</span>
                     <strong>${st.firstName} ${st.lastName}</strong>
                 </div>
-                <span class="rank-badge" style="font-size:0.9rem;">${st.totalScore} امتیاز</span>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span class="rank-badge" style="font-size:0.9rem;">${st.totalScore} امتیاز</span>
+                    <button class="btn btn-danger btn-sm" onclick="removeStudentFromGroup(${st.id})" title="حذف از گروه">🗑️</button>
+                </div>
             </div>
         `;
     });
 
     container.innerHTML = html;
+}
+
+async function removeStudentFromGroup(studentId) {
+    if (!confirm('آیا از حذف این دانش‌آموز از گروه مطمئن هستید؟')) return;
+    try {
+        const student = await getDataById('students', studentId);
+        if (student) {
+            student.groupId = null;
+            await saveData('students', student);
+            showToast('دانش‌آموز از گروه حذف شد.', 'success');
+            await loadAllData(); // رفرش لیست‌های پس‌زمینه
+            renderGroupDetails(); // رفرش محتوای مودال
+        }
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در حذف دانش‌آموز از گروه!', 'error');
+    }
 }
