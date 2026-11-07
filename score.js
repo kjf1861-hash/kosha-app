@@ -8,8 +8,9 @@ let currentStudentView = 'flat';
 function initScoreEvents() {
     document.getElementById('recordItem').addEventListener('change', (e) => {
         if (e.target.value !== "") {
+            // پیدا کردن آیتم بر اساس ID
             const item = window.allAssessmentItems.find(i => i.id == e.target.value);
-            renderScoreInput(item);
+            if(item) renderScoreInput(item);
         } else {
             document.getElementById('dynamic-score-section').style.display = 'none';
         }
@@ -30,10 +31,10 @@ function renderScoreData() {
     if (editRecordSubject) editRecordSubject.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + subjOptions;
     if (recordsFilterSubject) recordsFilterSubject.innerHTML = '<option value="">همه دروس</option>' + subjOptions;
 
-    // پر کردن منوی آیتم‌ها
+    // پر کردن منوی آیتم‌ها (value روی ID تنظیم شد)
     const itemSelect = document.getElementById('recordItem');
     const editRecordItemSelect = document.getElementById('editRecordItem');
-    const itemOptions = window.allAssessmentItems.map(i => `<option value="${i.title}">${i.title}</option>`).join('');
+    const itemOptions = window.allAssessmentItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
     
     if (itemSelect) itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + itemOptions;
     if (editRecordItemSelect) editRecordItemSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + itemOptions;
@@ -157,7 +158,8 @@ function showPreview(isFinal) {
     const selectedIndex = document.getElementById('recordItem').value;
     if (selectedIndex === "") { showToast('آیتم ارزشیابی را انتخاب کنید.', 'error'); return; }
     
-    const selectedItem = window.allAssessmentItems.find(i => i.title === selectedIndex);
+    // پیدا کردن آیتم بر اساس ID
+    const selectedItem = window.allAssessmentItems.find(i => i.id == selectedIndex);
     if (!selectedItem) { showToast('آیتم یافت نشد.', 'error'); return; }
     
     let finalScore = 0;
@@ -348,7 +350,9 @@ async function openEditRecordModal(id) {
         document.getElementById('editRecordDate').value = record.date;
         document.getElementById('editRecordScore').value = record.finalScore;
         document.getElementById('editRecordSubject').value = record.subjectId;
-        document.getElementById('editRecordItem').value = record.itemName; 
+        // منوی آیتم‌های ویرایش هم بر اساس ID
+        const itemInList = window.allAssessmentItems.find(i => i.title === record.itemName);
+        document.getElementById('editRecordItem').value = itemInList ? itemInList.id : ''; 
         
         const container = document.getElementById('edit-record-students-container');
         container.innerHTML = '';
@@ -375,13 +379,17 @@ async function saveEditedRecord(event) {
     if(event) event.preventDefault();
     const id = parseInt(document.getElementById('editRecordId').value);
     const subjectId = parseInt(document.getElementById('editRecordSubject').value);
-    const itemName = document.getElementById('editRecordItem').value;
+    const itemId = document.getElementById('editRecordItem').value;
     const newTitle = document.getElementById('editRecordTitle').value;
     const newDate = document.getElementById('editRecordDate').value;
     const newScore = parseInt(document.getElementById('editRecordScore').value);
     
     const studentCheckboxes = document.querySelectorAll('.edit-student-checkbox:checked');
     const students = Array.from(studentCheckboxes).map(cb => parseInt(cb.value));
+
+    // پیدا کردن عنوان آیتم از روی ID
+    const selectedItem = window.allAssessmentItems.find(i => i.id == itemId);
+    const itemName = selectedItem ? selectedItem.title : '';
 
     if (!newTitle || !newDate || isNaN(newScore) || !subjectId || !itemName) { 
         showToast('لطفاً تمام فیلدهای الزامی را پر کنید.', 'error'); return; 
