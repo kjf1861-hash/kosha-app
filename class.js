@@ -26,10 +26,18 @@ async function saveClassProfile(e) {
 async function saveStudent(e) {
     e.preventDefault();
     const editId = document.getElementById('editStudentId').value;
+    let existingGroupId = null;
+    
+    // اگر در حال ویرایش است، گروه قبلی را حفظ کن
+    if (editId) {
+        const existing = await getDataById('students', parseInt(editId));
+        if (existing) existingGroupId = existing.groupId;
+    }
+
     const data = {
         firstName: document.getElementById('studentFirstName').value,
         lastName: document.getElementById('studentLastName').value,
-        groupId: null // گروه بعدا در تب گروه تعیین می‌شود
+        groupId: existingGroupId
     };
     if (editId) data.id = parseInt(editId);
     
