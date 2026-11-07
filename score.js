@@ -3,7 +3,7 @@
 // ==========================================
 
 let isSaveAndNext = false;
-let currentStudentView = 'flat'; 
+// متغیر currentStudentView در app.js تعریف شده است و نباید اینجا تکرار شود
 
 function initScoreEvents() {
     document.getElementById('recordItem').addEventListener('change', (e) => {
@@ -31,7 +31,7 @@ function renderScoreData() {
     if (editRecordSubject) editRecordSubject.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + subjOptions;
     if (recordsFilterSubject) recordsFilterSubject.innerHTML = '<option value="">همه دروس</option>' + subjOptions;
 
-    // پر کردن منوی آیتم‌ها (value روی ID تنظیم شد)
+    // پر کردن منوی آیتم‌ها
     const itemSelect = document.getElementById('recordItem');
     const editRecordItemSelect = document.getElementById('editRecordItem');
     const itemOptions = window.allAssessmentItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
@@ -350,7 +350,7 @@ async function openEditRecordModal(id) {
         document.getElementById('editRecordDate').value = record.date;
         document.getElementById('editRecordScore').value = record.finalScore;
         document.getElementById('editRecordSubject').value = record.subjectId;
-        // منوی آیتم‌های ویرایش هم بر اساس ID
+        
         const itemInList = window.allAssessmentItems.find(i => i.title === record.itemName);
         document.getElementById('editRecordItem').value = itemInList ? itemInList.id : ''; 
         
@@ -387,7 +387,6 @@ async function saveEditedRecord(event) {
     const studentCheckboxes = document.querySelectorAll('.edit-student-checkbox:checked');
     const students = Array.from(studentCheckboxes).map(cb => parseInt(cb.value));
 
-    // پیدا کردن عنوان آیتم از روی ID
     const selectedItem = window.allAssessmentItems.find(i => i.id == itemId);
     const itemName = selectedItem ? selectedItem.title : '';
 
