@@ -59,7 +59,6 @@ function checkBackupReminder() {
     } catch (e) { console.log(e); }
 }
 
-// محدود کردن فیلدهای نماد به ایموجی
 function applyEmojiRestriction(inputId) {
     const input = document.getElementById(inputId);
     if (input) {
@@ -72,7 +71,7 @@ function applyEmojiRestriction(inputId) {
 }
 
 // ==========================================
-// 3. راه‌اندازی اولیه
+// 3. راه‌اندازی اولیه و اتصال رویدادها
 // ==========================================
 function initApp() {
     applyEmojiRestriction('classSymbol');
@@ -82,18 +81,39 @@ function initApp() {
     initDateDropdowns();
     initSessionDateDropdowns();
     
-    // مقداردهی اولیه تب‌ها
-    if (typeof initClassEvents === 'function') initClassEvents();
-    if (typeof initLessonEvents === 'function') initLessonEvents();
-    if (typeof initGroupEvents === 'function') initGroupEvents();
-    if (typeof initSessionEvents === 'function') initSessionEvents();
-    if (typeof initScoreEvents === 'function') initScoreEvents();
+    // اتصال مستقیم رویدادها (بدون نیاز به توابع init... در فایل‌های دیگر)
+    // تب کلاس
+    if(document.getElementById('class-form')) document.getElementById('class-form').addEventListener('submit', saveClassProfile);
+    if(document.getElementById('student-form')) document.getElementById('student-form').addEventListener('submit', saveStudent);
 
-    // مدیریت فرم آیتم‌ها در مودال
-    document.getElementById('item-manager-form').addEventListener('submit', saveItem);
-    document.getElementById('itemType').addEventListener('change', toggleItemTypeFields);
+    // تب درس
+    if(document.getElementById('lesson-form')) document.getElementById('lesson-form').addEventListener('submit', saveLesson);
 
-    // بارگذاری اولیه
+    // تب گروه
+    if(document.getElementById('group-form')) document.getElementById('group-form').addEventListener('submit', saveGroup);
+
+    // تب جلسه
+    if(document.getElementById('scheduleDaySelect')) document.getElementById('scheduleDaySelect').addEventListener('change', renderScheduleForDay);
+    if(document.getElementById('sessionDayOfWeek')) document.getElementById('sessionDayOfWeek').addEventListener('change', checkScheduleExists);
+
+    // تب امتیاز
+    if(document.getElementById('recordItem')) {
+        document.getElementById('recordItem').addEventListener('change', (e) => {
+            if (e.target.value !== "") {
+                const item = window.allAssessmentItems.find(i => i.id == e.target.value);
+                if(item) renderScoreInput(item);
+            } else {
+                document.getElementById('dynamic-score-section').style.display = 'none';
+            }
+        });
+    }
+    if(document.getElementById('edit-record-form')) document.getElementById('edit-record-form').addEventListener('submit', saveEditedRecord);
+
+    // مودال آیتم‌ها
+    if(document.getElementById('item-manager-form')) document.getElementById('item-manager-form').addEventListener('submit', saveItem);
+    if(document.getElementById('itemType')) document.getElementById('itemType').addEventListener('change', toggleItemTypeFields);
+
+    // بارگذاری داده‌ها
     loadAllData();
     checkBackupReminder();
 }
@@ -103,7 +123,6 @@ function initApp() {
 // ==========================================
 async function loadAllData() {
     try {
-        // مشخصات کلاس
         const classData = await getDataById('classProfile', 1);
         if (classData) {
             document.getElementById('className').value = classData.name || '';
@@ -115,7 +134,6 @@ async function loadAllData() {
             document.getElementById('header-subtitle').textContent = classData.name || 'همیار پرتلاش معلم';
         }
 
-        // دریافت تمام داده‌ها
         window.allStudentsData = await getAllData('students');
         window.allGroupsData = await getAllData('groups');
         window.allSubjectsData = await getAllData('subjects');
@@ -127,7 +145,7 @@ async function loadAllData() {
         assessmentItems = await getAllData('assessmentItems');
         window.allAssessmentItems = assessmentItems;
 
-        // فراخوانی توابع رندر در تب‌های مختلف (با نام‌های صحیح)
+        // رندر تب‌ها
         if (typeof renderClassData === 'function') renderClassData();
         if (typeof renderLessonData === 'function') renderLessonData();
         if (typeof renderGroupData === 'function') renderGroupData();
