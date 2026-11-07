@@ -82,7 +82,7 @@ function initApp() {
     initDateDropdowns();
     initSessionDateDropdowns();
     
-    // مقداردهی اولیه تب‌ها (فراخوانی توابع از فایل‌های دیگر)
+    // مقداردهی اولیه تب‌ها
     if (typeof initClassEvents === 'function') initClassEvents();
     if (typeof initLessonEvents === 'function') initLessonEvents();
     if (typeof initGroupEvents === 'function') initGroupEvents();
@@ -93,6 +93,7 @@ function initApp() {
     document.getElementById('item-manager-form').addEventListener('submit', saveItem);
     document.getElementById('itemType').addEventListener('change', toggleItemTypeFields);
 
+    // بارگذاری اولیه
     loadAllData();
     checkBackupReminder();
 }
@@ -126,7 +127,7 @@ async function loadAllData() {
         assessmentItems = await getAllData('assessmentItems');
         window.allAssessmentItems = assessmentItems;
 
-        // فراخوانی توابع رندر در تب‌های مختلف
+        // فراخوانی توابع رندر در تب‌های مختلف (با نام‌های صحیح)
         if (typeof renderClassData === 'function') renderClassData();
         if (typeof renderLessonData === 'function') renderLessonData();
         if (typeof renderGroupData === 'function') renderGroupData();
@@ -388,7 +389,7 @@ function changePage(section, direction) {
     }
     else if (section === 'records') { 
         currentPage.records += direction; 
-        if(typeof renderScoreRecords === 'function') renderScoreRecords(); 
+        if(typeof loadAssessmentRecords === 'function') loadAssessmentRecords(); 
     }
 }
 
