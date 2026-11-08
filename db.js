@@ -3,7 +3,7 @@
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 9; // نسخه به 9 افزایش یافت برای پاکسازی آیتم‌های تکراری
+const DB_VERSION = 10; // نسخه به 10 افزایش یافت تا دیتابیس جدید ساخته شود و کدهای قدیمی پاک شوند
 
 let db;
 
@@ -34,8 +34,8 @@ function initDB() {
         request.onsuccess = (event) => {
             db = event.target.result;
             console.log('پایگاه داده با موفقیت راه‌اندازی شد.');
-            // پاکسازی آیتم‌های تکراری پس از باز شدن دیتابیس
-            cleanUpDuplicateItems().then(() => resolve(db));
+            // دیگر نیازی به پاکسازی آیتم‌های تکراری نیست
+            resolve(db);
         };
 
         request.onupgradeneeded = (event) => {
@@ -65,40 +65,17 @@ function initDB() {
                 attStore.createIndex('studentId', 'studentId', { unique: false });
             }
             if (!db.objectStoreNames.contains('assessmentItems')) {
-                db.createObjectStore('assessmentItems', { keyPath: 'id' });
+                const itemStore = db.createObjectStore('assessmentItems', { keyPath: 'id' });
+                // اضافه کردن آیتم‌های پیش‌فرض در هنگام ساخت اولیه
+                for (const item of defaultAssessmentItems) {
+                    itemStore.add(item);
+                }
             }
             if (!db.objectStoreNames.contains('weeklySchedule')) {
                 db.createObjectStore('weeklySchedule', { keyPath: 'day' });
             }
         };
     });
-}
-
-// تابع جدید: پاکسازی آیتم‌های تکراری و اضافه کردن 11 آیتم عمومی
-async function cleanUpDuplicateItems() {
-    try {
-        const existingItems = await getAllData('assessmentItems');
-        
-        // اگر آیتم‌های تکراری وجود دارد
-        if (existingItems.length > 0) {
-            // حذف تمام آیتم‌های قبلی
-            await clearStore('assessmentItems');
-            
-            // اضافه کردن 11 آیتم جدید
-            for (const item of defaultAssessmentItems) {
-                await saveData('assessmentItems', item);
-            }
-            console.log('آیتم‌های ارزشیابی به‌روزرسانی شدند.');
-        } else {
-            // اگر دیتابیس خالی بود، 11 آیتم جدید را اضافه کن
-            for (const item of defaultAssessmentItems) {
-                await saveData('assessmentItems', item);
-            }
-            console.log('آیتم‌های پیش‌فرض با موفقیت اضافه شدند.');
-        }
-    } catch (e) {
-        console.error('خطا در پاکسازی آیتم‌ها:', e);
-    }
 }
 
 function saveData(storeName, data) {
