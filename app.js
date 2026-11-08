@@ -348,7 +348,7 @@ async function exportData() {
     } catch (e) { showToast('خطا در تولید فایل پشتیبان!', 'error'); }
 }
 
-// *** تابع اصلاح‌شده برای رفع باگ بارگذاری همزمان ***
+// *** تابع اصلاح‌شده نهایی: رفرش کامل صفحه بعد از بازیابی ***
 async function importData(event) {
     const file = event.target.files[0]; 
     if (!file) return;
@@ -366,13 +366,12 @@ async function importData(event) {
             const data = JSON.parse(e.target.result); 
             await importAllData(data); 
             
-            // نمایش پیام موفقیت
-            showToast('اطلاعات با موفقیت بازیابی شد!', 'success'); 
+            showToast('اطلاعات با موفقیت بازیابی شد! در حال بارگذاری مجدد...', 'success'); 
             
-            // *** تأخیر کوچک برای اطمینان از نوشتن کامل داده‌ها در دیتابیس ***
+            // *** رفرش کامل صفحه برای پاک کردن حافظه موقت ***
             setTimeout(() => {
-                loadAllData();
-            }, 500);
+                window.location.reload();
+            }, 1000);
 
         }
         catch (err) { 
