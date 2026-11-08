@@ -3,15 +3,14 @@
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 7; // نسخه به 7 افزایش یافت برای رفع باگ کلید برنامه هفتگی
+const DB_VERSION = 8; // نسخه به 8 افزایش یافت برای اعمال تغییرات جدید
 
 let db;
 
-// آرایه آیتم‌های پیش‌فرض (۱۴ آیتم)
+// آرایه آیتم‌های پیش‌فرض (11 آیتم عمومی)
 const defaultAssessmentItems = [
     { id: 1, title: "پرسش و پاسخ", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
     { id: 2, title: "حفظ و قرائت", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
-    { id: 3, title: "پویش حفظ قرآن کریم", type: "quran" },
     { id: 4, title: "آزمون مداد و کاغذی", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
     { id: 5, title: "کاربرگ", type: "count", unitScore: 10, placeholder: "تعداد برگه را وارد کنید:" },
     { id: 6, title: "آزمون الکترونیکی", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
@@ -20,9 +19,7 @@ const defaultAssessmentItems = [
     { id: 9, title: "پروژه و آزمایش علمی", type: "fixed", score: 20 },
     { id: 10, title: "بازی آموزشی تعاملی", type: "fixed", score: 5 },
     { id: 11, title: "آزمون مهارت حرکتی", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
-    { id: 12, title: "مشاهده", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
-    { id: 13, title: "تشویق ویژه", type: "free", placeholder: "امتیاز تشویقی را وارد کنید:" },
-    { id: 14, title: "تشویق خوش‌خط‌نویسی", type: "fixed", score: 4 }
+    { id: 12, title: "مشاهده", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] }
 ];
 
 function initDB() {
@@ -37,7 +34,6 @@ function initDB() {
         request.onsuccess = (event) => {
             db = event.target.result;
             console.log('پایگاه داده با موفقیت راه‌اندازی شد.');
-            seedAssessmentItems(); 
             resolve(db);
         };
 
@@ -70,30 +66,11 @@ function initDB() {
             if (!db.objectStoreNames.contains('assessmentItems')) {
                 db.createObjectStore('assessmentItems', { keyPath: 'id' });
             }
-            
-            // اصلاح باگ: کلید برنامه هفتگی روی روز هفته تنظیم شد
             if (!db.objectStoreNames.contains('weeklySchedule')) {
-                db.createObjectStore('weeklySchedule', { keyPath: 'day' });
-            } else {
-                // اگر از قبل وجود داشت، آن را حذف و بازسازی میکنیم تا کلید جدید اعمال شود
-                // (این کار باعث پاک شدن برنامه‌های قبلی می‌شود که اشکالی ندارد چون باگ داشتند)
-                db.deleteObjectStore('weeklySchedule');
                 db.createObjectStore('weeklySchedule', { keyPath: 'day' });
             }
         };
     });
-}
-
-async function seedAssessmentItems() {
-    try {
-        const items = await getAllData('assessmentItems');
-        if (items.length === 0) {
-            for (const item of defaultAssessmentItems) {
-                await saveData('assessmentItems', item);
-            }
-            console.log('آیتم‌های پیش‌فرض با موفقیت به دیتابیس اضافه شدند.');
-        }
-    } catch (e) { console.error('خطا در مقداردهی اولیه آیتم‌ها:', e); }
 }
 
 function saveData(storeName, data) {
