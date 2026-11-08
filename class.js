@@ -190,6 +190,30 @@ async function deleteStudent(id) {
 }
 
 // ==========================================
+// بازنشانی دانش‌آموزان (حذف همه)
+// ==========================================
+async function resetAllStudents() {
+    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید تمام دانش‌آموزان را حذف کنید؟ تمام سوابق ارزشیابی و حضور و غیاب آن‌ها نیز پاک خواهد شد.');
+    if (!confirm1) return;
+
+    const confirm2 = confirm('🚨 آخرین هشدار!\n\nاین عمل غیرقابل بازگشت است و تمام اطلاعات دانش‌آموزان برای همیشه حذف می‌شود. آیا ۱۰۰٪ مطمئن هستید؟');
+    if (!confirm2) return;
+
+    try {
+        await clearStore('students');
+        await clearStore('records');
+        await clearStore('attendance');
+        await clearStore('badgesSettings');
+        
+        showToast('تمام دانش‌آموزان و سوابق مرتبط با موفقیت حذف شدند.', 'success');
+        loadAllData();
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در حذف دانش‌آموزان!', 'error');
+    }
+}
+
+// ==========================================
 // مشاهده جزئیات دانش‌آموز (👁️)
 // ==========================================
 async function openStudentDetails(id) {
