@@ -12,7 +12,7 @@ let assessmentItems = [];
 
 let currentStudentView = 'flat';
 let currentPage = { students: 1, records: 1, reports: 1 };
-const itemsPerPage = 40; // سقف به ۴۰ نفر افزایش یافت
+const itemsPerPage = 40;
 
 const quranSurahs = {
     "ناس": 6, "فلق": 5, "توحید": 4, "مسد": 5, "نصر": 3, "کافرون": 6, "کوثر": 3, "ماعون": 7,
@@ -74,6 +74,11 @@ function initApp() {
         if(document.getElementById('student-form')) document.getElementById('student-form').addEventListener('submit', saveStudent);
         if(document.getElementById('lesson-form')) document.getElementById('lesson-form').addEventListener('submit', saveLesson);
         if(document.getElementById('group-form')) document.getElementById('group-form').addEventListener('submit', saveGroup);
+        
+        // *** اضافه شدن رویدادهای مربوط به فرم‌های ویرایش ***
+        if(document.getElementById('edit-student-form')) document.getElementById('edit-student-form').addEventListener('submit', saveEditedStudent);
+        if(document.getElementById('edit-group-form')) document.getElementById('edit-group-form').addEventListener('submit', saveEditedGroup);
+
         if(document.getElementById('scheduleDaySelect')) document.getElementById('scheduleDaySelect').addEventListener('change', renderScheduleForDay);
         if(document.getElementById('sessionDayOfWeek')) document.getElementById('sessionDayOfWeek').addEventListener('change', checkScheduleExists);
         
@@ -348,7 +353,6 @@ async function exportData() {
     } catch (e) { showToast('خطا در تولید فایل پشتیبان!', 'error'); }
 }
 
-// *** تابع اصلاح‌شده نهایی: رفرش کامل صفحه بعد از بازیابی ***
 async function importData(event) {
     const file = event.target.files[0]; 
     if (!file) return;
@@ -368,7 +372,6 @@ async function importData(event) {
             
             showToast('اطلاعات با موفقیت بازیابی شد! در حال بارگذاری مجدد...', 'success'); 
             
-            // *** رفرش کامل صفحه برای پاک کردن حافظه موقت ***
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
