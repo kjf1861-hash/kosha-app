@@ -241,7 +241,7 @@
                 </div>
             </div>
 
-            <!-- تب ۵: امتیاز (بازطراحی شده) -->
+            <!-- تب ۵: امتیاز -->
             <div id="page-score" class="page-section">
                 
                 <!-- بخش ۱: ارزشیابی عمومی -->
@@ -314,46 +314,61 @@
                     </div>
                 </div>
 
-                <!-- بخش ۲: پویش حفظ جزء سی قرآن کریم (مستقل) -->
-                <div class="card" style="margin-top: 20px; border: 2px solid #f59e0b;">
-                    <h2 class="card-title" style="color: #f59e0b;">🕌 پویش حفظ جزء سی قرآن کریم</h2>
-                    <form id="quran-form">
-                        <div class="form-group">
-                            <label class="form-label">انتخاب دانش‌آموزان</label>
-                            <div class="view-toggle-group">
-                                <button type="button" id="btnQuranFlatView" class="view-toggle-btn active" onclick="switchQuranStudentView('flat')">👦 نمای کلاسی</button>
-                                <button type="button" id="btnQuranGroupView" class="view-toggle-btn" onclick="switchQuranStudentView('grouped')">👥 نمای گروهی</button>
+                <!-- بخش ۲: قرآن، عترت و نماز -->
+                <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);">
+                    <h2 class="card-title" style="color: #16a34a; border-bottom-color: #86efac;">🌱 قرآن، عترت و نماز</h2>
+                    
+                    <!-- کارت قرآن -->
+                    <div class="card" style="border: 2px solid #86efac; background: white;">
+                        <h3 style="color: #16a34a; font-size: 1.1rem; margin-bottom: 5px;">🌟 قرآن: ریسمان محکم و نور هدایت</h3>
+                        <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 15px;">ثبت پویش حفظ جزء سی قرآن کریم</p>
+                        
+                        <form id="quran-form">
+                            <div class="form-group">
+                                <label class="form-label">انتخاب دانش‌آموزان</label>
+                                <div class="view-toggle-group">
+                                    <button type="button" id="btnQuranFlatView" class="view-toggle-btn active" onclick="switchQuranStudentView('flat')">👦 نمای کلاسی</button>
+                                    <button type="button" id="btnQuranGroupView" class="view-toggle-btn" onclick="switchQuranStudentView('grouped')">👥 نمای گروهی</button>
+                                </div>
+                                <div id="quran-students-container" class="student-checkbox-list"></div>
                             </div>
-                            <div id="quran-students-container" class="student-checkbox-list"></div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">انتخاب سوره</label>
-                            <select id="quranSurahSelect" class="form-control" required>
-                                <option value="" disabled selected>انتخاب سوره...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">تعداد آیات</label>
-                            <input type="number" id="quranAyatInput" class="form-control" min="1" placeholder="تعداد آیات" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">تاریخ (الزامی)</label>
-                            <div style="display: flex; gap: 8px;">
-                                <select id="quranDateDay" class="form-control" style="flex: 1;" required></select>
-                                <select id="quranDateMonth" class="form-control" style="flex: 1.5;" required></select>
-                                <select id="quranDateYear" class="form-control" style="flex: 1.2;" required></select>
+                            <div class="form-group">
+                                <label class="form-label">انتخاب سوره</label>
+                                <select id="quranSurahSelect" class="form-control" required>
+                                    <option value="" disabled selected>انتخاب سوره...</option>
+                                </select>
                             </div>
-                        </div>
-                        <button type="button" class="btn btn-primary btn-block" onclick="saveQuranRecord()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">✅ ثبت پویش قرآن</button>
-                    </form>
-
-                    <div style="margin-top: 20px; border-top: 1px dashed var(--border-color); padding-top: 15px;">
-                        <h3 style="color: #f59e0b; font-size: 1rem; margin-bottom: 10px;">🏅 تشویق‌های پویش قرآن</h3>
-                        <div id="quran-rewards-list" class="list-group"></div>
+                            <div class="form-group">
+                                <label class="form-label">تعداد آیات</label>
+                                <input type="number" id="quranAyatInput" class="form-control" min="1" placeholder="تعداد آیات" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">تاریخ (الزامی)</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <select id="quranDateDay" class="form-control" style="flex: 1;" required></select>
+                                    <select id="quranDateMonth" class="form-control" style="flex: 1.5;" required></select>
+                                    <select id="quranDateYear" class="form-control" style="flex: 1.2;" required></select>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-block" onclick="saveQuranRecord()" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);">✅ ثبت پویش قرآن</button>
+                        </form>
                     </div>
+
+                    <!-- کارت عترت -->
+                    <div class="card" style="border: 2px solid #bfdbfe; background: white; margin-top: 15px;">
+                        <h3 style="color: #2563eb; font-size: 1.1rem; margin-bottom: 5px;">💡 عترت: ستارگان هدایت و کشتی نجات</h3>
+                        <p style="color: #64748b; font-size: 0.85rem; text-align: center; padding: 20px;">✨ به زودی... ✨</p>
+                    </div>
+
+                    <!-- کارت نماز -->
+                    <div class="card" style="border: 2px solid #ddd6fe; background: white; margin-top: 15px;">
+                        <h3 style="color: #7c3aed; font-size: 1.1rem; margin-bottom: 5px;">🕌 نماز: نور، ستون و معراج</h3>
+                        <p style="color: #64748b; font-size: 0.85rem; text-align: center; padding: 20px;">✨ به زودی... ✨</p>
+                    </div>
+
                 </div>
 
-                <!-- بخش ۳: تشویق‌ها (مستقل) -->
+                <!-- بخش ۳: تشویق‌ها -->
                 <div class="card" style="margin-top: 20px; border: 2px solid #3b82f6;">
                     <h2 class="card-title" style="color: #3b82f6;">🎉 تشویق‌ها</h2>
                     
