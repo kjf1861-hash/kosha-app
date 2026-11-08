@@ -9,23 +9,53 @@ function initLessonEvents() {
     document.getElementById('lesson-form').addEventListener('submit', saveLesson);
 }
 
+// فقط برای افزودن درس جدید
 async function saveLesson(e) {
     e.preventDefault();
-    const editId = document.getElementById('editLessonId').value;
     const data = { 
         name: document.getElementById('lessonName').value,
         symbol: document.getElementById('lessonSymbol').value,
         motto: document.getElementById('lessonMotto').value
     };
-    if (editId) data.id = parseInt(editId);
     
     await saveData('subjects', data);
     
     document.getElementById('lesson-form').reset();
-    document.getElementById('editLessonId').value = '';
-    document.getElementById('lesson-submit-btn').textContent = '➕ ثبت درس';
+    showToast('درس جدید با موفقیت ثبت شد!', 'success');
+    loadAllData();
+}
+
+// باز کردن مودال ویرایش
+async function editLesson(id) {
+    const sub = await getDataById('subjects', id);
+    if (sub) {
+        document.getElementById('editLessonIdModal').value = sub.id;
+        document.getElementById('editLessonNameModal').value = sub.name;
+        document.getElementById('editLessonSymbolModal').value = sub.symbol || '';
+        document.getElementById('editLessonMottoModal').value = sub.motto || '';
+        document.getElementById('edit-lesson-modal').classList.add('show');
+    }
+}
+
+function closeEditLessonModal() {
+    document.getElementById('edit-lesson-modal').classList.remove('show');
+}
+
+// ذخیره تغییرات از داخل مودال
+async function saveEditedLesson(e) {
+    if(e) e.preventDefault();
+    const id = parseInt(document.getElementById('editLessonIdModal').value);
     
-    showToast(editId ? 'درس ویرایش شد!' : 'درس ثبت شد!', 'success');
+    const data = {
+        id: id,
+        name: document.getElementById('editLessonNameModal').value,
+        symbol: document.getElementById('editLessonSymbolModal').value,
+        motto: document.getElementById('editLessonMottoModal').value
+    };
+    
+    await saveData('subjects', data);
+    showToast('درس با موفقیت ویرایش شد!', 'success');
+    closeEditLessonModal();
     loadAllData();
 }
 
@@ -63,18 +93,6 @@ function renderLessonData() {
     });
 }
 
-async function editLesson(id) {
-    const sub = await getDataById('subjects', id);
-    if (sub) {
-        document.getElementById('lessonName').value = sub.name;
-        document.getElementById('lessonSymbol').value = sub.symbol || '';
-        document.getElementById('lessonMotto').value = sub.motto || '';
-        document.getElementById('editLessonId').value = sub.id;
-        document.getElementById('lesson-submit-btn').textContent = '💾 به‌روزرسانی درس';
-        document.getElementById('lesson-form').scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
 async function deleteLesson(id) {
     if (!confirm('آیا از حذف این درس مطمئن هستید؟ تمام سوابق ارزشیابی مرتبط با این درس نیز حذف خواهند شد!')) return;
     
@@ -88,6 +106,28 @@ async function deleteLesson(id) {
     await deleteData('subjects', id);
     showToast('درس و سوابق مرتبط حذف شد.', 'success');
     loadAllData();
+}
+
+// ==========================================
+// بازنشانی دروس (حذف همه)
+// ==========================================
+async function resetAllLessons() {
+    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید تمام دروس را حذف کنید؟ تمام سوابق ارزشیابی مرتبط با دروس نیز پاک خواهد شد.');
+    if (!confirm1) return;
+
+    const confirm2 = confirm('🚨 آخرین هشدار!\n\nاین عمل غیرقابل بازگشت است و تمام دروس برای همیشه حذف می‌شوند. آیا ۱۰۰٪ مطمئن هستید؟');
+    if (!confirm2) return;
+
+    try {
+        await clearStore('subjects');
+        await clearStore('records'); // حذف تمام سوابق چون دروس پاک شده‌اند
+        
+        showToast('تمام دروس و سوابق مرتبط با موفقیت حذف شدند.', 'success');
+        loadAllData();
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در حذف دروس!', 'error');
+    }
 }
 
 // ==========================================
