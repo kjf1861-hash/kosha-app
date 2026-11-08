@@ -91,6 +91,11 @@
                 <div class="card">
                     <h2 class="card-title">📋 فهرست دانش‌آموزان</h2>
                     <div id="students-list" class="list-group"></div>
+                    <div id="students-pagination" class="pagination-container" style="display:none;">
+                        <button type="button" class="pagination-btn" id="btnPrevStudents" onclick="changePage('students', -1)">قبلی</button>
+                        <span class="pagination-info" id="studentsPageInfo">صفحه ۱</span>
+                        <button type="button" class="pagination-btn" id="btnNextStudents" onclick="changePage('students', 1)">بعدی</button>
+                    </div>
                 </div>
 
                 <div class="card">
