@@ -3,7 +3,7 @@
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 8; // نسخه به 8 افزایش یافت برای اعمال تغییرات جدید
+const DB_VERSION = 9; // نسخه به 9 افزایش یافت برای پاکسازی آیتم‌های تکراری
 
 let db;
 
@@ -34,7 +34,8 @@ function initDB() {
         request.onsuccess = (event) => {
             db = event.target.result;
             console.log('پایگاه داده با موفقیت راه‌اندازی شد.');
-            resolve(db);
+            // پاکسازی آیتم‌های تکراری پس از باز شدن دیتابیس
+            cleanUpDuplicateItems().then(() => resolve(db));
         };
 
         request.onupgradeneeded = (event) => {
@@ -71,6 +72,33 @@ function initDB() {
             }
         };
     });
+}
+
+// تابع جدید: پاکسازی آیتم‌های تکراری و اضافه کردن 11 آیتم عمومی
+async function cleanUpDuplicateItems() {
+    try {
+        const existingItems = await getAllData('assessmentItems');
+        
+        // اگر آیتم‌های تکراری وجود دارد
+        if (existingItems.length > 0) {
+            // حذف تمام آیتم‌های قبلی
+            await clearStore('assessmentItems');
+            
+            // اضافه کردن 11 آیتم جدید
+            for (const item of defaultAssessmentItems) {
+                await saveData('assessmentItems', item);
+            }
+            console.log('آیتم‌های ارزشیابی به‌روزرسانی شدند.');
+        } else {
+            // اگر دیتابیس خالی بود، 11 آیتم جدید را اضافه کن
+            for (const item of defaultAssessmentItems) {
+                await saveData('assessmentItems', item);
+            }
+            console.log('آیتم‌های پیش‌فرض با موفقیت اضافه شدند.');
+        }
+    } catch (e) {
+        console.error('خطا در پاکسازی آیتم‌ها:', e);
+    }
 }
 
 function saveData(storeName, data) {
