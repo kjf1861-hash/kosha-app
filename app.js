@@ -111,9 +111,8 @@ async function loadAllData() {
             document.getElementById('classGrade').value = classData.grade || '';
             document.getElementById('teacherName').value = classData.teacherName || '';
             document.getElementById('schoolName').value = classData.schoolName || '';
-            
-            // *** نشانگر نسخه (v2) ***
-            document.getElementById('header-subtitle').textContent = (classData.name || 'همیار پرتلاش معلم') + ' (v2)';
+            // حذف عبارت (v2) و بازگشت به حالت تمیز
+            document.getElementById('header-subtitle').textContent = classData.name || 'همیار پرتلاش معلم';
         }
         window.allStudentsData = await getAllData('students');
         window.allGroupsData = await getAllData('groups');
