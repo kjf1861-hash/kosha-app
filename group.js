@@ -6,31 +6,29 @@ let currentGroupDetailsId = null;
 
 function initGroupEvents() {
     document.getElementById('group-form').addEventListener('submit', saveGroup);
+    if(document.getElementById('edit-group-form')) {
+        document.getElementById('edit-group-form').addEventListener('submit', saveEditedGroup);
+    }
 }
 
+// فقط برای افزودن گروه جدید
 async function saveGroup(e) {
     e.preventDefault();
-    const editId = document.getElementById('editGroupId').value;
     const data = { 
         name: document.getElementById('groupName').value,
         symbol: document.getElementById('groupSymbol').value,
         motto: document.getElementById('groupMotto').value
     };
-    if (editId) data.id = parseInt(editId);
     
     await saveData('groups', data);
     
     document.getElementById('group-form').reset();
-    document.getElementById('editGroupId').value = '';
-    document.getElementById('group-submit-btn').textContent = '➕ ثبت گروه';
-    
-    showToast(editId ? 'گروه ویرایش شد!' : 'گروه ثبت شد!', 'success');
+    showToast('گروه جدید با موفقیت ثبت شد!', 'success');
     loadAllData();
 }
 
 function renderGroupData() {
     renderGroupsList();
-    renderGroupAssignmentUI();
 }
 
 function renderGroupsList() {
@@ -93,7 +91,7 @@ function renderGroupsList() {
                     <span class="rank-badge">${g.totalScore} امتیاز</span>
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:5px; margin-top:5px; border-top:1px dashed var(--border-color); padding-top:10px;">
-                    <button class="btn btn-secondary btn-sm" onclick="openGroupDetails(${g.id})" title="مشاهده جزئیات">👁️</button>
+                    <button class="btn btn-secondary btn-sm" onclick="openGroupDetails(${g.id})" title="مشاهده جزئیات و مدیریت اعضا">👁️</button>
                     <button class="btn btn-secondary btn-sm" onclick="editGroup(${g.id})" title="ویرایش">✏️</button>
                     <button class="btn btn-danger btn-sm" onclick="deleteGroup(${g.id})" title="حذف">🗑️</button>
                 </div>
@@ -102,62 +100,41 @@ function renderGroupsList() {
     });
 }
 
-function renderGroupAssignmentUI() {
-    const studentSelect = document.getElementById('assignStudentSelect');
-    const groupSelect = document.getElementById('assignGroupSelect');
-    if (!studentSelect || !groupSelect) return;
-
-    // Populate students
-    studentSelect.innerHTML = '<option value="" disabled selected>انتخاب دانش‌آموز...</option>' + 
-        window.allStudentsData.map(st => {
-            const g = window.allGroupsData.find(x => x.id === st.groupId);
-            const groupName = g ? ` (در گروه ${g.name})` : ' (بدون گروه)';
-            return `<option value="${st.id}">${st.firstName} ${st.lastName}${groupName}</option>`;
-        }).join('');
-
-    // Populate groups
-    groupSelect.innerHTML = '<option value="" disabled selected>انتخاب گروه...</option>' + 
-        window.allGroupsData.map(g => `<option value="${g.id}">${g.symbol} ${g.name}</option>`).join('');
-}
-
-async function assignStudentToGroup() {
-    const studentId = document.getElementById('assignStudentSelect').value;
-    const groupId = document.getElementById('assignGroupSelect').value;
-
-    if (!studentId || !groupId) {
-        showToast('لطفاً دانش‌آموز و گروه را انتخاب کنید.', 'error');
-        return;
-    }
-
-    try {
-        const student = await getDataById('students', parseInt(studentId));
-        if (student) {
-            student.groupId = parseInt(groupId);
-            await saveData('students', student);
-            showToast('دانش‌آموز با موفقیت به گروه اختصاص یافت.', 'success');
-            loadAllData(); 
-        }
-    } catch (error) {
-        showToast('خطا در اختصاص گروه!', 'error');
-    }
-}
-
+// باز کردن مودال ویرایش
 async function editGroup(id) {
     const group = await getDataById('groups', id);
     if (group) {
-        document.getElementById('groupName').value = group.name;
-        document.getElementById('groupSymbol').value = group.symbol;
-        document.getElementById('groupMotto').value = group.motto;
-        document.getElementById('editGroupId').value = group.id;
-        document.getElementById('group-submit-btn').textContent = '💾 به‌روزرسانی گروه';
-        document.getElementById('group-form').scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('editGroupIdModal').value = group.id;
+        document.getElementById('editGroupNameModal').value = group.name;
+        document.getElementById('editGroupSymbolModal').value = group.symbol;
+        document.getElementById('editGroupMottoModal').value = group.motto;
+        document.getElementById('edit-group-modal').classList.add('show');
     }
+}
+
+function closeEditGroupModal() {
+    document.getElementById('edit-group-modal').classList.remove('show');
+}
+
+async function saveEditedGroup(e) {
+    e.preventDefault();
+    const id = parseInt(document.getElementById('editGroupIdModal').value);
+    const data = {
+        id: id,
+        name: document.getElementById('editGroupNameModal').value,
+        symbol: document.getElementById('editGroupSymbolModal').value,
+        motto: document.getElementById('editGroupMottoModal').value
+    };
+    
+    await saveData('groups', data);
+    showToast('گروه با موفقیت ویرایش شد!', 'success');
+    closeEditGroupModal();
+    loadAllData();
 }
 
 async function deleteGroup(id) {
     if (!confirm('آیا از حذف این گروه مطمئن هستید؟ (دانش‌آموزان این گروه بدون گروه خواهند شد)')) return;
     
-    // دانش‌آموزان این گروه را بدون گروه میکنیم
     const groupStudents = window.allStudentsData.filter(st => st.groupId === id);
     for (const st of groupStudents) {
         st.groupId = null;
@@ -170,7 +147,7 @@ async function deleteGroup(id) {
 }
 
 // ==========================================
-// مشاهده جزئیات گروه (👁️)
+// مشاهده جزئیات گروه و مدیریت اعضا (👁️)
 // ==========================================
 function openGroupDetails(id) {
     currentGroupDetailsId = id;
@@ -178,6 +155,10 @@ function openGroupDetails(id) {
     if (!group) return;
 
     document.getElementById('group-details-title').textContent = `📊 جزئیات گروه: ${group.symbol} ${group.name}`;
+    
+    // پر کردن منوی کشویی داخل مودال
+    populateModalStudentSelect(); 
+    
     renderGroupDetails();
     document.getElementById('group-details-modal').classList.add('show');
 }
@@ -185,6 +166,48 @@ function openGroupDetails(id) {
 function closeGroupDetails() {
     document.getElementById('group-details-modal').classList.remove('show');
     currentGroupDetailsId = null;
+}
+
+function populateModalStudentSelect() {
+    const select = document.getElementById('assignStudentSelectModal');
+    if (!select) return;
+    
+    // فقط دانش‌آموزانی که در این گروه نیستند را نشان بده
+    const availableStudents = window.allStudentsData.filter(st => st.groupId !== currentGroupDetailsId);
+    
+    if (availableStudents.length === 0) {
+        select.innerHTML = '<option value="" disabled selected>همه دانش‌آموزان در این گروه هستند.</option>';
+    } else {
+        select.innerHTML = '<option value="" disabled selected>انتخاب دانش‌آموز...</option>' + 
+            availableStudents.map(st => `<option value="${st.id}">${st.firstName} ${st.lastName}</option>`).join('');
+    }
+}
+
+async function assignStudentFromModal() {
+    const studentId = document.getElementById('assignStudentSelectModal').value;
+    if (!studentId) {
+        showToast('لطفاً یک دانش‌آموز را از لیست انتخاب کنید.', 'error');
+        return;
+    }
+
+    try {
+        const student = await getDataById('students', parseInt(studentId));
+        if (student) {
+            student.groupId = currentGroupDetailsId;
+            await saveData('students', student);
+            showToast('دانش‌آموز با موفقیت به گروه اضافه شد.', 'success');
+            
+            // رفرش کامل لیست‌های پس‌زمینه
+            await loadAllData(); 
+            
+            // رفرش محتوای مودال و منوی کشویی
+            populateModalStudentSelect(); 
+            renderGroupDetails(); 
+        }
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در اختصاص گروه!', 'error');
+    }
 }
 
 function renderGroupDetails() {
@@ -198,7 +221,6 @@ function renderGroupDetails() {
         return;
     }
 
-    // 1. محاسبه امتیاز کل هر دانش‌آموز در کل دروس
     const studentScores = groupStudents.map(st => {
         let total = 0;
         window.allRecordsData.forEach(rec => {
@@ -207,13 +229,11 @@ function renderGroupDetails() {
         return { ...st, totalScore: total };
     });
 
-    // 2. مرتب‌سازی: امتیاز (نزولی) -> نام خانوادگی (الفبا)
     studentScores.sort((a, b) => {
         if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
         return a.lastName.localeCompare(b.lastName, 'fa');
     });
 
-    // 3. تعیین مدال‌ها
     const uniqueScores = [...new Set(studentScores.map(s => s.totalScore))].filter(s => s > 0).sort((a, b) => b - a);
     const goldScore = uniqueScores.length > 0 ? uniqueScores[0] : -1;
     const silverScore = uniqueScores.length > 1 ? uniqueScores[1] : -1;
@@ -252,8 +272,10 @@ async function removeStudentFromGroup(studentId) {
             student.groupId = null;
             await saveData('students', student);
             showToast('دانش‌آموز از گروه حذف شد.', 'success');
-            await loadAllData(); // رفرش لیست‌های پس‌زمینه
-            renderGroupDetails(); // رفرش محتوای مودال
+            
+            await loadAllData(); 
+            populateModalStudentSelect();
+            renderGroupDetails(); 
         }
     } catch (e) {
         console.error(e);
