@@ -5,9 +5,6 @@
 function initClassEvents() {
     document.getElementById('class-form').addEventListener('submit', saveClassProfile);
     document.getElementById('student-form').addEventListener('submit', saveStudent);
-    if(document.getElementById('edit-student-form')) {
-        document.getElementById('edit-student-form').addEventListener('submit', saveEditedStudent);
-    }
 }
 
 async function saveClassProfile(e) {
@@ -60,7 +57,7 @@ function closeEditStudentModal() {
 
 // ذخیره تغییرات از داخل مودال
 async function saveEditedStudent(e) {
-    e.preventDefault();
+    if(e) e.preventDefault();
     const id = parseInt(document.getElementById('editStudentIdModal').value);
     
     // دریافت اطلاعات قبلی برای حفظ گروه
