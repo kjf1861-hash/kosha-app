@@ -112,6 +112,12 @@ async function deleteLesson(id) {
 // بازنشانی دروس (حذف همه)
 // ==========================================
 async function resetAllLessons() {
+    // *** بررسی خالی بودن لیست ***
+    if (window.allSubjectsData.length === 0) {
+        showToast('هیچ درسی برای حذف وجود ندارد.', 'error');
+        return;
+    }
+
     const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید تمام دروس را حذف کنید؟ تمام سوابق ارزشیابی مرتبط با دروس نیز پاک خواهد شد.');
     if (!confirm1) return;
 
