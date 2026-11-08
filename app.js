@@ -75,10 +75,6 @@ function initApp() {
         if(document.getElementById('lesson-form')) document.getElementById('lesson-form').addEventListener('submit', saveLesson);
         if(document.getElementById('group-form')) document.getElementById('group-form').addEventListener('submit', saveGroup);
         
-        // *** اضافه شدن رویدادهای مربوط به فرم‌های ویرایش ***
-        if(document.getElementById('edit-student-form')) document.getElementById('edit-student-form').addEventListener('submit', saveEditedStudent);
-        if(document.getElementById('edit-group-form')) document.getElementById('edit-group-form').addEventListener('submit', saveEditedGroup);
-
         if(document.getElementById('scheduleDaySelect')) document.getElementById('scheduleDaySelect').addEventListener('change', renderScheduleForDay);
         if(document.getElementById('sessionDayOfWeek')) document.getElementById('sessionDayOfWeek').addEventListener('change', checkScheduleExists);
         
