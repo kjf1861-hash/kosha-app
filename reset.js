@@ -43,40 +43,51 @@ async function resetGroupAssignments() {
     }
 }
 
-// ۳. حذف سوابق یک درس خاص
-async function resetSpecificSubjectRecords() {
-    const subjectId = document.getElementById('resetSubjectSelect').value;
-    if (!subjectId) {
-        showToast('لطفاً یک درس را انتخاب کنید.', 'error');
+// ۳. حذف سوابق یک درس یا یک فعالیت خاص (اصلاح‌شده)
+async function resetSpecificRecords() {
+    const selectedValue = document.getElementById('resetRecordSelect').value;
+    if (!selectedValue) {
+        showToast('لطفاً یک مورد را از لیست انتخاب کنید.', 'error');
         return;
     }
 
-    const isConfirmed = confirm('آیا از حذف تمام سوابق ارزشیابی این درس مطمئن هستید؟');
-    if (!isConfirmed) return;
+    // تشخیص اینکه کاربر درس انتخاب کرده یا یک آیتم/فعالیت
+    const type = selectedValue.split('_')[0]; 
+    const target = selectedValue.substring(type.length + 1); 
+
+    const confirmMsg = type === 'subject' 
+        ? 'آیا از حذف تمام سوابق ارزشیابی این درس مطمئن هستید؟'
+        : 'آیا از حذف تمام سوابق این فعالیت/تشویق در کل دروس مطمئن هستید؟';
+
+    if (!confirm(confirmMsg)) return;
 
     try {
         const allRecords = await getAllData('records');
-        const recordsToDelete = allRecords.filter(r => r.subjectId === parseInt(subjectId));
+        let recordsToDelete = [];
+        
+        if (type === 'subject') {
+            recordsToDelete = allRecords.filter(r => r.subjectId === parseInt(target));
+        } else if (type === 'item') {
+            recordsToDelete = allRecords.filter(r => r.itemName === target);
+        }
         
         for (const rec of recordsToDelete) {
             await deleteData('records', rec.id);
         }
         
-        showToast('سوابق درس مورد نظر با موفقیت حذف شد.', 'success');
+        showToast('سوابق مورد نظر با موفقیت حذف شدند.', 'success');
         loadAllData();
     } catch (e) {
         console.error(e);
-        showToast('خطا در حذف سوابق درس!', 'error');
+        showToast('خطا در حذف سوابق!', 'error');
     }
 }
 
 // ۴. بازنشانی کامل (تنظیمات کارخانه)
 async function resetFactoryAll() {
-    // هشدار اول
     const confirm1 = confirm('⚠️ خطر! آیا می‌خواهید کل اطلاعات برنامه (کلاس، دانش‌آموزان، دروس، سوابق و...) را برای همیشه پاک کنید؟');
     if (!confirm1) return;
 
-    // هشدار دوم (امنیت بیشتر)
     const confirm2 = confirm('🚨 آخرین هشدار!\n\nاین عمل غیرقابل بازگشت است. آیا واقعاً مطمئن هستید؟');
     if (!confirm2) return;
 
@@ -86,7 +97,6 @@ async function resetFactoryAll() {
             await clearStore(store);
         }
         
-        // پاک کردن تنظیمات محلی
         localStorage.clear();
         
         showToast('برنامه با موفقیت بازنشانی شد. در حال راه‌اندازی مجدد...', 'info');
@@ -103,13 +113,11 @@ async function resetTechnicalCache() {
     if (!isConfirmed) return;
 
     try {
-        // پاک کردن کش‌ها
         const cacheNames = await caches.keys();
         for (const name of cacheNames) {
             await caches.delete(name);
         }
         
-        // لغو ثبت Service Worker
         const registrations = await navigator.serviceWorker.getRegistrations();
         for (const registration of registrations) {
             await registration.unregister();
@@ -123,11 +131,37 @@ async function resetTechnicalCache() {
     }
 }
 
-// پر کردن منوی کشویی دروس برای بخش حذف سوابق
-function populateResetSubjectSelect() {
-    const select = document.getElementById('resetSubjectSelect');
+// ۶. پر کردن هوشمند منوی کشویی (دروس + آیتم‌ها)
+function populateResetSelect() {
+    const select = document.getElementById('resetRecordSelect');
     if (!select) return;
     
-    select.innerHTML = '<option value="" disabled selected>انتخاب درس...</option>' + 
-        window.allSubjectsData.map(s => `<option value="${s.id}">${s.symbol || ''} ${s.name}</option>`).join('');
+    let html = '<option value="" disabled selected>انتخاب کنید...</option>';
+    
+    // دسته اول: دروس
+    if (window.allSubjectsData && window.allSubjectsData.length > 0) {
+        html += '<optgroup label="📚 دروس (حذف تمام سوابق درس)">';
+        window.allSubjectsData.forEach(s => {
+            html += `<option value="subject_${s.id}">📚 ${s.symbol || ''} ${s.name}</option>`;
+        });
+        html += '</optgroup>';
+    }
+    
+    // دسته دوم: روش‌های کسب امتیاز و تشویق‌ها
+    html += '<optgroup label="🎯 روش‌های کسب امتیاز و تشویق‌ها">';
+    
+    if (window.allAssessmentItems) {
+        window.allAssessmentItems.forEach(i => {
+            html += `<option value="item_${i.title}">🎯 ${i.title}</option>`;
+        });
+    }
+    
+    // موارد ثابت سیستم (قرآن و تشویق‌ها)
+    html += `<option value="item_پویش حفظ جزء سی قرآن کریم">🌟 پویش حفظ جزء سی قرآن کریم</option>`;
+    html += `<option value="item_تشویق ویژه">🎁 تشویق ویژه</option>`;
+    html += `<option value="item_تشویق خوش‌خط‌نویسی">✍️ تشویق خوش‌خط‌نویسی</option>`;
+    
+    html += '</optgroup>';
+    
+    select.innerHTML = html;
 }
