@@ -625,3 +625,17 @@ details.group-accordion[open] summary::after {
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 5px;
 }
+/* =========================================
+   استایل‌های جدید برای بخش قرآن، عترت و نماز
+   ========================================= */
+.spiritual-section-title {
+    font-size: 1.15rem;
+    font-weight: bold;
+    color: #16a34a;
+    margin-bottom: 16px;
+    border-bottom: 2px dashed #86efac;
+    padding-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
