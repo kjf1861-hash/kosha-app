@@ -108,9 +108,18 @@ function initApp() {
                 }
             });
         }
-        if(document.getElementById('edit-record-form')) document.getElementById('edit-record-form').addEventListener('submit', saveEditedRecord);
-        if(document.getElementById('item-manager-form')) document.getElementById('item-manager-form').addEventListener('submit', saveItem);
-        if(document.getElementById('itemType')) document.getElementById('itemType').addEventListener('change', toggleItemTypeFields);
+        
+        // *** اصلاح باگ: اتصال فرم مدیریت آیتم‌ها به تابع saveItem ***
+        if(document.getElementById('item-manager-form')) {
+            document.getElementById('item-manager-form').addEventListener('submit', saveItem);
+        }
+        if(document.getElementById('itemType')) {
+            document.getElementById('itemType').addEventListener('change', toggleItemTypeFields);
+        }
+        if(document.getElementById('edit-record-form')) {
+            document.getElementById('edit-record-form').addEventListener('submit', saveEditedRecord);
+        }
+        
     } catch (error) {
         console.error("خطا در اتصال رویدادها:", error);
     }
@@ -218,7 +227,8 @@ function openItemManagementModal() {
 
 function closeItemManagementModal() {
     document.getElementById('item-management-modal').classList.remove('show');
-    if (typeof renderScoreData === 'function') renderScoreData(); 
+    // رفرش کامل داده‌ها برای اعمال تغییرات در همه بخش‌ها
+    loadAllData();
 }
 
 function renderItemsList() {
@@ -337,13 +347,20 @@ async function saveItem(e) {
     try {
         await saveData('assessmentItems', itemData);
         showToast('آیتم با موفقیت ذخیره شد!', 'success');
-        resetItemForm();
-        assessmentItems = await getAllData('assessmentItems');
-        window.allAssessmentItems = assessmentItems;
-        renderItemsList();
         
+        // *** اصلاح باگ: رفرش کامل داده‌ها و لیست آیتم‌ها ***
+        loadAllData(); 
+        renderItemsList();
+        resetItemForm();
+        
+        // رفرش دستی منوی انتخاب آیتم در فرم ثبت ارزشیابی
         const itemSelect = document.getElementById('recordItem');
-        if (itemSelect) itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + assessmentItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
+        if (itemSelect) {
+            const freshItems = await getAllData('assessmentItems');
+            window.allAssessmentItems = freshItems;
+            itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
+        }
+        
     } catch (error) {
         showToast('خطا در ذخیره آیتم!', 'error');
     }
@@ -351,13 +368,24 @@ async function saveItem(e) {
 
 async function deleteCustomItem(id) {
     if(!confirm('آیا از حذف این آیتم مطمئن هستید؟')) return;
-    await deleteData('assessmentItems', id);
-    showToast('آیتم حذف شد.', 'success');
-    assessmentItems = await getAllData('assessmentItems');
-    window.allAssessmentItems = assessmentItems;
-    renderItemsList();
-    const itemSelect = document.getElementById('recordItem');
-    if (itemSelect) itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + assessmentItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
+    try {
+        await deleteData('assessmentItems', id);
+        showToast('آیتم حذف شد.', 'success');
+        
+        // *** اصلاح باگ: رفرش کامل داده‌ها و لیست آیتم‌ها ***
+        loadAllData(); 
+        renderItemsList();
+        
+        // رفرش دستی منوی انتخاب آیتم در فرم ثبت ارزشیابی
+        const itemSelect = document.getElementById('recordItem');
+        if (itemSelect) {
+            const freshItems = await getAllData('assessmentItems');
+            window.allAssessmentItems = freshItems;
+            itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
+        }
+    } catch (e) {
+        showToast('خطا در حذف آیتم!', 'error');
+    }
 }
 
 // ==========================================
