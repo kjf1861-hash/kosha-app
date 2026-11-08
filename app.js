@@ -12,7 +12,7 @@ let assessmentItems = [];
 
 let currentStudentView = 'flat';
 let currentPage = { students: 1, records: 1, reports: 1 };
-const itemsPerPage = 10;
+const itemsPerPage = 40; // سقف به ۴۰ نفر افزایش یافت
 
 const quranSurahs = {
     "ناس": 6, "فلق": 5, "توحید": 4, "مسد": 5, "نصر": 3, "کافرون": 6, "کوثر": 3, "ماعون": 7,
@@ -77,7 +77,6 @@ function initApp() {
         if(document.getElementById('scheduleDaySelect')) document.getElementById('scheduleDaySelect').addEventListener('change', renderScheduleForDay);
         if(document.getElementById('sessionDayOfWeek')) document.getElementById('sessionDayOfWeek').addEventListener('change', checkScheduleExists);
         
-        // *** اتصال فرم آیتم‌ها به تابع saveItem ***
         if(document.getElementById('item-manager-form')) {
             document.getElementById('item-manager-form').addEventListener('submit', saveItem);
         }
@@ -349,7 +348,6 @@ async function exportData() {
     } catch (e) { showToast('خطا در تولید فایل پشتیبان!', 'error'); }
 }
 
-// *** تابع اصلاح‌شده با هشدار تایید (Confirm) ***
 async function importData(event) {
     const file = event.target.files[0]; 
     if (!file) return;
