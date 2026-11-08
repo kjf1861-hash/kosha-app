@@ -33,6 +33,8 @@
         .view-toggle-group { display: flex; gap: 10px; margin-bottom: 10px; }
         .view-toggle-btn { flex: 1; padding: 8px; border: 2px solid var(--border-color); background: white; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; font-size: 0.9rem; font-weight: bold; color: var(--text-muted); }
         .view-toggle-btn.active { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+        
+        .page-header-title { text-align: center; font-size: 1.6rem; font-weight: bold; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; }
     </style>
 </head>
 <body>
@@ -135,12 +137,6 @@
                         </div>
 
                         <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
-                            <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">👥 پاک کردن گروه‌بندی‌ها</strong>
-                            <p style="font-size: 0.8rem; color: #64748b; margin: 0 0 10px 0;">خارج کردن همه دانش‌آموزان از گروه‌ها برای گروه‌بندی مجدد.</p>
-                            <button type="button" class="btn btn-secondary btn-block" onclick="resetGroupAssignments()" style="background: #fca5a5; color: #7f1d1d;">بازنشانی گروه‌ها</button>
-                        </div>
-
-                        <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
                             <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">🧹 حذف سوابق یک درس یا فعالیت</strong>
                             <select id="resetRecordSelect" class="form-control" style="margin-bottom: 10px;"></select>
                             <button type="button" class="btn btn-secondary btn-block" onclick="resetSpecificRecords()" style="background: #fca5a5; color: #7f1d1d;">حذف سوابق انتخاب شده</button>
@@ -184,17 +180,21 @@
 
             <!-- تب ۳: گروه -->
             <div id="page-group" class="page-section">
+                
+                <div class="page-header-title">
+                    👥 گروه‌بندی
+                </div>
+
                 <div class="card">
-                    <h2 class="card-title">👥 افزودن گروه</h2>
+                    <h2 class="card-title">➕ افزودن گروه جدید</h2>
                     <form id="group-form">
-                        <input type="hidden" id="editGroupId" value="">
                         <div class="form-group"><label class="form-label" for="groupName">نام گروه</label><input type="text" id="groupName" class="form-control" placeholder="شهباز بصیر" autocomplete="on" required></div>
                         <div class="form-group"><label class="form-label" for="groupSymbol">نماد (ایموجی)</label><input type="text" id="groupSymbol" class="form-control" placeholder="🦅" autocomplete="off" required></div>
                         <div class="form-group">
                             <label class="form-label" for="groupMotto">شعار گروه</label>
                             <textarea id="groupMotto" class="form-control" placeholder="تیزبین باشیم. (نماد بصیرت و دقت در جزئیات)&#10;پرندگان شکاری همچون شهباز، از بلندی‌ها کوچک‌ترین حرکت‌ها را می‌بینند. واژه «بصیر» به معنای بصیرت و دوراندیشی است. دانش‌آموز بصیر، در درس‌ها و در احساسات دوستانش تیزبین است. این گروه، پرچم‌دار دقت در کلاس است." autocomplete="on" required rows="5"></textarea>
                         </div>
-                        <button type="submit" id="group-submit-btn" class="btn btn-primary mt-4">➕ ثبت گروه</button>
+                        <button type="submit" class="btn btn-primary mt-4">➕ ثبت گروه</button>
                     </form>
                 </div>
 
@@ -203,18 +203,16 @@
                     <div id="groups-list" class="list-group"></div>
                 </div>
 
-                <div class="card">
-                    <h2 class="card-title">🔗 اختصاص دانش‌آموزان به گروه</h2>
-                    <div class="form-group">
-                        <label class="form-label">انتخاب دانش‌آموز</label>
-                        <select id="assignStudentSelect" class="form-control"></select>
+                <!-- کارت بازنشانی گروه‌ها (منتقل شده به اینجا) -->
+                <div class="card" style="border: 2px solid #ef4444; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);">
+                    <h2 class="card-title" style="color: #b91c1c; border-bottom-color: #fca5a5;">🗑️ بازنشانی</h2>
+                    <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
+                        <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">👥 پاک کردن گروه‌بندی‌ها</strong>
+                        <p style="font-size: 0.8rem; color: #64748b; margin: 0 0 10px 0;">خارج کردن همه دانش‌آموزان از گروه‌ها برای گروه‌بندی مجدد.</p>
+                        <button type="button" class="btn btn-secondary btn-block" onclick="resetGroupAssignments()" style="background: #fca5a5; color: #7f1d1d;">بازنشانی گروه‌ها</button>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">انتخاب گروه</label>
-                        <select id="assignGroupSelect" class="form-control"></select>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-block" onclick="assignStudentToGroup()">💾 ثبت گروه‌بندی</button>
                 </div>
+
             </div>
 
             <!-- تب ۴: جلسه -->
@@ -490,7 +488,45 @@
     <div id="report-card-modal" class="modal-overlay"><div class="modal-content report-card-modal"><div class="no-print" style="display: flex; justify-content: space-between; margin-bottom: 15px; flex-wrap: wrap; gap: 5px;"><button type="button" class="btn btn-secondary btn-sm" onclick="copyReportText()" style="background: var(--primary); color: white;">📋 کپی متن کارنامه</button><button type="button" class="btn btn-primary btn-sm" onclick="window.print()">🖨️ چاپ</button><button type="button" class="btn btn-secondary btn-sm" onclick="closeReportCard()">✖️ بستن</button></div><div id="report-card-content"></div></div></div>
     <div id="attendance-details-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header" id="attendance-details-title">📋 جزئیات حضور</div><div id="attendance-details-content"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeAttendanceDetails()">بستن</button></div></div></div>
     <div id="lesson-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="lesson-details-title">📊 جزئیات درس</div><div class="view-toggle-group"><button type="button" id="btnLessonClassView" class="view-toggle-btn active" onclick="switchLessonDetailView('class')">👦 نمای کلاسی</button><button type="button" id="btnLessonGroupView" class="view-toggle-btn" onclick="switchLessonDetailView('group')">👥 نمای گروهی</button></div><div id="lesson-details-content" class="list-group"></div><div class="modal-footer"><button type="button" class="btn btn-secondary btn-block" onclick="closeLessonDetails()">بستن</button></div></div></div>
-    <div id="group-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="group-details-title">📊 جزئیات گروه</div><div id="group-details-content" class="list-group"></div><div class="modal-footer"><button type="button" class="btn btn-secondary btn-block" onclick="closeGroupDetails()">بستن</button></div></div></div>
+    
+    <!-- مودال جزئیات گروه (با قابلیت اختصاص دانش‌آموز) -->
+    <div id="group-details-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header" id="group-details-title">📊 جزئیات گروه</div>
+            
+            <div style="background: var(--input-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--border-color);">
+                <label class="form-label" style="font-size: 0.9rem; margin-bottom: 5px;">➕ افزودن دانش‌آموز به این گروه</label>
+                <div style="display: flex; gap: 8px;">
+                    <select id="assignStudentSelectModal" class="form-control" style="flex: 1;"></select>
+                    <button type="button" class="btn btn-primary" onclick="assignStudentFromModal()">افزودن</button>
+                </div>
+            </div>
+
+            <div id="group-details-content" class="list-group" style="max-height: 40vh; overflow-y: auto;"></div>
+            
+            <div class="modal-footer" style="flex-direction: column; gap: 10px; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary btn-block" onclick="closeGroupDetails()">بستن</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال ویرایش گروه (جدید) -->
+    <div id="edit-group-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">✏️ ویرایش گروه</div>
+            <form id="edit-group-form">
+                <input type="hidden" id="editGroupIdModal">
+                <div class="form-group"><label class="form-label">نام گروه</label><input type="text" id="editGroupNameModal" class="form-control" required></div>
+                <div class="form-group"><label class="form-label">نماد (ایموجی)</label><input type="text" id="editGroupSymbolModal" class="form-control" required></div>
+                <div class="form-group"><label class="form-label">شعار گروه</label><textarea id="editGroupMottoModal" class="form-control" rows="4" required></textarea></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditGroupModal()">انصراف</button>
+                    <button type="submit" class="btn btn-primary">💾 ذخیره تغییرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="session-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="session-details-title">📅 جزئیات جلسه</div><div id="session-details-content"></div><div class="modal-footer" style="flex-direction: column; gap: 10px;"><button type="button" class="btn btn-primary btn-block" onclick="saveAllSessionAttendance()">💾 ذخیره کل حضور و غیاب</button><button type="button" class="btn btn-secondary btn-block" onclick="closeSessionDetails()">بستن</button></div></div></div>
     <div id="student-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="student-details-title">👤 جزئیات دانش‌آموز</div><div id="student-details-content" style="max-height: 60vh; overflow-y: auto;"></div><div class="modal-footer"><button type="button" class="btn btn-secondary btn-block" onclick="closeStudentDetails()">بستن</button></div></div></div>
 
