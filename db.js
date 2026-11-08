@@ -3,11 +3,10 @@
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 10; // نسخه به 10 افزایش یافت تا دیتابیس جدید ساخته شود و کدهای قدیمی پاک شوند
+const DB_VERSION = 10;
 
 let db;
 
-// آرایه آیتم‌های پیش‌فرض (11 آیتم عمومی)
 const defaultAssessmentItems = [
     { id: 1, title: "پرسش و پاسخ", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
     { id: 2, title: "حفظ و قرائت", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
@@ -34,7 +33,6 @@ function initDB() {
         request.onsuccess = (event) => {
             db = event.target.result;
             console.log('پایگاه داده با موفقیت راه‌اندازی شد.');
-            // دیگر نیازی به پاکسازی آیتم‌های تکراری نیست
             resolve(db);
         };
 
@@ -66,9 +64,9 @@ function initDB() {
             }
             if (!db.objectStoreNames.contains('assessmentItems')) {
                 const itemStore = db.createObjectStore('assessmentItems', { keyPath: 'id' });
-                // اضافه کردن آیتم‌های پیش‌فرض در هنگام ساخت اولیه
+                // استفاده از put به جای add تا در صورت وجود آیتم قبلی، خطا ندهد
                 for (const item of defaultAssessmentItems) {
-                    itemStore.add(item);
+                    itemStore.put(item);
                 }
             }
             if (!db.objectStoreNames.contains('weeklySchedule')) {
