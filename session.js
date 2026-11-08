@@ -95,6 +95,29 @@ async function checkScheduleExists() {
     }
 }
 
+// *** حذف کل برنامه هفتگی ***
+async function resetAllWeeklySchedules() {
+    if (window.allWeeklyScheduleData.length === 0) {
+        showToast('هیچ برنامه هفتگی برای حذف وجود ندارد.', 'error');
+        return;
+    }
+
+    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید کل برنامه هفتگی (برای تمام روزها) را حذف کنید؟');
+    if (!confirm1) return;
+
+    const confirm2 = confirm('🚨 آخرین هشدار!\n\nاین عمل غیرقابل بازگشت است و تمام تنظیمات برنامه هفتگی پاک می‌شوند. آیا ۱۰۰٪ مطمئن هستید؟');
+    if (!confirm2) return;
+
+    try {
+        await clearStore('weeklySchedule');
+        showToast('کل برنامه هفتگی با موفقیت حذف شد.', 'success');
+        loadAllData();
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در حذف برنامه هفتگی!', 'error');
+    }
+}
+
 // ==========================================
 // 2. ثبت جلسه و لیست جلسات
 // ==========================================
@@ -183,6 +206,31 @@ async function deleteSession(sessionId) {
     await deleteData('sessions', sessionId);
     showToast('جلسه و سوابق آن حذف شد.', 'success');
     loadAllData();
+}
+
+// *** حذف همه جلسات ***
+async function resetAllSessions() {
+    if (window.allSessionsData.length === 0) {
+        showToast('هیچ جلسه‌ای برای حذف وجود ندارد.', 'error');
+        return;
+    }
+
+    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید تمام جلسات را حذف کنید؟ تمام حضور و غیاب‌های مرتبط نیز پاک خواهند شد.');
+    if (!confirm1) return;
+
+    const confirm2 = confirm('🚨 آخرین هشدار!\n\nاین عمل غیرقابل بازگشت است و تمام جلسات برای همیشه حذف می‌شوند. آیا ۱۰۰٪ مطمئن هستید؟');
+    if (!confirm2) return;
+
+    try {
+        await clearStore('sessions');
+        await clearStore('attendance'); // حذف تمام حضور و غیاب‌ها
+        
+        showToast('تمام جلسات و سوابق حضور و غیاب با موفقیت حذف شدند.', 'success');
+        loadAllData();
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در حذف جلسات!', 'error');
+    }
 }
 
 // ==========================================
