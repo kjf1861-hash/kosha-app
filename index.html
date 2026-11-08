@@ -90,22 +90,15 @@
                 </div>
 
                 <div class="card">
-                    <h2 class="card-title">📋 فهرست دانش‌آموزان</h2>
+                    <h2 class="card-title" style="justify-content: space-between;">
+                        <span style="display: flex; align-items: center; gap: 8px;">📋 فهرست دانش‌آموزان</span>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="resetAllStudents()" title="حذف همه دانش‌آموزان" style="padding: 4px 8px; border-radius: 8px;">🗑️</button>
+                    </h2>
                     <div id="students-list" class="list-group"></div>
                     <div id="students-pagination" class="pagination-container" style="display:none;">
                         <button type="button" class="pagination-btn" id="btnPrevStudents" onclick="changePage('students', -1)">قبلی</button>
                         <span class="pagination-info" id="studentsPageInfo">صفحه ۱</span>
                         <button type="button" class="pagination-btn" id="btnNextStudents" onclick="changePage('students', 1)">بعدی</button>
-                    </div>
-                </div>
-
-                <!-- کارت حذف همه دانش‌آموزان -->
-                <div class="card" style="border: 2px solid #ef4444; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);">
-                    <h2 class="card-title" style="color: #b91c1c; border-bottom-color: #fca5a5;">🗑️ بازنشانی</h2>
-                    <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
-                        <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">👦 حذف همه دانش‌آموزان</strong>
-                        <p style="font-size: 0.8rem; color: #64748b; margin: 0 0 10px 0;">حذف تمام دانش‌آموزان و سوابق ارزشیابی و حضور و غیاب آن‌ها. (این عمل غیرقابل بازگشت است)</p>
-                        <button type="button" class="btn btn-secondary btn-block" onclick="resetAllStudents()" style="background: #fca5a5; color: #7f1d1d;">حذف همه دانش‌آموزان</button>
                     </div>
                 </div>
 
@@ -208,18 +201,11 @@
                 </div>
 
                 <div class="card">
-                    <h2 class="card-title">📋 فهرست گروه‌ها</h2>
+                    <h2 class="card-title" style="justify-content: space-between;">
+                        <span style="display: flex; align-items: center; gap: 8px;">📋 فهرست گروه‌ها</span>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="resetGroupAssignments()" title="پاک کردن گروه‌بندی‌ها" style="padding: 4px 8px; border-radius: 8px;">🗑️</button>
+                    </h2>
                     <div id="groups-list" class="list-group"></div>
-                </div>
-
-                <!-- کارت بازنشانی گروه‌ها -->
-                <div class="card" style="border: 2px solid #ef4444; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);">
-                    <h2 class="card-title" style="color: #b91c1c; border-bottom-color: #fca5a5;">🗑️ بازنشانی</h2>
-                    <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
-                        <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">👥 پاک کردن گروه‌بندی‌ها</strong>
-                        <p style="font-size: 0.8rem; color: #64748b; margin: 0 0 10px 0;">خارج کردن همه دانش‌آموزان از گروه‌ها برای گروه‌بندی مجدد.</p>
-                        <button type="button" class="btn btn-secondary btn-block" onclick="resetGroupAssignments()" style="background: #fca5a5; color: #7f1d1d;">بازنشانی گروه‌ها</button>
-                    </div>
                 </div>
 
             </div>
@@ -519,7 +505,7 @@
         </div>
     </div>
 
-    <!-- مودال ویرایش گروه (جدید) -->
+    <!-- مودال ویرایش گروه -->
     <div id="edit-group-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">✏️ ویرایش گروه</div>
@@ -536,7 +522,7 @@
         </div>
     </div>
 
-    <!-- مودال ویرایش دانش‌آموز (جدید) -->
+    <!-- مودال ویرایش دانش‌آموز -->
     <div id="edit-student-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">✏️ ویرایش دانش‌آموز</div>
