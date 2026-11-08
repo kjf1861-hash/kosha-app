@@ -10,12 +10,10 @@ let currentAttReportFilter = 'class';
 function initSessionEvents() {
     document.getElementById('scheduleDaySelect').addEventListener('change', renderScheduleForDay);
     document.getElementById('sessionDayOfWeek').addEventListener('change', checkScheduleExists);
-
-    // بارگذاری اولیه برنامه هفتگی برای روز پیش‌فرض (شنبه)
-    renderScheduleForDay();
 }
 
 async function renderSessionData() {
+    renderScheduleForDay(); // *** اضافه شدن این خط برای رفع باگ ***
     renderSessionsList();
     generateAttendanceReports();
 }
