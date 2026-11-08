@@ -193,6 +193,12 @@ async function deleteStudent(id) {
 // بازنشانی دانش‌آموزان (حذف همه)
 // ==========================================
 async function resetAllStudents() {
+    // *** بررسی خالی بودن لیست ***
+    if (window.allStudentsData.length === 0) {
+        showToast('هیچ دانش‌آموزی برای حذف وجود ندارد.', 'error');
+        return;
+    }
+
     const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید تمام دانش‌آموزان را حذف کنید؟ تمام سوابق ارزشیابی و حضور و غیاب آن‌ها نیز پاک خواهد شد.');
     if (!confirm1) return;
 
