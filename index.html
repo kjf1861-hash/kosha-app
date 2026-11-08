@@ -81,12 +81,11 @@
                 </div>
 
                 <div class="card">
-                    <h2 class="card-title">👦 افزودن دانش‌آموز</h2>
+                    <h2 class="card-title">👦 افزودن دانش‌آموز جدید</h2>
                     <form id="student-form">
-                        <input type="hidden" id="editStudentId" value="">
                         <div class="form-group"><label class="form-label" for="studentFirstName">نام</label><input type="text" id="studentFirstName" class="form-control" placeholder="ارسلان" autocomplete="on" required></div>
                         <div class="form-group"><label class="form-label" for="studentLastName">نام خانوادگی</label><input type="text" id="studentLastName" class="form-control" placeholder="قاسمی" autocomplete="on" required></div>
-                        <button type="submit" id="student-submit-btn" class="btn btn-primary mt-4">➕ ثبت دانش‌آموز</button>
+                        <button type="submit" class="btn btn-primary mt-4">➕ ثبت دانش‌آموز</button>
                     </form>
                 </div>
 
@@ -203,7 +202,7 @@
                     <div id="groups-list" class="list-group"></div>
                 </div>
 
-                <!-- کارت بازنشانی گروه‌ها (منتقل شده به اینجا) -->
+                <!-- کارت بازنشانی گروه‌ها -->
                 <div class="card" style="border: 2px solid #ef4444; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);">
                     <h2 class="card-title" style="color: #b91c1c; border-bottom-color: #fca5a5;">🗑️ بازنشانی</h2>
                     <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
@@ -521,6 +520,22 @@
                 <div class="form-group"><label class="form-label">شعار گروه</label><textarea id="editGroupMottoModal" class="form-control" rows="4" required></textarea></div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeEditGroupModal()">انصراف</button>
+                    <button type="submit" class="btn btn-primary">💾 ذخیره تغییرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- مودال ویرایش دانش‌آموز (جدید) -->
+    <div id="edit-student-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">✏️ ویرایش دانش‌آموز</div>
+            <form id="edit-student-form">
+                <input type="hidden" id="editStudentIdModal">
+                <div class="form-group"><label class="form-label">نام</label><input type="text" id="editStudentFirstNameModal" class="form-control" required></div>
+                <div class="form-group"><label class="form-label">نام خانوادگی</label><input type="text" id="editStudentLastNameModal" class="form-control" required></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditStudentModal()">انصراف</button>
                     <button type="submit" class="btn btn-primary">💾 ذخیره تغییرات</button>
                 </div>
             </form>
