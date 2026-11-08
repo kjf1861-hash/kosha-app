@@ -76,6 +76,20 @@ function initApp() {
         if(document.getElementById('group-form')) document.getElementById('group-form').addEventListener('submit', saveGroup);
         if(document.getElementById('scheduleDaySelect')) document.getElementById('scheduleDaySelect').addEventListener('change', renderScheduleForDay);
         if(document.getElementById('sessionDayOfWeek')) document.getElementById('sessionDayOfWeek').addEventListener('change', checkScheduleExists);
+        
+        // *** اتصال فرم آیتم‌ها به تابع saveItem ***
+        if(document.getElementById('item-manager-form')) {
+            document.getElementById('item-manager-form').addEventListener('submit', saveItem);
+        }
+        if(document.getElementById('itemType')) {
+            document.getElementById('itemType').addEventListener('change', toggleItemTypeFields);
+        }
+        
+        // *** حذف اتصال تکراری برای فرم ویرایش رکورد، چون در HTML با onclick هندل می‌شود ***
+        // if(document.getElementById('edit-record-form')) {
+        //     document.getElementById('edit-record-form').addEventListener('submit', saveEditedRecord);
+        // }
+        
         if(document.getElementById('recordItem')) {
             document.getElementById('recordItem').addEventListener('change', (e) => {
                 if (e.target.value !== "") {
@@ -86,16 +100,8 @@ function initApp() {
                 }
             });
         }
-        if(document.getElementById('item-manager-form')) {
-            document.getElementById('item-manager-form').addEventListener('submit', saveItem);
-        }
-        if(document.getElementById('itemType')) {
-            document.getElementById('itemType').addEventListener('change', toggleItemTypeFields);
-        }
-        if(document.getElementById('edit-record-form')) {
-            document.getElementById('edit-record-form').addEventListener('submit', saveEditedRecord);
-        }
     } catch (error) { console.error("خطا در اتصال رویدادها:", error); }
+    
     loadAllData();
     checkBackupReminder();
 }
@@ -172,6 +178,9 @@ function jalaliToDateString(jy, jm, jd) {
     return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
 }
 
+// ==========================================
+// توابع مدیریت آیتم‌ها
+// ==========================================
 function openItemManagementModal() {
     document.getElementById('item-management-modal').classList.add('show');
     renderItemsList();
@@ -262,15 +271,24 @@ async function editItem(id) {
     }
 }
 
+// *** تابع نهایی و اصلاح‌شده برای ذخیره آیتم ***
 async function saveItem(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
+    
     const id = document.getElementById('editItemId').value;
     const title = document.getElementById('itemTitle').value.trim();
     const type = document.getElementById('itemType').value;
-    if (!title || !type) { showToast('عنوان و نوع را مشخص کنید.', 'error'); return; }
+    
+    if (!title) { showToast('عنوان آیتم را وارد کنید.', 'error'); return; }
+    if (!type) { showToast('نوع آیتم را انتخاب کنید.', 'error'); return; }
+    
     let itemData = { title, type };
-    if (id) itemData.id = parseInt(id);
-    else itemData.id = Date.now();
+    if (id) {
+        itemData.id = parseInt(id);
+    } else {
+        itemData.id = Date.now();
+    }
+    
     if (type === 'level') {
         itemData.placeholder = document.getElementById('itemLevelPlaceholder').value || 'انتخاب سطح عملکرد:';
         const levels = [];
@@ -288,17 +306,26 @@ async function saveItem(e) {
     } else if (type === 'free') {
         itemData.placeholder = document.getElementById('itemFreePlaceholder').value;
     }
+    
     try {
         await saveData('assessmentItems', itemData);
         showToast('آیتم با موفقیت ذخیره شد!', 'success');
+        
         const freshItems = await getAllData('assessmentItems');
         window.allAssessmentItems = freshItems;
         assessmentItems = freshItems;
+        
         renderItemsList();
         resetItemForm();
+        
         const itemSelect = document.getElementById('recordItem');
-        if (itemSelect) itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
-    } catch (error) { console.error(error); showToast('خطا در ذخیره آیتم!', 'error'); }
+        if (itemSelect) {
+            itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
+        }
+    } catch (error) { 
+        console.error(error); 
+        showToast('خطا در ذخیره آیتم!', 'error'); 
+    }
 }
 
 async function deleteCustomItem(id) {
