@@ -6,9 +6,6 @@ let currentGroupDetailsId = null;
 
 function initGroupEvents() {
     document.getElementById('group-form').addEventListener('submit', saveGroup);
-    if(document.getElementById('edit-group-form')) {
-        document.getElementById('edit-group-form').addEventListener('submit', saveEditedGroup);
-    }
 }
 
 // فقط برای افزودن گروه جدید
@@ -117,7 +114,7 @@ function closeEditGroupModal() {
 }
 
 async function saveEditedGroup(e) {
-    e.preventDefault();
+    if(e) e.preventDefault();
     const id = parseInt(document.getElementById('editGroupIdModal').value);
     const data = {
         id: id,
