@@ -85,11 +85,6 @@ function initApp() {
             document.getElementById('itemType').addEventListener('change', toggleItemTypeFields);
         }
         
-        // *** حذف اتصال تکراری برای فرم ویرایش رکورد، چون در HTML با onclick هندل می‌شود ***
-        // if(document.getElementById('edit-record-form')) {
-        //     document.getElementById('edit-record-form').addEventListener('submit', saveEditedRecord);
-        // }
-        
         if(document.getElementById('recordItem')) {
             document.getElementById('recordItem').addEventListener('change', (e) => {
                 if (e.target.value !== "") {
@@ -271,7 +266,6 @@ async function editItem(id) {
     }
 }
 
-// *** تابع نهایی و اصلاح‌شده برای ذخیره آیتم ***
 async function saveItem(e) {
     if (e) e.preventDefault();
     
@@ -355,12 +349,31 @@ async function exportData() {
     } catch (e) { showToast('خطا در تولید فایل پشتیبان!', 'error'); }
 }
 
+// *** تابع اصلاح‌شده با هشدار تایید (Confirm) ***
 async function importData(event) {
-    const file = event.target.files[0]; if (!file) return;
+    const file = event.target.files[0]; 
+    if (!file) return;
+    
+    const isConfirmed = confirm('⚠️ هشدار مهم:\n\nبا بازیابی این فایل، تمام اطلاعات فعلی شما (از جمله تغییرات و آیتم‌های جدید) پاک شده و با اطلاعات داخل فایل بکاپ جایگزین می‌شود.\n\nآیا مطمئن هستید؟');
+    
+    if (!isConfirmed) {
+        event.target.value = ''; // پاک کردن فایل انتخاب شده
+        return;
+    }
+
     const reader = new FileReader();
     reader.onload = async (e) => {
-        try { const data = JSON.parse(e.target.result); await importAllData(data); showToast('بازیابی شد!', 'success'); loadAllData(); }
-        catch (err) { showToast('فایل نامعتبر! تغییرات لغو شد.', 'error'); }
+        try { 
+            const data = JSON.parse(e.target.result); 
+            await importAllData(data); 
+            showToast('اطلاعات با موفقیت بازیابی شد!', 'success'); 
+            loadAllData(); 
+        }
+        catch (err) { 
+            console.error(err);
+            showToast('فایل نامعتبر! تغییرات لغو شد.', 'error'); 
+        }
+        event.target.value = ''; // پاک کردن فایل انتخاب شده برای دفعات بعدی
     };
     reader.readAsText(file);
 }
