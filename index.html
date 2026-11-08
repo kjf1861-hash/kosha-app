@@ -117,7 +117,7 @@
                     </div>
                 </div>
 
-                <!-- کارت جدید: بازنشانی و پاکسازی -->
+                <!-- کارت بازنشانی و پاکسازی -->
                 <div class="card" style="border: 2px solid #ef4444; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);">
                     <h2 class="card-title" style="color: #b91c1c; border-bottom-color: #fca5a5;">🗑️ بازنشانی و پاکسازی اطلاعات</h2>
                     
@@ -136,9 +136,9 @@
                         </div>
 
                         <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
-                            <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">📚 حذف سوابق یک درس خاص</strong>
-                            <select id="resetSubjectSelect" class="form-control" style="margin-bottom: 10px;"></select>
-                            <button type="button" class="btn btn-secondary btn-block" onclick="resetSpecificSubjectRecords()" style="background: #fca5a5; color: #7f1d1d;">حذف سوابق درس</button>
+                            <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">🧹 حذف سوابق یک درس یا فعالیت</strong>
+                            <select id="resetRecordSelect" class="form-control" style="margin-bottom: 10px;"></select>
+                            <button type="button" class="btn btn-secondary btn-block" onclick="resetSpecificRecords()" style="background: #fca5a5; color: #7f1d1d;">حذف سوابق انتخاب شده</button>
                         </div>
 
                         <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
@@ -496,7 +496,7 @@
     <script src="group.js"></script>
     <script src="session.js"></script>
     <script src="score.js"></script>
-    <script src="reset.js"></script> <!-- فراخوانی فایل جدید -->
+    <script src="reset.js"></script>
     
     <script>
         function initTheme() {
@@ -551,7 +551,7 @@
             
             if (pageId === 'page-class' && typeof renderClassData === 'function') {
                 renderClassData();
-                if (typeof populateResetSubjectSelect === 'function') populateResetSubjectSelect();
+                if (typeof populateResetSelect === 'function') populateResetSelect();
             }
             if (pageId === 'page-lesson' && typeof renderLessonData === 'function') renderLessonData();
             if (pageId === 'page-group' && typeof renderGroupData === 'function') renderGroupData();
