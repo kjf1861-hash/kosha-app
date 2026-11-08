@@ -317,14 +317,18 @@ async function editItem(id) {
 async function saveItem(e) {
     e.preventDefault();
     const id = document.getElementById('editItemId').value;
-    const title = document.getElementById('itemTitle').value;
+    const title = document.getElementById('itemTitle').value.trim();
     const type = document.getElementById('itemType').value;
     
     if (!title || !type) { showToast('عنوان و نوع را مشخص کنید.', 'error'); return; }
     
     let itemData = { title, type };
-    if (id) itemData.id = parseInt(id);
-    else itemData.id = Date.now();
+    if (id) {
+        itemData.id = parseInt(id);
+    } else {
+        // استفاده از Date.now() برای ID یکتا
+        itemData.id = Date.now();
+    }
     
     if (type === 'level') {
         itemData.placeholder = document.getElementById('itemLevelPlaceholder').value || 'انتخاب سطح عملکرد:';
@@ -348,7 +352,7 @@ async function saveItem(e) {
         await saveData('assessmentItems', itemData);
         showToast('آیتم با موفقیت ذخیره شد!', 'success');
         
-        // *** اصلاح باگ: رفرش داده‌ها بدون بستن مودال ***
+        // به‌روزرسانی لیست آیتم‌ها در حافظه
         const freshItems = await getAllData('assessmentItems');
         window.allAssessmentItems = freshItems;
         assessmentItems = freshItems;
@@ -356,13 +360,14 @@ async function saveItem(e) {
         renderItemsList();
         resetItemForm();
         
-        // رفرش دستی منوی انتخاب آیتم در فرم ثبت ارزشیابی
+        // به‌روزرسانی منوی انتخاب آیتم در فرم ثبت ارزشیابی
         const itemSelect = document.getElementById('recordItem');
         if (itemSelect) {
             itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
         }
         
     } catch (error) {
+        console.error(error);
         showToast('خطا در ذخیره آیتم!', 'error');
     }
 }
@@ -373,23 +378,23 @@ async function deleteCustomItem(id) {
         await deleteData('assessmentItems', id);
         showToast('آیتم حذف شد.', 'success');
         
-        // *** اصلاح باگ: رفرش داده‌ها بدون بستن مودال ***
+        // به‌روزرسانی لیست آیتم‌ها در حافظه
         const freshItems = await getAllData('assessmentItems');
         window.allAssessmentItems = freshItems;
         assessmentItems = freshItems;
         
         renderItemsList();
         
-        // رفرش دستی منوی انتخاب آیتم در فرم ثبت ارزشیابی
+        // به‌روزرسانی منوی انتخاب آیتم در فرم ثبت ارزشیابی
         const itemSelect = document.getElementById('recordItem');
         if (itemSelect) {
             itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
         }
     } catch (e) {
+        console.error(e);
         showToast('خطا در حذف آیتم!', 'error');
     }
 }
-
 // ==========================================
 // 7. پشتیبان‌گیری و بازیابی
 // ==========================================
