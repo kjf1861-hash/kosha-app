@@ -158,7 +158,6 @@
                     <div id="groups-list" class="list-group"></div>
                 </div>
 
-                <!-- بخش جدید: اختصاص دانش‌آموزان -->
                 <div class="card">
                     <h2 class="card-title">🔗 اختصاص دانش‌آموزان به گروه</h2>
                     <div class="form-group">
@@ -242,10 +241,12 @@
                 </div>
             </div>
 
-            <!-- تب ۵: امتیاز -->
+            <!-- تب ۵: امتیاز (بازطراحی شده) -->
             <div id="page-score" class="page-section">
+                
+                <!-- بخش ۱: ارزشیابی عمومی -->
                 <div class="card">
-                    <h2 class="card-title">📝 ثبت امتیاز جدید</h2>
+                    <h2 class="card-title">📝 ارزشیابی</h2>
                     <button type="button" class="btn btn-secondary btn-block mb-4" onclick="openItemManagementModal()">⚙️ مدیریت آیتم‌های ارزشیابی</button>
                     
                     <form id="record-form">
@@ -313,9 +314,100 @@
                     </div>
                 </div>
 
-                <div class="card" style="margin-top: 20px;">
-                    <h2 class="card-title">🏅 تشویق‌های پویش قرآن</h2>
-                    <div id="quran-rewards-list" class="list-group"></div>
+                <!-- بخش ۲: پویش حفظ جزء سی قرآن کریم (مستقل) -->
+                <div class="card" style="margin-top: 20px; border: 2px solid #f59e0b;">
+                    <h2 class="card-title" style="color: #f59e0b;">🕌 پویش حفظ جزء سی قرآن کریم</h2>
+                    <form id="quran-form">
+                        <div class="form-group">
+                            <label class="form-label">انتخاب دانش‌آموزان</label>
+                            <div class="view-toggle-group">
+                                <button type="button" id="btnQuranFlatView" class="view-toggle-btn active" onclick="switchQuranStudentView('flat')">👦 نمای کلاسی</button>
+                                <button type="button" id="btnQuranGroupView" class="view-toggle-btn" onclick="switchQuranStudentView('grouped')">👥 نمای گروهی</button>
+                            </div>
+                            <div id="quran-students-container" class="student-checkbox-list"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">انتخاب سوره</label>
+                            <select id="quranSurahSelect" class="form-control" required>
+                                <option value="" disabled selected>انتخاب سوره...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">تعداد آیات</label>
+                            <input type="number" id="quranAyatInput" class="form-control" min="1" placeholder="تعداد آیات" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">تاریخ (الزامی)</label>
+                            <div style="display: flex; gap: 8px;">
+                                <select id="quranDateDay" class="form-control" style="flex: 1;" required></select>
+                                <select id="quranDateMonth" class="form-control" style="flex: 1.5;" required></select>
+                                <select id="quranDateYear" class="form-control" style="flex: 1.2;" required></select>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-block" onclick="saveQuranRecord()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">✅ ثبت پویش قرآن</button>
+                    </form>
+
+                    <div style="margin-top: 20px; border-top: 1px dashed var(--border-color); padding-top: 15px;">
+                        <h3 style="color: #f59e0b; font-size: 1rem; margin-bottom: 10px;">🏅 تشویق‌های پویش قرآن</h3>
+                        <div id="quran-rewards-list" class="list-group"></div>
+                    </div>
+                </div>
+
+                <!-- بخش ۳: تشویق‌ها (مستقل) -->
+                <div class="card" style="margin-top: 20px; border: 2px solid #3b82f6;">
+                    <h2 class="card-title" style="color: #3b82f6;">🎉 تشویق‌ها</h2>
+                    
+                    <!-- تشویق ویژه -->
+                    <form id="special-reward-form" style="border-bottom: 1px dashed var(--border-color); padding-bottom: 20px; margin-bottom: 20px;">
+                        <h3 style="font-size: 1rem; margin-bottom: 10px; color: var(--text-main);">🎁 تشویق ویژه</h3>
+                        <div class="form-group">
+                            <label class="form-label">انتخاب دانش‌آموزان</label>
+                            <div class="view-toggle-group">
+                                <button type="button" id="btnSpecialFlatView" class="view-toggle-btn active" onclick="switchSpecialStudentView('flat')">👦 نمای کلاسی</button>
+                                <button type="button" id="btnSpecialGroupView" class="view-toggle-btn" onclick="switchSpecialStudentView('grouped')">👥 نمای گروهی</button>
+                            </div>
+                            <div id="special-reward-students-container" class="student-checkbox-list"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">عنوان تشویق</label>
+                            <input type="text" id="specialRewardTitle" class="form-control" placeholder="مثلاً: نظم و انضباط در کلاس" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">امتیاز</label>
+                            <input type="number" id="specialRewardScore" class="form-control" min="1" placeholder="عدد امتیاز" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">تاریخ</label>
+                            <div style="display: flex; gap: 8px;">
+                                <select id="specialDateDay" class="form-control" style="flex: 1;" required></select>
+                                <select id="specialDateMonth" class="form-control" style="flex: 1.5;" required></select>
+                                <select id="specialDateYear" class="form-control" style="flex: 1.2;" required></select>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-block" onclick="saveSpecialReward()" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">✅ ثبت تشویق ویژه</button>
+                    </form>
+
+                    <!-- تشویق خوش‌خط‌نویسی -->
+                    <form id="handwriting-reward-form">
+                        <h3 style="font-size: 1rem; margin-bottom: 10px; color: var(--text-main);">✍️ تشویق خوش‌خط‌نویسی</h3>
+                        <div class="form-group">
+                            <label class="form-label">انتخاب دانش‌آموزان</label>
+                            <div class="view-toggle-group">
+                                <button type="button" id="btnHandwritingFlatView" class="view-toggle-btn active" onclick="switchHandwritingStudentView('flat')">👦 نمای کلاسی</button>
+                                <button type="button" id="btnHandwritingGroupView" class="view-toggle-btn" onclick="switchHandwritingStudentView('grouped')">👥 نمای گروهی</button>
+                            </div>
+                            <div id="handwriting-students-container" class="student-checkbox-list"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">تاریخ</label>
+                            <div style="display: flex; gap: 8px;">
+                                <select id="handwritingDateDay" class="form-control" style="flex: 1;" required></select>
+                                <select id="handwritingDateMonth" class="form-control" style="flex: 1.5;" required></select>
+                                <select id="handwritingDateYear" class="form-control" style="flex: 1.2;" required></select>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-block" onclick="saveHandwritingReward()" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">✅ ثبت تشویق خوش‌خط‌نویسی</button>
+                    </form>
                 </div>
             </div>
 
