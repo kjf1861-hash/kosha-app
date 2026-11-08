@@ -348,16 +348,17 @@ async function saveItem(e) {
         await saveData('assessmentItems', itemData);
         showToast('آیتم با موفقیت ذخیره شد!', 'success');
         
-        // *** اصلاح باگ: رفرش کامل داده‌ها و لیست آیتم‌ها ***
-        loadAllData(); 
+        // *** اصلاح باگ: رفرش داده‌ها بدون بستن مودال ***
+        const freshItems = await getAllData('assessmentItems');
+        window.allAssessmentItems = freshItems;
+        assessmentItems = freshItems;
+        
         renderItemsList();
         resetItemForm();
         
         // رفرش دستی منوی انتخاب آیتم در فرم ثبت ارزشیابی
         const itemSelect = document.getElementById('recordItem');
         if (itemSelect) {
-            const freshItems = await getAllData('assessmentItems');
-            window.allAssessmentItems = freshItems;
             itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
         }
         
@@ -372,15 +373,16 @@ async function deleteCustomItem(id) {
         await deleteData('assessmentItems', id);
         showToast('آیتم حذف شد.', 'success');
         
-        // *** اصلاح باگ: رفرش کامل داده‌ها و لیست آیتم‌ها ***
-        loadAllData(); 
+        // *** اصلاح باگ: رفرش داده‌ها بدون بستن مودال ***
+        const freshItems = await getAllData('assessmentItems');
+        window.allAssessmentItems = freshItems;
+        assessmentItems = freshItems;
+        
         renderItemsList();
         
         // رفرش دستی منوی انتخاب آیتم در فرم ثبت ارزشیابی
         const itemSelect = document.getElementById('recordItem');
         if (itemSelect) {
-            const freshItems = await getAllData('assessmentItems');
-            window.allAssessmentItems = freshItems;
             itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
         }
     } catch (e) {
