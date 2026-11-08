@@ -116,6 +116,46 @@
                         <input type="file" id="importFile" accept=".json" class="form-control" onchange="importData(event)">
                     </div>
                 </div>
+
+                <!-- کارت جدید: بازنشانی و پاکسازی -->
+                <div class="card" style="border: 2px solid #ef4444; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);">
+                    <h2 class="card-title" style="color: #b91c1c; border-bottom-color: #fca5a5;">🗑️ بازنشانی و پاکسازی اطلاعات</h2>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                        
+                        <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
+                            <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">📅 شروع سال تحصیلی جدید</strong>
+                            <p style="font-size: 0.8rem; color: #64748b; margin: 0 0 10px 0;">پاک کردن تمام سوابق ارزشیابی، حضور و غیاب‌ها و جلسات (دانش‌آموزان و دروس حفظ می‌شوند).</p>
+                            <button type="button" class="btn btn-secondary btn-block" onclick="resetYearlyRecords()" style="background: #fca5a5; color: #7f1d1d;">پاک کردن سوابق</button>
+                        </div>
+
+                        <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
+                            <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">👥 پاک کردن گروه‌بندی‌ها</strong>
+                            <p style="font-size: 0.8rem; color: #64748b; margin: 0 0 10px 0;">خارج کردن همه دانش‌آموزان از گروه‌ها برای گروه‌بندی مجدد.</p>
+                            <button type="button" class="btn btn-secondary btn-block" onclick="resetGroupAssignments()" style="background: #fca5a5; color: #7f1d1d;">بازنشانی گروه‌ها</button>
+                        </div>
+
+                        <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
+                            <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">📚 حذف سوابق یک درس خاص</strong>
+                            <select id="resetSubjectSelect" class="form-control" style="margin-bottom: 10px;"></select>
+                            <button type="button" class="btn btn-secondary btn-block" onclick="resetSpecificSubjectRecords()" style="background: #fca5a5; color: #7f1d1d;">حذف سوابق درس</button>
+                        </div>
+
+                        <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
+                            <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">🔄 پاکسازی فنی (کش)</strong>
+                            <p style="font-size: 0.8rem; color: #64748b; margin: 0 0 10px 0;">اگر برنامه باگ زد یا آپدیت نشد، کش مرورگر را پاک کنید.</p>
+                            <button type="button" class="btn btn-secondary btn-block" onclick="resetTechnicalCache()" style="background: #fca5a5; color: #7f1d1d;">پاکسازی کش</button>
+                        </div>
+
+                        <div style="background: #fef2f2; padding: 12px; border-radius: 8px; border: 2px dashed #ef4444; margin-top: 5px;">
+                            <strong style="color: #dc2626; display: block; margin-bottom: 5px;">⚠️ بازنشانی کامل (تنظیمات کارخانه)</strong>
+                            <p style="font-size: 0.8rem; color: #7f1d1d; margin: 0 0 10px 0;">حذف کل اطلاعات برنامه (کلاس، دانش‌آموزان، دروس، سوابق و...). این عمل غیرقابل بازگشت است!</p>
+                            <button type="button" class="btn btn-primary btn-block" onclick="resetFactoryAll()" style="background: #dc2626; border: none;">حذف کل اطلاعات</button>
+                        </div>
+
+                    </div>
+                </div>
+
             </div>
 
             <!-- تب ۲: درس -->
@@ -456,6 +496,7 @@
     <script src="group.js"></script>
     <script src="session.js"></script>
     <script src="score.js"></script>
+    <script src="reset.js"></script> <!-- فراخوانی فایل جدید -->
     
     <script>
         function initTheme() {
@@ -508,7 +549,10 @@
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
             navElement.classList.add('active');
             
-            if (pageId === 'page-class' && typeof renderClassData === 'function') renderClassData();
+            if (pageId === 'page-class' && typeof renderClassData === 'function') {
+                renderClassData();
+                if (typeof populateResetSubjectSelect === 'function') populateResetSubjectSelect();
+            }
             if (pageId === 'page-lesson' && typeof renderLessonData === 'function') renderLessonData();
             if (pageId === 'page-group' && typeof renderGroupData === 'function') renderGroupData();
             if (pageId === 'page-session' && typeof renderSessionData === 'function') renderSessionData();
