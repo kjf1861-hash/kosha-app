@@ -24,6 +24,14 @@ async function resetYearlyRecords() {
 
 // ۲. پاک کردن گروه‌بندی دانش‌آموزان
 async function resetGroupAssignments() {
+    // *** بررسی خالی بودن گروه‌بندی‌ها ***
+    const hasAssignedStudents = window.allStudentsData.some(st => st.groupId !== null);
+    
+    if (!hasAssignedStudents) {
+        showToast('هیچ دانش‌آموزی در گروه‌ها وجود ندارد که خارج شود.', 'error');
+        return;
+    }
+
     const isConfirmed = confirm('آیا از خارج کردن تمام دانش‌آموزان از گروه‌ها مطمئن هستید؟ (گروه‌ها و دانش‌آموزان حذف نمی‌شوند)');
     if (!isConfirmed) return;
 
