@@ -3,10 +3,11 @@
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 10;
+const DB_VERSION = 10; // نسخه به 10 افزایش یافت تا دیتابیس جدید ساخته شود
 
 let db;
 
+// آرایه آیتم‌های پیش‌فرض (11 آیتم عمومی)
 const defaultAssessmentItems = [
     { id: 1, title: "پرسش و پاسخ", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
     { id: 2, title: "حفظ و قرائت", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
@@ -33,6 +34,7 @@ function initDB() {
         request.onsuccess = (event) => {
             db = event.target.result;
             console.log('پایگاه داده با موفقیت راه‌اندازی شد.');
+            // تابع پاکسازی مخرب حذف شد تا آیتم‌های سفارشی شما هرگز پاک نشوند
             resolve(db);
         };
 
