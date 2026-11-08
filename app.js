@@ -348,6 +348,7 @@ async function exportData() {
     } catch (e) { showToast('خطا در تولید فایل پشتیبان!', 'error'); }
 }
 
+// *** تابع اصلاح‌شده برای رفع باگ بارگذاری همزمان ***
 async function importData(event) {
     const file = event.target.files[0]; 
     if (!file) return;
@@ -355,7 +356,7 @@ async function importData(event) {
     const isConfirmed = confirm('⚠️ هشدار مهم:\n\nبا بازیابی این فایل، تمام اطلاعات فعلی شما (از جمله تغییرات و آیتم‌های جدید) پاک شده و با اطلاعات داخل فایل بکاپ جایگزین می‌شود.\n\nآیا مطمئن هستید؟');
     
     if (!isConfirmed) {
-        event.target.value = ''; // پاک کردن فایل انتخاب شده
+        event.target.value = ''; 
         return;
     }
 
@@ -364,14 +365,21 @@ async function importData(event) {
         try { 
             const data = JSON.parse(e.target.result); 
             await importAllData(data); 
+            
+            // نمایش پیام موفقیت
             showToast('اطلاعات با موفقیت بازیابی شد!', 'success'); 
-            loadAllData(); 
+            
+            // *** تأخیر کوچک برای اطمینان از نوشتن کامل داده‌ها در دیتابیس ***
+            setTimeout(() => {
+                loadAllData();
+            }, 500);
+
         }
         catch (err) { 
             console.error(err);
             showToast('فایل نامعتبر! تغییرات لغو شد.', 'error'); 
         }
-        event.target.value = ''; // پاک کردن فایل انتخاب شده برای دفعات بعدی
+        event.target.value = ''; 
     };
     reader.readAsText(file);
 }
