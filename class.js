@@ -5,6 +5,9 @@
 function initClassEvents() {
     document.getElementById('class-form').addEventListener('submit', saveClassProfile);
     document.getElementById('student-form').addEventListener('submit', saveStudent);
+    if(document.getElementById('edit-student-form')) {
+        document.getElementById('edit-student-form').addEventListener('submit', saveEditedStudent);
+    }
 }
 
 async function saveClassProfile(e) {
@@ -23,30 +26,57 @@ async function saveClassProfile(e) {
     document.getElementById('header-subtitle').textContent = data.name;
 }
 
+// فقط برای افزودن دانش‌آموز جدید
 async function saveStudent(e) {
     e.preventDefault();
-    const editId = document.getElementById('editStudentId').value;
-    let existingGroupId = null;
     
-    // اگر در حال ویرایش است، گروه قبلی را حفظ کن
-    if (editId) {
-        const existing = await getDataById('students', parseInt(editId));
-        if (existing) existingGroupId = existing.groupId;
-    }
-
     const data = {
         firstName: document.getElementById('studentFirstName').value,
         lastName: document.getElementById('studentLastName').value,
-        groupId: existingGroupId
+        groupId: null // دانش‌آموز جدید پیش‌فرض بدون گروه است
     };
-    if (editId) data.id = parseInt(editId);
     
     await saveData('students', data);
     
     document.getElementById('student-form').reset();
-    document.getElementById('editStudentId').value = '';
-    document.getElementById('student-submit-btn').textContent = '➕ ثبت دانش‌آموز';
-    showToast(editId ? 'دانش‌آموز ویرایش شد!' : 'دانش‌آموز ثبت شد!', 'success');
+    showToast('دانش‌آموز جدید با موفقیت ثبت شد!', 'success');
+    loadAllData();
+}
+
+// باز کردن مودال ویرایش
+async function editStudent(id) {
+    const student = await getDataById('students', id);
+    if (student) {
+        document.getElementById('editStudentIdModal').value = student.id;
+        document.getElementById('editStudentFirstNameModal').value = student.firstName;
+        document.getElementById('editStudentLastNameModal').value = student.lastName;
+        document.getElementById('edit-student-modal').classList.add('show');
+    }
+}
+
+function closeEditStudentModal() {
+    document.getElementById('edit-student-modal').classList.remove('show');
+}
+
+// ذخیره تغییرات از داخل مودال
+async function saveEditedStudent(e) {
+    e.preventDefault();
+    const id = parseInt(document.getElementById('editStudentIdModal').value);
+    
+    // دریافت اطلاعات قبلی برای حفظ گروه
+    const existing = await getDataById('students', id);
+    const existingGroupId = existing ? existing.groupId : null;
+
+    const data = {
+        id: id,
+        firstName: document.getElementById('editStudentFirstNameModal').value,
+        lastName: document.getElementById('editStudentLastNameModal').value,
+        groupId: existingGroupId
+    };
+    
+    await saveData('students', data);
+    showToast('اطلاعات دانش‌آموز با موفقیت ویرایش شد!', 'success');
+    closeEditStudentModal();
     loadAllData();
 }
 
@@ -139,17 +169,6 @@ function renderStudentsList() {
         } else {
             pagination.style.display = 'none';
         }
-    }
-}
-
-async function editStudent(id) {
-    const student = await getDataById('students', id);
-    if (student) {
-        document.getElementById('studentFirstName').value = student.firstName;
-        document.getElementById('studentLastName').value = student.lastName;
-        document.getElementById('editStudentId').value = student.id;
-        document.getElementById('student-submit-btn').textContent = '💾 به‌روزرسانی دانش‌آموز';
-        document.getElementById('student-form').scrollIntoView({ behavior: 'smooth' });
     }
 }
 
