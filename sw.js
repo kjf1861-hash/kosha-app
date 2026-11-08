@@ -1,6 +1,6 @@
-const CACHE_NAME = 'kosha-cache-v31';
+const CACHE_NAME = 'kosha-cache-v32';
 const ASSETS_TO_CACHE = [
-    './', './index.html', './styles.css', './app.js', './db.js', './manifest.json', './icon.svg', './class.js', './lesson.js', './group.js', './session.js', './score.js'
+    './', './index.html', './styles.css', './app.js', './db.js', './manifest.json', './icon.svg', './class.js', './lesson.js', './group.js', './session.js', './score.js', './reset.js'
 ];
 
 self.addEventListener('install', (event) => {
