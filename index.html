@@ -74,7 +74,6 @@
                     🏫 کلاس
                 </div>
                 
-                <!-- آمارهای سریع -->
                 <div class="dashboard-grid">
                     <div class="dashboard-card">
                         <div class="dc-icon">👦</div>
@@ -98,42 +97,28 @@
                     </div>
                 </div>
 
-                <!-- کارت‌های فعالیت (اسکرول افقی) -->
-                <div class="horizontal-scroll-container" id="dashboard-activity-cards">
-                    <!-- محتوا از طریق JS پر می‌شود -->
-                </div>
+                <div class="horizontal-scroll-container" id="dashboard-activity-cards"></div>
 
-                <!-- تحلیل‌های بصری (آکاردئون) -->
                 <details class="dashboard-accordion">
                     <summary>📊 نمودار حضور و غیاب کلاس</summary>
-                    <div class="dashboard-accordion-content" id="dashboard-attendance-chart" style="display: flex; justify-content: center; padding: 20px 0;">
-                        <!-- نمودار دونات از طریق JS پر می‌شود -->
-                    </div>
+                    <div class="dashboard-accordion-content" id="dashboard-attendance-chart" style="display: flex; justify-content: center; padding: 20px 0;"></div>
                 </details>
 
                 <details class="dashboard-accordion">
                     <summary>📚 میانگین امتیازات دروس</summary>
-                    <div class="dashboard-accordion-content" id="dashboard-subject-averages" style="display: flex; flex-direction: column; gap: 12px;">
-                        <!-- نمودار میله‌ای از طریق JS پر می‌شود -->
-                    </div>
+                    <div class="dashboard-accordion-content" id="dashboard-subject-averages" style="display: flex; flex-direction: column; gap: 12px;"></div>
                 </details>
 
-                <!-- رتبه‌بندی‌ها (آکاردئون) -->
                 <details class="dashboard-accordion" open>
                     <summary>🏆 شاگردان برتر</summary>
-                    <div class="dashboard-accordion-content" id="dashboard-top-students">
-                        <!-- لیست از طریق JS پر می‌شود -->
-                    </div>
+                    <div class="dashboard-accordion-content" id="dashboard-top-students"></div>
                 </details>
 
                 <details class="dashboard-accordion">
                     <summary>👥 گروه‌های برتر</summary>
-                    <div class="dashboard-accordion-content" id="dashboard-top-groups">
-                        <!-- لیست از طریق JS پر می‌شود -->
-                    </div>
+                    <div class="dashboard-accordion-content" id="dashboard-top-groups"></div>
                 </details>
 
-                <!-- تحلیل هوشمند -->
                 <div class="card" style="background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); border: 1px solid #f59e0b;">
                     <h2 class="card-title" style="color: #b45309; border-bottom-color: #fcd34d;">⚠️ دانش‌آموزان نیازمند توجه</h2>
                     <div id="dashboard-needs-attention" class="list-group"></div>
@@ -144,7 +129,6 @@
                     <div id="dashboard-recent-activities" class="list-group"></div>
                 </div>
 
-                <!-- گزارش امتیازات و چاپ -->
                 <div class="card">
                     <h2 class="card-title">📈 گزارش امتیازات کلاس</h2>
                     <div id="class-score-report-section">
@@ -256,26 +240,19 @@
                         </div>
                     </h2>
                     
-                    <!-- دکمه سوییچ بین حالت مشاهده و ویرایش -->
                     <div class="view-toggle-group" style="margin-bottom: 15px;">
                         <button type="button" id="btnScheduleViewMode" class="view-toggle-btn active" onclick="toggleScheduleMode('view')">👁️ نمای کلی</button>
                         <button type="button" id="btnScheduleEditMode" class="view-toggle-btn" onclick="toggleScheduleMode('edit')">✏️ نمای ویرایش</button>
                     </div>
 
-                    <!-- حالت ۱: نمای جدول (مشاهده) -->
                     <div id="schedule-view-mode">
                         <div class="schedule-table-wrapper">
-                            <table class="schedule-table" id="schedule-display-table">
-                                <!-- محتوا از طریق JS پر می‌شود -->
-                            </table>
+                            <table class="schedule-table" id="schedule-display-table"></table>
                         </div>
                     </div>
 
-                    <!-- حالت ۲: نمای ویرایش (آکاردئون) -->
                     <div id="schedule-edit-mode" style="display: none;">
-                        <div id="schedule-edit-container">
-                            <!-- محتوا از طریق JS پر می‌شود -->
-                        </div>
+                        <div id="schedule-edit-container"></div>
                         <button type="button" class="btn btn-primary btn-block mt-4" onclick="saveAllWeeklySchedules()">💾 ذخیره کل برنامه هفتگی</button>
                     </div>
                 </div>
@@ -324,7 +301,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- تب ۶: امتیازات -->
             <div id="page-score" class="page-section">
                 <div class="page-header-title">
@@ -344,7 +320,7 @@
                             <label class="form-label">انتخاب دانش‌آموزان (الزامی)</label>
                             <div class="view-toggle-group">
                                 <button type="button" id="btnFlatView" class="view-toggle-btn active" onclick="switchStudentView('flat')">👦 نمای کلاسی</button>
-                                <button type="button" id="btnGroupView" class="view-toggle-btn" onclick="switchGroupedView()">👥 نمای گروهی</button>
+                                <button type="button" id="btnGroupView" class="view-toggle-btn" onclick="switchStudentView('grouped')">👥 نمای گروهی</button>
                             </div>
                             <div style="margin-bottom: 8px; display: flex; gap: 5px; flex-wrap: wrap;">
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllStudents(true)">انتخاب همه</button>
@@ -581,8 +557,6 @@
 
         </div> <!-- پایان container -->
     </div> <!-- پایان app-container -->
-        </div> <!-- پایان container -->
-    </div> <!-- پایان app-container -->
 
     <!-- منوی پایین (۷ تب - فقط ایموجی) -->
     <nav class="bottom-nav" style="display: none;">
@@ -626,12 +600,14 @@
                     
                     <!-- تنظیمات برنامه هفتگی -->
                     <div class="form-group">
-                        <label class="form-label" for="scheduleDaysCount">تعداد روزهای هفته (برنامه هفتگی)</label>
-                        <input type="number" id="scheduleDaysCount" class="form-control" min="1" max="7" value="6" required>
-                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">حداکثر ۷ روز (شنبه تا جمعه)</p>
+                        <label class="form-label">روزهای فعال هفته (برای برنامه هفتگی)</label>
+                        <div id="schedule-days-checkboxes" style="display: flex; flex-wrap: wrap; gap: 10px; background: var(--input-bg); padding: 12px; border-radius: var(--radius-sm);">
+                            <!-- چک‌باکس‌ها از طریق JS پر می‌شوند -->
+                        </div>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">روزهایی را که مدرسه دایر است انتخاب کنید.</p>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="schedulePeriodsCount">تعداد زنگ‌ها در هر روز</label>
+                        <label class="form-label" for="schedulePeriodsCount">حداکثر تعداد زنگ‌ها در روز</label>
                         <input type="number" id="schedulePeriodsCount" class="form-control" min="1" max="6" value="5" required>
                         <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">حداکثر ۶ زنگ در روز</p>
                     </div>
@@ -705,11 +681,10 @@
     <div id="attendance-details-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header" id="attendance-details-title">📋 جزئیات حضور</div><div id="attendance-details-content"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeAttendanceDetails()">بستن</button></div></div></div>
     <div id="lesson-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="lesson-details-title">📊 جزئیات درس</div><div class="view-toggle-group"><button type="button" id="btnLessonClassView" class="view-toggle-btn active" onclick="switchLessonDetailView('class')">👦 نمای کلاسی</button><button type="button" id="btnLessonGroupView" class="view-toggle-btn" onclick="switchLessonDetailView('group')">👥 نمای گروهی</button></div><div id="lesson-details-content" class="list-group"></div><div class="modal-footer"><button type="button" class="btn btn-secondary btn-block" onclick="closeLessonDetails()">بستن</button></div></div></div>
     
-    <!-- مودال جزئیات گروه (با قابلیت اختصاص دانش‌آموز) -->
+    <!-- مودال جزئیات گروه -->
     <div id="group-details-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header" id="group-details-title">📊 جزئیات گروه</div>
-            
             <div style="background: var(--input-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--border-color);">
                 <label class="form-label" style="font-size: 0.9rem; margin-bottom: 5px;">➕ افزودن دانش‌آموز به این گروه</label>
                 <div style="display: flex; gap: 8px;">
@@ -717,9 +692,7 @@
                     <button type="button" class="btn btn-primary" onclick="assignStudentFromModal()">افزودن</button>
                 </div>
             </div>
-
             <div id="group-details-content" class="list-group" style="max-height: 40vh; overflow-y: auto;"></div>
-            
             <div class="modal-footer" style="flex-direction: column; gap: 10px; margin-top: 20px;">
                 <button type="button" class="btn btn-secondary btn-block" onclick="closeGroupDetails()">بستن</button>
             </div>
@@ -816,6 +789,7 @@
         function openSettingsModal() {
             document.getElementById('settings-modal').classList.add('show');
             if (typeof populateResetSelect === 'function') populateResetSelect();
+            if (typeof populateScheduleDaysCheckboxes === 'function') populateScheduleDaysCheckboxes();
         }
         function closeSettingsModal() {
             document.getElementById('settings-modal').classList.remove('show');
