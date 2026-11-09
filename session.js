@@ -14,15 +14,15 @@ const leapYears = [1408]; // تنها سال کبیسه در این بازه
 let currentCalendarYear = 1405;
 let currentCalendarMonth = 1;
 let selectedSessionDate = "";
+let selectedSessionDayOfWeek = "";
 
 function initSessionEvents() {
     document.getElementById('scheduleDaySelect').addEventListener('change', renderScheduleForDay);
-    document.getElementById('sessionDayOfWeek').addEventListener('change', checkScheduleExists);
 }
 
 async function renderSessionData() {
     renderScheduleForDay();
-    initCalendar(); // راه‌اندازی تقویم
+    initCalendar(); 
     renderSessionsList();
     generateAttendanceReports();
 }
@@ -57,21 +57,18 @@ function initCalendar() {
     const monthSelect = document.getElementById('calendarMonthSelect');
     if (!yearSelect || !monthSelect) return;
 
-    // خواندن از localStorage یا مقدار پیش‌فرض
     let savedYear = localStorage.getItem('kosha-calendar-year');
     let savedMonth = localStorage.getItem('kosha-calendar-month');
     
     currentCalendarYear = savedYear ? parseInt(savedYear) : 1405;
     currentCalendarMonth = savedMonth ? parseInt(savedMonth) : 1;
 
-    // پر کردن منوی سال
     yearSelect.innerHTML = '';
     calendarYears.forEach(y => {
         yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
     });
     yearSelect.value = currentCalendarYear;
 
-    // پر کردن منوی ماه
     monthSelect.innerHTML = '';
     jalaliMonths.forEach((m, i) => {
         monthSelect.innerHTML += `<option value="${i + 1}">${m}</option>`;
@@ -90,12 +87,10 @@ function renderCalendarGrid() {
     const firstDay = getFirstDayOfWeek(currentCalendarYear, currentCalendarMonth);
     const daysInMonth = getDaysInMonth(currentCalendarYear, currentCalendarMonth);
 
-    // خانه‌های خالی قبل از روز اول
     for (let i = 0; i < firstDay; i++) {
         grid.innerHTML += `<div class="calendar-day empty"></div>`;
     }
 
-    // روزهای ماه
     for (let day = 1; day <= daysInMonth; day++) {
         const isFriday = ((firstDay + day - 1) % 7) === 6;
         const dateStr = `${currentCalendarYear}/${String(currentCalendarMonth).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
@@ -107,11 +102,10 @@ function renderCalendarGrid() {
         grid.innerHTML += `<div class="${classes}" onclick="selectCalendarDay(${day}, '${dateStr}')">${day}</div>`;
     }
 
-    // آپدیت نمایش تاریخ انتخاب شده
     if (selectedSessionDate) {
         const parts = selectedSessionDate.split('/');
         const monthName = jalaliMonths[parseInt(parts[1]) - 1];
-        display.textContent = `تاریخ انتخابی: ${parts[2]} ${monthName} ${parts[0]}`;
+        display.textContent = `تاریخ انتخابی: ${parts[2]} ${monthName} ${parts[0]} (${selectedSessionDayOfWeek})`;
         display.style.display = 'block';
     } else {
         display.textContent = 'تاریخ انتخاب نشده است';
@@ -121,7 +115,6 @@ function renderCalendarGrid() {
 
 function changeCalendarMonth(delta) {
     if (delta === 0) {
-        // تغییر از طریق منوی کشویی
         currentCalendarMonth = parseInt(document.getElementById('calendarMonthSelect').value);
     } else {
         currentCalendarMonth += delta;
@@ -134,7 +127,6 @@ function changeCalendarMonth(delta) {
         }
     }
 
-    // بررسی محدوده سال
     if (currentCalendarYear < 1405) { currentCalendarYear = 1405; currentCalendarMonth = 1; }
     if (currentCalendarYear > 1409) { currentCalendarYear = 1409; currentCalendarMonth = 12; }
 
@@ -156,6 +148,28 @@ function changeCalendarYear() {
 function selectCalendarDay(day, dateStr) {
     selectedSessionDate = dateStr;
     document.getElementById('sessionDateHidden').value = dateStr;
+    
+    // *** محاسبه هوشمند روز هفته ***
+    const firstDay = getFirstDayOfWeek(currentCalendarYear, currentCalendarMonth);
+    const dayOfWeekIndex = (firstDay + day - 1) % 7;
+    const dayNames = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+    selectedSessionDayOfWeek = dayNames[dayOfWeekIndex];
+
+    // نمایش روز هفته زیر تقویم
+    const detectedDisplay = document.getElementById('detectedDayDisplay');
+    if (detectedDisplay) {
+        detectedDisplay.style.display = 'block';
+        
+        // بررسی وجود برنامه هفتگی برای این روز
+        const hasSchedule = window.allWeeklyScheduleData.some(s => s.day === selectedSessionDayOfWeek && s.periods.some(p => p !== null));
+        
+        if (hasSchedule) {
+            detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#16a34a;">✅ برنامه هفتگی برای این روز تعریف شده است.</span>`;
+        } else {
+            detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#dc2626;">⚠️ برنامه‌ای برای این روز تعریف نشده است.</span>`;
+        }
+    }
+
     renderCalendarGrid();
 }
 
@@ -192,7 +206,6 @@ async function addSchedulePeriod() {
     const container = document.getElementById('weekly-schedule-container');
     const currentCount = container.querySelectorAll('.schedule-period-select').length;
     
-    // *** بررسی محدودیت ۵ زنگ ***
     if (currentCount >= 5) {
         showToast('حداکثر تعداد مجاز زنگ در هر روز (۵ زنگ) تکمیل شده است.', 'error');
         return;
@@ -224,18 +237,6 @@ async function saveWeeklySchedule() {
     showToast(`برنامه هفتگی روز ${day} ذخیره شد!`, 'success');
 }
 
-async function checkScheduleExists() {
-    const day = document.getElementById('sessionDayOfWeek').value;
-    if (!day) return;
-    
-    const schedules = await getAllData('weeklySchedule');
-    const hasSchedule = schedules.some(s => s.day === day && s.periods.some(p => p !== null));
-    
-    if (!hasSchedule) {
-        showToast(`برای روز ${day} برنامه‌ای تعریف نشده است. لطفاً ابتدا برنامه هفتگی را تنظیم کنید.`, 'error');
-    }
-}
-
 // *** حذف کل برنامه هفتگی ***
 async function resetAllWeeklySchedules() {
     if (window.allWeeklyScheduleData.length === 0) {
@@ -263,28 +264,33 @@ async function resetAllWeeklySchedules() {
 // 2. ثبت جلسه و لیست جلسات
 // ==========================================
 async function createNewSession() {
-    const dateStr = document.getElementById('sessionDateHidden').value;
-    const dayOfWeek = document.getElementById('sessionDayOfWeek').value;
-
-    if (!dateStr) {
+    if (!selectedSessionDate) {
         showToast('لطفاً یک تاریخ را از تقویم انتخاب کنید.', 'error'); return;
     }
-    if (!dayOfWeek) {
-        showToast('لطفاً روز برنامه هفتگی را انتخاب کنید.', 'error'); return;
+    if (!selectedSessionDayOfWeek) {
+        showToast('خطا در تشخیص روز هفته.', 'error'); return;
+    }
+
+    // بررسی وجود برنامه هفتگی برای این روز
+    const hasSchedule = window.allWeeklyScheduleData.some(s => s.day === selectedSessionDayOfWeek && s.periods.some(p => p !== null));
+    if (!hasSchedule) {
+        showToast(`برای روز ${selectedSessionDayOfWeek} برنامه‌ای تعریف نشده است. لطفاً ابتدا برنامه هفتگی را تنظیم کنید.`, 'error');
+        return;
     }
 
     const allSessions = await getAllData('sessions');
-    if (allSessions.find(s => s.date === dateStr)) {
+    if (allSessions.find(s => s.date === selectedSessionDate)) {
         showToast('این تاریخ قبلاً ثبت شده است.', 'error'); return;
     }
 
-    await saveData('sessions', { date: dateStr, dayOfWeek: dayOfWeek });
+    await saveData('sessions', { date: selectedSessionDate, dayOfWeek: selectedSessionDayOfWeek });
     showToast('جلسه با موفقیت ثبت شد!', 'success');
     
     // ریست
     selectedSessionDate = "";
+    selectedSessionDayOfWeek = "";
     document.getElementById('sessionDateHidden').value = "";
-    document.getElementById('sessionDayOfWeek').value = "";
+    document.getElementById('detectedDayDisplay').style.display = 'none';
     renderCalendarGrid();
 
     loadAllData();
