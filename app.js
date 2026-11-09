@@ -66,8 +66,8 @@ function initApp() {
     applyEmojiRestriction('classSymbol');
     applyEmojiRestriction('lessonSymbol');
     applyEmojiRestriction('groupSymbol');
-    initDateDropdowns();
-    initSessionDateDropdowns();
+    initDateDropdowns(); // تاریخ تب امتیاز (که هنوز با منوهای کشویی کار می‌کند)
+    // initSessionDateDropdowns حذف شد چون تقویم جدید جایگزین آن شد
     
     try {
         if(document.getElementById('class-form')) document.getElementById('class-form').addEventListener('submit', saveClassProfile);
@@ -111,7 +111,6 @@ async function loadAllData() {
             document.getElementById('classGrade').value = classData.grade || '';
             document.getElementById('teacherName').value = classData.teacherName || '';
             document.getElementById('schoolName').value = classData.schoolName || '';
-            // حذف عبارت (v2) و بازگشت به حالت تمیز
             document.getElementById('header-subtitle').textContent = classData.name || 'همیار پرتلاش معلم';
         }
         window.allStudentsData = await getAllData('students');
@@ -153,21 +152,6 @@ function initDateDropdowns() {
     daySelect.addEventListener('change', updateDate);
     monthSelect.addEventListener('change', updateDate);
     yearSelect.addEventListener('change', updateDate);
-}
-
-function initSessionDateDropdowns() {
-    const daySelect = document.getElementById('sessDateDay');
-    const monthSelect = document.getElementById('sessDateMonth');
-    const yearSelect = document.getElementById('sessDateYear');
-    if (!daySelect || !monthSelect || !yearSelect) return;
-    daySelect.innerHTML = '<option value="" disabled selected>روز</option>';
-    for (let i = 1; i <= 31; i++) daySelect.innerHTML += `<option value="${i}">${i}</option>`;
-    const monthNames = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
-    monthSelect.innerHTML = '<option value="" disabled selected>ماه</option>';
-    monthNames.forEach((name, index) => monthSelect.innerHTML += `<option value="${index + 1}">${name}</option>`);
-    yearSelect.innerHTML = '<option value="" disabled selected>سال</option>';
-    for (let i = 1405; i <= 1409; i++) yearSelect.innerHTML += `<option value="${i}">${i}</option>`;
-    daySelect.value = ''; monthSelect.value = ''; yearSelect.value = '';
 }
 
 function jalaliToDateString(jy, jm, jd) {
