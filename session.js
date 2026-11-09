@@ -62,28 +62,58 @@ function toggleScheduleMode(mode) {
     }
 }
 
+// تابع کمکی برای استخراج داده‌های برنامه (فقط روزها و زنگ‌های استفاده شده)
+function getPopulatedScheduleData() {
+    const activeDays = window.scheduleActiveDays || [];
+    
+    // پیدا کردن روزهایی که حداقل یک زنگ دارند
+    const populatedDays = activeDays.filter(day => {
+        const sched = window.allWeeklyScheduleData.find(s => s.day === day);
+        return sched && sched.periods && sched.periods.some(p => p !== null && p !== undefined);
+    });
+
+    // پیدا کردن بیشترین زنگ استفاده شده
+    let maxPeriod = 0;
+    populatedDays.forEach(day => {
+        const sched = window.allWeeklyScheduleData.find(s => s.day === day);
+        if (sched && sched.periods) {
+            sched.periods.forEach((p, idx) => {
+                if (p !== null && p !== undefined) {
+                    if (idx + 1 > maxPeriod) maxPeriod = idx + 1;
+                }
+            });
+        }
+    });
+
+    return {
+        daysToShow: populatedDays.length > 0 ? populatedDays : activeDays,
+        maxPeriodToShow: maxPeriod > 0 ? maxPeriod : (window.schedulePeriodsCount || 1)
+    };
+}
+
 function renderScheduleView() {
     const table = document.getElementById('schedule-display-table');
     if (!table) return;
 
-    const days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
-    const activeDays = days.slice(0, window.scheduleDaysCount);
-    const periodsCount = window.schedulePeriodsCount;
+    const { daysToShow, maxPeriodToShow } = getPopulatedScheduleData();
 
-    // ساخت هدر
+    if (daysToShow.length === 0) {
+        table.innerHTML = '<tbody><tr><td style="text-align:center; padding: 20px; color: var(--text-muted);">هنوز برنامه‌ای ثبت نشده است.</td></tr></tbody>';
+        return;
+    }
+
     let html = `<thead><tr><th>روز / زنگ</th>`;
-    for (let i = 1; i <= periodsCount; i++) {
+    for (let i = 1; i <= maxPeriodToShow; i++) {
         html += `<th>زنگ ${i}</th>`;
     }
     html += `</tr></thead><tbody>`;
 
-    // ساخت بدنه
-    activeDays.forEach(day => {
+    daysToShow.forEach(day => {
         const daySchedule = window.allWeeklyScheduleData.find(s => s.day === day);
         const periods = daySchedule ? daySchedule.periods : [];
 
         html += `<tr><th>${day}</th>`;
-        for (let i = 0; i < periodsCount; i++) {
+        for (let i = 0; i < maxPeriodToShow; i++) {
             const subId = periods[i];
             if (subId) {
                 const sub = window.allSubjectsData.find(s => s.id === subId);
@@ -107,9 +137,13 @@ function renderScheduleEdit() {
     const container = document.getElementById('schedule-edit-container');
     if (!container) return;
 
-    const days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
-    const activeDays = days.slice(0, window.scheduleDaysCount);
-    const periodsCount = window.schedulePeriodsCount;
+    const activeDays = window.scheduleActiveDays || [];
+    const periodsCount = window.schedulePeriodsCount || 5;
+
+    if (activeDays.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#dc2626;">هیچ روزی در تنظیمات انتخاب نکرده‌اید. لطفاً ابتدا از تنظیمات (⚙️) روزهای هفته را انتخاب کنید.</p>';
+        return;
+    }
 
     container.innerHTML = '';
 
@@ -144,7 +178,6 @@ function renderScheduleEdit() {
 async function saveAllWeeklySchedules() {
     const selects = document.querySelectorAll('.schedule-subject-select');
     
-    // ساختار داده جدید: { day: 'شنبه', periods: [...] }
     const newSchedule = {};
 
     selects.forEach(sel => {
@@ -159,7 +192,6 @@ async function saveAllWeeklySchedules() {
     });
 
     try {
-        // پاک کردن برنامه‌های قبلی و ذخیره جدید
         await clearStore('weeklySchedule');
         
         for (const day in newSchedule) {
@@ -167,8 +199,8 @@ async function saveAllWeeklySchedules() {
         }
 
         showToast('برنامه هفتگی با موفقیت ذخیره شد!', 'success');
-        await loadAllData(); // بارگذاری مجدد داده‌ها
-        toggleScheduleMode('view'); // برگشت به حالت مشاهده
+        await loadAllData(); 
+        toggleScheduleMode('view'); 
     } catch (e) {
         console.error(e);
         showToast('خطا در ذخیره برنامه هفتگی!', 'error');
@@ -201,16 +233,14 @@ async function resetAllWeeklySchedules() {
 // خروجی‌های برنامه هفتگی (اکسل، HTML، چاپ)
 // ------------------------------------------
 function getScheduleDataMatrix() {
-    const days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
-    const activeDays = days.slice(0, window.scheduleDaysCount);
-    const periodsCount = window.schedulePeriodsCount;
+    const { daysToShow, maxPeriodToShow } = getPopulatedScheduleData();
     const matrix = [];
 
-    activeDays.forEach(day => {
+    daysToShow.forEach(day => {
         const daySchedule = window.allWeeklyScheduleData.find(s => s.day === day);
         const periods = daySchedule ? daySchedule.periods : [];
         const row = [day];
-        for (let i = 0; i < periodsCount; i++) {
+        for (let i = 0; i < maxPeriodToShow; i++) {
             const subId = periods[i];
             if (subId) {
                 const sub = window.allSubjectsData.find(s => s.id === subId);
@@ -221,14 +251,17 @@ function getScheduleDataMatrix() {
         }
         matrix.push(row);
     });
-    return matrix;
+
+    return { matrix, maxPeriodToShow };
 }
 
 function exportScheduleCSV() {
     try {
-        const matrix = getScheduleDataMatrix();
+        const { matrix, maxPeriodToShow } = getScheduleDataMatrix();
+        if (matrix.length === 0) { showToast('برنامه‌ای برای خروجی وجود ندارد.', 'error'); return; }
+
         let csvContent = "روز / زنگ";
-        for (let i = 1; i <= window.schedulePeriodsCount; i++) {
+        for (let i = 1; i <= maxPeriodToShow; i++) {
             csvContent += `,زنگ ${i}`;
         }
         csvContent += "\n";
@@ -254,7 +287,8 @@ function exportScheduleCSV() {
 
 function exportScheduleHTML() {
     try {
-        const matrix = getScheduleDataMatrix();
+        const { matrix, maxPeriodToShow } = getScheduleDataMatrix();
+        if (matrix.length === 0) { showToast('برنامه‌ای برای خروجی وجود ندارد.', 'error'); return; }
         
         let html = `
         <!DOCTYPE html>
@@ -278,7 +312,7 @@ function exportScheduleHTML() {
                 <h1>📚 برنامه هفتگی کلاس 📚</h1>
                 <table>
                     <thead><tr><th>روز / زنگ</th>`;
-        for (let i = 1; i <= window.schedulePeriodsCount; i++) {
+        for (let i = 1; i <= maxPeriodToShow; i++) {
             html += `<th>زنگ ${i}</th>`;
         }
         html += `</tr></thead><tbody>`;
@@ -310,7 +344,8 @@ function exportScheduleHTML() {
 
 function printSchedule() {
     try {
-        const matrix = getScheduleDataMatrix();
+        const { matrix, maxPeriodToShow } = getScheduleDataMatrix();
+        if (matrix.length === 0) { showToast('برنامه‌ای برای چاپ وجود ندارد.', 'error'); return; }
         
         let html = `
         <!DOCTYPE html>
@@ -332,7 +367,7 @@ function printSchedule() {
             <h1>📚 برنامه هفتگی 📚</h1>
             <table>
                 <thead><tr><th>روز / زنگ</th>`;
-        for (let i = 1; i <= window.schedulePeriodsCount; i++) {
+        for (let i = 1; i <= maxPeriodToShow; i++) {
             html += `<th>زنگ ${i}</th>`;
         }
         html += `</tr></thead><tbody>`;
@@ -528,6 +563,9 @@ function selectCalendarDay(day, dateStr) {
     
     const existingSession = window.allSessionsData.find(s => s.date === dateStr);
     const isHoliday = officialHolidays[currentCalendarYear]?.includes(dateStr) || (dayOfWeekIndex === 6);
+    
+    // بررسی اینکه آیا این روز در برنامه هفتگی کاربر فعال است یا خیر
+    const isActiveDay = (window.scheduleActiveDays || []).includes(selectedSessionDayOfWeek);
 
     if (detectedDisplay && actionArea) {
         detectedDisplay.style.display = 'block';
@@ -543,17 +581,22 @@ function selectCalendarDay(day, dateStr) {
                 </div>
             `;
         } else {
-            const hasSchedule = window.allWeeklyScheduleData.some(s => s.day === selectedSessionDayOfWeek && s.periods && s.periods.some(p => p !== null && p !== undefined));
-            
             if (isHoliday) {
                  detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong> (تعطیل)<br><span style="font-size:0.85rem; color:#dc2626;">⚠️ امکان ثبت جلسه در روزهای تعطیل وجود ندارد.</span>`;
                  actionArea.innerHTML = '';
-            } else if (hasSchedule) {
-                detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#16a34a;">✅ برنامه هفتگی برای این روز تعریف شده است.</span>`;
-                actionArea.innerHTML = `<button type="button" class="btn btn-primary btn-block" onclick="createNewSession()">➕ ثبت جلسه</button>`;
+            } else if (!isActiveDay) {
+                 detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#dc2626;">⚠️ این روز در تنظیمات کلاس به عنوان روز فعال انتخاب نشده است.</span>`;
+                 actionArea.innerHTML = '';
             } else {
-                detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#dc2626;">⚠️ برنامه‌ای برای این روز تعریف نشده است.</span>`;
-                actionArea.innerHTML = `<button type="button" class="btn btn-primary btn-block" onclick="createNewSession()">➕ ثبت جلسه</button>`;
+                const hasSchedule = window.allWeeklyScheduleData.some(s => s.day === selectedSessionDayOfWeek && s.periods && s.periods.some(p => p !== null && p !== undefined));
+                
+                if (hasSchedule) {
+                    detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#16a34a;">✅ برنامه هفتگی برای این روز تعریف شده است.</span>`;
+                    actionArea.innerHTML = `<button type="button" class="btn btn-primary btn-block" onclick="createNewSession()">➕ ثبت جلسه</button>`;
+                } else {
+                    detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#dc2626;">⚠️ برنامه‌ای برای این روز تعریف نشده است.</span>`;
+                    actionArea.innerHTML = `<button type="button" class="btn btn-primary btn-block" onclick="createNewSession()">➕ ثبت جلسه</button>`;
+                }
             }
         }
     }
@@ -578,6 +621,12 @@ async function createNewSession() {
 
     if (isHoliday) {
         showToast('امکان ثبت جلسه در روزهای تعطیل وجود ندارد.', 'error');
+        return;
+    }
+
+    const isActiveDay = (window.scheduleActiveDays || []).includes(selectedSessionDayOfWeek);
+    if (!isActiveDay) {
+        showToast('این روز در تنظیمات کلاس به عنوان روز فعال انتخاب نشده است.', 'error');
         return;
     }
 
