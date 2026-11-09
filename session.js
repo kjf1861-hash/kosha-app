@@ -10,7 +10,7 @@ let currentAttReportFilter = 'class';
 // متغیرهای تقویم
 const jalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
 const calendarYears = [1405, 1406, 1407, 1408, 1409];
-const leapYears = [1408]; // تنها سال کبیسه در این بازه
+const leapYears = [1408];
 let currentCalendarYear = 1405;
 let currentCalendarMonth = 1;
 let selectedSessionDate = "";
@@ -23,7 +23,6 @@ function initSessionEvents() {
 async function renderSessionData() {
     renderScheduleForDay();
     initCalendar(); 
-    renderSessionsList();
     generateAttendanceReports();
 }
 
@@ -41,7 +40,6 @@ function getDaysInMonth(year, month) {
 }
 
 function getFirstDayOfWeek(year, month) {
-    // روز پایه: 1405/01/01 برابر با شنبه است (0=شنبه, 1=یکشنبه, ..., 6=جمعه)
     let daysPassed = 0;
     for (let y = 1405; y < year; y++) {
         daysPassed += isLeapYear(y) ? 366 : 365;
@@ -80,7 +78,6 @@ function initCalendar() {
 
 function renderCalendarGrid() {
     const grid = document.getElementById('calendarDaysGrid');
-    const display = document.getElementById('selectedDateDisplay');
     if (!grid) return;
 
     grid.innerHTML = '';
@@ -95,21 +92,15 @@ function renderCalendarGrid() {
         const isFriday = ((firstDay + day - 1) % 7) === 6;
         const dateStr = `${currentCalendarYear}/${String(currentCalendarMonth).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
         
+        // *** بررسی وجود جلسه در این روز ***
+        const hasSession = window.allSessionsData.some(s => s.date === dateStr);
+        
         let classes = 'calendar-day';
         if (isFriday) classes += ' friday';
         if (selectedSessionDate === dateStr) classes += ' selected';
+        if (hasSession) classes += ' has-session';
 
         grid.innerHTML += `<div class="${classes}" onclick="selectCalendarDay(${day}, '${dateStr}')">${day}</div>`;
-    }
-
-    if (selectedSessionDate) {
-        const parts = selectedSessionDate.split('/');
-        const monthName = jalaliMonths[parseInt(parts[1]) - 1];
-        display.textContent = `تاریخ انتخابی: ${parts[2]} ${monthName} ${parts[0]} (${selectedSessionDayOfWeek})`;
-        display.style.display = 'block';
-    } else {
-        display.textContent = 'تاریخ انتخاب نشده است';
-        display.style.display = 'block';
     }
 }
 
@@ -149,24 +140,44 @@ function selectCalendarDay(day, dateStr) {
     selectedSessionDate = dateStr;
     document.getElementById('sessionDateHidden').value = dateStr;
     
-    // *** محاسبه هوشمند روز هفته ***
     const firstDay = getFirstDayOfWeek(currentCalendarYear, currentCalendarMonth);
     const dayOfWeekIndex = (firstDay + day - 1) % 7;
     const dayNames = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
     selectedSessionDayOfWeek = dayNames[dayOfWeekIndex];
 
-    // نمایش روز هفته زیر تقویم
     const detectedDisplay = document.getElementById('detectedDayDisplay');
-    if (detectedDisplay) {
+    const actionArea = document.getElementById('sessionActionArea');
+    
+    // جستجوی جلسه ثبت شده در این تاریخ
+    const existingSession = window.allSessionsData.find(s => s.date === dateStr);
+
+    if (detectedDisplay && actionArea) {
         detectedDisplay.style.display = 'block';
         
-        // بررسی وجود برنامه هفتگی برای این روز
+        // بررسی وجود برنامه هفتگی
         const hasSchedule = window.allWeeklyScheduleData.some(s => s.day === selectedSessionDayOfWeek && s.periods.some(p => p !== null));
-        
-        if (hasSchedule) {
-            detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#16a34a;">✅ برنامه هفتگی برای این روز تعریف شده است.</span>`;
+
+        if (existingSession) {
+            // حالت ۱: جلسه در این روز وجود دارد
+            detectedDisplay.innerHTML = `📅 تاریخ انتخابی: <strong>${selectedSessionDate}</strong> (${selectedSessionDayOfWeek})`;
+            actionArea.innerHTML = `
+                <div style="text-align:center; margin-bottom:10px; color:#16a34a; font-weight:bold;">✅ جلسه ثبت شده است.</div>
+                <div style="display:flex; gap:5px;">
+                    <button type="button" class="btn btn-primary" style="flex:2;" onclick="openSessionDetails(${existingSession.id})">👁️ مشاهده حضور و غیاب</button>
+                    <button type="button" class="btn btn-secondary" style="flex:1;" onclick="editSessionDate(${existingSession.id}, '${existingSession.date}')">✏️</button>
+                    <button type="button" class="btn btn-danger" style="flex:1;" onclick="deleteSession(${existingSession.id})">🗑️</button>
+                </div>
+            `;
         } else {
-            detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#dc2626;">⚠️ برنامه‌ای برای این روز تعریف نشده است.</span>`;
+            // حالت ۲: جلسه در این روز وجود ندارد
+            if (hasSchedule) {
+                detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#16a34a;">✅ برنامه هفتگی برای این روز تعریف شده است.</span>`;
+            } else {
+                detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#dc2626;">⚠️ برنامه‌ای برای این روز تعریف نشده است.</span>`;
+            }
+            actionArea.innerHTML = `
+                <button type="button" class="btn btn-primary btn-block" onclick="createNewSession()">➕ ثبت جلسه</button>
+            `;
         }
     }
 
@@ -237,7 +248,6 @@ async function saveWeeklySchedule() {
     showToast(`برنامه هفتگی روز ${day} ذخیره شد!`, 'success');
 }
 
-// *** حذف کل برنامه هفتگی ***
 async function resetAllWeeklySchedules() {
     if (window.allWeeklyScheduleData.length === 0) {
         showToast('هیچ برنامه هفتگی برای حذف وجود ندارد.', 'error');
@@ -261,7 +271,7 @@ async function resetAllWeeklySchedules() {
 }
 
 // ==========================================
-// 2. ثبت جلسه و لیست جلسات
+// 2. ثبت جلسه
 // ==========================================
 async function createNewSession() {
     if (!selectedSessionDate) {
@@ -271,7 +281,6 @@ async function createNewSession() {
         showToast('خطا در تشخیص روز هفته.', 'error'); return;
     }
 
-    // بررسی وجود برنامه هفتگی برای این روز
     const hasSchedule = window.allWeeklyScheduleData.some(s => s.day === selectedSessionDayOfWeek && s.periods.some(p => p !== null));
     if (!hasSchedule) {
         showToast(`برای روز ${selectedSessionDayOfWeek} برنامه‌ای تعریف نشده است. لطفاً ابتدا برنامه هفتگی را تنظیم کنید.`, 'error');
@@ -286,43 +295,14 @@ async function createNewSession() {
     await saveData('sessions', { date: selectedSessionDate, dayOfWeek: selectedSessionDayOfWeek });
     showToast('جلسه با موفقیت ثبت شد!', 'success');
     
-    // ریست
+    // ریست و رفرش
     selectedSessionDate = "";
     selectedSessionDayOfWeek = "";
     document.getElementById('sessionDateHidden').value = "";
     document.getElementById('detectedDayDisplay').style.display = 'none';
-    renderCalendarGrid();
-
+    document.getElementById('sessionActionArea').innerHTML = '';
+    
     loadAllData();
-}
-
-async function renderSessionsList() {
-    const container = document.getElementById('sessions-list');
-    if (!container) return;
-
-    if (window.allSessionsData.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:#64748b;">هنوز جلسه‌ای ثبت نشده است.</p>';
-        return;
-    }
-
-    const sorted = [...window.allSessionsData].sort((a, b) => b.date.localeCompare(a.date));
-
-    container.innerHTML = '';
-    sorted.forEach((sess, index) => {
-        container.innerHTML += `
-            <div class="list-item">
-                <div>
-                    <strong>${index + 1}. 📅 ${sess.date}</strong>
-                    <span class="group-label" style="margin-right:8px;">${sess.dayOfWeek}</span>
-                </div>
-                <div style="display:flex; gap:5px;">
-                    <button class="btn btn-primary btn-sm" onclick="openSessionDetails(${sess.id})">👁️ مشاهده</button>
-                    <button class="btn btn-secondary btn-sm" onclick="editSessionDate(${sess.id}, '${sess.date}')">✏️</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteSession(${sess.id})">🗑️</button>
-                </div>
-            </div>
-        `;
-    });
 }
 
 async function editSessionDate(sessionId, currentDate) {
@@ -346,10 +326,17 @@ async function deleteSession(sessionId) {
 
     await deleteData('sessions', sessionId);
     showToast('جلسه و سوابق آن حذف شد.', 'success');
+    
+    // پس از حذف، اگر همان روز انتخاب شده بود، اکشن‌ها را پاک کن
+    if (selectedSessionDate === window.allSessionsData.find(s => s.id === sessionId)?.date) {
+        selectedSessionDate = "";
+        document.getElementById('sessionActionArea').innerHTML = '';
+        document.getElementById('detectedDayDisplay').style.display = 'none';
+    }
+    
     loadAllData();
 }
 
-// *** حذف همه جلسات ***
 async function resetAllSessions() {
     if (window.allSessionsData.length === 0) {
         showToast('هیچ جلسه‌ای برای حذف وجود ندارد.', 'error');
@@ -367,6 +354,9 @@ async function resetAllSessions() {
         await clearStore('attendance');
         
         showToast('تمام جلسات و سوابق حضور و غیاب با موفقیت حذف شدند.', 'success');
+        selectedSessionDate = "";
+        document.getElementById('sessionActionArea').innerHTML = '';
+        document.getElementById('detectedDayDisplay').style.display = 'none';
         loadAllData();
     } catch (e) {
         console.error(e);
