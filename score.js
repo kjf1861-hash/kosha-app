@@ -910,21 +910,22 @@ async function loadQuranRewards() {
 }
 
 // ==========================================
-// 14. خروجی اکسل سوابق ارزشیابی (اصلاح شده نهایی)
+// 14. خروجی اکسل سوابق ارزشیابی (اصلاح شده قطعی)
 // ==========================================
 async function exportScoreCSV() {
     try {
-        let csvContent = "ردیف,عنوان,درس,آیتم,تاریخ,امتیاز,ارفاق\r\n";
+        // استفاده از Tab به عنوان جداکننده برای سازگاری کامل با اکسل موبایل
+        let csvContent = "ردیف\tعنوان\tدرس\tآیتم\tتاریخ\tامتیاز\tارفاق\r\n";
         const sorted = [...window.allRecordsData].sort((a, b) => b.date.localeCompare(a.date));
         
         sorted.forEach((rec, i) => {
             const s = window.allSubjectsData.find(x => x.id === rec.subjectId); 
             const sn = s ? s.name : 'بدون درس';
-            csvContent += `${i + 1},"${rec.title}","${sn}","${rec.itemName}","${rec.date}",${rec.finalScore},"${rec.arf ? 'دارد' : 'ندارد'}"\r\n`;
+            csvContent += `${i + 1}\t"${rec.title}"\t"${sn}"\t"${rec.itemName}"\t"${rec.date}"\t${rec.finalScore}\t"${rec.arf ? 'دارد' : 'ندارد'}"\r\n`;
         });
 
-        // *** اصلاح قطعی برای اکسل با UTF-16LE ***
-        const bom = new Uint8Array([0xFF, 0xFE]); // BOM مخصوص UTF-16LE
+        // *** راه‌حل قطعی: UTF-16LE با BOM و جداکننده Tab ***
+        const bom = new Uint8Array([0xFF, 0xFE]); 
         const contentBytes = new Uint8Array(csvContent.length * 2);
         for (let i = 0; i < csvContent.length; i++) {
             const code = csvContent.charCodeAt(i);
@@ -936,11 +937,11 @@ async function exportScoreCSV() {
         fullBytes.set(bom, 0);
         fullBytes.set(contentBytes, bom.length);
 
-        const blob = new Blob([fullBytes], { type: 'text/csv;charset=utf-16le;' });
+        const blob = new Blob([fullBytes], { type: 'application/vnd.ms-excel;charset=utf-16le;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); 
         a.href = url; 
-        a.download = `kosha_records_${new Date().toISOString().slice(0,10)}.csv`; 
+        a.download = `kosha_records_${new Date().toISOString().slice(0,10)}.xls`; 
         a.click();
         URL.revokeObjectURL(url);
         showToast('فایل اکسل سوابق دانلود شد!', 'success');
