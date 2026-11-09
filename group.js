@@ -11,6 +11,13 @@ function initGroupEvents() {
 // فقط برای افزودن گروه جدید
 async function saveGroup(e) {
     e.preventDefault();
+
+    // *** بررسی محدودیت ۱۲ گروه ***
+    if (window.allGroupsData.length >= 12) {
+        showToast('حداکثر تعداد مجاز گروه (۱۲ گروه) تکمیل شده است.', 'error');
+        return;
+    }
+
     const data = { 
         name: document.getElementById('groupName').value,
         symbol: document.getElementById('groupSymbol').value,
@@ -120,7 +127,7 @@ async function saveEditedGroup(e) {
         id: id,
         name: document.getElementById('editGroupNameModal').value,
         symbol: document.getElementById('editGroupSymbolModal').value,
-        motto: document.getElementById('editGroupMottoModal').value
+        motto: document.getElementById('editGroupMottoModal').value // اختیاری
     };
     
     await saveData('groups', data);
