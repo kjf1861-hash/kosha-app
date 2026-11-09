@@ -239,7 +239,6 @@
                 <div class="card">
                     <h2 class="card-title">📝 ایجاد جلسهٔ آموزشی</h2>
                     
-                    <!-- تقویم جدید جایگزین سه منوی کشویی قبلی شد -->
                     <div class="form-group">
                         <label class="form-label">تاریخ (تقویم شمسی)</label>
                         <div class="jalali-calendar-wrapper" id="jalali-calendar">
@@ -260,19 +259,9 @@
                         </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label class="form-label">روز برنامه هفتگی</label>
-                        <select id="sessionDayOfWeek" class="form-control" required>
-                            <option value="" disabled selected>انتخاب کنید...</option>
-                            <option value="شنبه">شنبه</option>
-                            <option value="یکشنبه">یکشنبه</option>
-                            <option value="دوشنبه">دوشنبه</option>
-                            <option value="سه‌شنبه">سه‌شنبه</option>
-                            <option value="چهارشنبه">چهارشنبه</option>
-                            <option value="پنجشنبه">پنجشنبه</option>
-                            <option value="جمعه">جمعه</option>
-                        </select>
-                    </div>
+                    <!-- حذف منوی کشویی روز هفته و اضافه شدن نمایشگر هوشمند -->
+                    <div id="detectedDayDisplay" style="text-align:center; font-weight:bold; color:var(--primary); margin:15px 0; padding:10px; background:var(--input-bg); border-radius:8px; display:none;"></div>
+
                     <button type="button" class="btn btn-primary btn-block" onclick="createNewSession()">➕ ثبت جلسه</button>
                 </div>
 
