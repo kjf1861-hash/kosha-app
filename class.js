@@ -27,6 +27,12 @@ async function saveClassProfile(e) {
 async function saveStudent(e) {
     e.preventDefault();
     
+    // *** بررسی محدودیت ۳۶ دانش‌آموز ***
+    if (window.allStudentsData.length >= 36) {
+        showToast('حداکثر تعداد مجاز دانش‌آموز (۳۶ نفر) تکمیل شده است.', 'error');
+        return;
+    }
+
     const data = {
         firstName: document.getElementById('studentFirstName').value,
         lastName: document.getElementById('studentLastName').value,
