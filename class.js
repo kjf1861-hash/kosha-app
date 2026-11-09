@@ -5,7 +5,6 @@
 async function saveClassProfile(e) {
     e.preventDefault();
     
-    // دریافت روزهای انتخاب شده از چک‌باکس‌ها
     const checkedBoxes = document.querySelectorAll('.schedule-day-checkbox:checked');
     const selectedDays = Array.from(checkedBoxes).map(cb => cb.value);
     
@@ -14,11 +13,9 @@ async function saveClassProfile(e) {
         return;
     }
 
-    // مرتب‌سازی روزها بر اساس ترتیب هفته
     const weekOrder = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
     selectedDays.sort((a, b) => weekOrder.indexOf(a) - weekOrder.indexOf(b));
 
-    // دریافت و اعتبارسنجی تعداد زنگ‌ها
     const periodsInput = document.getElementById('schedulePeriodsCount');
     let periodsCount = periodsInput ? parseInt(periodsInput.value) : 5;
     if (isNaN(periodsCount) || periodsCount < 1) periodsCount = 5;
@@ -39,7 +36,6 @@ async function saveClassProfile(e) {
     
     await saveData('classProfile', data);
     
-    // بروزرسانی متغیرهای سراسری
     window.scheduleActiveDays = selectedDays;
     window.schedulePeriodsCount = periodsCount;
 
@@ -51,7 +47,6 @@ async function saveClassProfile(e) {
     loadAllData();
 }
 
-// تابع پر کردن چک‌باکس‌های روزهای هفته در تنظیمات
 function populateScheduleDaysCheckboxes() {
     const container = document.getElementById('schedule-days-checkboxes');
     if (!container) return;
@@ -71,11 +66,7 @@ function populateScheduleDaysCheckboxes() {
     });
 }
 
-// ==========================================
-// منطق داشبورد کلاس (تب اول)
-// ==========================================
 function renderDashboardData() {
-    // 1. آمار سریع
     document.getElementById('stat-students').textContent = window.allStudentsData.length;
     document.getElementById('stat-subjects').textContent = window.allSubjectsData.length;
     document.getElementById('stat-sessions').textContent = window.allSessionsData.length;
@@ -89,28 +80,13 @@ function renderDashboardData() {
         return { ...st, totalScore: total };
     });
 
-    // 2. کارت‌های فعالیت
     renderActivityCards();
-
-    // 3. نمودار حضور و غیاب
     renderAttendanceChart();
-
-    // 4. میانگین امتیازات دروس
     renderSubjectAveragesChart();
-
-    // 5. شاگردان برتر
     renderTopStudents(studentScores);
-
-    // 6. گروه‌های برتر
     renderTopGroups();
-
-    // 7. دانش‌آموزان نیازمند توجه
     renderNeedsAttention(studentScores);
-
-    // 8. آخرین فعالیت‌ها
     renderRecentActivities();
-
-    // 9. گزارش کامل امتیازات کلاس
     renderFullClassReport(studentScores);
 }
 
@@ -430,7 +406,7 @@ function renderFullClassReport(studentScores) {
 
 async function exportClassCSV() {
     try {
-        let csvContent = "ردیف,نام,نام خانوادگی,مجموع امتیاز\n";
+        let csvContent = "ردیف,نام,نام خانوادگی,مجموع امتیاز\r\n";
         const studentScores = window.allStudentsData.map(st => {
             let total = 0;
             window.allRecordsData.forEach(rec => {
@@ -445,11 +421,11 @@ async function exportClassCSV() {
         });
 
         studentScores.forEach((st, i) => {
-            csvContent += `${i + 1},${st.firstName},${st.lastName},${st.totalScore}\n`;
+            csvContent += `${i + 1},"${st.firstName}","${st.lastName}",${st.totalScore}\r\n`;
         });
 
         const BOM = "\uFEFF";
-        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([BOM, csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); 
         a.href = url; 
