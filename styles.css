@@ -146,6 +146,99 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .dc-value { font-size: 1.8rem; font-weight: bold; color: var(--primary); }
 .dc-label { font-size: 0.9rem; color: var(--text-muted); }
 
+/* =========================================
+   اسکرول افقی و کارت‌های فعالیت
+   ========================================= */
+.horizontal-scroll-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 12px;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    scrollbar-width: none; /* Firefox */
+    -webkit-overflow-scrolling: touch;
+}
+.horizontal-scroll-container::-webkit-scrollbar { display: none; /* Chrome, Safari */ }
+
+.activity-card {
+    min-width: 110px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 15px 10px;
+    text-align: center;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.ac-icon { font-size: 1.8rem; }
+.ac-value { font-size: 1.4rem; font-weight: bold; color: var(--primary); }
+.ac-label { font-size: 0.75rem; color: var(--text-muted); line-height: 1.2; }
+
+/* =========================================
+   آکاردئون‌های داشبورد
+   ========================================= */
+.dashboard-accordion {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: 15px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+.dashboard-accordion summary {
+    padding: 15px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    list-style: none;
+    color: var(--primary);
+    background: var(--card-bg);
+    font-size: 1.05rem;
+}
+.dashboard-accordion summary::-webkit-details-marker { display: none; }
+.dashboard-accordion summary::after {
+    content: '▼';
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+}
+.dashboard-accordion[open] summary::after { transform: rotate(180deg); }
+.dashboard-accordion[open] summary { border-bottom: 1px dashed var(--border-color); }
+
+.dashboard-accordion-content {
+    padding: 15px;
+    background: var(--card-bg);
+}
+
+/* =========================================
+   نوارهای پیشرفت (میانگین دروس)
+   ========================================= */
+.progress-bar-container {
+    width: 100%;
+    height: 10px;
+    background-color: var(--border-color);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 5px;
+    direction: ltr;
+}
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: 5px;
+    transition: width 0.8s ease-out;
+}
+
+/* =========================================
+   استایل‌های عمومی کارت‌ها و فرم‌ها
+   ========================================= */
 .card {
     background: var(--card-bg);
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -171,10 +264,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
     border-color: var(--primary); background-color: var(--input-focus-bg);
     box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.15); transform: translateY(-1px);
 }
-textarea.form-control {
-    resize: vertical;
-    min-height: 80px;
-}
+textarea.form-control { resize: vertical; min-height: 80px; }
 
 .input-error {
     border-color: #dc2626 !important;
@@ -421,7 +511,7 @@ details.group-accordion[open] summary::after {
 .rc-subject-row:last-child { border-bottom: none; }
 
 /* =========================================
-   استایل نمودارها
+   استایل نمودارها (حضور و غیاب)
    ========================================= */
 .score-bar-container {
     width: 100%;
