@@ -238,14 +238,28 @@
 
                 <div class="card">
                     <h2 class="card-title">📝 ایجاد جلسهٔ آموزشی</h2>
+                    
+                    <!-- تقویم جدید جایگزین سه منوی کشویی قبلی شد -->
                     <div class="form-group">
-                        <label class="form-label">تاریخ (روز / ماه / سال)</label>
-                        <div style="display: flex; gap: 8px;">
-                            <select id="sessDateDay" class="form-control" style="flex: 1;" required></select>
-                            <select id="sessDateMonth" class="form-control" style="flex: 1.5;" required></select>
-                            <select id="sessDateYear" class="form-control" style="flex: 1.2;" required></select>
+                        <label class="form-label">تاریخ (تقویم شمسی)</label>
+                        <div class="jalali-calendar-wrapper" id="jalali-calendar">
+                            <div class="calendar-header">
+                                <button type="button" onclick="changeCalendarMonth(-1)">◀ ماه قبل</button>
+                                <div class="calendar-title">
+                                    <select id="calendarMonthSelect" onchange="changeCalendarMonth(0)"></select>
+                                    <select id="calendarYearSelect" onchange="changeCalendarYear()"></select>
+                                </div>
+                                <button type="button" onclick="changeCalendarMonth(1)">ماه بعد ▶</button>
+                            </div>
+                            <div class="calendar-weekdays">
+                                <span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span>
+                            </div>
+                            <div class="calendar-grid" id="calendarDaysGrid"></div>
+                            <div class="selected-date-display" id="selectedDateDisplay">تاریخ انتخاب نشده است</div>
+                            <input type="hidden" id="sessionDateHidden" value="">
                         </div>
                     </div>
+                    
                     <div class="form-group">
                         <label class="form-label">روز برنامه هفتگی</label>
                         <select id="sessionDayOfWeek" class="form-control" required>
@@ -521,7 +535,7 @@
                 <input type="hidden" id="editGroupIdModal">
                 <div class="form-group"><label class="form-label">نام گروه</label><input type="text" id="editGroupNameModal" class="form-control" required></div>
                 <div class="form-group"><label class="form-label">نماد (ایموجی)</label><input type="text" id="editGroupSymbolModal" class="form-control" required></div>
-                <div class="form-group"><label class="form-label">شعار گروه</label><textarea id="editGroupMottoModal" class="form-control" rows="4"></textarea></div>
+                <div class="form-group"><label class="form-label">شعار گروه (اختیاری)</label><textarea id="editGroupMottoModal" class="form-control" rows="4"></textarea></div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeEditGroupModal()">انصراف</button>
                     <button type="button" class="btn btn-primary" onclick="saveEditedGroup(event)">💾 ذخیره تغییرات</button>
