@@ -277,6 +277,12 @@ async function saveItem(e) {
     if (!title) { showToast('عنوان آیتم را وارد کنید.', 'error'); return; }
     if (!type) { showToast('نوع آیتم را انتخاب کنید.', 'error'); return; }
     
+    // *** بررسی محدودیت ۱۶ آیتم (فقط برای آیتم جدید) ***
+    if (!id && assessmentItems.length >= 16) {
+        showToast('حداکثر تعداد مجاز آیتم ارزشیابی (۱۶ آیتم) تکمیل شده است.', 'error');
+        return;
+    }
+    
     let itemData = { title, type };
     if (id) {
         itemData.id = parseInt(id);
