@@ -16,18 +16,21 @@ async function saveClassProfile(e) {
         motto: document.getElementById('classMotto').value,
         grade: document.getElementById('classGrade').value,
         teacherName: document.getElementById('teacherName').value,
-        schoolName: document.getElementById('schoolName').value
+        schoolName: document.getElementById('schoolName').value,
+        academicYear: document.getElementById('academicYear').value
     };
     await saveData('classProfile', data);
     showToast('مشخصات کلاس ذخیره شد!', 'success');
     document.getElementById('header-subtitle').textContent = data.name;
+    
+    // اگر سال تحصیلی تغییر کرد، کل برنامه باید رفرش شود تا داده‌های سال جدید لود شوند
+    loadAllData();
 }
 
 // فقط برای افزودن دانش‌آموز جدید
 async function saveStudent(e) {
     e.preventDefault();
     
-    // *** بررسی محدودیت ۳۶ دانش‌آموز ***
     if (window.allStudentsData.length >= 36) {
         showToast('حداکثر تعداد مجاز دانش‌آموز (۳۶ نفر) تکمیل شده است.', 'error');
         return;
@@ -36,7 +39,7 @@ async function saveStudent(e) {
     const data = {
         firstName: document.getElementById('studentFirstName').value,
         lastName: document.getElementById('studentLastName').value,
-        groupId: null // دانش‌آموز جدید پیش‌فرض بدون گروه است
+        groupId: null
     };
     
     await saveData('students', data);
@@ -66,7 +69,6 @@ async function saveEditedStudent(e) {
     if(e) e.preventDefault();
     const id = parseInt(document.getElementById('editStudentIdModal').value);
     
-    // دریافت اطلاعات قبلی برای حفظ گروه
     const existing = await getDataById('students', id);
     const existingGroupId = existing ? existing.groupId : null;
 
@@ -98,7 +100,6 @@ function renderStudentsList() {
         return;
     }
 
-    // 1. محاسبه امتیاز کل هر دانش‌آموز
     const studentScores = window.allStudentsData.map(st => {
         let total = 0;
         window.allRecordsData.forEach(rec => {
@@ -109,19 +110,16 @@ function renderStudentsList() {
         return { ...st, totalScore: total };
     });
 
-    // 2. مرتب‌سازی: امتیاز (نزولی) -> نام خانوادگی (صعودی/الفبا)
     studentScores.sort((a, b) => {
         if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
         return a.lastName.localeCompare(b.lastName, 'fa');
     });
 
-    // 3. تعیین مدال‌ها (قانون تساوی)
     const uniqueScores = [...new Set(studentScores.map(s => s.totalScore))].filter(s => s > 0).sort((a, b) => b - a);
     const goldScore = uniqueScores.length > 0 ? uniqueScores[0] : -1;
     const silverScore = uniqueScores.length > 1 ? uniqueScores[1] : -1;
     const bronzeScore = uniqueScores.length > 2 ? uniqueScores[2] : -1;
 
-    // 4. صفحه‌بندی
     const totalPages = Math.ceil(studentScores.length / itemsPerPage);
     if (currentPage.students > totalPages) currentPage.students = totalPages;
     if (currentPage.students < 1) currentPage.students = 1;
@@ -161,7 +159,6 @@ function renderStudentsList() {
         `;
     });
 
-    // آپدیت UI صفحه‌بندی
     const pagination = document.getElementById('students-pagination');
     if (pagination) {
         if (totalPages > 1) {
@@ -178,7 +175,6 @@ function renderStudentsList() {
 async function deleteStudent(id) {
     if (!confirm('آیا از حذف این دانش‌آموز مطمئن هستید؟ تمام سوابق ارزشیابی این دانش‌آموز نیز حذف خواهد شد!')) return;
     
-    // حذف رکوردهای ارزشیابی مرتبط
     const allRecords = await getAllData('records');
     const studentRecords = allRecords.filter(r => r.students.includes(id));
     for (const rec of studentRecords) {
@@ -195,11 +191,7 @@ async function deleteStudent(id) {
     loadAllData();
 }
 
-// ==========================================
-// بازنشانی دانش‌آموزان (حذف همه)
-// ==========================================
 async function resetAllStudents() {
-    // *** بررسی خالی بودن لیست ***
     if (window.allStudentsData.length === 0) {
         showToast('هیچ دانش‌آموزی برای حذف وجود ندارد.', 'error');
         return;
@@ -225,9 +217,6 @@ async function resetAllStudents() {
     }
 }
 
-// ==========================================
-// مشاهده جزئیات دانش‌آموز (👁️)
-// ==========================================
 async function openStudentDetails(id) {
     const student = window.allStudentsData.find(s => s.id === id);
     if (!student) return;
@@ -238,7 +227,6 @@ async function openStudentDetails(id) {
 
     const srs = window.allRecordsData.filter(rec => rec.students && rec.students.includes(id));
 
-    // 1. امتیاز به تفکیک دروس
     let subjectHtml = '<h4 style="color:var(--primary); margin-bottom:10px;">📊 امتیاز به تفکیک دروس</h4>';
     let hasSubjects = false;
     window.allSubjectsData.forEach(sub => {
@@ -253,7 +241,6 @@ async function openStudentDetails(id) {
     });
     if (!hasSubjects) subjectHtml += '<p style="color:#64748b; font-size:0.9rem; text-align:center;">هنوز امتیازی در هیچ درسی ثبت نشده است.</p>';
 
-    // 2. آمار آیتم‌های ارزشیابی
     let itemHtml = '<h4 style="color:var(--primary); margin-top:20px; margin-bottom:10px;">📝 دفعات و جزئیات ارزشیابی‌ها</h4>';
     let hasItems = false;
     
@@ -278,9 +265,6 @@ function closeStudentDetails() {
     document.getElementById('student-details-modal').classList.remove('show');
 }
 
-// ==========================================
-// خروجی اکسل گزارش کلاسی
-// ==========================================
 async function exportClassCSV() {
     try {
         let csvContent = "ردیف,نام,نام خانوادگی,مجموع امتیاز\n";
