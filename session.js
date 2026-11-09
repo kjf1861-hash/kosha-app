@@ -62,17 +62,14 @@ function toggleScheduleMode(mode) {
     }
 }
 
-// تابع کمکی برای استخراج داده‌های برنامه (فقط روزها و زنگ‌های استفاده شده)
 function getPopulatedScheduleData() {
     const activeDays = window.scheduleActiveDays || [];
     
-    // پیدا کردن روزهایی که حداقل یک زنگ دارند
     const populatedDays = activeDays.filter(day => {
         const sched = window.allWeeklyScheduleData.find(s => s.day === day);
         return sched && sched.periods && sched.periods.some(p => p !== null && p !== undefined);
     });
 
-    // پیدا کردن بیشترین زنگ استفاده شده
     let maxPeriod = 0;
     populatedDays.forEach(day => {
         const sched = window.allWeeklyScheduleData.find(s => s.day === day);
@@ -229,9 +226,6 @@ async function resetAllWeeklySchedules() {
     }
 }
 
-// ------------------------------------------
-// خروجی‌های برنامه هفتگی (اکسل، HTML، چاپ)
-// ------------------------------------------
 function getScheduleDataMatrix() {
     const { daysToShow, maxPeriodToShow } = getPopulatedScheduleData();
     const matrix = [];
@@ -468,21 +462,28 @@ function renderCalendarGrid() {
     const [startYear, endYear] = window.activeAcademicYear.split('-');
     const startBound = `${startYear}/07/01`;
     const endBound = `${endYear}/06/31`;
+    const dayNames = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
 
     for (let i = 0; i < firstDay; i++) {
         grid.innerHTML += `<div class="calendar-day empty"></div>`;
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-        const isFriday = ((firstDay + day - 1) % 7) === 6;
+        const dayOfWeekIndex = (firstDay + day - 1) % 7;
+        const isFriday = dayOfWeekIndex === 6;
         const dateStr = `${currentCalendarYear}/${String(currentCalendarMonth).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
         
         const isHoliday = officialHolidays[currentCalendarYear]?.includes(dateStr) || false;
         const hasSession = window.allSessionsData.some(s => s.date === dateStr);
         const inAcademicYear = (dateStr >= startBound && dateStr <= endBound);
+        
+        // بررسی اینکه آیا این روز در برنامه هفتگی فعال است
+        const isActiveDay = (window.scheduleActiveDays || []).includes(dayNames[dayOfWeekIndex]);
 
         let classes = 'calendar-day';
-        if (isFriday || isHoliday) classes += ' holiday';
+        // اگر روز فعال باشد، رنگ تعطیلی نمی‌گیرد حتی اگر جمعه باشد
+        if ((isFriday && !isActiveDay) || isHoliday) classes += ' holiday';
+        
         if (selectedSessionDate === dateStr) classes += ' selected';
         if (hasSession) classes += ' has-session';
         if (!inAcademicYear) classes += ' outside-range';
@@ -562,9 +563,9 @@ function selectCalendarDay(day, dateStr) {
     const actionArea = document.getElementById('sessionActionArea');
     
     const existingSession = window.allSessionsData.find(s => s.date === dateStr);
-    const isHoliday = officialHolidays[currentCalendarYear]?.includes(dateStr) || (dayOfWeekIndex === 6);
+    // فقط تعطیلات رسمی از لیست بررسی می‌شوند (جمعه به صورت پیش‌فرض تعطیل نیست مگر اینکه کاربر غیرفعالش کرده باشد)
+    const isHoliday = officialHolidays[currentCalendarYear]?.includes(dateStr) || false;
     
-    // بررسی اینکه آیا این روز در برنامه هفتگی کاربر فعال است یا خیر
     const isActiveDay = (window.scheduleActiveDays || []).includes(selectedSessionDayOfWeek);
 
     if (detectedDisplay && actionArea) {
@@ -582,7 +583,7 @@ function selectCalendarDay(day, dateStr) {
             `;
         } else {
             if (isHoliday) {
-                 detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong> (تعطیل)<br><span style="font-size:0.85rem; color:#dc2626;">⚠️ امکان ثبت جلسه در روزهای تعطیل وجود ندارد.</span>`;
+                 detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong> (تعطیل رسمی)<br><span style="font-size:0.85rem; color:#dc2626;">⚠️ امکان ثبت جلسه در تعطیلات رسمی وجود ندارد.</span>`;
                  actionArea.innerHTML = '';
             } else if (!isActiveDay) {
                  detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#dc2626;">⚠️ این روز در تنظیمات کلاس به عنوان روز فعال انتخاب نشده است.</span>`;
@@ -615,12 +616,11 @@ async function createNewSession() {
         showToast('خطا در تشخیص روز هفته.', 'error'); return;
     }
 
-    const firstDay = getFirstDayOfWeek(currentCalendarYear, currentCalendarMonth);
-    const dayOfWeekIndex = (firstDay + parseInt(selectedSessionDate.split('/')[2]) - 1) % 7;
-    const isHoliday = officialHolidays[currentCalendarYear]?.includes(selectedSessionDate) || (dayOfWeekIndex === 6);
+    // فقط تعطیلات رسمی چک می‌شوند
+    const isHoliday = officialHolidays[currentCalendarYear]?.includes(selectedSessionDate) || false;
 
     if (isHoliday) {
-        showToast('امکان ثبت جلسه در روزهای تعطیل وجود ندارد.', 'error');
+        showToast('امکان ثبت جلسه در تعطیلات رسمی وجود ندارد.', 'error');
         return;
     }
 
