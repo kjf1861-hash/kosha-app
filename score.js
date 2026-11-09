@@ -8,6 +8,17 @@ let currentQuranStudentView = 'flat';
 let currentSpecialStudentView = 'flat';
 let currentHandwritingStudentView = 'flat';
 
+// وضعیت تقویم‌های تب امتیاز
+let scoreCalendarState = {
+    record: { year: 1405, month: 7, selectedDate: '' },
+    quran: { year: 1405, month: 7, selectedDate: '' },
+    special: { year: 1405, month: 7, selectedDate: '' },
+    handwriting: { year: 1405, month: 7, selectedDate: '' }
+};
+
+const scoreJalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
+const scoreLeapYears = [1408]; // برای محاسبه دقیق اسفند
+
 function initScoreEvents() {
     document.getElementById('recordItem').addEventListener('change', (e) => {
         if (e.target.value !== "") {
@@ -52,9 +63,7 @@ function renderScoreData() {
         }
     }
 
-    initQuranDateDropdowns();
-    initSpecialDateDropdowns();
-    initHandwritingDateDropdowns();
+    initScoreCalendars();
 
     renderStudentCheckboxes();
     renderQuranStudentCheckboxes();
@@ -62,6 +71,224 @@ function renderScoreData() {
     renderHandwritingStudentCheckboxes();
     loadAssessmentRecords();
     loadQuranRewards();
+}
+
+// ==========================================
+// توابع تقویم شمسی تب امتیاز
+// ==========================================
+function isScoreLeapYear(year) { return scoreLeapYears.includes(year); }
+
+function getScoreDaysInMonth(year, month) {
+    if (month <= 6) return 31;
+    if (month <= 11) return 30;
+    return isScoreLeapYear(year) ? 30 : 29;
+}
+
+function getScoreFirstDayOfWeek(year, month) {
+    let daysPassed = 0;
+    for (let y = 1405; y < year; y++) {
+        daysPassed += isScoreLeapYear(y) ? 366 : 365;
+    }
+    for (let m = 1; m < month; m++) {
+        daysPassed += getScoreDaysInMonth(year, m);
+    }
+    return daysPassed % 7;
+}
+
+function initScoreCalendars() {
+    const [startYearStr, endYearStr] = window.activeAcademicYear.split('-');
+    const startYear = parseInt(startYearStr);
+    
+    // مقداردهی اولیه برای هر ۴ بخش اگر قبلاً تنظیم نشده است
+    ['record', 'quran', 'special', 'handwriting'].forEach(type => {
+        if (!scoreCalendarState[type].year || scoreCalendarState[type].year < startYear) {
+            scoreCalendarState[type].year = startYear;
+            scoreCalendarState[type].month = 7; // پیش‌فرض مهرماه
+        }
+        renderScoreCalendar(type);
+    });
+}
+
+function changeScoreCalendarMonth(type, delta) {
+    const [startYearStr, endYearStr] = window.activeAcademicYear.split('-');
+    const startYear = parseInt(startYearStr);
+    const endYear = parseInt(endYearStr);
+
+    let state = scoreCalendarState[type];
+
+    if (delta === -1) {
+        if (state.year === startYear && state.month === 7) {
+            showToast('شما در ابتدای سال تحصیلی هستید.', 'error');
+            return;
+        }
+    } else if (delta === 1) {
+        if (state.year === endYear && state.month === 6) {
+            showToast('شما در انتهای سال تحصیلی هستید.', 'error');
+            return;
+        }
+    }
+
+    state.month += delta;
+    if (state.month < 1) { state.month = 12; state.year--; } 
+    else if (state.month > 12) { state.month = 1; state.year++; }
+
+    // بررسی مجدد محدوده
+    if (state.year < startYear || state.year > endYear) {
+        showToast('این ماه خارج از بازه سال تحصیلی است.', 'error');
+        state.year = parseInt(document.getElementById(`${type}-calendar-title`).dataset.year);
+        state.month = parseInt(document.getElementById(`${type}-calendar-title`).dataset.month);
+        return;
+    }
+
+    renderScoreCalendar(type);
+}
+
+function renderScoreCalendar(type) {
+    const state = scoreCalendarState[type];
+    
+    // تنظیم عنوان
+    const titleEl = document.getElementById(`${type}-calendar-title`);
+    if (!titleEl) return;
+    
+    titleEl.dataset.year = state.year;
+    titleEl.dataset.month = state.month;
+    titleEl.innerHTML = `
+        <select onchange="updateScoreCalendarSelect('${type}', 'month', this.value)">
+            ${scoreJalaliMonths.map((m, i) => `<option value="${i + 1}" ${state.month === i + 1 ? 'selected' : ''}>${m}</option>`).join('')}
+        </select>
+        <select onchange="updateScoreCalendarSelect('${type}', 'year', this.value)">
+            ${[parseInt(window.activeAcademicYear.split('-')[0]), parseInt(window.activeAcademicYear.split('-')[1])].map(y => `<option value="${y}" ${state.year === y ? 'selected' : ''}>${y}</option>`).join('')}
+        </select>
+    `;
+
+    const grid = document.getElementById(`${type}-calendar-grid`);
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const firstDay = getScoreFirstDayOfWeek(state.year, state.month);
+    const daysInMonth = getScoreDaysInMonth(state.year, state.month);
+    
+    const [startY, endY] = window.activeAcademicYear.split('-');
+    const startBound = `${startY}/07/01`;
+    const endBound = `${endY}/06/31`;
+
+    for (let i = 0; i < firstDay; i++) {
+        grid.innerHTML += `<div class="calendar-day empty"></div>`;
+    }
+
+    // فیلتر کردن رکوردها بر اساس نوع بخش برای نمایش در تقویم
+    const relevantRecords = window.allRecordsData.filter(rec => {
+        if (type === 'quran') return rec.itemName === "پویش حفظ جزء سی قرآن کریم";
+        if (type === 'special') return rec.itemName === "تشویق ویژه";
+        if (type === 'handwriting') return rec.itemName === "تشویق خوش‌خط‌نویسی";
+        if (type === 'record') return rec.subjectId !== null && rec.itemName !== "پویش حفظ جزء سی قرآن کریم" && rec.itemName !== "تشویق ویژه" && rec.itemName !== "تشویق خوش‌خط‌نویسی";
+        return false;
+    });
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const isFriday = ((firstDay + day - 1) % 7) === 6;
+        const dateStr = `${state.year}/${String(state.month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+        
+        const inAcademicYear = (dateStr >= startBound && dateStr <= endBound);
+        const hasRecord = relevantRecords.some(r => r.date === dateStr);
+        
+        let classes = 'calendar-day';
+        if (isFriday) classes += ' holiday';
+        if (state.selectedDate === dateStr) classes += ' selected';
+        if (hasRecord) classes += ' has-record';
+        if (!inAcademicYear) classes += ' outside-range'; // از استایل تب جلسه استفاده می‌کند
+
+        const clickHandler = inAcademicYear ? `onclick="selectScoreCalendarDay('${type}', '${dateStr}')"` : `onclick="showToast('این تاریخ خارج از بازه سال تحصیلی است.', 'error')"`;
+
+        grid.innerHTML += `<div class="${classes}" ${clickHandler}>${day}</div>`;
+    }
+}
+
+function updateScoreCalendarSelect(type, field, value) {
+    scoreCalendarState[type][field] = parseInt(value);
+    renderScoreCalendar(type);
+}
+
+function selectScoreCalendarDay(type, dateStr) {
+    scoreCalendarState[type].selectedDate = dateStr;
+    
+    // آپدیت متن نمایشی
+    const displayEl = document.getElementById(`${type}DateDisplay`);
+    if (displayEl) displayEl.textContent = dateStr;
+
+    // آپدیت فیلد مخفی
+    const hiddenInputId = type === 'record' ? 'recordDate' : `${type}DateHidden`;
+    const hiddenInput = document.getElementById(hiddenInputId);
+    if (hiddenInput) hiddenInput.value = dateStr;
+
+    // رندر مجدد تقویم برای اعمال کلاس selected
+    renderScoreCalendar(type);
+
+    // نمایش بایگانی روز
+    renderScoreDayArchive(type, dateStr);
+    
+    // بستن آکاردئون پس از انتخاب تاریخ
+    const accordion = document.getElementById(`${type}-date-accordion`);
+    if (accordion) accordion.removeAttribute('open');
+}
+
+function renderScoreDayArchive(type, dateStr) {
+    const archiveContainer = document.getElementById(`${type}-day-archive`);
+    const archiveList = document.getElementById(`${type}-day-archive-list`);
+    if (!archiveContainer || !archiveList) return;
+
+    // فیلتر کردن رکوردهای آن روز
+    const dayRecords = window.allRecordsData.filter(rec => {
+        if (rec.date !== dateStr) return false;
+        if (type === 'quran') return rec.itemName === "پویش حفظ جزء سی قرآن کریم";
+        if (type === 'special') return rec.itemName === "تشویق ویژه";
+        if (type === 'handwriting') return rec.itemName === "تشویق خوش‌خط‌نویسی";
+        if (type === 'record') return rec.subjectId !== null && rec.itemName !== "پویش حفظ جزء سی قرآن کریم" && rec.itemName !== "تشویق ویژه" && rec.itemName !== "تشویق خوش‌خط‌نویسی";
+        return false;
+    });
+
+    if (dayRecords.length === 0) {
+        archiveContainer.style.display = 'none';
+        return;
+    }
+
+    archiveContainer.style.display = 'block';
+    archiveList.innerHTML = `<h4>📋 سوابق ثبت‌شده در این روز (${dayRecords.length} مورد):</h4>`;
+    
+    dayRecords.forEach(rec => {
+        let names = '';
+        if (rec.students && rec.students.length > 0) {
+            names = rec.students.map(id => {
+                const st = window.allStudentsData.find(s => s.id === id);
+                return st ? `${st.firstName} ${st.lastName}` : '';
+            }).filter(n => n !== '').join('، ');
+        }
+        
+        archiveList.innerHTML += `
+            <div class="score-archive-item">
+                <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                    <strong>${rec.title}</strong> 
+                    <span style="font-size:0.75rem; color:var(--text-muted);">(${names || 'بدون دانش‌آموز'})</span>
+                </div>
+                <div style="color:var(--primary); font-weight:bold; margin-right:10px;">${rec.finalScore} امتیاز</div>
+            </div>
+        `;
+    });
+}
+
+function resetScoreCalendar(type) {
+    scoreCalendarState[type].selectedDate = '';
+    const displayEl = document.getElementById(`${type}DateDisplay`);
+    if (displayEl) displayEl.textContent = 'انتخاب نشده';
+    
+    const hiddenInputId = type === 'record' ? 'recordDate' : `${type}DateHidden`;
+    const hiddenInput = document.getElementById(hiddenInputId);
+    if (hiddenInput) hiddenInput.value = '';
+    
+    const archiveContainer = document.getElementById(`${type}-day-archive`);
+    if (archiveContainer) archiveContainer.style.display = 'none';
+
+    renderScoreCalendar(type);
 }
 
 // ==========================================
@@ -289,11 +516,9 @@ function showPreview(isFinal) {
     const studentCheckboxes = document.querySelectorAll('.student-checkbox:checked');
     if (studentCheckboxes.length === 0) { showToast('دانش‌آموز انتخاب کنید.', 'error'); return; }
     
-    const daySelect = document.getElementById('dateDay'), monthSelect = document.getElementById('dateMonth'), yearSelect = document.getElementById('dateYear');
     const dateStr = document.getElementById('recordDate').value;
-    
-    if (!daySelect.value || !monthSelect.value || !yearSelect.value || !dateStr) {
-        showToast('تاریخ را کامل انتخاب کنید.', 'error'); return;
+    if (!dateStr) {
+        showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return;
     }
 
     document.getElementById('preview-content').innerHTML = `
@@ -311,7 +536,7 @@ function showPreview(isFinal) {
         students: Array.from(studentCheckboxes).map(cb => parseInt(cb.value)),
         arf: document.getElementById('recordArf').checked, 
         finalScore: finalScore,
-        academicYear: window.activeAcademicYear // *** تگ سال تحصیلی ***
+        academicYear: window.activeAcademicYear
     };
     document.getElementById('preview-modal').classList.add('show');
 }
@@ -331,9 +556,11 @@ async function confirmAndSaveRecord() {
             const scoreInput = document.getElementById('dynamicLevelInput') || document.getElementById('dynamicCountInput') || document.getElementById('dynamicFreeInput');
             if (scoreInput) scoreInput.value = '';
             document.getElementById('record-form').scrollIntoView({ behavior: 'smooth' });
+            // تاریخ و آیتم برای ثبت نفر بعدی تغییر نمی‌کند
+            loadAllData(); 
         } else {
             document.getElementById('record-form').reset(); 
-            if(typeof initDateDropdowns === 'function') initDateDropdowns();
+            resetScoreCalendar('record');
             document.getElementById('dynamic-score-section').style.display = 'none'; 
             loadAllData();
         }
@@ -343,22 +570,6 @@ async function confirmAndSaveRecord() {
 // ==========================================
 // 8. منطق ثبت پویش قرآن کریم
 // ==========================================
-function initQuranDateDropdowns() {
-    const daySelect = document.getElementById('quranDateDay');
-    const monthSelect = document.getElementById('quranDateMonth');
-    const yearSelect = document.getElementById('quranDateYear');
-    if (!daySelect || !monthSelect || !yearSelect) return;
-
-    daySelect.innerHTML = '<option value="" disabled selected>روز</option>';
-    for (let i = 1; i <= 31; i++) daySelect.innerHTML += `<option value="${i}">${i}</option>`;
-    const monthNames = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
-    monthSelect.innerHTML = '<option value="" disabled selected>ماه</option>';
-    monthNames.forEach((name, index) => monthSelect.innerHTML += `<option value="${index + 1}">${name}</option>`);
-    yearSelect.innerHTML = '<option value="" disabled selected>سال</option>';
-    for (let i = 1405; i <= 1410; i++) yearSelect.innerHTML += `<option value="${i}">${i}</option>`;
-    daySelect.value = ''; monthSelect.value = ''; yearSelect.value = '';
-}
-
 async function saveQuranRecord() {
     const studentCheckboxes = document.querySelectorAll('.quran-student-checkbox:checked');
     if (studentCheckboxes.length === 0) { showToast('دانش‌آموز انتخاب کنید.', 'error'); return; }
@@ -380,11 +591,8 @@ async function saveQuranRecord() {
         return;
     }
 
-    const d = document.getElementById('quranDateDay').value;
-    const m = document.getElementById('quranDateMonth').value;
-    const y = document.getElementById('quranDateYear').value;
-    if (!d || !m || !y) { showToast('تاریخ را انتخاب کنید.', 'error'); return; }
-    const dateStr = jalaliToDateString(y, m, d);
+    const dateStr = document.getElementById('quranDateHidden').value;
+    if (!dateStr) { showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return; }
 
     const recordData = {
         subjectId: null,
@@ -394,7 +602,7 @@ async function saveQuranRecord() {
         students: Array.from(studentCheckboxes).map(cb => parseInt(cb.value)),
         arf: false,
         finalScore: finalScore,
-        academicYear: window.activeAcademicYear // *** تگ سال تحصیلی ***
+        academicYear: window.activeAcademicYear
     };
 
     try {
@@ -423,7 +631,7 @@ async function saveQuranRecord() {
 
         showToast('پویش قرآن با موفقیت ثبت شد!', 'success');
         document.getElementById('quran-form').reset();
-        initQuranDateDropdowns();
+        resetScoreCalendar('quran');
         loadAllData();
     } catch (e) { console.error(e); showToast('خطا در ثبت پویش قرآن.', 'error'); }
 }
@@ -431,22 +639,6 @@ async function saveQuranRecord() {
 // ==========================================
 // 9. منطق ثبت تشویق ویژه
 // ==========================================
-function initSpecialDateDropdowns() {
-    const daySelect = document.getElementById('specialDateDay');
-    const monthSelect = document.getElementById('specialDateMonth');
-    const yearSelect = document.getElementById('specialDateYear');
-    if (!daySelect || !monthSelect || !yearSelect) return;
-
-    daySelect.innerHTML = '<option value="" disabled selected>روز</option>';
-    for (let i = 1; i <= 31; i++) daySelect.innerHTML += `<option value="${i}">${i}</option>`;
-    const monthNames = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
-    monthSelect.innerHTML = '<option value="" disabled selected>ماه</option>';
-    monthNames.forEach((name, index) => monthSelect.innerHTML += `<option value="${index + 1}">${name}</option>`);
-    yearSelect.innerHTML = '<option value="" disabled selected>سال</option>';
-    for (let i = 1405; i <= 1410; i++) yearSelect.innerHTML += `<option value="${i}">${i}</option>`;
-    daySelect.value = ''; monthSelect.value = ''; yearSelect.value = '';
-}
-
 async function saveSpecialReward() {
     const studentCheckboxes = document.querySelectorAll('.special-student-checkbox:checked');
     if (studentCheckboxes.length === 0) { showToast('دانش‌آموز انتخاب کنید.', 'error'); return; }
@@ -457,11 +649,8 @@ async function saveSpecialReward() {
     const score = parseInt(document.getElementById('specialRewardScore').value);
     if (isNaN(score) || score <= 0) { showToast('امتیاز معتبر وارد کنید.', 'error'); return; }
 
-    const d = document.getElementById('specialDateDay').value;
-    const m = document.getElementById('specialDateMonth').value;
-    const y = document.getElementById('specialDateYear').value;
-    if (!d || !m || !y) { showToast('تاریخ را انتخاب کنید.', 'error'); return; }
-    const dateStr = jalaliToDateString(y, m, d);
+    const dateStr = document.getElementById('specialDateHidden').value;
+    if (!dateStr) { showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return; }
 
     const recordData = {
         subjectId: null,
@@ -471,14 +660,14 @@ async function saveSpecialReward() {
         students: Array.from(studentCheckboxes).map(cb => parseInt(cb.value)),
         arf: false,
         finalScore: score,
-        academicYear: window.activeAcademicYear // *** تگ سال تحصیلی ***
+        academicYear: window.activeAcademicYear
     };
 
     try {
         await saveData('records', recordData);
         showToast('تشویق ویژه با موفقیت ثبت شد!', 'success');
         document.getElementById('special-reward-form').reset();
-        initSpecialDateDropdowns();
+        resetScoreCalendar('special');
         loadAllData();
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق ویژه.', 'error'); }
 }
@@ -486,31 +675,12 @@ async function saveSpecialReward() {
 // ==========================================
 // 10. منطق ثبت تشویق خوش‌خط‌نویسی
 // ==========================================
-function initHandwritingDateDropdowns() {
-    const daySelect = document.getElementById('handwritingDateDay');
-    const monthSelect = document.getElementById('handwritingDateMonth');
-    const yearSelect = document.getElementById('handwritingDateYear');
-    if (!daySelect || !monthSelect || !yearSelect) return;
-
-    daySelect.innerHTML = '<option value="" disabled selected>روز</option>';
-    for (let i = 1; i <= 31; i++) daySelect.innerHTML += `<option value="${i}">${i}</option>`;
-    const monthNames = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
-    monthSelect.innerHTML = '<option value="" disabled selected>ماه</option>';
-    monthNames.forEach((name, index) => monthSelect.innerHTML += `<option value="${index + 1}">${name}</option>`);
-    yearSelect.innerHTML = '<option value="" disabled selected>سال</option>';
-    for (let i = 1405; i <= 1410; i++) yearSelect.innerHTML += `<option value="${i}">${i}</option>`;
-    daySelect.value = ''; monthSelect.value = ''; yearSelect.value = '';
-}
-
 async function saveHandwritingReward() {
     const studentCheckboxes = document.querySelectorAll('.handwriting-student-checkbox:checked');
     if (studentCheckboxes.length === 0) { showToast('دانش‌آموز انتخاب کنید.', 'error'); return; }
 
-    const d = document.getElementById('handwritingDateDay').value;
-    const m = document.getElementById('handwritingDateMonth').value;
-    const y = document.getElementById('handwritingDateYear').value;
-    if (!d || !m || !y) { showToast('تاریخ را انتخاب کنید.', 'error'); return; }
-    const dateStr = jalaliToDateString(y, m, d);
+    const dateStr = document.getElementById('handwritingDateHidden').value;
+    if (!dateStr) { showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return; }
 
     const recordData = {
         subjectId: null,
@@ -520,14 +690,14 @@ async function saveHandwritingReward() {
         students: Array.from(studentCheckboxes).map(cb => parseInt(cb.value)),
         arf: false,
         finalScore: 4,
-        academicYear: window.activeAcademicYear // *** تگ سال تحصیلی ***
+        academicYear: window.activeAcademicYear
     };
 
     try {
         await saveData('records', recordData);
         showToast('تشویق خوش‌خط‌نویسی با موفقیت ثبت شد!', 'success');
         document.getElementById('handwriting-reward-form').reset();
-        initHandwritingDateDropdowns();
+        resetScoreCalendar('handwriting');
         loadAllData();
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق خوش‌خط‌نویسی.', 'error'); }
 }
@@ -546,7 +716,6 @@ function loadAssessmentRecords() {
     const filterStudent = document.getElementById('recordsFilterStudent').value;
     const searchText = document.getElementById('recordsSearchText').value.trim();
 
-    // نکته: window.allRecordsData قبلاً در app.js فیلتر شده است و فقط شامل رکوردهای سال جاری است
     let filteredRecords = window.allRecordsData.filter(rec => {
         if (filterSubject && rec.subjectId != filterSubject) return false;
         if (filterStudent && (!rec.students || !rec.students.includes(parseInt(filterStudent)))) return false;
@@ -714,7 +883,7 @@ async function saveEditedRecord(event) {
         record.date = newDate; 
         record.finalScore = newScore;
         record.students = students;
-        record.academicYear = window.activeAcademicYear; // *** اطمینان از حفظ تگ ***
+        record.academicYear = window.activeAcademicYear;
         
         await saveData('records', record);
         showToast('رکورد با موفقیت ویرایش شد.', 'success');
@@ -730,7 +899,6 @@ async function loadQuranRewards() {
     if (!container) return;
     try {
         const allBadges = await getAllData('badgesSettings');
-        // فیلتر بر اساس سال تحصیلی هم اضافه شد
         const quranRewards = allBadges.filter(b => b.id && b.id.startsWith('quranReward_') && b.academicYear === window.activeAcademicYear);
         
         if (quranRewards.length === 0) { container.innerHTML = '<p style="color:#64748b; text-align:center;">هنوز تشویقی صادر نشده است.</p>'; return; }
