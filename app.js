@@ -12,8 +12,8 @@ let assessmentItems = [];
 window.activeAcademicYear = '1405-1406'; // مقدار پیش‌فرض
 
 // متغیرهای جدید برای برنامه هفتگی
-window.scheduleDaysCount = 6;
-window.schedulePeriodsCount = 5;
+window.scheduleActiveDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه']; // پیش‌فرض
+window.schedulePeriodsCount = 5; // پیش‌فرض
 
 let currentStudentView = 'flat';
 let currentPage = { students: 1, records: 1, reports: 1 };
@@ -125,23 +125,23 @@ async function loadAllData() {
                 classData.academicYear = window.activeAcademicYear;
             }
 
-            // بارگذاری تنظیمات برنامه هفتگی
-            if (classData.scheduleDaysCount) {
-                window.scheduleDaysCount = parseInt(classData.scheduleDaysCount);
+            // بارگذاری تنظیمات برنامه هفتگی (با پشتیبانی از نسخه قدیمی)
+            if (classData.scheduleActiveDays && Array.isArray(classData.scheduleActiveDays)) {
+                window.scheduleActiveDays = classData.scheduleActiveDays;
+            } else if (classData.scheduleDaysCount) {
+                // مهاجرت از نسخه قدیمی
+                const days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+                window.scheduleActiveDays = days.slice(0, classData.scheduleDaysCount);
+                classData.scheduleActiveDays = window.scheduleActiveDays;
             } else {
-                classData.scheduleDaysCount = window.scheduleDaysCount;
+                classData.scheduleActiveDays = window.scheduleActiveDays;
             }
+
             if (classData.schedulePeriodsCount) {
                 window.schedulePeriodsCount = parseInt(classData.schedulePeriodsCount);
             } else {
                 classData.schedulePeriodsCount = window.schedulePeriodsCount;
             }
-
-            // پر کردن فیلدهای جدید تنظیمات
-            const schedDaysInput = document.getElementById('scheduleDaysCount');
-            if (schedDaysInput) schedDaysInput.value = window.scheduleDaysCount;
-            const schedPeriodsInput = document.getElementById('schedulePeriodsCount');
-            if (schedPeriodsInput) schedPeriodsInput.value = window.schedulePeriodsCount;
 
             // ذخیره تغییرات در دیتابیس در صورت نیاز (مهاجرت)
             await saveData('classProfile', classData);
