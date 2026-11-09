@@ -424,8 +424,9 @@ async function exportClassCSV() {
             csvContent += `${i + 1},"${st.firstName}","${st.lastName}",${st.totalScore}\r\n`;
         });
 
-        const BOM = "\uFEFF";
-        const blob = new Blob([BOM, csvContent], { type: 'text/csv;charset=utf-8;' });
+        // رفع مشکل اکسل
+        const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+        const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); 
         a.href = url; 
