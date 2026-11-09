@@ -155,10 +155,10 @@ h1, h2, h3, h4, p { margin-top: 0; }
     gap: 12px;
     padding-bottom: 10px;
     margin-bottom: 20px;
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
 }
-.horizontal-scroll-container::-webkit-scrollbar { display: none; /* Chrome, Safari */ }
+.horizontal-scroll-container::-webkit-scrollbar { display: none; }
 
 .activity-card {
     min-width: 110px;
@@ -313,25 +313,125 @@ select.form-control {
 .mt-4 { margin-top: 12px; }
 
 /* =========================================
-   منوی پایین (۷ تب - فقط ایموجی)
+   استایل‌های جدول برنامه هفتگی (بخش جدید)
    ========================================= */
-.bottom-nav {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--nav-bg); backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px); display: flex; justify-content: space-around;
-    padding: 10px 0 15px 0; box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
-    z-index: 100; border-top: 1px solid var(--border-color);
-    transition: background 0.3s ease;
+.schedule-table-wrapper {
+    overflow-x: auto;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 15px;
+    background: var(--card-bg);
 }
-.nav-item {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
+
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 500px;
+    text-align: center;
+    table-layout: fixed;
+}
+
+.schedule-table th, .schedule-table td {
+    border: 1px solid var(--border-color);
+    padding: 12px 8px;
+    vertical-align: middle;
+    height: 50px;
+    font-size: 0.9rem;
+}
+
+.schedule-table thead th {
+    background: var(--primary);
+    color: white;
+    font-weight: bold;
+    border-bottom: 3px solid var(--primary-dark);
+}
+
+/* ستون روزها ثابت می‌ماند */
+.schedule-table tbody th {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-weight: bold;
+    position: sticky;
+    right: 0;
+    z-index: 2;
+    border-left: 2px solid var(--primary);
+    width: 80px;
+}
+
+.schedule-table td {
+    background: var(--card-bg);
+    color: var(--text-main);
+    cursor: default;
+}
+
+.schedule-table td.empty-cell {
     color: var(--text-muted);
-    padding: 8px 0; text-decoration: none; border-radius: var(--radius-sm);
-    flex: 1; transition: all 0.2s ease; position: relative;
+    font-size: 0.8rem;
 }
-.nav-item .icon { font-size: 1.7rem; transition: transform 0.2s ease; display: inline-block; }
-.nav-item.active .icon { transform: translateY(-5px) scale(1.15); }
-.nav-item.active::before { content: ''; position: absolute; top: 0; width: 30px; height: 3px; background: var(--primary); border-radius: 0 0 4px 4px; }
+
+/* نمای ویرایش (آکاردئون روزها) */
+.schedule-edit-accordion {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--input-bg);
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.schedule-edit-accordion summary {
+    padding: 12px 15px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    list-style: none;
+    background: var(--card-bg);
+    color: var(--text-main);
+}
+
+.schedule-edit-accordion summary::-webkit-details-marker { display: none; }
+.schedule-edit-accordion summary::after {
+    content: '▼';
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+}
+.schedule-edit-accordion[open] summary::after { transform: rotate(180deg); }
+.schedule-edit-accordion[open] summary { border-bottom: 1px dashed var(--border-color); }
+
+.schedule-edit-content {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.schedule-period-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.schedule-period-row span {
+    min-width: 60px;
+    font-size: 0.9rem;
+    color: var(--primary);
+    font-weight: bold;
+}
+
+.schedule-period-row select {
+    flex: 1;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 0.9rem;
+    outline: none;
+}
 .checkbox-group {
     display: flex; align-items: center; gap: 10px;
     padding: 12px; background: var(--arf-bg);
@@ -511,7 +611,7 @@ details.group-accordion[open] summary::after {
 .rc-subject-row:last-child { border-bottom: none; }
 
 /* =========================================
-   استایل نمودارها (حضور و غیاب)
+   استایل نمودارها
    ========================================= */
 .score-bar-container {
     width: 100%;
@@ -702,39 +802,6 @@ details.group-accordion[open] summary::after {
     font-size: 1.2rem;
     margin-left: 5px;
     vertical-align: middle;
-}
-
-.weekly-schedule-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-    background: var(--input-bg);
-    padding: 10px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-color);
-}
-.weekly-schedule-row span {
-    font-weight: bold;
-    color: var(--primary);
-    white-space: nowrap;
-}
-.weekly-schedule-row select {
-    flex: 1;
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-    background: var(--card-bg);
-    color: var(--text-main);
-}
-.remove-period-btn {
-    background: #ef4444;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 8px 12px;
-    cursor: pointer;
-    font-weight: bold;
 }
 
 .details-list-item {
