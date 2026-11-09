@@ -11,6 +11,10 @@ window.allWeeklyScheduleData = [];
 let assessmentItems = [];
 window.activeAcademicYear = '1405-1406'; // مقدار پیش‌فرض
 
+// متغیرهای جدید برای برنامه هفتگی
+window.scheduleDaysCount = 6;
+window.schedulePeriodsCount = 5;
+
 let currentStudentView = 'flat';
 let currentPage = { students: 1, records: 1, reports: 1 };
 const itemsPerPage = 40;
@@ -74,8 +78,6 @@ function initApp() {
         if(document.getElementById('lesson-form')) document.getElementById('lesson-form').addEventListener('submit', saveLesson);
         if(document.getElementById('group-form')) document.getElementById('group-form').addEventListener('submit', saveGroup);
         
-        if(document.getElementById('scheduleDaySelect')) document.getElementById('scheduleDaySelect').addEventListener('change', renderScheduleForDay);
-        
         if(document.getElementById('item-manager-form')) {
             document.getElementById('item-manager-form').addEventListener('submit', saveItem);
         }
@@ -103,7 +105,7 @@ async function loadAllData() {
     try {
         const classData = await getDataById('classProfile', 1);
         if (classData) {
-            // پر کردن فیلدهای تنظیمات (چون در مودال هستند، دسترسی به آن‌ها با ID برقرار است)
+            // پر کردن فیلدهای تنظیمات
             const classNameEl = document.getElementById('className');
             if(classNameEl) classNameEl.value = classData.name || '';
             const classSymbolEl = document.getElementById('classSymbol');
@@ -121,8 +123,28 @@ async function loadAllData() {
                 window.activeAcademicYear = classData.academicYear;
             } else {
                 classData.academicYear = window.activeAcademicYear;
-                await saveData('classProfile', classData);
             }
+
+            // بارگذاری تنظیمات برنامه هفتگی
+            if (classData.scheduleDaysCount) {
+                window.scheduleDaysCount = parseInt(classData.scheduleDaysCount);
+            } else {
+                classData.scheduleDaysCount = window.scheduleDaysCount;
+            }
+            if (classData.schedulePeriodsCount) {
+                window.schedulePeriodsCount = parseInt(classData.schedulePeriodsCount);
+            } else {
+                classData.schedulePeriodsCount = window.schedulePeriodsCount;
+            }
+
+            // پر کردن فیلدهای جدید تنظیمات
+            const schedDaysInput = document.getElementById('scheduleDaysCount');
+            if (schedDaysInput) schedDaysInput.value = window.scheduleDaysCount;
+            const schedPeriodsInput = document.getElementById('schedulePeriodsCount');
+            if (schedPeriodsInput) schedPeriodsInput.value = window.schedulePeriodsCount;
+
+            // ذخیره تغییرات در دیتابیس در صورت نیاز (مهاجرت)
+            await saveData('classProfile', classData);
             
             const aySelect = document.getElementById('academicYear');
             if (aySelect) aySelect.value = window.activeAcademicYear;
