@@ -725,24 +725,29 @@ details.group-accordion[open] summary::after {
 }
 .calendar-day:hover { background: var(--primary-light); }
 .calendar-day.empty { background: transparent; cursor: default; border: none; pointer-events: none; }
-.calendar-day.friday { color: #ef4444; }
-.calendar-day.today { border-color: var(--primary); color: var(--primary); }
-.calendar-day.selected { background: var(--primary); color: white !important; border-color: var(--primary); box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4); transform: scale(1.05); }
+.calendar-day.today { border-color: var(--primary); }
 
-/* نشانگر روزهایی که جلسه دارند */
-.calendar-day.has-session::after {
-    content: '';
-    position: absolute;
-    bottom: 4px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
-    background-color: #22c55e;
-    border-radius: 50%;
+/* روزهای تعطیل (رنگ قرمز) */
+.calendar-day.friday, .calendar-day.holiday { 
+    color: #ef4444; 
 }
-.calendar-day.has-session.selected::after {
-    background-color: white;
+
+/* روزهای دارای جلسه (رنگ سبز) */
+.calendar-day.has-session { 
+    color: #16a34a; 
+    border: 1px dashed #16a34a;
+}
+
+/* استایل روز انتخاب شده (باید بر همه اولویت داشته باشد) */
+.calendar-day.selected { 
+    background: var(--primary); 
+    color: white !important; 
+    border: 1px solid var(--primary); 
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4); 
+    transform: scale(1.05); 
+}
+.calendar-day.selected.has-session {
+    border: 1px solid white;
 }
 
 .selected-date-display {
