@@ -27,13 +27,11 @@ let currentCalendarMonth = 1;
 let selectedSessionDate = "";
 let selectedSessionDayOfWeek = "";
 
-function initSessionEvents() {
-    // رویدادهای قدیمی حذف شده‌اند
-}
+function initSessionEvents() {}
 
 async function renderSessionData() {
     initCalendar(); 
-    toggleScheduleMode('view'); // پیش‌فرض روی نمای مشاهده
+    toggleScheduleMode('view'); 
     generateAttendanceReports();
 }
 
@@ -174,7 +172,6 @@ function renderScheduleEdit() {
 
 async function saveAllWeeklySchedules() {
     const selects = document.querySelectorAll('.schedule-subject-select');
-    
     const newSchedule = {};
 
     selects.forEach(sel => {
@@ -258,14 +255,16 @@ function exportScheduleCSV() {
         for (let i = 1; i <= maxPeriodToShow; i++) {
             csvContent += `,زنگ ${i}`;
         }
-        csvContent += "\n";
+        csvContent += "\r\n"; // استفاده از استاندارد اکسل
 
         matrix.forEach(row => {
-            csvContent += row.join(',') + "\n";
+            // قرار دادن مقادیر در دابل کوتیشن برای جلوگیری از به هم ریختگی
+            const rowData = row.map(cell => `"${cell}"`).join(',');
+            csvContent += rowData + "\r\n";
         });
 
-        const BOM = "\uFEFF";
-        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const BOM = "\uFEFF"; // کاراکتر استاندارد UTF-8 برای اکسل
+        const blob = new Blob([BOM, csvContent], { type: 'text/csv;charset=utf-8;' }); 
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); 
         a.href = url; 
@@ -477,13 +476,10 @@ function renderCalendarGrid() {
         const hasSession = window.allSessionsData.some(s => s.date === dateStr);
         const inAcademicYear = (dateStr >= startBound && dateStr <= endBound);
         
-        // بررسی اینکه آیا این روز در برنامه هفتگی فعال است
         const isActiveDay = (window.scheduleActiveDays || []).includes(dayNames[dayOfWeekIndex]);
 
         let classes = 'calendar-day';
-        // اگر روز فعال باشد، رنگ تعطیلی نمی‌گیرد حتی اگر جمعه باشد
         if ((isFriday && !isActiveDay) || isHoliday) classes += ' holiday';
-        
         if (selectedSessionDate === dateStr) classes += ' selected';
         if (hasSession) classes += ' has-session';
         if (!inAcademicYear) classes += ' outside-range';
@@ -563,7 +559,6 @@ function selectCalendarDay(day, dateStr) {
     const actionArea = document.getElementById('sessionActionArea');
     
     const existingSession = window.allSessionsData.find(s => s.date === dateStr);
-    // فقط تعطیلات رسمی از لیست بررسی می‌شوند (جمعه به صورت پیش‌فرض تعطیل نیست مگر اینکه کاربر غیرفعالش کرده باشد)
     const isHoliday = officialHolidays[currentCalendarYear]?.includes(dateStr) || false;
     
     const isActiveDay = (window.scheduleActiveDays || []).includes(selectedSessionDayOfWeek);
@@ -616,7 +611,6 @@ async function createNewSession() {
         showToast('خطا در تشخیص روز هفته.', 'error'); return;
     }
 
-    // فقط تعطیلات رسمی چک می‌شوند
     const isHoliday = officialHolidays[currentCalendarYear]?.includes(selectedSessionDate) || false;
 
     if (isHoliday) {
@@ -920,7 +914,7 @@ async function generateAttendanceReports() {
 
 async function exportSessionCSV() {
     try {
-        let csvContent = "ردیف,نام,نام خانوادگی,تعداد حاضر,تعداد غایب,تعداد تأخیر\n";
+        let csvContent = "ردیف,نام,نام خانوادگی,تعداد حاضر,تعداد غایب,تعداد تأخیر\r\n";
         window.allStudentsData.forEach((st, i) => {
             let p = 0, a = 0, l = 0;
             window.allAttendanceData.forEach(att => { 
@@ -930,11 +924,11 @@ async function exportSessionCSV() {
                     else if (att.status === 'late') l++; 
                 } 
             });
-            csvContent += `${i + 1},${st.firstName},${st.lastName},${p},${a},${l}\n`;
+            csvContent += `${i + 1},"${st.firstName}","${st.lastName}",${p},${a},${l}\r\n`;
         });
 
         const BOM = "\uFEFF";
-        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([BOM, csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url; a.download = `kosha_attendance_${new Date().toISOString().slice(0,10)}.csv`; a.click();
         URL.revokeObjectURL(url);
