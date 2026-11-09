@@ -12,10 +12,17 @@ function initLessonEvents() {
 // فقط برای افزودن درس جدید
 async function saveLesson(e) {
     e.preventDefault();
+
+    // *** بررسی محدودیت ۱۴ درس ***
+    if (window.allSubjectsData.length >= 14) {
+        showToast('حداکثر تعداد مجاز درس (۱۴ درس) تکمیل شده است.', 'error');
+        return;
+    }
+
     const data = { 
         name: document.getElementById('lessonName').value,
         symbol: document.getElementById('lessonSymbol').value,
-        motto: document.getElementById('lessonMotto').value
+        motto: document.getElementById('lessonMotto').value // اختیاری
     };
     
     await saveData('subjects', data);
@@ -50,7 +57,7 @@ async function saveEditedLesson(e) {
         id: id,
         name: document.getElementById('editLessonNameModal').value,
         symbol: document.getElementById('editLessonSymbolModal').value,
-        motto: document.getElementById('editLessonMottoModal').value
+        motto: document.getElementById('editLessonMottoModal').value // اختیاری
     };
     
     await saveData('subjects', data);
