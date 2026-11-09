@@ -7,12 +7,10 @@ let currentSessionDay = null;
 let currentSessionAttendanceState = {};
 let currentAttReportFilter = 'class';
 
-// متغیرهای تقویم
 const jalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
 const calendarYears = [1405, 1406, 1407, 1408, 1409, 1410];
-const leapYears = [1408]; // 1412 هم کبیسه است، اما فعلا تا 1410 داریم
+const leapYears = [1408];
 
-// دیکشنری تعطیلات رسمی (شمسی و قمری) برای سال‌های 1405 تا 1410
 const officialHolidays = {
     1405: ["1405/01/01", "1405/01/02", "1405/01/03", "1405/01/04", "1405/01/12", "1405/01/13", "1405/01/21", "1405/01/23", "1405/02/01", "1405/02/09", "1405/03/05", "1405/03/06", "1405/03/14", "1405/03/15", "1405/03/25", "1405/04/02", "1405/04/04", "1405/04/12", "1405/04/20", "1405/05/09", "1405/06/01", "1405/07/13", "1405/08/27", "1405/09/15", "1405/10/25", "1405/11/19", "1405/11/22", "1405/12/29"],
     1406: ["1406/01/01", "1406/01/02", "1406/01/03", "1406/01/04", "1406/01/11", "1406/01/12", "1406/01/13", "1406/01/20", "1406/01/30", "1406/02/08", "1406/02/17", "1406/02/25", "1406/03/03", "1406/03/11", "1406/03/14", "1406/03/15", "1406/03/19", "1406/03/27", "1406/04/04", "1406/04/28", "1406/05/22", "1406/06/18", "1406/07/06", "1406/07/18", "1406/08/08", "1406/09/04", "1406/10/06", "1406/10/15", "1406/11/12", "1406/11/22", "1406/12/10"],
@@ -38,7 +36,7 @@ async function renderSessionData() {
 }
 
 // ==========================================
-// توابع تقویم شمسی
+// توابع تقویم شمسی (با محدودیت سال تحصیلی)
 // ==========================================
 function isLeapYear(year) {
     return leapYears.includes(year);
@@ -94,6 +92,11 @@ function renderCalendarGrid() {
     grid.innerHTML = '';
     const firstDay = getFirstDayOfWeek(currentCalendarYear, currentCalendarMonth);
     const daysInMonth = getDaysInMonth(currentCalendarYear, currentCalendarMonth);
+    
+    // تعیین محدوده سال تحصیلی
+    const [startYear, endYear] = window.activeAcademicYear.split('-');
+    const startBound = `${startYear}/07/01`;
+    const endBound = `${endYear}/06/31`;
 
     for (let i = 0; i < firstDay; i++) {
         grid.innerHTML += `<div class="calendar-day empty"></div>`;
@@ -103,19 +106,27 @@ function renderCalendarGrid() {
         const isFriday = ((firstDay + day - 1) % 7) === 6;
         const dateStr = `${currentCalendarYear}/${String(currentCalendarMonth).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
         
-        // بررسی تعطیلات رسمی
         const isHoliday = officialHolidays[currentCalendarYear]?.includes(dateStr) || false;
-        
-        // بررسی وجود جلسه در این روز
         const hasSession = window.allSessionsData.some(s => s.date === dateStr);
         
+        // بررسی اینکه آیا روز در محدوده سال تحصیلی است یا خیر
+        const inAcademicYear = (dateStr >= startBound && dateStr <= endBound);
+
         let classes = 'calendar-day';
         if (isFriday || isHoliday) classes += ' holiday';
         if (selectedSessionDate === dateStr) classes += ' selected';
         if (hasSession) classes += ' has-session';
+        if (!inAcademicYear) classes += ' outside-range';
 
-        grid.innerHTML += `<div class="${classes}" onclick="selectCalendarDay(${day}, '${dateStr}')">${day}</div>`;
+        // اگر خارج از بازه است، onclick را غیرفعال می‌کنیم
+        const clickHandler = inAcademicYear ? `onclick="selectCalendarDay(${day}, '${dateStr}')"` : `onclick="showOutsideRangeError()"`;
+
+        grid.innerHTML += `<div class="${classes}" ${clickHandler}>${day}</div>`;
     }
+}
+
+function showOutsideRangeError() {
+    showToast('این تاریخ خارج از بازه سال تحصیلی جاری است.', 'error');
 }
 
 function changeCalendarMonth(delta) {
@@ -183,7 +194,7 @@ function selectCalendarDay(day, dateStr) {
             
             if (isHoliday) {
                  detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong> (تعطیل)<br><span style="font-size:0.85rem; color:#dc2626;">⚠️ امکان ثبت جلسه در روزهای تعطیل وجود ندارد.</span>`;
-                 actionArea.innerHTML = ''; // دکمه ثبت را مخفی کن
+                 actionArea.innerHTML = '';
             } else if (hasSchedule) {
                 detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#16a34a;">✅ برنامه هفتگی برای این روز تعریف شده است.</span>`;
                 actionArea.innerHTML = `<button type="button" class="btn btn-primary btn-block" onclick="createNewSession()">➕ ثبت جلسه</button>`;
@@ -284,7 +295,7 @@ async function resetAllWeeklySchedules() {
 }
 
 // ==========================================
-// 2. ثبت جلسه
+// 2. ثبت جلسه (با تگ سال تحصیلی)
 // ==========================================
 async function createNewSession() {
     if (!selectedSessionDate) {
@@ -310,11 +321,15 @@ async function createNewSession() {
     }
 
     const allSessions = await getAllData('sessions');
-    if (allSessions.find(s => s.date === selectedSessionDate)) {
+    if (allSessions.find(s => s.date === selectedSessionDate && s.academicYear === window.activeAcademicYear)) {
         showToast('این تاریخ قبلاً ثبت شده است.', 'error'); return;
     }
 
-    await saveData('sessions', { date: selectedSessionDate, dayOfWeek: selectedSessionDayOfWeek });
+    await saveData('sessions', { 
+        date: selectedSessionDate, 
+        dayOfWeek: selectedSessionDayOfWeek,
+        academicYear: window.activeAcademicYear // *** تگ سال تحصیلی ***
+    });
     showToast('جلسه با موفقیت ثبت شد!', 'success');
     
     selectedSessionDate = "";
@@ -333,9 +348,13 @@ async function editSessionDate(sessionId, currentDate) {
     if (!/^\d{4}\/\d{2}\/\d{2}$/.test(trimmed)) { showToast('فرمت نامعتبر است.', 'error'); return; }
     if (trimmed === currentDate) return;
 
-    await saveData('sessions', { id: sessionId, date: trimmed, dayOfWeek: window.allSessionsData.find(s=>s.id===sessionId).dayOfWeek });
-    showToast('تاریخ ویرایش شد.', 'success');
-    loadAllData();
+    const session = await getDataById('sessions', sessionId);
+    if(session) {
+        session.date = trimmed;
+        await saveData('sessions', session);
+        showToast('تاریخ ویرایش شد.', 'success');
+        loadAllData();
+    }
 }
 
 async function deleteSession(sessionId) {
@@ -349,7 +368,7 @@ async function deleteSession(sessionId) {
     await deleteData('sessions', sessionId);
     showToast('جلسه و سوابق آن حذف شد.', 'success');
     
-    if (selectedSessionDate === sessionToDelete.date) {
+    if (selectedSessionDate === sessionToDelete?.date) {
         selectedSessionDate = "";
         document.getElementById('sessionActionArea').innerHTML = '';
         document.getElementById('detectedDayDisplay').style.display = 'none';
@@ -364,17 +383,20 @@ async function resetAllSessions() {
         return;
     }
 
-    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید تمام جلسات را حذف کنید؟ تمام حضور و غیاب‌های مرتبط نیز پاک خواهند شد.');
+    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید تمام جلسات سال تحصیلی جاری را حذف کنید؟');
     if (!confirm1) return;
 
-    const confirm2 = confirm('🚨 آخرین هشدار!\n\nاین عمل غیرقابل بازگشت است و تمام جلسات برای همیشه حذف می‌شوند. آیا ۱۰۰٪ مطمئن هستید؟');
+    const confirm2 = confirm('🚨 آخرین هشدار!\n\nاین عمل غیرقابل بازگشت است. آیا ۱۰۰٪ مطمئن هستید؟');
     if (!confirm2) return;
 
     try {
-        await clearStore('sessions');
-        await clearStore('attendance');
+        for (const sess of window.allSessionsData) {
+            const atts = window.allAttendanceData.filter(a => a.sessionId === sess.id);
+            for (const att of atts) await deleteData('attendance', att.id);
+            await deleteData('sessions', sess.id);
+        }
         
-        showToast('تمام جلسات و سوابق حضور و غیاب با موفقیت حذف شدند.', 'success');
+        showToast('تمام جلسات سال جاری با موفقیت حذف شدند.', 'success');
         selectedSessionDate = "";
         document.getElementById('sessionActionArea').innerHTML = '';
         document.getElementById('detectedDayDisplay').style.display = 'none';
@@ -499,7 +521,8 @@ async function saveAllSessionAttendance() {
                 sessionId: currentSessionId,
                 periodNumber: parseInt(periodNum),
                 studentId: parseInt(studentId),
-                status: currentSessionAttendanceState[periodNum][studentId]
+                status: currentSessionAttendanceState[periodNum][studentId],
+                academicYear: window.activeAcademicYear // *** تگ سال تحصیلی ***
             });
         }
     }
