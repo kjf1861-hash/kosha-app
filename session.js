@@ -7,15 +7,156 @@ let currentSessionDay = null;
 let currentSessionAttendanceState = {}; // ساختار: { periodNumber: { studentId: 'present' } }
 let currentAttReportFilter = 'class';
 
+// متغیرهای تقویم
+const jalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
+const calendarYears = [1405, 1406, 1407, 1408, 1409];
+const leapYears = [1408]; // تنها سال کبیسه در این بازه
+let currentCalendarYear = 1405;
+let currentCalendarMonth = 1;
+let selectedSessionDate = "";
+
 function initSessionEvents() {
     document.getElementById('scheduleDaySelect').addEventListener('change', renderScheduleForDay);
     document.getElementById('sessionDayOfWeek').addEventListener('change', checkScheduleExists);
 }
 
 async function renderSessionData() {
-    renderScheduleForDay(); // *** اضافه شدن این خط برای رفع باگ ***
+    renderScheduleForDay();
+    initCalendar(); // راه‌اندازی تقویم
     renderSessionsList();
     generateAttendanceReports();
+}
+
+// ==========================================
+// توابع تقویم شمسی
+// ==========================================
+function isLeapYear(year) {
+    return leapYears.includes(year);
+}
+
+function getDaysInMonth(year, month) {
+    if (month <= 6) return 31;
+    if (month <= 11) return 30;
+    return isLeapYear(year) ? 30 : 29;
+}
+
+function getFirstDayOfWeek(year, month) {
+    // روز پایه: 1405/01/01 برابر با شنبه است (0=شنبه, 1=یکشنبه, ..., 6=جمعه)
+    let daysPassed = 0;
+    for (let y = 1405; y < year; y++) {
+        daysPassed += isLeapYear(y) ? 366 : 365;
+    }
+    for (let m = 1; m < month; m++) {
+        daysPassed += getDaysInMonth(year, m);
+    }
+    return daysPassed % 7;
+}
+
+function initCalendar() {
+    const yearSelect = document.getElementById('calendarYearSelect');
+    const monthSelect = document.getElementById('calendarMonthSelect');
+    if (!yearSelect || !monthSelect) return;
+
+    // خواندن از localStorage یا مقدار پیش‌فرض
+    let savedYear = localStorage.getItem('kosha-calendar-year');
+    let savedMonth = localStorage.getItem('kosha-calendar-month');
+    
+    currentCalendarYear = savedYear ? parseInt(savedYear) : 1405;
+    currentCalendarMonth = savedMonth ? parseInt(savedMonth) : 1;
+
+    // پر کردن منوی سال
+    yearSelect.innerHTML = '';
+    calendarYears.forEach(y => {
+        yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+    });
+    yearSelect.value = currentCalendarYear;
+
+    // پر کردن منوی ماه
+    monthSelect.innerHTML = '';
+    jalaliMonths.forEach((m, i) => {
+        monthSelect.innerHTML += `<option value="${i + 1}">${m}</option>`;
+    });
+    monthSelect.value = currentCalendarMonth;
+
+    renderCalendarGrid();
+}
+
+function renderCalendarGrid() {
+    const grid = document.getElementById('calendarDaysGrid');
+    const display = document.getElementById('selectedDateDisplay');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+    const firstDay = getFirstDayOfWeek(currentCalendarYear, currentCalendarMonth);
+    const daysInMonth = getDaysInMonth(currentCalendarYear, currentCalendarMonth);
+
+    // خانه‌های خالی قبل از روز اول
+    for (let i = 0; i < firstDay; i++) {
+        grid.innerHTML += `<div class="calendar-day empty"></div>`;
+    }
+
+    // روزهای ماه
+    for (let day = 1; day <= daysInMonth; day++) {
+        const isFriday = ((firstDay + day - 1) % 7) === 6;
+        const dateStr = `${currentCalendarYear}/${String(currentCalendarMonth).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+        
+        let classes = 'calendar-day';
+        if (isFriday) classes += ' friday';
+        if (selectedSessionDate === dateStr) classes += ' selected';
+
+        grid.innerHTML += `<div class="${classes}" onclick="selectCalendarDay(${day}, '${dateStr}')">${day}</div>`;
+    }
+
+    // آپدیت نمایش تاریخ انتخاب شده
+    if (selectedSessionDate) {
+        const parts = selectedSessionDate.split('/');
+        const monthName = jalaliMonths[parseInt(parts[1]) - 1];
+        display.textContent = `تاریخ انتخابی: ${parts[2]} ${monthName} ${parts[0]}`;
+        display.style.display = 'block';
+    } else {
+        display.textContent = 'تاریخ انتخاب نشده است';
+        display.style.display = 'block';
+    }
+}
+
+function changeCalendarMonth(delta) {
+    if (delta === 0) {
+        // تغییر از طریق منوی کشویی
+        currentCalendarMonth = parseInt(document.getElementById('calendarMonthSelect').value);
+    } else {
+        currentCalendarMonth += delta;
+        if (currentCalendarMonth < 1) {
+            currentCalendarMonth = 12;
+            currentCalendarYear--;
+        } else if (currentCalendarMonth > 12) {
+            currentCalendarMonth = 1;
+            currentCalendarYear++;
+        }
+    }
+
+    // بررسی محدوده سال
+    if (currentCalendarYear < 1405) { currentCalendarYear = 1405; currentCalendarMonth = 1; }
+    if (currentCalendarYear > 1409) { currentCalendarYear = 1409; currentCalendarMonth = 12; }
+
+    localStorage.setItem('kosha-calendar-year', currentCalendarYear);
+    localStorage.setItem('kosha-calendar-month', currentCalendarMonth);
+
+    document.getElementById('calendarYearSelect').value = currentCalendarYear;
+    document.getElementById('calendarMonthSelect').value = currentCalendarMonth;
+
+    renderCalendarGrid();
+}
+
+function changeCalendarYear() {
+    currentCalendarYear = parseInt(document.getElementById('calendarYearSelect').value);
+    localStorage.setItem('kosha-calendar-year', currentCalendarYear);
+    renderCalendarGrid();
+}
+
+function selectCalendarDay(day, dateStr) {
+    selectedSessionDate = dateStr;
+    document.getElementById('sessionDateHidden').value = dateStr;
+    renderCalendarGrid();
 }
 
 // ==========================================
@@ -27,9 +168,9 @@ async function renderScheduleForDay() {
     if (!container) return;
 
     const schedules = await getAllData('weeklySchedule');
-    let schedule = schedules.find(s => s.day === day); // پیدا کردن رکورد همان روز
+    let schedule = schedules.find(s => s.day === day);
 
-    let periods = schedule ? schedule.periods : [null, null, null, null, null]; // 5 زنگ پیش‌فرض
+    let periods = schedule ? schedule.periods : [null, null, null, null, null];
     if (periods.length < 5) periods = [...periods, ...Array(5 - periods.length).fill(null)];
 
     container.innerHTML = '';
@@ -79,7 +220,6 @@ async function saveWeeklySchedule() {
         periods.push(sel.value ? parseInt(sel.value) : null);
     });
 
-    // ذخیره با کلید روز
     await saveData('weeklySchedule', { day: day, periods: periods });
     showToast(`برنامه هفتگی روز ${day} ذخیره شد!`, 'success');
 }
@@ -123,20 +263,16 @@ async function resetAllWeeklySchedules() {
 // 2. ثبت جلسه و لیست جلسات
 // ==========================================
 async function createNewSession() {
-    const d = document.getElementById('sessDateDay').value;
-    const m = document.getElementById('sessDateMonth').value;
-    const y = document.getElementById('sessDateYear').value;
+    const dateStr = document.getElementById('sessionDateHidden').value;
     const dayOfWeek = document.getElementById('sessionDayOfWeek').value;
 
-    if (!d || !m || !y) {
-        showToast('لطفاً تاریخ را کامل انتخاب کنید.', 'error'); return;
+    if (!dateStr) {
+        showToast('لطفاً یک تاریخ را از تقویم انتخاب کنید.', 'error'); return;
     }
     if (!dayOfWeek) {
         showToast('لطفاً روز برنامه هفتگی را انتخاب کنید.', 'error'); return;
     }
 
-    const dateStr = jalaliToDateString(y, m, d);
-    
     const allSessions = await getAllData('sessions');
     if (allSessions.find(s => s.date === dateStr)) {
         showToast('این تاریخ قبلاً ثبت شده است.', 'error'); return;
@@ -145,11 +281,11 @@ async function createNewSession() {
     await saveData('sessions', { date: dateStr, dayOfWeek: dayOfWeek });
     showToast('جلسه با موفقیت ثبت شد!', 'success');
     
-    // ریست فرم
-    document.getElementById('sessDateDay').value = '';
-    document.getElementById('sessDateMonth').value = '';
-    document.getElementById('sessDateYear').value = '';
-    document.getElementById('sessionDayOfWeek').value = '';
+    // ریست
+    selectedSessionDate = "";
+    document.getElementById('sessionDateHidden').value = "";
+    document.getElementById('sessionDayOfWeek').value = "";
+    renderCalendarGrid();
 
     loadAllData();
 }
@@ -163,7 +299,6 @@ async function renderSessionsList() {
         return;
     }
 
-    // مرتب‌سازی از جدیدترین به قدیمی‌ترین
     const sorted = [...window.allSessionsData].sort((a, b) => b.date.localeCompare(a.date));
 
     container.innerHTML = '';
@@ -199,7 +334,6 @@ async function editSessionDate(sessionId, currentDate) {
 async function deleteSession(sessionId) {
     if (!confirm('آیا از حذف این جلسه و تمام حضور و غیاب‌های آن مطمئن هستید؟')) return;
 
-    // حذف حضور و غیاب‌ها
     const allAtt = await getAllData('attendance');
     const sessionAtt = allAtt.filter(a => a.sessionId === sessionId);
     for (const att of sessionAtt) await deleteData('attendance', att.id);
@@ -224,7 +358,7 @@ async function resetAllSessions() {
 
     try {
         await clearStore('sessions');
-        await clearStore('attendance'); // حذف تمام حضور و غیاب‌ها
+        await clearStore('attendance');
         
         showToast('تمام جلسات و سوابق حضور و غیاب با موفقیت حذف شدند.', 'success');
         loadAllData();
@@ -249,7 +383,6 @@ async function openSessionDetails(sessionId) {
     document.getElementById('session-details-content').innerHTML = '<p style="text-align:center;">در حال بارگذاری...</p>';
     document.getElementById('session-details-modal').classList.add('show');
 
-    // 1. دریافت برنامه هفتگی برای روز مورد نظر
     const schedules = await getAllData('weeklySchedule');
     const schedule = schedules.find(s => s.day === session.dayOfWeek);
     
@@ -258,18 +391,16 @@ async function openSessionDetails(sessionId) {
         return;
     }
 
-    // 2. دریافت حضور و غیاب‌های قبلی این جلسه
     const existingAtt = window.allAttendanceData.filter(a => a.sessionId === sessionId);
     
-    // 3. مقداردهی اولیه استیت
     schedule.periods.forEach((subId, index) => {
-        if (subId === null) return; // زنگ خالی
+        if (subId === null) return;
         const periodNum = index + 1;
         currentSessionAttendanceState[periodNum] = {};
         
         window.allStudentsData.forEach(st => {
             const record = existingAtt.find(a => a.periodNumber === periodNum && a.studentId === st.id);
-            currentSessionAttendanceState[periodNum][st.id] = record ? record.status : 'present'; // پیش‌فرض حاضر
+            currentSessionAttendanceState[periodNum][st.id] = record ? record.status : 'present';
         });
     });
 
@@ -281,7 +412,7 @@ function renderSessionDetails(schedule) {
     container.innerHTML = '';
 
     schedule.periods.forEach((subId, index) => {
-        if (subId === null) return; // زنگ خالی
+        if (subId === null) return;
         
         const periodNum = index + 1;
         const subject = window.allSubjectsData.find(s => s.id === subId);
@@ -331,7 +462,6 @@ function setAllPeriodAttendance(periodNum, status) {
         currentSessionAttendanceState[periodNum][st.id] = status;
     });
     
-    // آپدیت UI برای این زنگ خاص
     const section = document.getElementById(`session-period-${periodNum}`);
     if (section) {
         section.querySelectorAll('.attendance-student-row').forEach(row => {
@@ -358,11 +488,9 @@ async function saveAllSessionAttendance() {
     }
 
     try {
-        // برای جلوگیری از تکرار رکوردها، رکوردهای قبلی این جلسه را پاک میکنیم
         const existing = window.allAttendanceData.filter(a => a.sessionId === currentSessionId);
         for (const rec of existing) await deleteData('attendance', rec.id);
         
-        // ذخیره گروهی جدید
         await saveBulkData('attendance', recordsToSave);
         showToast('حضور و غیاب کل جلسه ذخیره شد!', 'success');
         loadAllData();
@@ -380,7 +508,7 @@ function closeSessionDetails() {
 }
 
 // ==========================================
-// 4. گزارش حضور و غیاب (انتقال یافته)
+// 4. گزارش حضور و غیاب
 // ==========================================
 function changeAttReportFilter(filter, btn) {
     currentAttReportFilter = filter;
@@ -434,7 +562,6 @@ async function generateAttendanceReports() {
     container.innerHTML = html;
 }
 
-// خروجی اکسل حضور و غیاب
 async function exportSessionCSV() {
     try {
         let csvContent = "ردیف,نام,نام خانوادگی,تعداد حاضر,تعداد غایب,تعداد تأخیر\n";
