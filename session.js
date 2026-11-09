@@ -51,8 +51,9 @@ async function addSchedulePeriod() {
     const container = document.getElementById('weekly-schedule-container');
     const currentCount = container.querySelectorAll('.schedule-period-select').length;
     
-    if (currentCount >= 10) {
-        showToast('حداکثر ۱۰ زنگ مجاز است.', 'error');
+    // *** بررسی محدودیت ۵ زنگ ***
+    if (currentCount >= 5) {
+        showToast('حداکثر تعداد مجاز زنگ در هر روز (۵ زنگ) تکمیل شده است.', 'error');
         return;
     }
 
