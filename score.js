@@ -17,7 +17,7 @@ let scoreCalendarState = {
 };
 
 const scoreJalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
-const scoreLeapYears = [1408]; // برای محاسبه دقیق اسفند
+const scoreLeapYears = [1408]; 
 
 function initScoreEvents() {
     document.getElementById('recordItem').addEventListener('change', (e) => {
@@ -99,11 +99,10 @@ function initScoreCalendars() {
     const [startYearStr, endYearStr] = window.activeAcademicYear.split('-');
     const startYear = parseInt(startYearStr);
     
-    // مقداردهی اولیه برای هر ۴ بخش اگر قبلاً تنظیم نشده است
     ['record', 'quran', 'special', 'handwriting'].forEach(type => {
         if (!scoreCalendarState[type].year || scoreCalendarState[type].year < startYear) {
             scoreCalendarState[type].year = startYear;
-            scoreCalendarState[type].month = 7; // پیش‌فرض مهرماه
+            scoreCalendarState[type].month = 7; 
         }
         renderScoreCalendar(type);
     });
@@ -132,7 +131,6 @@ function changeScoreCalendarMonth(type, delta) {
     if (state.month < 1) { state.month = 12; state.year--; } 
     else if (state.month > 12) { state.month = 1; state.year++; }
 
-    // بررسی مجدد محدوده
     if (state.year < startYear || state.year > endYear) {
         showToast('این ماه خارج از بازه سال تحصیلی است.', 'error');
         state.year = parseInt(document.getElementById(`${type}-calendar-title`).dataset.year);
@@ -146,7 +144,6 @@ function changeScoreCalendarMonth(type, delta) {
 function renderScoreCalendar(type) {
     const state = scoreCalendarState[type];
     
-    // تنظیم عنوان
     const titleEl = document.getElementById(`${type}-calendar-title`);
     if (!titleEl) return;
     
@@ -176,7 +173,6 @@ function renderScoreCalendar(type) {
         grid.innerHTML += `<div class="calendar-day empty"></div>`;
     }
 
-    // فیلتر کردن رکوردها بر اساس نوع بخش برای نمایش در تقویم
     const relevantRecords = window.allRecordsData.filter(rec => {
         if (type === 'quran') return rec.itemName === "پویش حفظ جزء سی قرآن کریم";
         if (type === 'special') return rec.itemName === "تشویق ویژه";
@@ -196,7 +192,7 @@ function renderScoreCalendar(type) {
         if (isFriday) classes += ' holiday';
         if (state.selectedDate === dateStr) classes += ' selected';
         if (hasRecord) classes += ' has-record';
-        if (!inAcademicYear) classes += ' outside-range'; // از استایل تب جلسه استفاده می‌کند
+        if (!inAcademicYear) classes += ' outside-range'; 
 
         const clickHandler = inAcademicYear ? `onclick="selectScoreCalendarDay('${type}', '${dateStr}')"` : `onclick="showToast('این تاریخ خارج از بازه سال تحصیلی است.', 'error')"`;
 
@@ -212,22 +208,17 @@ function updateScoreCalendarSelect(type, field, value) {
 function selectScoreCalendarDay(type, dateStr) {
     scoreCalendarState[type].selectedDate = dateStr;
     
-    // آپدیت متن نمایشی
     const displayEl = document.getElementById(`${type}DateDisplay`);
     if (displayEl) displayEl.textContent = dateStr;
 
-    // آپدیت فیلد مخفی
     const hiddenInputId = type === 'record' ? 'recordDate' : `${type}DateHidden`;
     const hiddenInput = document.getElementById(hiddenInputId);
     if (hiddenInput) hiddenInput.value = dateStr;
 
-    // رندر مجدد تقویم برای اعمال کلاس selected
     renderScoreCalendar(type);
 
-    // نمایش بایگانی روز
     renderScoreDayArchive(type, dateStr);
     
-    // بستن آکاردئون پس از انتخاب تاریخ
     const accordion = document.getElementById(`${type}-date-accordion`);
     if (accordion) accordion.removeAttribute('open');
 }
@@ -237,7 +228,6 @@ function renderScoreDayArchive(type, dateStr) {
     const archiveList = document.getElementById(`${type}-day-archive-list`);
     if (!archiveContainer || !archiveList) return;
 
-    // فیلتر کردن رکوردهای آن روز
     const dayRecords = window.allRecordsData.filter(rec => {
         if (rec.date !== dateStr) return false;
         if (type === 'quran') return rec.itemName === "پویش حفظ جزء سی قرآن کریم";
@@ -556,7 +546,6 @@ async function confirmAndSaveRecord() {
             const scoreInput = document.getElementById('dynamicLevelInput') || document.getElementById('dynamicCountInput') || document.getElementById('dynamicFreeInput');
             if (scoreInput) scoreInput.value = '';
             document.getElementById('record-form').scrollIntoView({ behavior: 'smooth' });
-            // تاریخ و آیتم برای ثبت نفر بعدی تغییر نمی‌کند
             loadAllData(); 
         } else {
             document.getElementById('record-form').reset(); 
@@ -921,24 +910,30 @@ async function loadQuranRewards() {
 }
 
 // ==========================================
-// 14. خروجی اکسل سوابق ارزشیابی
+// 14. خروجی اکسل سوابق ارزشیابی (اصلاح شده)
 // ==========================================
 async function exportScoreCSV() {
     try {
-        let csvContent = "ردیف,عنوان,درس,آیتم,تاریخ,امتیاز,ارفاق\n";
+        let csvContent = "ردیف,عنوان,درس,آیتم,تاریخ,امتیاز,ارفاق\r\n";
         const sorted = [...window.allRecordsData].sort((a, b) => b.date.localeCompare(a.date));
         
         sorted.forEach((rec, i) => {
             const s = window.allSubjectsData.find(x => x.id === rec.subjectId); 
             const sn = s ? s.name : 'بدون درس';
-            csvContent += `${i + 1},"${rec.title}","${sn}","${rec.itemName}","${rec.date}",${rec.finalScore},"${rec.arf ? 'دارد' : 'ندارد'}"\n`;
+            csvContent += `${i + 1},"${rec.title}","${sn}","${rec.itemName}","${rec.date}",${rec.finalScore},"${rec.arf ? 'دارد' : 'ندارد'}"\r\n`;
         });
 
         const BOM = "\uFEFF";
-        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([BOM, csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = `kosha_records_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+        const a = document.createElement('a'); 
+        a.href = url; 
+        a.download = `kosha_records_${new Date().toISOString().slice(0,10)}.csv`; 
+        a.click();
         URL.revokeObjectURL(url);
         showToast('فایل اکسل سوابق دانلود شد!', 'success');
-    } catch (e) { console.error(e); showToast('خطا در تولید فایل اکسل.', 'error'); }
+    } catch (e) { 
+        console.error(e); 
+        showToast('خطا در تولید فایل اکسل.', 'error'); 
+    }
 }
