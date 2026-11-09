@@ -255,16 +255,16 @@ function exportScheduleCSV() {
         for (let i = 1; i <= maxPeriodToShow; i++) {
             csvContent += `,زنگ ${i}`;
         }
-        csvContent += "\r\n"; // استفاده از استاندارد اکسل
+        csvContent += "\r\n"; 
 
         matrix.forEach(row => {
-            // قرار دادن مقادیر در دابل کوتیشن برای جلوگیری از به هم ریختگی
             const rowData = row.map(cell => `"${cell}"`).join(',');
             csvContent += rowData + "\r\n";
         });
 
-        const BOM = "\uFEFF"; // کاراکتر استاندارد UTF-8 برای اکسل
-        const blob = new Blob([BOM, csvContent], { type: 'text/csv;charset=utf-8;' }); 
+        // رفع مشکل اکسل: استفاده از Uint8Array برای قرار دادن بایت‌های دقیق BOM
+        const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+        const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' }); 
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); 
         a.href = url; 
@@ -927,8 +927,9 @@ async function exportSessionCSV() {
             csvContent += `${i + 1},"${st.firstName}","${st.lastName}",${p},${a},${l}\r\n`;
         });
 
-        const BOM = "\uFEFF";
-        const blob = new Blob([BOM, csvContent], { type: 'text/csv;charset=utf-8;' });
+        // رفع مشکل اکسل
+        const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+        const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url; a.download = `kosha_attendance_${new Date().toISOString().slice(0,10)}.csv`; a.click();
         URL.revokeObjectURL(url);
