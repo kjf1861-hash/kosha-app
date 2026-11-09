@@ -84,6 +84,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .app-header h1 { margin: 0; font-size: 1.9rem; position: relative; z-index: 1; letter-spacing: -0.5px; }
 .app-header p { margin: 6px 0 0 0; font-size: 1rem; opacity: 0.9; position: relative; z-index: 1; }
 
+/* دکمه تغییر تم (سمت چپ) */
 .theme-toggle {
     position: absolute; top: 15px; left: 15px; z-index: 10;
     background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3);
@@ -95,7 +96,55 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .theme-toggle:active { transform: scale(0.9); }
 .theme-toggle:hover { background: rgba(255, 255, 255, 0.3); }
 
+/* دکمه تنظیمات (سمت راست) */
+.settings-toggle {
+    position: absolute; top: 15px; right: 15px; z-index: 10;
+    background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white; width: 42px; height: 42px; border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 1.3rem; cursor: pointer; transition: all 0.2s;
+    backdrop-filter: blur(4px);
+}
+.settings-toggle:active { transform: scale(0.9); }
+.settings-toggle:hover { background: rgba(255, 255, 255, 0.3); }
+
 .container { padding: 0 16px 100px 16px; max-width: 600px; margin: 0 auto; width: 100%; }
+
+.page-header-title {
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: var(--primary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* =========================================
+   کارت‌های آمار (داشبورد تب کلاس)
+   ========================================= */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+.dashboard-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-radius: var(--radius-md);
+    padding: 20px 15px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s;
+}
+.dashboard-card:active { transform: scale(0.98); }
+.dc-icon { font-size: 2rem; margin-bottom: 5px; }
+.dc-value { font-size: 1.8rem; font-weight: bold; color: var(--primary); }
+.dc-label { font-size: 0.9rem; color: var(--text-muted); }
 
 .card {
     background: var(--card-bg);
@@ -173,6 +222,26 @@ select.form-control {
 .btn-sm { padding: 6px 12px; font-size: 0.85rem; border-radius: 8px; }
 .mt-4 { margin-top: 12px; }
 
+/* =========================================
+   منوی پایین (۷ تب - فقط ایموجی)
+   ========================================= */
+.bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--nav-bg); backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px); display: flex; justify-content: space-around;
+    padding: 10px 0 15px 0; box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+    z-index: 100; border-top: 1px solid var(--border-color);
+    transition: background 0.3s ease;
+}
+.nav-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--text-muted);
+    padding: 8px 0; text-decoration: none; border-radius: var(--radius-sm);
+    flex: 1; transition: all 0.2s ease; position: relative;
+}
+.nav-item .icon { font-size: 1.7rem; transition: transform 0.2s ease; display: inline-block; }
+.nav-item.active .icon { transform: translateY(-5px) scale(1.15); }
+.nav-item.active::before { content: ''; position: absolute; top: 0; width: 30px; height: 3px; background: var(--primary); border-radius: 0 0 4px 4px; }
 .checkbox-group {
     display: flex; align-items: center; gap: 10px;
     padding: 12px; background: var(--arf-bg);
@@ -209,25 +278,6 @@ select.form-control {
 .arf-badge { background-color: var(--arf-bg); border-right: 4px solid var(--arf-border); padding: 8px 12px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 8px; font-weight: bold; color: var(--arf-border); margin-top: 8px; }
 .rank-badge { display: inline-flex; align-items: center; background: var(--primary-light); color: var(--text-main); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; white-space: nowrap; }
 .top-student-row { background: linear-gradient(90deg, var(--arf-bg) 0%, rgba(245, 158, 11, 0.3) 100%) !important; border-right: 4px solid var(--arf-border) !important; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15); }
-
-.bottom-nav {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--nav-bg); backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px); display: flex; justify-content: space-around;
-    padding: 8px 0 12px 0; box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
-    z-index: 100; border-top: 1px solid var(--border-color);
-    transition: background 0.3s ease;
-}
-.nav-item {
-    display: flex; flex-direction: column; align-items: center;
-    color: var(--text-muted); font-size: 0.65rem; gap: 4px;
-    padding: 6px 4px; text-decoration: none; border-radius: var(--radius-sm);
-    flex: 1; transition: all 0.2s ease; position: relative;
-}
-.nav-item .icon { font-size: 1.3rem; transition: transform 0.2s ease; }
-.nav-item.active { color: var(--primary); font-weight: bold; }
-.nav-item.active .icon { transform: translateY(-3px) scale(1.15); }
-.nav-item.active::before { content: ''; position: absolute; top: 0; width: 30px; height: 3px; background: var(--primary); border-radius: 0 0 4px 4px; }
 
 .modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -554,8 +604,9 @@ details.group-accordion[open] summary::after {
 .level-row-input input {
     flex: 1;
 }
+
 /* =========================================
-   استایل‌های جدید برای مدال‌ها و برنامه هفتگی
+   استایل‌های برنامه هفتگی و جدول‌ها
    ========================================= */
 .medal-badge {
     font-size: 1.2rem;
@@ -628,7 +679,7 @@ details.group-accordion[open] summary::after {
 }
 
 /* =========================================
-   استایل‌های تقویم شمسی (جدید)
+   استایل‌های تقویم شمسی
    ========================================= */
 .jalali-calendar-wrapper {
     background: var(--card-bg);
@@ -726,19 +777,8 @@ details.group-accordion[open] summary::after {
 .calendar-day:hover { background: var(--primary-light); }
 .calendar-day.empty { background: transparent; cursor: default; border: none; pointer-events: none; }
 .calendar-day.today { border-color: var(--primary); }
-
-/* روزهای تعطیل (رنگ قرمز) */
-.calendar-day.friday, .calendar-day.holiday { 
-    color: #ef4444; 
-}
-
-/* روزهای دارای جلسه (رنگ سبز) */
-.calendar-day.has-session { 
-    color: #16a34a; 
-    border: 1px dashed #16a34a;
-}
-
-/* استایل روز انتخاب شده (باید بر همه اولویت داشته باشد) */
+.calendar-day.friday, .calendar-day.holiday { color: #ef4444; }
+.calendar-day.has-session { color: #16a34a; border: 1px dashed #16a34a; }
 .calendar-day.selected { 
     background: var(--primary); 
     color: white !important; 
@@ -746,9 +786,7 @@ details.group-accordion[open] summary::after {
     box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4); 
     transform: scale(1.05); 
 }
-.calendar-day.selected.has-session {
-    border: 1px solid white;
-}
+.calendar-day.selected.has-session { border: 1px solid white; }
 
 .selected-date-display {
     text-align: center;
@@ -762,7 +800,7 @@ details.group-accordion[open] summary::after {
 }
 
 /* =========================================
-   استایل‌های جدید: آکاردئون تقویم و بایگانی در تب امتیاز
+   استایل‌های آکاردئون تقویم و بایگانی در تب امتیاز
    ========================================= */
 .score-calendar-accordion {
     border: 1px solid var(--border-color);
@@ -814,7 +852,6 @@ details.group-accordion[open] summary::after {
     margin-bottom: 10px;
 }
 
-/* روزهای دارای سابقه در تب امتیاز */
 .calendar-day.has-record {
     color: #16a34a;
     border: 1px solid #16a34a;
@@ -826,7 +863,6 @@ details.group-accordion[open] summary::after {
     background: rgba(74, 222, 128, 0.1);
 }
 
-/* لیست بایگانی روز در تب امتیاز */
 .score-day-archive {
     padding: 12px 15px;
     background: var(--primary-light);
