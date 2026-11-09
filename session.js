@@ -7,6 +7,9 @@ let currentSessionDay = null;
 let currentSessionAttendanceState = {};
 let currentAttReportFilter = 'class';
 
+// متغیر حالت برنامه هفتگی
+let currentScheduleMode = 'view'; // 'view' or 'edit'
+
 const jalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
 const leapYears = [1408];
 
@@ -25,21 +28,344 @@ let selectedSessionDate = "";
 let selectedSessionDayOfWeek = "";
 
 function initSessionEvents() {
-    document.getElementById('scheduleDaySelect').addEventListener('change', renderScheduleForDay);
+    // رویدادهای قدیمی حذف شده‌اند
 }
 
 async function renderSessionData() {
-    renderScheduleForDay();
     initCalendar(); 
+    toggleScheduleMode('view'); // پیش‌فرض روی نمای مشاهده
     generateAttendanceReports();
 }
 
 // ==========================================
-// توابع تقویم شمسی
+// 1. برنامه هفتگی جدید (جدول و ویرایش)
 // ==========================================
-function isLeapYear(year) {
-    return leapYears.includes(year);
+function toggleScheduleMode(mode) {
+    currentScheduleMode = mode;
+    const viewBtn = document.getElementById('btnScheduleViewMode');
+    const editBtn = document.getElementById('btnScheduleEditMode');
+    const viewContainer = document.getElementById('schedule-view-mode');
+    const editContainer = document.getElementById('schedule-edit-mode');
+
+    if (mode === 'view') {
+        if(viewBtn) viewBtn.classList.add('active');
+        if(editBtn) editBtn.classList.remove('active');
+        if(viewContainer) viewContainer.style.display = 'block';
+        if(editContainer) editContainer.style.display = 'none';
+        renderScheduleView();
+    } else {
+        if(viewBtn) viewBtn.classList.remove('active');
+        if(editBtn) editBtn.classList.add('active');
+        if(viewContainer) viewContainer.style.display = 'none';
+        if(editContainer) editContainer.style.display = 'block';
+        renderScheduleEdit();
+    }
 }
+
+function renderScheduleView() {
+    const table = document.getElementById('schedule-display-table');
+    if (!table) return;
+
+    const days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+    const activeDays = days.slice(0, window.scheduleDaysCount);
+    const periodsCount = window.schedulePeriodsCount;
+
+    // ساخت هدر
+    let html = `<thead><tr><th>روز / زنگ</th>`;
+    for (let i = 1; i <= periodsCount; i++) {
+        html += `<th>زنگ ${i}</th>`;
+    }
+    html += `</tr></thead><tbody>`;
+
+    // ساخت بدنه
+    activeDays.forEach(day => {
+        const daySchedule = window.allWeeklyScheduleData.find(s => s.day === day);
+        const periods = daySchedule ? daySchedule.periods : [];
+
+        html += `<tr><th>${day}</th>`;
+        for (let i = 0; i < periodsCount; i++) {
+            const subId = periods[i];
+            if (subId) {
+                const sub = window.allSubjectsData.find(s => s.id === subId);
+                if (sub) {
+                    html += `<td>${sub.symbol || ''} ${sub.name}</td>`;
+                } else {
+                    html += `<td class="empty-cell">-</td>`;
+                }
+            } else {
+                html += `<td class="empty-cell">-</td>`;
+            }
+        }
+        html += `</tr>`;
+    });
+
+    html += `</tbody>`;
+    table.innerHTML = html;
+}
+
+function renderScheduleEdit() {
+    const container = document.getElementById('schedule-edit-container');
+    if (!container) return;
+
+    const days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+    const activeDays = days.slice(0, window.scheduleDaysCount);
+    const periodsCount = window.schedulePeriodsCount;
+
+    container.innerHTML = '';
+
+    activeDays.forEach(day => {
+        const daySchedule = window.allWeeklyScheduleData.find(s => s.day === day);
+        const periods = daySchedule ? daySchedule.periods : [];
+
+        let html = `
+            <details class="schedule-edit-accordion">
+                <summary>${day}</summary>
+                <div class="schedule-edit-content">
+        `;
+
+        for (let i = 0; i < periodsCount; i++) {
+            const currentSubId = periods[i] || '';
+            html += `
+                <div class="schedule-period-row">
+                    <span>زنگ ${i + 1}:</span>
+                    <select class="schedule-subject-select" data-day="${day}" data-period="${i}">
+                        <option value="">-- خالی --</option>
+                        ${window.allSubjectsData.map(s => `<option value="${s.id}" ${s.id == currentSubId ? 'selected' : ''}>${s.symbol || ''} ${s.name}</option>`).join('')}
+                    </select>
+                </div>
+            `;
+        }
+
+        html += `</div></details>`;
+        container.innerHTML += html;
+    });
+}
+
+async function saveAllWeeklySchedules() {
+    const selects = document.querySelectorAll('.schedule-subject-select');
+    
+    // ساختار داده جدید: { day: 'شنبه', periods: [...] }
+    const newSchedule = {};
+
+    selects.forEach(sel => {
+        const day = sel.getAttribute('data-day');
+        const periodIndex = parseInt(sel.getAttribute('data-period'));
+        const subId = sel.value ? parseInt(sel.value) : null;
+
+        if (!newSchedule[day]) {
+            newSchedule[day] = [];
+        }
+        newSchedule[day][periodIndex] = subId;
+    });
+
+    try {
+        // پاک کردن برنامه‌های قبلی و ذخیره جدید
+        await clearStore('weeklySchedule');
+        
+        for (const day in newSchedule) {
+            await saveData('weeklySchedule', { day: day, periods: newSchedule[day] });
+        }
+
+        showToast('برنامه هفتگی با موفقیت ذخیره شد!', 'success');
+        await loadAllData(); // بارگذاری مجدد داده‌ها
+        toggleScheduleMode('view'); // برگشت به حالت مشاهده
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در ذخیره برنامه هفتگی!', 'error');
+    }
+}
+
+async function resetAllWeeklySchedules() {
+    if (window.allWeeklyScheduleData.length === 0) {
+        showToast('هیچ برنامه هفتگی برای حذف وجود ندارد.', 'error');
+        return;
+    }
+
+    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید کل برنامه هفتگی را حذف کنید؟');
+    if (!confirm1) return;
+
+    const confirm2 = confirm('🚨 آخرین هشدار!\n\nاین عمل غیرقابل بازگشت است. آیا ۱۰۰٪ مطمئن هستید؟');
+    if (!confirm2) return;
+
+    try {
+        await clearStore('weeklySchedule');
+        showToast('کل برنامه هفتگی با موفقیت حذف شد.', 'success');
+        loadAllData();
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در حذف برنامه هفتگی!', 'error');
+    }
+}
+
+// ------------------------------------------
+// خروجی‌های برنامه هفتگی (اکسل، HTML، چاپ)
+// ------------------------------------------
+function getScheduleDataMatrix() {
+    const days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+    const activeDays = days.slice(0, window.scheduleDaysCount);
+    const periodsCount = window.schedulePeriodsCount;
+    const matrix = [];
+
+    activeDays.forEach(day => {
+        const daySchedule = window.allWeeklyScheduleData.find(s => s.day === day);
+        const periods = daySchedule ? daySchedule.periods : [];
+        const row = [day];
+        for (let i = 0; i < periodsCount; i++) {
+            const subId = periods[i];
+            if (subId) {
+                const sub = window.allSubjectsData.find(s => s.id === subId);
+                row.push(sub ? `${sub.symbol || ''} ${sub.name}` : '-');
+            } else {
+                row.push('-');
+            }
+        }
+        matrix.push(row);
+    });
+    return matrix;
+}
+
+function exportScheduleCSV() {
+    try {
+        const matrix = getScheduleDataMatrix();
+        let csvContent = "روز / زنگ";
+        for (let i = 1; i <= window.schedulePeriodsCount; i++) {
+            csvContent += `,زنگ ${i}`;
+        }
+        csvContent += "\n";
+
+        matrix.forEach(row => {
+            csvContent += row.join(',') + "\n";
+        });
+
+        const BOM = "\uFEFF";
+        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); 
+        a.href = url; 
+        a.download = `kosha_schedule_${new Date().toISOString().slice(0,10)}.csv`; 
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('خروجی اکسل دانلود شد!', 'success');
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در تولید فایل اکسل.', 'error');
+    }
+}
+
+function exportScheduleHTML() {
+    try {
+        const matrix = getScheduleDataMatrix();
+        
+        let html = `
+        <!DOCTYPE html>
+        <html lang="fa" dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <title>برنامه هفتگی</title>
+            <style>
+                body { font-family: Tahoma, sans-serif; background-color: #f0f4f8; display: flex; justify-content: center; padding: 20px; }
+                .container { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 900px; overflow-x: auto; }
+                h1 { text-align: center; color: #2c3e50; margin-bottom: 25px; }
+                table { width: 100%; border-collapse: collapse; min-width: 600px; }
+                th, td { border: 2px solid #e2e8f0; padding: 12px 8px; text-align: center; vertical-align: middle; height: 50px; }
+                thead th { background-color: #4a90e2; color: white; border-bottom: 4px solid #357abd; }
+                tbody th { background-color: #f39c12; color: white; border-left: 4px solid #d68910; width: 100px; }
+                td { background-color: #f8fafc; font-size: 14px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>📚 برنامه هفتگی کلاس 📚</h1>
+                <table>
+                    <thead><tr><th>روز / زنگ</th>`;
+        for (let i = 1; i <= window.schedulePeriodsCount; i++) {
+            html += `<th>زنگ ${i}</th>`;
+        }
+        html += `</tr></thead><tbody>`;
+        
+        matrix.forEach(row => {
+            html += `<tr>`;
+            row.forEach((cell, idx) => {
+                if (idx === 0) html += `<th>${cell}</th>`;
+                else html += `<td>${cell}</td>`;
+            });
+            html += `</tr>`;
+        });
+        
+        html += `</tbody></table></div></body></html>`;
+
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); 
+        a.href = url; 
+        a.download = `kosha_schedule_${new Date().toISOString().slice(0,10)}.html`; 
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('خروجی HTML دانلود شد!', 'success');
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در تولید فایل HTML.', 'error');
+    }
+}
+
+function printSchedule() {
+    try {
+        const matrix = getScheduleDataMatrix();
+        
+        let html = `
+        <!DOCTYPE html>
+        <html lang="fa" dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <title>چاپ برنامه هفتگی</title>
+            <style>
+                body { font-family: Tahoma, sans-serif; padding: 20px; }
+                h1 { text-align: center; color: #2c3e50; margin-bottom: 25px; }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { border: 2px solid #333; padding: 12px 8px; text-align: center; vertical-align: middle; height: 50px; }
+                thead th { background-color: #ddd; color: #000; border-bottom: 3px solid #333; }
+                tbody th { background-color: #eee; color: #000; border-left: 3px solid #333; width: 100px; }
+                td { font-size: 14px; }
+            </style>
+        </head>
+        <body>
+            <h1>📚 برنامه هفتگی 📚</h1>
+            <table>
+                <thead><tr><th>روز / زنگ</th>`;
+        for (let i = 1; i <= window.schedulePeriodsCount; i++) {
+            html += `<th>زنگ ${i}</th>`;
+        }
+        html += `</tr></thead><tbody>`;
+        
+        matrix.forEach(row => {
+            html += `<tr>`;
+            row.forEach((cell, idx) => {
+                if (idx === 0) html += `<th>${cell}</th>`;
+                else html += `<td>${cell}</td>`;
+            });
+            html += `</tr>`;
+        });
+        
+        html += `</tbody></table></body></html>`;
+
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+            printWindow.print();
+        }, 500);
+        
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در آماده‌سازی برای چاپ.', 'error');
+    }
+}
+
+// ==========================================
+// 2. توابع تقویم شمسی
+// ==========================================
+function isLeapYear(year) { return leapYears.includes(year); }
 
 function getDaysInMonth(year, month) {
     if (month <= 6) return 31;
@@ -63,7 +389,6 @@ function initCalendar() {
     const monthSelect = document.getElementById('calendarMonthSelect');
     if (!yearSelect || !monthSelect) return;
 
-    // تعیین محدوده سال تحصیلی
     const [startYearStr, endYearStr] = window.activeAcademicYear.split('-');
     const startYear = parseInt(startYearStr);
     const endYear = parseInt(endYearStr);
@@ -75,10 +400,9 @@ function initCalendar() {
     currentCalendarYear = savedYear ? parseInt(savedYear) : startYear;
     currentCalendarMonth = savedMonth ? parseInt(savedMonth) : 1;
 
-    // اگر سال ذخیره شده خارج از محدوده مجاز بود، آن را به سال شروع تغییر بده
     if (!allowedYears.includes(currentCalendarYear)) {
         currentCalendarYear = startYear;
-        currentCalendarMonth = 7; // پیش‌فرض مهرماه
+        currentCalendarMonth = 7;
         localStorage.setItem('kosha-calendar-year', currentCalendarYear);
         localStorage.setItem('kosha-calendar-month', currentCalendarMonth);
     }
@@ -106,7 +430,6 @@ function renderCalendarGrid() {
     const firstDay = getFirstDayOfWeek(currentCalendarYear, currentCalendarMonth);
     const daysInMonth = getDaysInMonth(currentCalendarYear, currentCalendarMonth);
     
-    // تعیین محدوده سال تحصیلی
     const [startYear, endYear] = window.activeAcademicYear.split('-');
     const startBound = `${startYear}/07/01`;
     const endBound = `${endYear}/06/31`;
@@ -121,8 +444,6 @@ function renderCalendarGrid() {
         
         const isHoliday = officialHolidays[currentCalendarYear]?.includes(dateStr) || false;
         const hasSession = window.allSessionsData.some(s => s.date === dateStr);
-        
-        // بررسی اینکه آیا روز در محدوده سال تحصیلی است یا خیر
         const inAcademicYear = (dateStr >= startBound && dateStr <= endBound);
 
         let classes = 'calendar-day';
@@ -171,10 +492,8 @@ function changeCalendarMonth(delta) {
         }
     }
 
-    // بررسی مجدد محدوده (برای حالت delta === 0 که از منوی کشویی می‌آید)
     if (currentCalendarYear < startYear || currentCalendarYear > endYear) {
         showToast('این ماه خارج از بازه سال تحصیلی است.', 'error');
-        // برگرداندن به حالت قبلی
         currentCalendarYear = parseInt(document.getElementById('calendarYearSelect').value);
         currentCalendarMonth = parseInt(document.getElementById('calendarMonthSelect').value);
         return;
@@ -224,7 +543,7 @@ function selectCalendarDay(day, dateStr) {
                 </div>
             `;
         } else {
-            const hasSchedule = window.allWeeklyScheduleData.some(s => s.day === selectedSessionDayOfWeek && s.periods.some(p => p !== null));
+            const hasSchedule = window.allWeeklyScheduleData.some(s => s.day === selectedSessionDayOfWeek && s.periods && s.periods.some(p => p !== null && p !== undefined));
             
             if (isHoliday) {
                  detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong> (تعطیل)<br><span style="font-size:0.85rem; color:#dc2626;">⚠️ امکان ثبت جلسه در روزهای تعطیل وجود ندارد.</span>`;
@@ -243,93 +562,7 @@ function selectCalendarDay(day, dateStr) {
 }
 
 // ==========================================
-// 1. برنامه هفتگی
-// ==========================================
-async function renderScheduleForDay() {
-    const day = document.getElementById('scheduleDaySelect').value;
-    const container = document.getElementById('weekly-schedule-container');
-    if (!container) return;
-
-    const schedules = await getAllData('weeklySchedule');
-    let schedule = schedules.find(s => s.day === day);
-
-    let periods = schedule ? schedule.periods : [null, null, null, null, null];
-    if (periods.length < 5) periods = [...periods, ...Array(5 - periods.length).fill(null)];
-
-    container.innerHTML = '';
-    periods.forEach((subjectId, index) => {
-        container.innerHTML += `
-            <div class="weekly-schedule-row">
-                <span>زنگ ${index + 1}:</span>
-                <select class="schedule-period-select" data-index="${index}">
-                    <option value="">-- خالی --</option>
-                    ${window.allSubjectsData.map(s => `<option value="${s.id}" ${subjectId === s.id ? 'selected' : ''}>${s.symbol || ''} ${s.name}</option>`).join('')}
-                </select>
-                <button type="button" class="remove-period-btn" onclick="this.parentElement.remove()">✖</button>
-            </div>
-        `;
-    });
-}
-
-async function addSchedulePeriod() {
-    const container = document.getElementById('weekly-schedule-container');
-    const currentCount = container.querySelectorAll('.schedule-period-select').length;
-    
-    if (currentCount >= 5) {
-        showToast('حداکثر تعداد مجاز زنگ در هر روز (۵ زنگ) تکمیل شده است.', 'error');
-        return;
-    }
-
-    const row = document.createElement('div');
-    row.className = 'weekly-schedule-row';
-    row.innerHTML = `
-        <span>زنگ ${currentCount + 1}:</span>
-        <select class="schedule-period-select" data-index="${currentCount}">
-            <option value="">-- خالی --</option>
-            ${window.allSubjectsData.map(s => `<option value="${s.id}">${s.symbol || ''} ${s.name}</option>`).join('')}
-        </select>
-        <button type="button" class="remove-period-btn" onclick="this.parentElement.remove()">✖</button>
-    `;
-    container.appendChild(row);
-}
-
-async function saveWeeklySchedule() {
-    const day = document.getElementById('scheduleDaySelect').value;
-    const selects = document.querySelectorAll('.schedule-period-select');
-    const periods = [];
-    
-    selects.forEach(sel => {
-        periods.push(sel.value ? parseInt(sel.value) : null);
-    });
-
-    await saveData('weeklySchedule', { day: day, periods: periods });
-    showToast(`برنامه هفتگی روز ${day} ذخیره شد!`, 'success');
-}
-
-async function resetAllWeeklySchedules() {
-    if (window.allWeeklyScheduleData.length === 0) {
-        showToast('هیچ برنامه هفتگی برای حذف وجود ندارد.', 'error');
-        return;
-    }
-
-    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید کل برنامه هفتگی (برای تمام روزها) را حذف کنید؟');
-    if (!confirm1) return;
-
-    const confirm2 = confirm('🚨 آخرین هشدار!\n\nاین عمل غیرقابل بازگشت است و تمام تنظیمات برنامه هفتگی پاک می‌شوند. آیا ۱۰۰٪ مطمئن هستید؟');
-    if (!confirm2) return;
-
-    try {
-        await clearStore('weeklySchedule');
-        showToast('کل برنامه هفتگی با موفقیت حذف شد.', 'success');
-        loadAllData();
-    } catch (e) {
-        console.error(e);
-        showToast('خطا در حذف برنامه هفتگی!', 'error');
-    }
-}
-
-// ==========================================
-// 2. ثبت جلسه
+// 3. ثبت جلسه
 // ==========================================
 async function createNewSession() {
     if (!selectedSessionDate) {
@@ -348,7 +581,7 @@ async function createNewSession() {
         return;
     }
 
-    const hasSchedule = window.allWeeklyScheduleData.some(s => s.day === selectedSessionDayOfWeek && s.periods.some(p => p !== null));
+    const hasSchedule = window.allWeeklyScheduleData.some(s => s.day === selectedSessionDayOfWeek && s.periods && s.periods.some(p => p !== null && p !== undefined));
     if (!hasSchedule) {
         showToast(`برای روز ${selectedSessionDayOfWeek} برنامه‌ای تعریف نشده است. لطفاً ابتدا برنامه هفتگی را تنظیم کنید.`, 'error');
         return;
@@ -442,7 +675,7 @@ async function resetAllSessions() {
 }
 
 // ==========================================
-// 3. مشاهده جزئیات جلسه و ثبت حضور و غیاب زنگ‌ها
+// 4. مشاهده جزئیات جلسه و ثبت حضور و غیاب زنگ‌ها
 // ==========================================
 async function openSessionDetails(sessionId) {
     const session = window.allSessionsData.find(s => s.id === sessionId);
@@ -459,7 +692,7 @@ async function openSessionDetails(sessionId) {
     const schedules = await getAllData('weeklySchedule');
     const schedule = schedules.find(s => s.day === session.dayOfWeek);
     
-    if (!schedule || !schedule.periods.some(p => p !== null)) {
+    if (!schedule || !schedule.periods || !schedule.periods.some(p => p !== null && p !== undefined)) {
         document.getElementById('session-details-content').innerHTML = '<p style="text-align:center; color:red;">برنامه‌ای برای این روز تعریف نشده است.</p>';
         return;
     }
@@ -467,7 +700,7 @@ async function openSessionDetails(sessionId) {
     const existingAtt = window.allAttendanceData.filter(a => a.sessionId === sessionId);
     
     schedule.periods.forEach((subId, index) => {
-        if (subId === null) return;
+        if (subId === null || subId === undefined) return;
         const periodNum = index + 1;
         currentSessionAttendanceState[periodNum] = {};
         
@@ -485,7 +718,7 @@ function renderSessionDetails(schedule) {
     container.innerHTML = '';
 
     schedule.periods.forEach((subId, index) => {
-        if (subId === null) return;
+        if (subId === null || subId === undefined) return;
         
         const periodNum = index + 1;
         const subject = window.allSubjectsData.find(s => s.id === subId);
@@ -582,7 +815,7 @@ function closeSessionDetails() {
 }
 
 // ==========================================
-// 4. گزارش حضور و غیاب
+// 5. گزارش حضور و غیاب
 // ==========================================
 function changeAttReportFilter(filter, btn) {
     currentAttReportFilter = filter;
