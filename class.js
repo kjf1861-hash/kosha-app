@@ -1,20 +1,26 @@
 // ==========================================
-// فایل class.js — منطق تب کلاس (داشبورد و تنظیمات)
+// فایل class.js — منطق تب کلاس (داشبورد) و تنظیمات
 // ==========================================
 
 async function saveClassProfile(e) {
     e.preventDefault();
     
-    // دریافت و اعتبارسنجی تعداد روزها و زنگ‌ها
-    const daysInput = document.getElementById('scheduleDaysCount');
+    // دریافت روزهای انتخاب شده از چک‌باکس‌ها
+    const checkedBoxes = document.querySelectorAll('.schedule-day-checkbox:checked');
+    const selectedDays = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    if (selectedDays.length === 0) {
+        showToast('حداقل یک روز را برای برنامه هفتگی انتخاب کنید.', 'error');
+        return;
+    }
+
+    // مرتب‌سازی روزها بر اساس ترتیب هفته
+    const weekOrder = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+    selectedDays.sort((a, b) => weekOrder.indexOf(a) - weekOrder.indexOf(b));
+
+    // دریافت و اعتبارسنجی تعداد زنگ‌ها
     const periodsInput = document.getElementById('schedulePeriodsCount');
-    
-    let daysCount = daysInput ? parseInt(daysInput.value) : 6;
     let periodsCount = periodsInput ? parseInt(periodsInput.value) : 5;
-    
-    if (isNaN(daysCount) || daysCount < 1) daysCount = 6;
-    if (daysCount > 7) daysCount = 7;
-    
     if (isNaN(periodsCount) || periodsCount < 1) periodsCount = 5;
     if (periodsCount > 6) periodsCount = 6;
 
@@ -27,14 +33,14 @@ async function saveClassProfile(e) {
         teacherName: document.getElementById('teacherName').value,
         schoolName: document.getElementById('schoolName').value,
         academicYear: document.getElementById('academicYear').value,
-        scheduleDaysCount: daysCount,
+        scheduleActiveDays: selectedDays,
         schedulePeriodsCount: periodsCount
     };
     
     await saveData('classProfile', data);
     
     // بروزرسانی متغیرهای سراسری
-    window.scheduleDaysCount = daysCount;
+    window.scheduleActiveDays = selectedDays;
     window.schedulePeriodsCount = periodsCount;
 
     showToast('مشخصات کلاس ذخیره شد!', 'success');
@@ -45,17 +51,36 @@ async function saveClassProfile(e) {
     loadAllData();
 }
 
+// تابع پر کردن چک‌باکس‌های روزهای هفته در تنظیمات
+function populateScheduleDaysCheckboxes() {
+    const container = document.getElementById('schedule-days-checkboxes');
+    if (!container) return;
+
+    const weekDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+    
+    container.innerHTML = '';
+    weekDays.forEach(day => {
+        const isChecked = window.scheduleActiveDays.includes(day) ? 'checked' : '';
+        const label = document.createElement('label');
+        label.className = 'day-checkbox-label';
+        label.innerHTML = `
+            <input type="checkbox" class="schedule-day-checkbox" value="${day}" ${isChecked}>
+            <span>${day}</span>
+        `;
+        container.appendChild(label);
+    });
+}
+
 // ==========================================
 // منطق داشبورد کلاس (تب اول)
 // ==========================================
 function renderDashboardData() {
-    // 1. آمار سریع (کارت‌های بالا)
+    // 1. آمار سریع
     document.getElementById('stat-students').textContent = window.allStudentsData.length;
     document.getElementById('stat-subjects').textContent = window.allSubjectsData.length;
     document.getElementById('stat-sessions').textContent = window.allSessionsData.length;
     document.getElementById('stat-records').textContent = window.allRecordsData.length;
 
-    // محاسبه امتیاز کل دانش‌آموزان
     const studentScores = window.allStudentsData.map(st => {
         let total = 0;
         window.allRecordsData.forEach(rec => {
@@ -64,13 +89,13 @@ function renderDashboardData() {
         return { ...st, totalScore: total };
     });
 
-    // 2. کارت‌های فعالیت (اسکرول افقی)
+    // 2. کارت‌های فعالیت
     renderActivityCards();
 
-    // 3. نمودار حضور و غیاب (دونات)
+    // 3. نمودار حضور و غیاب
     renderAttendanceChart();
 
-    // 4. میانگین امتیازات دروس (نمودار میله‌ای افقی)
+    // 4. میانگین امتیازات دروس
     renderSubjectAveragesChart();
 
     // 5. شاگردان برتر
@@ -89,9 +114,6 @@ function renderDashboardData() {
     renderFullClassReport(studentScores);
 }
 
-// ------------------------------------------
-// بخش ۲: کارت‌های فعالیت (اسکرول افقی)
-// ------------------------------------------
 function renderActivityCards() {
     const container = document.getElementById('dashboard-activity-cards');
     if (!container) return;
@@ -136,9 +158,6 @@ function renderActivityCards() {
     `).join('');
 }
 
-// ------------------------------------------
-// بخش ۳: نمودار حضور و غیاب (دونات SVG)
-// ------------------------------------------
 function renderAttendanceChart() {
     const container = document.getElementById('dashboard-attendance-chart');
     if (!container) return;
@@ -189,9 +208,6 @@ function renderAttendanceChart() {
     `;
 }
 
-// ------------------------------------------
-// بخش ۴: میانگین امتیازات دروس (نمودار میله‌ای)
-// ------------------------------------------
 function renderSubjectAveragesChart() {
     const container = document.getElementById('dashboard-subject-averages');
     if (!container) return;
@@ -228,9 +244,6 @@ function renderSubjectAveragesChart() {
     }).join('');
 }
 
-// ------------------------------------------
-// بخش ۵: شاگردان برتر
-// ------------------------------------------
 function renderTopStudents(studentScores) {
     const container = document.getElementById('dashboard-top-students');
     if (!container) return;
@@ -264,9 +277,6 @@ function renderTopStudents(studentScores) {
     }).join('');
 }
 
-// ------------------------------------------
-// بخش ۶: گروه‌های برتر
-// ------------------------------------------
 function renderTopGroups() {
     const container = document.getElementById('dashboard-top-groups');
     if (!container) return;
@@ -310,9 +320,6 @@ function renderTopGroups() {
     `).join('');
 }
 
-// ------------------------------------------
-// بخش ۷: دانش‌آموزان نیازمند توجه
-// ------------------------------------------
 function renderNeedsAttention(studentScores) {
     const container = document.getElementById('dashboard-needs-attention');
     if (!container) return;
@@ -351,9 +358,6 @@ function renderNeedsAttention(studentScores) {
     `).join('');
 }
 
-// ------------------------------------------
-// بخش ۸: آخرین فعالیت‌ها
-// ------------------------------------------
 function renderRecentActivities() {
     const container = document.getElementById('dashboard-recent-activities');
     if (!container) return;
@@ -385,9 +389,6 @@ function renderRecentActivities() {
     }).join('');
 }
 
-// ------------------------------------------
-// بخش ۹: گزارش کامل امتیازات کلاس (لیست و نمودار)
-// ------------------------------------------
 function renderFullClassReport(studentScores) {
     const reportsList = document.getElementById('reports-list');
     if (!reportsList) return;
@@ -427,9 +428,6 @@ function renderFullClassReport(studentScores) {
     }).join('');
 }
 
-// ------------------------------------------
-// خروجی اکسل
-// ------------------------------------------
 async function exportClassCSV() {
     try {
         let csvContent = "ردیف,نام,نام خانوادگی,مجموع امتیاز\n";
@@ -465,9 +463,6 @@ async function exportClassCSV() {
     }
 }
 
-// ------------------------------------------
-// چاپ گزارش اختصاصی کلاس
-// ------------------------------------------
 function printClassReport() {
     const content = document.getElementById('report-card-content');
     if(!content) return;
