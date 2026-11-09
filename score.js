@@ -923,15 +923,20 @@ async function exportScoreCSV() {
             csvContent += `${i + 1},"${rec.title}","${sn}","${rec.itemName}","${rec.date}",${rec.finalScore},"${rec.arf ? 'دارد' : 'ندارد'}"\r\n`;
         });
 
-        // اصلاح قطعی BOM با TextEncoder
-        const encoder = new TextEncoder();
-        const csvBytes = encoder.encode(csvContent);
-        const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-        const fullBytes = new Uint8Array(bom.length + csvBytes.length);
+        // *** اصلاح قطعی برای اکسل با UTF-16LE ***
+        const bom = new Uint8Array([0xFF, 0xFE]); // BOM مخصوص UTF-16LE
+        const contentBytes = new Uint8Array(csvContent.length * 2);
+        for (let i = 0; i < csvContent.length; i++) {
+            const code = csvContent.charCodeAt(i);
+            contentBytes[i * 2] = code & 0xFF;
+            contentBytes[i * 2 + 1] = code >> 8;
+        }
+        
+        const fullBytes = new Uint8Array(bom.length + contentBytes.length);
         fullBytes.set(bom, 0);
-        fullBytes.set(csvBytes, bom.length);
+        fullBytes.set(contentBytes, bom.length);
 
-        const blob = new Blob([fullBytes], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([fullBytes], { type: 'text/csv;charset=utf-16le;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); 
         a.href = url; 
