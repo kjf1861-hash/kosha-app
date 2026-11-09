@@ -406,7 +406,8 @@ function renderFullClassReport(studentScores) {
 
 async function exportClassCSV() {
     try {
-        let csvContent = "ردیف,نام,نام خانوادگی,مجموع امتیاز\r\n";
+        // استفاده از Tab به عنوان جداکننده برای سازگاری کامل با اکسل موبایل
+        let csvContent = "ردیف\tنام\tنام خانوادگی\tمجموع امتیاز\r\n";
         const studentScores = window.allStudentsData.map(st => {
             let total = 0;
             window.allRecordsData.forEach(rec => {
@@ -421,10 +422,10 @@ async function exportClassCSV() {
         });
 
         studentScores.forEach((st, i) => {
-            csvContent += `${i + 1},"${st.firstName}","${st.lastName}",${st.totalScore}\r\n`;
+            csvContent += `${i + 1}\t"${st.firstName}"\t"${st.lastName}"\t${st.totalScore}\r\n`;
         });
 
-        // *** اصلاح قطعی برای اکسل با UTF-16LE ***
+        // *** راه‌حل قطعی: UTF-16LE با BOM و جداکننده Tab ***
         const bom = new Uint8Array([0xFF, 0xFE]); // BOM مخصوص UTF-16LE
         const contentBytes = new Uint8Array(csvContent.length * 2);
         for (let i = 0; i < csvContent.length; i++) {
@@ -437,11 +438,11 @@ async function exportClassCSV() {
         fullBytes.set(bom, 0);
         fullBytes.set(contentBytes, bom.length);
 
-        const blob = new Blob([fullBytes], { type: 'text/csv;charset=utf-16le;' });
+        const blob = new Blob([fullBytes], { type: 'application/vnd.ms-excel;charset=utf-16le;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); 
         a.href = url; 
-        a.download = `kosha_class_scores_${new Date().toISOString().slice(0,10)}.csv`; 
+        a.download = `kosha_class_scores_${new Date().toISOString().slice(0,10)}.xls`; 
         a.click();
         URL.revokeObjectURL(url);
         showToast('فایل اکسل دانلود شد!', 'success');
