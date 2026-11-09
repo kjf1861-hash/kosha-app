@@ -4,6 +4,20 @@
 
 async function saveClassProfile(e) {
     e.preventDefault();
+    
+    // دریافت و اعتبارسنجی تعداد روزها و زنگ‌ها
+    const daysInput = document.getElementById('scheduleDaysCount');
+    const periodsInput = document.getElementById('schedulePeriodsCount');
+    
+    let daysCount = daysInput ? parseInt(daysInput.value) : 6;
+    let periodsCount = periodsInput ? parseInt(periodsInput.value) : 5;
+    
+    if (isNaN(daysCount) || daysCount < 1) daysCount = 6;
+    if (daysCount > 7) daysCount = 7;
+    
+    if (isNaN(periodsCount) || periodsCount < 1) periodsCount = 5;
+    if (periodsCount > 6) periodsCount = 6;
+
     const data = {
         id: 1,
         name: document.getElementById('className').value,
@@ -12,9 +26,17 @@ async function saveClassProfile(e) {
         grade: document.getElementById('classGrade').value,
         teacherName: document.getElementById('teacherName').value,
         schoolName: document.getElementById('schoolName').value,
-        academicYear: document.getElementById('academicYear').value
+        academicYear: document.getElementById('academicYear').value,
+        scheduleDaysCount: daysCount,
+        schedulePeriodsCount: periodsCount
     };
+    
     await saveData('classProfile', data);
+    
+    // بروزرسانی متغیرهای سراسری
+    window.scheduleDaysCount = daysCount;
+    window.schedulePeriodsCount = periodsCount;
+
     showToast('مشخصات کلاس ذخیره شد!', 'success');
     document.getElementById('header-subtitle').textContent = data.name;
     
@@ -33,7 +55,7 @@ function renderDashboardData() {
     document.getElementById('stat-sessions').textContent = window.allSessionsData.length;
     document.getElementById('stat-records').textContent = window.allRecordsData.length;
 
-    // محاسبه امتیاز کل دانش‌آموزان (برای استفاده در بخش‌های مختلف)
+    // محاسبه امتیاز کل دانش‌آموزان
     const studentScores = window.allStudentsData.map(st => {
         let total = 0;
         window.allRecordsData.forEach(rec => {
@@ -74,7 +96,6 @@ function renderActivityCards() {
     const container = document.getElementById('dashboard-activity-cards');
     if (!container) return;
 
-    // محاسبه آمار
     let totalAyats = 0;
     let handwritingCount = 0;
     let specialRewardsCount = 0;
@@ -140,7 +161,6 @@ function renderAttendanceChart() {
     const pa = Math.round((absent / total) * 100);
     const pl = Math.round((late / total) * 100);
 
-    // رسم دونات با SVG
     const radius = 40;
     const circumference = 2 * Math.PI * radius;
     
@@ -151,16 +171,9 @@ function renderAttendanceChart() {
     container.innerHTML = `
         <div style="position: relative; width: 150px; height: 150px;">
             <svg viewBox="0 0 100 100" style="transform: rotate(-90deg); width: 100%; height: 100%;">
-                <!-- پس‌زمینه -->
                 <circle cx="50" cy="50" r="${radius}" fill="transparent" stroke="var(--border-color)" stroke-width="15" />
-                
-                <!-- حاضر (سبز) -->
                 ${present > 0 ? `<circle cx="50" cy="50" r="${radius}" fill="transparent" stroke="#22c55e" stroke-width="15" stroke-dasharray="${pDash} ${circumference}" stroke-dashoffset="0" />` : ''}
-                
-                <!-- غایب (قرمز) -->
                 ${absent > 0 ? `<circle cx="50" cy="50" r="${radius}" fill="transparent" stroke="#ef4444" stroke-width="15" stroke-dasharray="${aDash} ${circumference}" stroke-dashoffset="-${pDash}" />` : ''}
-                
-                <!-- تأخیر (زرد) -->
                 ${late > 0 ? `<circle cx="50" cy="50" r="${radius}" fill="transparent" stroke="#f59e0b" stroke-width="15" stroke-dasharray="${lDash} ${circumference}" stroke-dashoffset="-${pDash + aDash}" />` : ''}
             </svg>
             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
@@ -188,7 +201,6 @@ function renderSubjectAveragesChart() {
         return;
     }
 
-    // محاسبه مجموع امتیاز هر درس
     const subjectData = window.allSubjectsData.map(sub => {
         let total = 0;
         window.allRecordsData.forEach(rec => {
@@ -310,7 +322,6 @@ function renderNeedsAttention(studentScores) {
         return;
     }
 
-    // محاسبه غیبت‌ها
     const studentStats = studentScores.map(st => {
         let absences = 0;
         window.allAttendanceData.forEach(att => {
@@ -319,7 +330,6 @@ function renderNeedsAttention(studentScores) {
         return { ...st, absences };
     });
 
-    // مرتب‌سازی: کمترین امتیاز، سپس بیشترین غیبت
     studentStats.sort((a, b) => {
         if (a.totalScore !== b.totalScore) return a.totalScore - b.totalScore;
         return b.absences - a.absences;
@@ -396,7 +406,6 @@ function renderFullClassReport(studentScores) {
         const g = window.allGroupsData.find(x => x.id === st.groupId);
         const groupBadge = g ? `<span class="group-label" style="margin-right:5px;">${g.symbol} ${g.name}</span>` : '';
         
-        // محاسبه درصد برای نوار پیشرفت
         const maxScore = sorted[0].totalScore || 1;
         const percent = Math.round((st.totalScore / maxScore) * 100);
 
@@ -507,7 +516,6 @@ function printClassReport() {
     html += `</tbody></table>`;
     content.innerHTML = html;
     
-    // باز کردن مودال و چاپ
     document.getElementById('report-card-modal').classList.add('show');
     setTimeout(() => {
         window.print();
