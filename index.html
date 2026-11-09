@@ -108,7 +108,7 @@
                         <div id="reports-list" class="list-group"></div>
                         <div style="margin-top: 15px; display: flex; gap: 10px;">
                             <button type="button" class="btn btn-secondary btn-block" onclick="exportClassCSV()">📗 خروجی اکسل</button>
-                            <button type="button" class="btn btn-secondary btn-block" onclick="window.print()">🖨️ چاپ</button>
+                            <button type="button" class="btn btn-secondary btn-block" onclick="printClassReport()">🖨️ چاپ</button>
                         </div>
                     </div>
                 </div>
@@ -509,10 +509,10 @@
                 </div>
             </div>
 
-            <!-- تب ۷: آزمون‌ها (جدید) -->
+            <!-- تب ۷: آزمون‌ها -->
             <div id="page-exams" class="page-section">
                 <div class="page-header-title">
-                    📝 آزمون‌ها
+                    🎓 آزمون‌ها
                 </div>
                 <div class="card" style="text-align: center; padding: 50px 20px;">
                     <h3 style="color: var(--primary); margin-bottom: 15px;">🎓 ماژول آزمون‌ها</h3>
@@ -706,6 +706,7 @@
     <script src="db.js"></script>
     <script src="app.js"></script>
     <script src="class.js"></script>
+    <script src="students.js"></script> <!-- فایل جدید اضافه شد -->
     <script src="lesson.js"></script>
     <script src="group.js"></script>
     <script src="session.js"></script>
