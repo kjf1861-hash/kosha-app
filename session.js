@@ -251,42 +251,30 @@ function exportScheduleCSV() {
         const { matrix, maxPeriodToShow } = getScheduleDataMatrix(); 
         if (matrix.length === 0) { showToast('برنامه‌ای برای خروجی وجود ندارد.', 'error'); return; }
 
-        // استفاده از Tab به عنوان جداکننده برای سازگاری کامل با اکسل موبایل
+        // استفاده از کاما (,) برای سازگاری با Google Sheets
         let csvContent = '"روز / زنگ"';
         for (let i = 1; i <= maxPeriodToShow; i++) {
-            csvContent += `\t"زنگ ${i}"`;
+            csvContent += `,"زنگ ${i}"`;
         }
         csvContent += "\r\n"; 
 
         matrix.forEach(row => {
-            const rowData = row.map(cell => `"${cell}"`).join('\t');
+            const rowData = row.map(cell => `"${cell}"`).join(',');
             csvContent += rowData + "\r\n";
         });
 
-        // *** راه‌حل قطعی: UTF-16LE با BOM و جداکننده Tab ***
-        const bom = new Uint8Array([0xFF, 0xFE]); // BOM مخصوص UTF-16LE
-        const contentBytes = new Uint8Array(csvContent.length * 2);
-        for (let i = 0; i < csvContent.length; i++) {
-            const code = csvContent.charCodeAt(i);
-            contentBytes[i * 2] = code & 0xFF;
-            contentBytes[i * 2 + 1] = code >> 8;
-        }
-        
-        const fullBytes = new Uint8Array(bom.length + contentBytes.length);
-        fullBytes.set(bom, 0);
-        fullBytes.set(contentBytes, bom.length);
-
-        const blob = new Blob([fullBytes], { type: 'application/vnd.ms-excel;charset=utf-16le;' }); 
+        // *** راه‌حل قطعی: UTF-8 با BOM و پسوند CSV ***
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' }); 
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); 
         a.href = url; 
-        a.download = `kosha_schedule_${new Date().toISOString().slice(0,10)}.xls`; 
+        a.download = `kosha_schedule_${new Date().toISOString().slice(0,10)}.csv`; 
         a.click();
         URL.revokeObjectURL(url);
-        showToast('خروجی اکسل دانلود شد!', 'success');
+        showToast('فایل CSV دانلود شد!', 'success');
     } catch (e) {
         console.error(e);
-        showToast('خطا در تولید فایل اکسل.', 'error');
+        showToast('خطا در تولید فایل.', 'error');
     }
 }
 
@@ -926,8 +914,8 @@ async function generateAttendanceReports() {
 
 async function exportSessionCSV() {
     try {
-        // استفاده از Tab به عنوان جداکننده برای سازگاری کامل با اکسل موبایل
-        let csvContent = "ردیف\tنام\tنام خانوادگی\tتعداد حاضر\tتعداد غایب\tتعداد تأخیر\r\n";
+        // استفاده از کاما (,) برای سازگاری کامل با Google Sheets
+        let csvContent = "ردیف,نام,نام خانوادگی,تعداد حاضر,تعداد غایب,تعداد تأخیر\r\n";
         window.allStudentsData.forEach((st, i) => {
             let p = 0, a = 0, l = 0;
             window.allAttendanceData.forEach(att => { 
@@ -937,31 +925,20 @@ async function exportSessionCSV() {
                     else if (att.status === 'late') l++; 
                 } 
             });
-            csvContent += `${i + 1}\t"${st.firstName}"\t"${st.lastName}"\t${p}\t${a}\t${l}\r\n`;
+            csvContent += `${i + 1},"${st.firstName}","${st.lastName}",${p},${a},${l}\r\n`;
         });
 
-        // *** راه‌حل قطعی: UTF-16LE با BOM و جداکننده Tab ***
-        const bom = new Uint8Array([0xFF, 0xFE]); 
-        const contentBytes = new Uint8Array(csvContent.length * 2);
-        for (let i = 0; i < csvContent.length; i++) {
-            const code = csvContent.charCodeAt(i);
-            contentBytes[i * 2] = code & 0xFF;
-            contentBytes[i * 2 + 1] = code >> 8;
-        }
-        const fullBytes = new Uint8Array(bom.length + contentBytes.length);
-        fullBytes.set(bom, 0);
-        fullBytes.set(contentBytes, bom.length);
-
-        const blob = new Blob([fullBytes], { type: 'application/vnd.ms-excel;charset=utf-16le;' });
+        // *** راه‌حل استاندارد: UTF-8 با BOM و پسوند CSV ***
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); 
         a.href = url; 
-        a.download = `kosha_attendance_${new Date().toISOString().slice(0,10)}.xls`; 
+        a.download = `kosha_attendance_${new Date().toISOString().slice(0,10)}.csv`; 
         a.click();
         URL.revokeObjectURL(url);
-        showToast('فایل اکسل حضور و غیاب دانلود شد!', 'success');
+        showToast('فایل CSV حضور و غیاب دانلود شد!', 'success');
     } catch (e) { 
         console.error(e); 
-        showToast('خطا در تولید فایل اکسل.', 'error'); 
+        showToast('خطا در تولید فایل.', 'error'); 
     }
 }
