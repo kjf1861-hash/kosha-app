@@ -923,9 +923,15 @@ async function exportScoreCSV() {
             csvContent += `${i + 1},"${rec.title}","${sn}","${rec.itemName}","${rec.date}",${rec.finalScore},"${rec.arf ? 'دارد' : 'ندارد'}"\r\n`;
         });
 
-        // اصلاح قطعی BOM
+        // اصلاح قطعی BOM با TextEncoder
+        const encoder = new TextEncoder();
+        const csvBytes = encoder.encode(csvContent);
         const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-        const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
+        const fullBytes = new Uint8Array(bom.length + csvBytes.length);
+        fullBytes.set(bom, 0);
+        fullBytes.set(csvBytes, bom.length);
+
+        const blob = new Blob([fullBytes], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); 
         a.href = url; 
