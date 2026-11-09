@@ -1,11 +1,6 @@
 // ==========================================
-// فایل class.js — منطق تب کلاس
+// فایل class.js — منطق تب کلاس (داشبورد) و دانش‌آموزان
 // ==========================================
-
-function initClassEvents() {
-    document.getElementById('class-form').addEventListener('submit', saveClassProfile);
-    document.getElementById('student-form').addEventListener('submit', saveStudent);
-}
 
 async function saveClassProfile(e) {
     e.preventDefault();
@@ -23,9 +18,143 @@ async function saveClassProfile(e) {
     showToast('مشخصات کلاس ذخیره شد!', 'success');
     document.getElementById('header-subtitle').textContent = data.name;
     
+    // بستن مودال تنظیمات پس از ذخیره
+    if(typeof closeSettingsModal === 'function') closeSettingsModal();
+    
     // اگر سال تحصیلی تغییر کرد، کل برنامه باید رفرش شود تا داده‌های سال جدید لود شوند
     loadAllData();
 }
+
+// ==========================================
+// 1. منطق داشبورد کلاس (تب اول)
+// ==========================================
+function renderDashboardData() {
+    // 1. آمار کلی
+    const statStudents = document.getElementById('stat-students');
+    if (statStudents) statStudents.textContent = window.allStudentsData.length;
+    
+    const statSubjects = document.getElementById('stat-subjects');
+    if (statSubjects) statSubjects.textContent = window.allSubjectsData.length;
+    
+    const statSessions = document.getElementById('stat-sessions');
+    if (statSessions) statSessions.textContent = window.allSessionsData.length;
+    
+    const statRecords = document.getElementById('stat-records');
+    if (statRecords) statRecords.textContent = window.allRecordsData.length;
+
+    // 2. محاسبه امتیازات دانش‌آموزان برای رتبه‌بندی
+    const studentScores = window.allStudentsData.map(st => {
+        let total = 0;
+        window.allRecordsData.forEach(rec => {
+            if (rec.students && rec.students.includes(st.id)) {
+                total += rec.finalScore;
+            }
+        });
+        return { ...st, totalScore: total };
+    });
+
+    studentScores.sort((a, b) => {
+        if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+        return a.lastName.localeCompare(b.lastName, 'fa');
+    });
+
+    // 3. رندر ۳ شاگرد برتر
+    const topStudentsContainer = document.getElementById('dashboard-top-students');
+    if (topStudentsContainer) {
+        if (studentScores.length === 0) {
+            topStudentsContainer.innerHTML = '<p style="text-align:center; color:#64748b;">هنوز دانش‌آموزی ثبت نشده است.</p>';
+        } else {
+            topStudentsContainer.innerHTML = '';
+            const top3 = studentScores.slice(0, 3);
+            const medals = ['🥇', '🥈', '🥉'];
+            
+            top3.forEach((st, index) => {
+                const g = window.allGroupsData.find(x => x.id === st.groupId);
+                const groupBadge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
+                
+                topStudentsContainer.innerHTML += `
+                    <div class="list-item top-student-row" style="padding: 12px 15px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span class="medal-badge" style="font-size:1.5rem;">${medals[index]}</span>
+                            <span style="font-size: 1.1rem; font-weight: bold;">${st.firstName} ${st.lastName}</span>
+                            ${groupBadge}
+                        </div>
+                        <span class="rank-badge" style="background: var(--primary); color: white;">${st.totalScore} امتیاز</span>
+                    </div>
+                `;
+            });
+        }
+    }
+
+    // 4. رندر گزارش کامل امتیازات کلاس
+    const reportsList = document.getElementById('reports-list');
+    if (reportsList) {
+        if (studentScores.length === 0) {
+            reportsList.innerHTML = '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>';
+        } else {
+            reportsList.innerHTML = '';
+            studentScores.forEach((st, index) => {
+                const g = window.allGroupsData.find(x => x.id === st.groupId);
+                const groupBadge = g ? `<span class="group-label" style="margin-right:5px;">${g.symbol} ${g.name}</span>` : '';
+                
+                reportsList.innerHTML += `
+                    <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                            <div style="display:flex; align-items:center; gap:5px;">
+                                <span style="font-weight:bold; min-width:25px; color:var(--text-muted);">${index + 1}.</span>
+                                <span><strong>${st.firstName} ${st.lastName}</strong></span>
+                                ${groupBadge}
+                            </div>
+                            <span class="rank-badge">${st.totalScore} امتیاز</span>
+                        </div>
+                        <div class="score-bar-container">
+                            <div class="score-bar-fill ${index === 0 ? 'is-first' : ''}" style="width: ${studentScores[0].totalScore > 0 ? (st.totalScore / studentScores[0].totalScore) * 100 : 0}%;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    }
+}
+
+async function exportClassCSV() {
+    try {
+        let csvContent = "ردیف,نام,نام خانوادگی,مجموع امتیاز\n";
+        const studentScores = window.allStudentsData.map(st => {
+            let total = 0;
+            window.allRecordsData.forEach(rec => {
+                if (rec.students && rec.students.includes(st.id)) total += rec.finalScore;
+            });
+            return { ...st, totalScore: total };
+        });
+        
+        studentScores.sort((a, b) => {
+            if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+            return a.lastName.localeCompare(b.lastName, 'fa');
+        });
+
+        studentScores.forEach((st, i) => {
+            csvContent += `${i + 1},${st.firstName},${st.lastName},${st.totalScore}\n`;
+        });
+
+        const BOM = "\uFEFF";
+        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); 
+        a.href = url; 
+        a.download = `kosha_class_scores_${new Date().toISOString().slice(0,10)}.csv`; 
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('فایل اکسل دانلود شد!', 'success');
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در تولید فایل اکسل.', 'error');
+    }
+}
+
+// ==========================================
+// 2. منطق مدیریت دانش‌آموزان (تب دوم)
+// ==========================================
 
 // فقط برای افزودن دانش‌آموز جدید
 async function saveStudent(e) {
@@ -47,46 +176,6 @@ async function saveStudent(e) {
     document.getElementById('student-form').reset();
     showToast('دانش‌آموز جدید با موفقیت ثبت شد!', 'success');
     loadAllData();
-}
-
-// باز کردن مودال ویرایش
-async function editStudent(id) {
-    const student = await getDataById('students', id);
-    if (student) {
-        document.getElementById('editStudentIdModal').value = student.id;
-        document.getElementById('editStudentFirstNameModal').value = student.firstName;
-        document.getElementById('editStudentLastNameModal').value = student.lastName;
-        document.getElementById('edit-student-modal').classList.add('show');
-    }
-}
-
-function closeEditStudentModal() {
-    document.getElementById('edit-student-modal').classList.remove('show');
-}
-
-// ذخیره تغییرات از داخل مودال
-async function saveEditedStudent(e) {
-    if(e) e.preventDefault();
-    const id = parseInt(document.getElementById('editStudentIdModal').value);
-    
-    const existing = await getDataById('students', id);
-    const existingGroupId = existing ? existing.groupId : null;
-
-    const data = {
-        id: id,
-        firstName: document.getElementById('editStudentFirstNameModal').value,
-        lastName: document.getElementById('editStudentLastNameModal').value,
-        groupId: existingGroupId
-    };
-    
-    await saveData('students', data);
-    showToast('اطلاعات دانش‌آموز با موفقیت ویرایش شد!', 'success');
-    closeEditStudentModal();
-    loadAllData();
-}
-
-function renderClassData() {
-    renderStudentsList();
 }
 
 function renderStudentsList() {
@@ -115,6 +204,7 @@ function renderStudentsList() {
         return a.lastName.localeCompare(b.lastName, 'fa');
     });
 
+    // مدال‌دهی
     const uniqueScores = [...new Set(studentScores.map(s => s.totalScore))].filter(s => s > 0).sort((a, b) => b - a);
     const goldScore = uniqueScores.length > 0 ? uniqueScores[0] : -1;
     const silverScore = uniqueScores.length > 1 ? uniqueScores[1] : -1;
@@ -170,6 +260,42 @@ function renderStudentsList() {
             pagination.style.display = 'none';
         }
     }
+}
+
+// باز کردن مودال ویرایش
+async function editStudent(id) {
+    const student = await getDataById('students', id);
+    if (student) {
+        document.getElementById('editStudentIdModal').value = student.id;
+        document.getElementById('editStudentFirstNameModal').value = student.firstName;
+        document.getElementById('editStudentLastNameModal').value = student.lastName;
+        document.getElementById('edit-student-modal').classList.add('show');
+    }
+}
+
+function closeEditStudentModal() {
+    document.getElementById('edit-student-modal').classList.remove('show');
+}
+
+// ذخیره تغییرات از داخل مودال
+async function saveEditedStudent(e) {
+    if(e) e.preventDefault();
+    const id = parseInt(document.getElementById('editStudentIdModal').value);
+    
+    const existing = await getDataById('students', id);
+    const existingGroupId = existing ? existing.groupId : null;
+
+    const data = {
+        id: id,
+        firstName: document.getElementById('editStudentFirstNameModal').value,
+        lastName: document.getElementById('editStudentLastNameModal').value,
+        groupId: existingGroupId
+    };
+    
+    await saveData('students', data);
+    showToast('اطلاعات دانش‌آموز با موفقیت ویرایش شد!', 'success');
+    closeEditStudentModal();
+    loadAllData();
 }
 
 async function deleteStudent(id) {
@@ -263,39 +389,4 @@ async function openStudentDetails(id) {
 
 function closeStudentDetails() {
     document.getElementById('student-details-modal').classList.remove('show');
-}
-
-async function exportClassCSV() {
-    try {
-        let csvContent = "ردیف,نام,نام خانوادگی,مجموع امتیاز\n";
-        const studentScores = window.allStudentsData.map(st => {
-            let total = 0;
-            window.allRecordsData.forEach(rec => {
-                if (rec.students && rec.students.includes(st.id)) total += rec.finalScore;
-            });
-            return { ...st, totalScore: total };
-        });
-        
-        studentScores.sort((a, b) => {
-            if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
-            return a.lastName.localeCompare(b.lastName, 'fa');
-        });
-
-        studentScores.forEach((st, i) => {
-            csvContent += `${i + 1},${st.firstName},${st.lastName},${st.totalScore}\n`;
-        });
-
-        const BOM = "\uFEFF";
-        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); 
-        a.href = url; 
-        a.download = `kosha_class_scores_${new Date().toISOString().slice(0,10)}.csv`; 
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('فایل اکسل دانلود شد!', 'success');
-    } catch (e) {
-        console.error(e);
-        showToast('خطا در تولید فایل اکسل.', 'error');
-    }
 }
