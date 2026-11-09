@@ -251,9 +251,10 @@ function exportScheduleCSV() {
         const { matrix, maxPeriodToShow } = getScheduleDataMatrix();
         if (matrix.length === 0) { showToast('برنامه‌ای برای خروجی وجود ندارد.', 'error'); return; }
 
-        let csvContent = "روز / زنگ";
+        // اصلاح: قرار دادن هدرها هم داخل دابل کوتیشن
+        let csvContent = '"روز / زنگ"';
         for (let i = 1; i <= maxPeriodToShow; i++) {
-            csvContent += `,زنگ ${i}`;
+            csvContent += `,"زنگ ${i}"`;
         }
         csvContent += "\r\n"; 
 
@@ -262,7 +263,7 @@ function exportScheduleCSV() {
             csvContent += rowData + "\r\n";
         });
 
-        // رفع مشکل اکسل: استفاده از Uint8Array برای قرار دادن بایت‌های دقیق BOM
+        // اصلاح قطعی: استفاده از آرایه بایتی برای BOM به جای رشته متنی
         const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
         const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' }); 
         const url = URL.createObjectURL(blob);
@@ -927,7 +928,7 @@ async function exportSessionCSV() {
             csvContent += `${i + 1},"${st.firstName}","${st.lastName}",${p},${a},${l}\r\n`;
         });
 
-        // رفع مشکل اکسل
+        // اصلاح قطعی BOM برای این بخش
         const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
         const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
