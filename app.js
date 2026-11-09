@@ -67,8 +67,6 @@ function initApp() {
     applyEmojiRestriction('classSymbol');
     applyEmojiRestriction('lessonSymbol');
     applyEmojiRestriction('groupSymbol');
-    initDateDropdowns();
-    initSessionDateDropdowns();
     
     try {
         if(document.getElementById('class-form')) document.getElementById('class-form').addEventListener('submit', saveClassProfile);
@@ -77,7 +75,6 @@ function initApp() {
         if(document.getElementById('group-form')) document.getElementById('group-form').addEventListener('submit', saveGroup);
         
         if(document.getElementById('scheduleDaySelect')) document.getElementById('scheduleDaySelect').addEventListener('change', renderScheduleForDay);
-        if(document.getElementById('sessionDayOfWeek')) document.getElementById('sessionDayOfWeek').addEventListener('change', checkScheduleExists);
         
         if(document.getElementById('item-manager-form')) {
             document.getElementById('item-manager-form').addEventListener('submit', saveItem);
@@ -106,17 +103,23 @@ async function loadAllData() {
     try {
         const classData = await getDataById('classProfile', 1);
         if (classData) {
-            document.getElementById('className').value = classData.name || '';
-            document.getElementById('classSymbol').value = classData.symbol || '';
-            document.getElementById('classMotto').value = classData.motto || '';
-            document.getElementById('classGrade').value = classData.grade || '';
-            document.getElementById('teacherName').value = classData.teacherName || '';
-            document.getElementById('schoolName').value = classData.schoolName || '';
+            // پر کردن فیلدهای تنظیمات (چون در مودال هستند، دسترسی به آن‌ها با ID برقرار است)
+            const classNameEl = document.getElementById('className');
+            if(classNameEl) classNameEl.value = classData.name || '';
+            const classSymbolEl = document.getElementById('classSymbol');
+            if(classSymbolEl) classSymbolEl.value = classData.symbol || '';
+            const classMottoEl = document.getElementById('classMotto');
+            if(classMottoEl) classMottoEl.value = classData.motto || '';
+            const classGradeEl = document.getElementById('classGrade');
+            if(classGradeEl) classGradeEl.value = classData.grade || '';
+            const teacherNameEl = document.getElementById('teacherName');
+            if(teacherNameEl) teacherNameEl.value = classData.teacherName || '';
+            const schoolNameEl = document.getElementById('schoolName');
+            if(schoolNameEl) schoolNameEl.value = classData.schoolName || '';
             
             if (classData.academicYear) {
                 window.activeAcademicYear = classData.academicYear;
             } else {
-                // اگر برای اولین بار است و سال تحصیلی ندارد، مقدار پیش‌فرض را ست می‌کنیم
                 classData.academicYear = window.activeAcademicYear;
                 await saveData('classProfile', classData);
             }
@@ -150,11 +153,9 @@ async function loadAllData() {
         window.allGroupsData = rawGroups;
         window.allSubjectsData = rawSubjects;
         
-        // فقط داده‌های مربوط به سال تحصیلی فعال را نگه می‌داریم
         window.allRecordsData = rawRecords.filter(r => r.academicYear === window.activeAcademicYear);
         window.allSessionsData = rawSessions.filter(s => s.academicYear === window.activeAcademicYear);
         
-        // حضور و غیاب فقط برای جلسات مجاز
         const validSessionIds = window.allSessionsData.map(s => s.id);
         window.allAttendanceData = rawAttendance.filter(a => validSessionIds.includes(a.sessionId));
         
@@ -163,7 +164,9 @@ async function loadAllData() {
         assessmentItems = await getAllData('assessmentItems');
         window.allAssessmentItems = assessmentItems;
         
-        if (typeof renderClassData === 'function') renderClassData();
+        // فراخوانی توابع رندر (تب‌ها)
+        if (typeof renderDashboardData === 'function') renderDashboardData();
+        if (typeof renderStudentsList === 'function') renderStudentsList();
         if (typeof renderLessonData === 'function') renderLessonData();
         if (typeof renderGroupData === 'function') renderGroupData();
         if (typeof renderSessionData === 'function') renderSessionData();
@@ -172,34 +175,6 @@ async function loadAllData() {
         if (migrationNeeded) showToast('اطلاعات قبلی به سال تحصیلی جدید منتقل شد.', 'info');
         
     } catch (e) { console.log('خطا در بارگذاری داده‌ها:', e); }
-}
-
-function initDateDropdowns() {
-    const daySelect = document.getElementById('dateDay');
-    const monthSelect = document.getElementById('dateMonth');
-    const yearSelect = document.getElementById('dateYear');
-    if (!daySelect || !monthSelect || !yearSelect) return;
-    daySelect.innerHTML = '<option value="" disabled selected>روز</option>';
-    for (let i = 1; i <= 31; i++) daySelect.innerHTML += `<option value="${i}">${i}</option>`;
-    const monthNames = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
-    monthSelect.innerHTML = '<option value="" disabled selected>ماه</option>';
-    monthNames.forEach((name, index) => monthSelect.innerHTML += `<option value="${index + 1}">${name}</option>`);
-    yearSelect.innerHTML = '<option value="" disabled selected>سال</option>';
-    for (let i = 1405; i <= 1410; i++) yearSelect.innerHTML += `<option value="${i}">${i}</option>`;
-    daySelect.value = ''; monthSelect.value = ''; yearSelect.value = '';
-    document.getElementById('recordDate').value = '';
-    const updateDate = () => {
-        const d = daySelect.value, m = monthSelect.value, y = yearSelect.value;
-        if (d && m && y) document.getElementById('recordDate').value = jalaliToDateString(y, m, d);
-        daySelect.classList.remove('input-error'); monthSelect.classList.remove('input-error'); yearSelect.classList.remove('input-error');
-    };
-    daySelect.addEventListener('change', updateDate);
-    monthSelect.addEventListener('change', updateDate);
-    yearSelect.addEventListener('change', updateDate);
-}
-
-function initSessionDateDropdowns() {
-    // این تابع دیگر استفاده نمی‌شود ولی برای جلوگیری از خطا نگه داشته می‌شود
 }
 
 function jalaliToDateString(jy, jm, jd) {
@@ -421,7 +396,7 @@ async function importData(event) {
 }
 
 function changePage(section, direction) {
-    if (section === 'students') { currentPage.students += direction; if(typeof renderClassData === 'function') renderClassData(); }
+    if (section === 'students') { currentPage.students += direction; if(typeof renderStudentsList === 'function') renderStudentsList(); }
     else if (section === 'records') { currentPage.records += direction; if(typeof loadAssessmentRecords === 'function') loadAssessmentRecords(); }
 }
 
