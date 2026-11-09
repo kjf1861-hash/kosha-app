@@ -74,6 +74,7 @@
                     🏫 کلاس
                 </div>
                 
+                <!-- آمارهای سریع -->
                 <div class="dashboard-grid">
                     <div class="dashboard-card">
                         <div class="dc-icon">👦</div>
@@ -97,11 +98,53 @@
                     </div>
                 </div>
 
-                <div class="card">
-                    <h2 class="card-title">🏆 شاگردان برتر</h2>
-                    <div id="dashboard-top-students" class="list-group"></div>
+                <!-- کارت‌های فعالیت (اسکرول افقی) -->
+                <div class="horizontal-scroll-container" id="dashboard-activity-cards">
+                    <!-- محتوا از طریق JS پر می‌شود -->
                 </div>
 
+                <!-- تحلیل‌های بصری (آکاردئون) -->
+                <details class="dashboard-accordion">
+                    <summary>📊 نمودار حضور و غیاب کلاس</summary>
+                    <div class="dashboard-accordion-content" id="dashboard-attendance-chart" style="display: flex; justify-content: center; padding: 20px 0;">
+                        <!-- نمودار دونات از طریق JS پر می‌شود -->
+                    </div>
+                </details>
+
+                <details class="dashboard-accordion">
+                    <summary>📚 میانگین امتیازات دروس</summary>
+                    <div class="dashboard-accordion-content" id="dashboard-subject-averages" style="display: flex; flex-direction: column; gap: 12px;">
+                        <!-- نمودار میله‌ای از طریق JS پر می‌شود -->
+                    </div>
+                </details>
+
+                <!-- رتبه‌بندی‌ها (آکاردئون) -->
+                <details class="dashboard-accordion" open>
+                    <summary>🏆 شاگردان برتر</summary>
+                    <div class="dashboard-accordion-content" id="dashboard-top-students">
+                        <!-- لیست از طریق JS پر می‌شود -->
+                    </div>
+                </details>
+
+                <details class="dashboard-accordion">
+                    <summary>👥 گروه‌های برتر</summary>
+                    <div class="dashboard-accordion-content" id="dashboard-top-groups">
+                        <!-- لیست از طریق JS پر می‌شود -->
+                    </div>
+                </details>
+
+                <!-- تحلیل هوشمند -->
+                <div class="card" style="background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); border: 1px solid #f59e0b;">
+                    <h2 class="card-title" style="color: #b45309; border-bottom-color: #fcd34d;">⚠️ دانش‌آموزان نیازمند توجه</h2>
+                    <div id="dashboard-needs-attention" class="list-group"></div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">🕒 آخرین فعالیت‌های کلاس</h2>
+                    <div id="dashboard-recent-activities" class="list-group"></div>
+                </div>
+
+                <!-- گزارش امتیازات و چاپ -->
                 <div class="card">
                     <h2 class="card-title">📈 گزارش امتیازات کلاس</h2>
                     <div id="class-score-report-section">
@@ -706,7 +749,7 @@
     <script src="db.js"></script>
     <script src="app.js"></script>
     <script src="class.js"></script>
-    <script src="students.js"></script> <!-- فایل جدید اضافه شد -->
+    <script src="students.js"></script>
     <script src="lesson.js"></script>
     <script src="group.js"></script>
     <script src="session.js"></script>
