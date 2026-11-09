@@ -322,11 +322,24 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">تاریخ (الزامی)</label>
-                            <div style="display: flex; gap: 8px;">
-                                <select id="dateDay" class="form-control" style="flex: 1;" required></select>
-                                <select id="dateMonth" class="form-control" style="flex: 1.5;" required></select>
-                                <select id="dateYear" class="form-control" style="flex: 1.2;" required></select>
-                            </div>
+                            <details class="score-calendar-accordion" id="record-date-accordion">
+                                <summary>
+                                    <span>📅 انتخاب تاریخ از تقویم</span>
+                                    <span id="recordDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span>
+                                </summary>
+                                <div class="score-calendar-body" id="record-calendar-body">
+                                    <div class="calendar-header">
+                                        <button type="button" onclick="changeScoreCalendarMonth('record', -1)">◀</button>
+                                        <div class="calendar-title" id="record-calendar-title"></div>
+                                        <button type="button" onclick="changeScoreCalendarMonth('record', 1)">▶</button>
+                                    </div>
+                                    <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
+                                    <div class="calendar-grid" id="record-calendar-grid"></div>
+                                </div>
+                                <div class="score-day-archive" id="record-day-archive" style="display:none;">
+                                    <div id="record-day-archive-list"></div>
+                                </div>
+                            </details>
                             <input type="hidden" id="recordDate" value="">
                         </div>
                         <div class="form-group checkbox-group"><input type="checkbox" id="recordArf"><label for="recordArf">🎁 ارفاق آموزشی</label></div>
@@ -395,11 +408,25 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">تاریخ (الزامی)</label>
-                                <div style="display: flex; gap: 8px;">
-                                    <select id="quranDateDay" class="form-control" style="flex: 1;" required></select>
-                                    <select id="quranDateMonth" class="form-control" style="flex: 1.5;" required></select>
-                                    <select id="quranDateYear" class="form-control" style="flex: 1.2;" required></select>
-                                </div>
+                                <details class="score-calendar-accordion" id="quran-date-accordion">
+                                    <summary>
+                                        <span>📅 انتخاب تاریخ از تقویم</span>
+                                        <span id="quranDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span>
+                                    </summary>
+                                    <div class="score-calendar-body" id="quran-calendar-body">
+                                        <div class="calendar-header">
+                                            <button type="button" onclick="changeScoreCalendarMonth('quran', -1)">◀</button>
+                                            <div class="calendar-title" id="quran-calendar-title"></div>
+                                            <button type="button" onclick="changeScoreCalendarMonth('quran', 1)">▶</button>
+                                        </div>
+                                        <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
+                                        <div class="calendar-grid" id="quran-calendar-grid"></div>
+                                    </div>
+                                    <div class="score-day-archive" id="quran-day-archive" style="display:none;">
+                                        <div id="quran-day-archive-list"></div>
+                                    </div>
+                                </details>
+                                <input type="hidden" id="quranDateHidden" value="">
                             </div>
                             <button type="button" class="btn btn-primary btn-block" onclick="saveQuranRecord()" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);">✅ ثبت پویش قرآن</button>
                         </form>
@@ -444,11 +471,25 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">تاریخ</label>
-                            <div style="display: flex; gap: 8px;">
-                                <select id="specialDateDay" class="form-control" style="flex: 1;" required></select>
-                                <select id="specialDateMonth" class="form-control" style="flex: 1.5;" required></select>
-                                <select id="specialDateYear" class="form-control" style="flex: 1.2;" required></select>
-                            </div>
+                            <details class="score-calendar-accordion" id="special-date-accordion">
+                                <summary>
+                                    <span>📅 انتخاب تاریخ از تقویم</span>
+                                    <span id="specialDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span>
+                                </summary>
+                                <div class="score-calendar-body" id="special-calendar-body">
+                                    <div class="calendar-header">
+                                        <button type="button" onclick="changeScoreCalendarMonth('special', -1)">◀</button>
+                                        <div class="calendar-title" id="special-calendar-title"></div>
+                                        <button type="button" onclick="changeScoreCalendarMonth('special', 1)">▶</button>
+                                    </div>
+                                    <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
+                                    <div class="calendar-grid" id="special-calendar-grid"></div>
+                                </div>
+                                <div class="score-day-archive" id="special-day-archive" style="display:none;">
+                                    <div id="special-day-archive-list"></div>
+                                </div>
+                            </details>
+                            <input type="hidden" id="specialDateHidden" value="">
                         </div>
                         <button type="button" class="btn btn-primary btn-block" onclick="saveSpecialReward()" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">✅ ثبت تشویق ویژه</button>
                     </form>
@@ -466,11 +507,25 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">تاریخ</label>
-                            <div style="display: flex; gap: 8px;">
-                                <select id="handwritingDateDay" class="form-control" style="flex: 1;" required></select>
-                                <select id="handwritingDateMonth" class="form-control" style="flex: 1.5;" required></select>
-                                <select id="handwritingDateYear" class="form-control" style="flex: 1.2;" required></select>
-                            </div>
+                            <details class="score-calendar-accordion" id="handwriting-date-accordion">
+                                <summary>
+                                    <span>📅 انتخاب تاریخ از تقویم</span>
+                                    <span id="handwritingDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span>
+                                </summary>
+                                <div class="score-calendar-body" id="handwriting-calendar-body">
+                                    <div class="calendar-header">
+                                        <button type="button" onclick="changeScoreCalendarMonth('handwriting', -1)">◀</button>
+                                        <div class="calendar-title" id="handwriting-calendar-title"></div>
+                                        <button type="button" onclick="changeScoreCalendarMonth('handwriting', 1)">▶</button>
+                                    </div>
+                                    <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
+                                    <div class="calendar-grid" id="handwriting-calendar-grid"></div>
+                                </div>
+                                <div class="score-day-archive" id="handwriting-day-archive" style="display:none;">
+                                    <div id="handwriting-day-archive-list"></div>
+                                </div>
+                            </details>
+                            <input type="hidden" id="handwritingDateHidden" value="">
                         </div>
                         <button type="button" class="btn btn-primary btn-block" onclick="saveHandwritingReward()" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">✅ ثبت تشویق خوش‌خط‌نویسی</button>
                     </form>
