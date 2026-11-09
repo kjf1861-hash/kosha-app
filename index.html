@@ -259,19 +259,14 @@
                         </div>
                     </div>
                     
-                    <!-- حذف منوی کشویی روز هفته و اضافه شدن نمایشگر هوشمند -->
+                    <!-- نمایش روز هفته استخراج شده -->
                     <div id="detectedDayDisplay" style="text-align:center; font-weight:bold; color:var(--primary); margin:15px 0; padding:10px; background:var(--input-bg); border-radius:8px; display:none;"></div>
 
-                    <button type="button" class="btn btn-primary btn-block" onclick="createNewSession()">➕ ثبت جلسه</button>
+                    <!-- بخش اکشن‌های جلسه (ثبت، مشاهده، ویرایش، حذف) -->
+                    <div id="sessionActionArea" style="margin-top: 15px;"></div>
                 </div>
 
-                <div class="card">
-                    <h2 class="card-title" style="justify-content: space-between;">
-                        <span style="display: flex; align-items: center; gap: 8px;">📋 فهرست جلسات آموزشی</span>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="resetAllSessions()" title="حذف همه جلسات" style="padding: 4px 8px; border-radius: 8px;">🗑️</button>
-                    </h2>
-                    <div id="sessions-list" class="list-group"></div>
-                </div>
+                <!-- کارت فهرست جلسات حذف شد -->
 
                 <div class="card">
                     <h2 class="card-title">📅 گزارش حضور و غیاب</h2>
