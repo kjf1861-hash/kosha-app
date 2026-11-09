@@ -218,25 +218,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
 }
 
 /* =========================================
-   نوارهای پیشرفت (میانگین دروس)
-   ========================================= */
-.progress-bar-container {
-    width: 100%;
-    height: 10px;
-    background-color: var(--border-color);
-    border-radius: 5px;
-    overflow: hidden;
-    margin-top: 5px;
-    direction: ltr;
-}
-.progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
-    border-radius: 5px;
-    transition: width 0.8s ease-out;
-}
-
-/* =========================================
    استایل‌های عمومی کارت‌ها و فرم‌ها
    ========================================= */
 .card {
@@ -313,7 +294,72 @@ select.form-control {
 .mt-4 { margin-top: 12px; }
 
 /* =========================================
-   استایل‌های جدول برنامه هفتگی (بخش جدید)
+   منوی پایین (۷ تب - اصلاح شده برای وسط‌چین شدن)
+   ========================================= */
+.bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--nav-bg); backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px); display: flex; justify-content: space-around; align-items: center;
+    height: 70px; /* ارتفاع ثابت */
+    padding: 0 5px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+    z-index: 100; border-top: 1px solid var(--border-color);
+    transition: background 0.3s ease;
+}
+.nav-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--text-muted);
+    padding: 0; margin: 0; text-decoration: none; border-radius: var(--radius-sm);
+    flex: 1; height: 100%; transition: all 0.2s ease; position: relative;
+}
+.nav-item .icon { 
+    font-size: 1.8rem; 
+    transition: transform 0.2s ease; 
+    display: flex; justify-content: center; align-items: center;
+    margin: 0; line-height: 1;
+}
+.nav-item.active .icon { transform: translateY(-3px) scale(1.15); }
+.nav-item.active::before { content: ''; position: absolute; top: 0; width: 30px; height: 3px; background: var(--primary); border-radius: 0 0 4px 4px; }
+
+/* استایل چک‌باکس‌های روزهای هفته در تنظیمات */
+.day-checkbox-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: var(--input-bg);
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+}
+.day-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.day-checkbox-label:hover {
+    background: var(--primary-light);
+}
+.day-checkbox-label input[type="checkbox"] {
+    accent-color: var(--primary);
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+.day-checkbox-label.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-weight: bold;
+}
+/* =========================================
+   استایل‌های جدول برنامه هفتگی (بخش جدید و هوشمند)
    ========================================= */
 .schedule-table-wrapper {
     overflow-x: auto;
@@ -322,22 +368,23 @@ select.form-control {
     box-shadow: var(--shadow-sm);
     margin-bottom: 15px;
     background: var(--card-bg);
+    width: 100%;
 }
 
 .schedule-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 500px;
     text-align: center;
-    table-layout: fixed;
+    table-layout: auto; /* اجازه می‌دهد ستون‌ها بر اساس محتوا اندازه بگیرند */
 }
 
 .schedule-table th, .schedule-table td {
     border: 1px solid var(--border-color);
-    padding: 12px 8px;
+    padding: 12px 10px;
     vertical-align: middle;
     height: 50px;
     font-size: 0.9rem;
+    white-space: nowrap;
 }
 
 .schedule-table thead th {
@@ -345,9 +392,11 @@ select.form-control {
     color: white;
     font-weight: bold;
     border-bottom: 3px solid var(--primary-dark);
+    position: sticky;
+    top: 0;
 }
 
-/* ستون روزها ثابت می‌ماند */
+/* ستون روزها در سمت راست ثابت می‌ماند */
 .schedule-table tbody th {
     background: var(--primary-light);
     color: var(--primary-dark);
@@ -356,18 +405,14 @@ select.form-control {
     right: 0;
     z-index: 2;
     border-left: 2px solid var(--primary);
-    width: 80px;
+    min-width: 80px;
 }
 
 .schedule-table td {
     background: var(--card-bg);
     color: var(--text-main);
     cursor: default;
-}
-
-.schedule-table td.empty-cell {
-    color: var(--text-muted);
-    font-size: 0.8rem;
+    min-width: 70px;
 }
 
 /* نمای ویرایش (آکاردئون روزها) */
@@ -432,6 +477,10 @@ select.form-control {
     font-size: 0.9rem;
     outline: none;
 }
+
+/* =========================================
+   استایل‌های عمومی لیست‌ها و مودال‌ها
+   ========================================= */
 .checkbox-group {
     display: flex; align-items: center; gap: 10px;
     padding: 12px; background: var(--arf-bg);
@@ -632,6 +681,22 @@ details.group-accordion[open] summary::after {
     background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
 }
 
+.progress-bar-container {
+    width: 100%;
+    height: 10px;
+    background-color: var(--border-color);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 5px;
+    direction: ltr;
+}
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: 5px;
+    transition: width 0.8s ease-out;
+}
+
 .att-stacked-bar-container {
     width: 100%;
     height: 25px;
@@ -796,7 +861,7 @@ details.group-accordion[open] summary::after {
 }
 
 /* =========================================
-   استایل‌های برنامه هفتگی و جدول‌ها
+   استایل‌های متفرقه
    ========================================= */
 .medal-badge {
     font-size: 1.2rem;
