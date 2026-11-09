@@ -8,7 +8,6 @@ let currentSessionAttendanceState = {};
 let currentAttReportFilter = 'class';
 
 const jalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
-const calendarYears = [1405, 1406, 1407, 1408, 1409, 1410];
 const leapYears = [1408];
 
 const officialHolidays = {
@@ -36,7 +35,7 @@ async function renderSessionData() {
 }
 
 // ==========================================
-// توابع تقویم شمسی (با محدودیت سال تحصیلی)
+// توابع تقویم شمسی
 // ==========================================
 function isLeapYear(year) {
     return leapYears.includes(year);
@@ -64,14 +63,28 @@ function initCalendar() {
     const monthSelect = document.getElementById('calendarMonthSelect');
     if (!yearSelect || !monthSelect) return;
 
+    // تعیین محدوده سال تحصیلی
+    const [startYearStr, endYearStr] = window.activeAcademicYear.split('-');
+    const startYear = parseInt(startYearStr);
+    const endYear = parseInt(endYearStr);
+    const allowedYears = [startYear, endYear];
+
     let savedYear = localStorage.getItem('kosha-calendar-year');
     let savedMonth = localStorage.getItem('kosha-calendar-month');
     
-    currentCalendarYear = savedYear ? parseInt(savedYear) : 1405;
+    currentCalendarYear = savedYear ? parseInt(savedYear) : startYear;
     currentCalendarMonth = savedMonth ? parseInt(savedMonth) : 1;
 
+    // اگر سال ذخیره شده خارج از محدوده مجاز بود، آن را به سال شروع تغییر بده
+    if (!allowedYears.includes(currentCalendarYear)) {
+        currentCalendarYear = startYear;
+        currentCalendarMonth = 7; // پیش‌فرض مهرماه
+        localStorage.setItem('kosha-calendar-year', currentCalendarYear);
+        localStorage.setItem('kosha-calendar-month', currentCalendarMonth);
+    }
+
     yearSelect.innerHTML = '';
-    calendarYears.forEach(y => {
+    allowedYears.forEach(y => {
         yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
     });
     yearSelect.value = currentCalendarYear;
@@ -118,7 +131,6 @@ function renderCalendarGrid() {
         if (hasSession) classes += ' has-session';
         if (!inAcademicYear) classes += ' outside-range';
 
-        // اگر خارج از بازه است، onclick را غیرفعال می‌کنیم
         const clickHandler = inAcademicYear ? `onclick="selectCalendarDay(${day}, '${dateStr}')"` : `onclick="showOutsideRangeError()"`;
 
         grid.innerHTML += `<div class="${classes}" ${clickHandler}>${day}</div>`;
@@ -130,9 +142,25 @@ function showOutsideRangeError() {
 }
 
 function changeCalendarMonth(delta) {
+    const [startYearStr, endYearStr] = window.activeAcademicYear.split('-');
+    const startYear = parseInt(startYearStr);
+    const endYear = parseInt(endYearStr);
+
     if (delta === 0) {
         currentCalendarMonth = parseInt(document.getElementById('calendarMonthSelect').value);
     } else {
+        if (delta === -1) {
+            if (currentCalendarYear === startYear && currentCalendarMonth === 7) {
+                showToast('شما در ابتدای سال تحصیلی هستید.', 'error');
+                return;
+            }
+        } else if (delta === 1) {
+            if (currentCalendarYear === endYear && currentCalendarMonth === 6) {
+                showToast('شما در انتهای سال تحصیلی هستید.', 'error');
+                return;
+            }
+        }
+
         currentCalendarMonth += delta;
         if (currentCalendarMonth < 1) {
             currentCalendarMonth = 12;
@@ -143,8 +171,14 @@ function changeCalendarMonth(delta) {
         }
     }
 
-    if (currentCalendarYear < 1405) { currentCalendarYear = 1405; currentCalendarMonth = 1; }
-    if (currentCalendarYear > 1410) { currentCalendarYear = 1410; currentCalendarMonth = 12; }
+    // بررسی مجدد محدوده (برای حالت delta === 0 که از منوی کشویی می‌آید)
+    if (currentCalendarYear < startYear || currentCalendarYear > endYear) {
+        showToast('این ماه خارج از بازه سال تحصیلی است.', 'error');
+        // برگرداندن به حالت قبلی
+        currentCalendarYear = parseInt(document.getElementById('calendarYearSelect').value);
+        currentCalendarMonth = parseInt(document.getElementById('calendarMonthSelect').value);
+        return;
+    }
 
     localStorage.setItem('kosha-calendar-year', currentCalendarYear);
     localStorage.setItem('kosha-calendar-month', currentCalendarMonth);
@@ -295,7 +329,7 @@ async function resetAllWeeklySchedules() {
 }
 
 // ==========================================
-// 2. ثبت جلسه (با تگ سال تحصیلی)
+// 2. ثبت جلسه
 // ==========================================
 async function createNewSession() {
     if (!selectedSessionDate) {
@@ -328,7 +362,7 @@ async function createNewSession() {
     await saveData('sessions', { 
         date: selectedSessionDate, 
         dayOfWeek: selectedSessionDayOfWeek,
-        academicYear: window.activeAcademicYear // *** تگ سال تحصیلی ***
+        academicYear: window.activeAcademicYear
     });
     showToast('جلسه با موفقیت ثبت شد!', 'success');
     
@@ -522,7 +556,7 @@ async function saveAllSessionAttendance() {
                 periodNumber: parseInt(periodNum),
                 studentId: parseInt(studentId),
                 status: currentSessionAttendanceState[periodNum][studentId],
-                academicYear: window.activeAcademicYear // *** تگ سال تحصیلی ***
+                academicYear: window.activeAcademicYear
             });
         }
     }
