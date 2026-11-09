@@ -248,10 +248,9 @@ function getScheduleDataMatrix() {
 
 function exportScheduleCSV() {
     try {
-        const { matrix, maxPeriodToShow } = getScheduleDataMatrix();
+        const { matrix, maxPeriodToShow } = getPopulatedScheduleData();
         if (matrix.length === 0) { showToast('برنامه‌ای برای خروجی وجود ندارد.', 'error'); return; }
 
-        // اصلاح: قرار دادن هدرها هم داخل دابل کوتیشن
         let csvContent = '"روز / زنگ"';
         for (let i = 1; i <= maxPeriodToShow; i++) {
             csvContent += `,"زنگ ${i}"`;
@@ -263,9 +262,17 @@ function exportScheduleCSV() {
             csvContent += rowData + "\r\n";
         });
 
-        // اصلاح قطعی: استفاده از آرایه بایتی برای BOM به جای رشته متنی
+        // *** اصلاح نهایی برای ایموجی‌ها و اکسل ***
+        const encoder = new TextEncoder();
+        const csvBytes = encoder.encode(csvContent);
         const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-        const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' }); 
+        
+        // ترکیب BOM و بایت‌های فایل
+        const fullBytes = new Uint8Array(bom.length + csvBytes.length);
+        fullBytes.set(bom, 0);
+        fullBytes.set(csvBytes, bom.length);
+
+        const blob = new Blob([fullBytes], { type: 'text/csv;charset=utf-8;' }); 
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); 
         a.href = url; 
@@ -928,9 +935,15 @@ async function exportSessionCSV() {
             csvContent += `${i + 1},"${st.firstName}","${st.lastName}",${p},${a},${l}\r\n`;
         });
 
-        // اصلاح قطعی BOM برای این بخش
+        // اصلاح قطعی BOM با TextEncoder برای این بخش
+        const encoder = new TextEncoder();
+        const csvBytes = encoder.encode(csvContent);
         const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-        const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
+        const fullBytes = new Uint8Array(bom.length + csvBytes.length);
+        fullBytes.set(bom, 0);
+        fullBytes.set(csvBytes, bom.length);
+
+        const blob = new Blob([fullBytes], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url; a.download = `kosha_attendance_${new Date().toISOString().slice(0,10)}.csv`; a.click();
         URL.revokeObjectURL(url);
