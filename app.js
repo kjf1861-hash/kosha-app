@@ -9,15 +9,21 @@ window.allSessionsData = [];
 window.allAttendanceData = [];
 window.allWeeklyScheduleData = [];
 let assessmentItems = [];
-window.activeAcademicYear = '1405-1406'; // مقدار پیش‌فرض
+window.activeAcademicYear = '1405-1406'; 
 
-// متغیرهای جدید برای برنامه هفتگی
-window.scheduleActiveDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه']; // پیش‌فرض
-window.schedulePeriodsCount = 5; // پیش‌فرض
+window.scheduleActiveDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه'];
+window.schedulePeriodsCount = 5;
 
 let currentStudentView = 'flat';
 let currentPage = { students: 1, records: 1, reports: 1 };
 const itemsPerPage = 40;
+
+// *** تابع جدید برای فارسی‌سازی اعداد ***
+function toPersianNumber(num) {
+    if (num === undefined || num === null || num === '') return '';
+    const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+    return num.toString().replace(/\d/g, x => persianDigits[x]);
+}
 
 const quranSurahs = {
     "ناس": 6, "فلق": 5, "توحید": 4, "مسد": 5, "نصر": 3, "کافرون": 6, "کوثر": 3, "ماعون": 7,
@@ -50,7 +56,7 @@ function checkBackupReminder() {
             setTimeout(() => showToast('لطفاً از داده‌های خود نسخه پشتیبان تهیه کنید.', 'info'), 4000);
         } else {
             const daysDiff = Math.floor((Date.now() - parseInt(lastBackup)) / (1000 * 60 * 60 * 24));
-            if (statusEl) statusEl.innerHTML = `آخرین پشتیبان‌گیری: <strong>${daysDiff} روز پیش</strong>`;
+            if (statusEl) statusEl.innerHTML = `آخرین پشتیبان‌گیری: <strong>${toPersianNumber(daysDiff)} روز پیش</strong>`;
             if (daysDiff >= 7) setTimeout(() => showToast('یک هفته از آخرین پشتیبان‌گیری گذشته است. لطفاً نسخه پشتیبان بگیرید.', 'info'), 4000);
         }
     } catch (e) { console.log(e); }
@@ -105,7 +111,6 @@ async function loadAllData() {
     try {
         const classData = await getDataById('classProfile', 1);
         if (classData) {
-            // پر کردن فیلدهای تنظیمات
             const classNameEl = document.getElementById('className');
             if(classNameEl) classNameEl.value = classData.name || '';
             const classSymbolEl = document.getElementById('classSymbol');
@@ -125,11 +130,9 @@ async function loadAllData() {
                 classData.academicYear = window.activeAcademicYear;
             }
 
-            // بارگذاری تنظیمات برنامه هفتگی (با پشتیبانی از نسخه قدیمی)
             if (classData.scheduleActiveDays && Array.isArray(classData.scheduleActiveDays)) {
                 window.scheduleActiveDays = classData.scheduleActiveDays;
             } else if (classData.scheduleDaysCount) {
-                // مهاجرت از نسخه قدیمی
                 const days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
                 window.scheduleActiveDays = days.slice(0, classData.scheduleDaysCount);
                 classData.scheduleActiveDays = window.scheduleActiveDays;
@@ -143,7 +146,6 @@ async function loadAllData() {
                 classData.schedulePeriodsCount = window.schedulePeriodsCount;
             }
 
-            // ذخیره تغییرات در دیتابیس در صورت نیاز (مهاجرت)
             await saveData('classProfile', classData);
             
             const aySelect = document.getElementById('academicYear');
@@ -152,7 +154,6 @@ async function loadAllData() {
             document.getElementById('header-subtitle').textContent = classData.name || 'همیار پرتلاش معلم';
         }
 
-        // خواندن خام داده‌ها
         const rawStudents = await getAllData('students');
         const rawGroups = await getAllData('groups');
         const rawSubjects = await getAllData('subjects');
@@ -160,7 +161,6 @@ async function loadAllData() {
         const rawSessions = await getAllData('sessions');
         const rawAttendance = await getAllData('attendance');
         
-        // *** مهاجرت داده‌های قدیمی ***
         let migrationNeeded = false;
         
         for (let r of rawRecords) {
@@ -170,7 +170,6 @@ async function loadAllData() {
             if (!s.academicYear) { s.academicYear = window.activeAcademicYear; await saveData('sessions', s); migrationNeeded = true; }
         }
 
-        // *** فیلترینگ هوشمند ***
         window.allStudentsData = rawStudents;
         window.allGroupsData = rawGroups;
         window.allSubjectsData = rawSubjects;
@@ -186,7 +185,6 @@ async function loadAllData() {
         assessmentItems = await getAllData('assessmentItems');
         window.allAssessmentItems = assessmentItems;
         
-        // فراخوانی توابع رندر (تب‌ها)
         if (typeof renderDashboardData === 'function') renderDashboardData();
         if (typeof renderStudentsList === 'function') renderStudentsList();
         if (typeof renderLessonData === 'function') renderLessonData();
