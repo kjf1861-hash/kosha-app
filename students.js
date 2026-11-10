@@ -10,9 +10,25 @@ async function saveStudent(e) {
         return;
     }
 
+    const nationalId = document.getElementById('studentNationalId').value.trim();
+    
+    // اعتبارسنجی کد ملی
+    if (!validateNationalId(nationalId)) {
+        showToast('کد ملی وارد شده معتبر نیست. لطفاً ۱۰ رقم صحیح وارد کنید.', 'error');
+        return;
+    }
+
+    // بررسی تکراری نبودن کد ملی
+    const isDuplicate = window.allStudentsData.some(st => st.nationalId === nationalId);
+    if (isDuplicate) {
+        showToast('این کد ملی قبلاً برای دانش‌آموز دیگری ثبت شده است.', 'error');
+        return;
+    }
+
     const data = {
         firstName: document.getElementById('studentFirstName').value,
         lastName: document.getElementById('studentLastName').value,
+        nationalId: nationalId,
         groupId: null
     };
     
@@ -74,6 +90,9 @@ function renderStudentsList() {
 
         const g = window.allGroupsData.find(x => x.id === st.groupId);
         const groupBadge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
+        
+        // تولید رمز عبور برای نمایش
+        const studentPass = st.nationalId ? generateStudentPassword(st.nationalId) : '---';
 
         container.innerHTML += `
             <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;">
@@ -90,6 +109,10 @@ function renderStudentsList() {
                         <button class="btn btn-secondary btn-sm" onclick="editStudent(${st.id})" title="ویرایش">✏️</button>
                         <button class="btn btn-danger btn-sm" onclick="deleteStudent(${st.id})" title="حذف">🗑️</button>
                     </div>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-right: 25px; display: flex; gap: 15px;">
+                    <span>🆔 کد ملی: <strong style="font-family: 'IRNumber';">${toPersianNumber(st.nationalId || 'ثبت نشده')}</strong></span>
+                    <span>🔑 رمز: <strong style="font-family: 'IRNumber'; color: var(--primary);">${toPersianNumber(studentPass)}</strong></span>
                 </div>
             </div>
         `;
@@ -114,6 +137,7 @@ async function editStudent(id) {
         document.getElementById('editStudentIdModal').value = student.id;
         document.getElementById('editStudentFirstNameModal').value = student.firstName;
         document.getElementById('editStudentLastNameModal').value = student.lastName;
+        document.getElementById('editStudentNationalIdModal').value = student.nationalId || '';
         document.getElementById('edit-student-modal').classList.add('show');
     }
 }
@@ -125,7 +149,21 @@ function closeEditStudentModal() {
 async function saveEditedStudent(e) {
     if(e) e.preventDefault();
     const id = parseInt(document.getElementById('editStudentIdModal').value);
-    
+    const newNationalId = document.getElementById('editStudentNationalIdModal').value.trim();
+
+    // اعتبارسنجی کد ملی
+    if (!validateNationalId(newNationalId)) {
+        showToast('کد ملی وارد شده معتبر نیست.', 'error');
+        return;
+    }
+
+    // بررسی تکراری نبودن کد ملی (به جز خود دانش‌آموز)
+    const isDuplicate = window.allStudentsData.some(st => st.nationalId === newNationalId && st.id !== id);
+    if (isDuplicate) {
+        showToast('این کد ملی برای دانش‌آموز دیگری ثبت شده است.', 'error');
+        return;
+    }
+
     const existing = await getDataById('students', id);
     const existingGroupId = existing ? existing.groupId : null;
 
@@ -133,6 +171,7 @@ async function saveEditedStudent(e) {
         id: id,
         firstName: document.getElementById('editStudentFirstNameModal').value,
         lastName: document.getElementById('editStudentLastNameModal').value,
+        nationalId: newNationalId,
         groupId: existingGroupId
     };
     
@@ -196,6 +235,15 @@ async function openStudentDetails(id) {
     content.innerHTML = '<p style="text-align:center;">در حال محاسبه...</p>';
 
     const srs = window.allRecordsData.filter(rec => rec.students && rec.students.includes(id));
+    
+    const studentPass = student.nationalId ? generateStudentPassword(student.nationalId) : '---';
+
+    let headerHtml = `
+        <div style="background: var(--primary-light); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--primary);">
+            <p style="margin: 0 0 5px 0;"><strong>کد ملی:</strong> <span style="font-family: 'IRNumber';">${toPersianNumber(student.nationalId || 'ثبت نشده')}</span></p>
+            <p style="margin: 0;"><strong>رمز عبور:</strong> <span style="font-family: 'IRNumber'; color: var(--primary); font-weight: bold; font-size: 1.2rem;">${toPersianNumber(studentPass)}</span></p>
+        </div>
+    `;
 
     let subjectHtml = '<h4 style="color:var(--primary); margin-bottom:10px;">📊 امتیاز به تفکیک دروس</h4>';
     let hasSubjects = false;
@@ -227,7 +275,7 @@ async function openStudentDetails(id) {
     }
     if (!hasItems) itemHtml += '<p style="color:#64748b; font-size:0.9rem; text-align:center;">هیچ ارزشیابی ثبت نشده است.</p>';
 
-    content.innerHTML = subjectHtml + itemHtml;
+    content.innerHTML = headerHtml + subjectHtml + itemHtml;
     document.getElementById('student-details-modal').classList.add('show');
 }
 
