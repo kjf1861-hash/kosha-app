@@ -3,7 +3,7 @@
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 10; // نسخه به 10 افزایش یافت تا دیتابیس جدید ساخته شود
+const DB_VERSION = 11; // ارتقا به 11 برای اضافه شدن کد ملی
 
 let db;
 
@@ -34,7 +34,6 @@ function initDB() {
         request.onsuccess = (event) => {
             db = event.target.result;
             console.log('پایگاه داده با موفقیت راه‌اندازی شد.');
-            // تابع پاکسازی مخرب حذف شد تا آیتم‌های سفارشی شما هرگز پاک نشوند
             resolve(db);
         };
 
@@ -43,10 +42,20 @@ function initDB() {
             console.log('در حال ساخت/به‌روزرسانی جداول پایگاه داده...');
 
             if (!db.objectStoreNames.contains('classProfile')) db.createObjectStore('classProfile', { keyPath: 'id' });
+            
+            // جدول دانش‌آموزان با ایندکس یکتا برای کد ملی
             if (!db.objectStoreNames.contains('students')) {
                 const studentStore = db.createObjectStore('students', { keyPath: 'id', autoIncrement: true });
                 studentStore.createIndex('groupId', 'groupId', { unique: false });
+                studentStore.createIndex('nationalId', 'nationalId', { unique: true }); // ایندکس یکتا
+            } else {
+                // اگر جدول از قبل وجود دارد، در آپدیت جدید ایندکس کد ملی را اضافه می‌کنیم
+                const studentStore = event.currentTarget.transaction.objectStore('students');
+                if (!studentStore.indexNames.contains('nationalId')) {
+                    studentStore.createIndex('nationalId', 'nationalId', { unique: true });
+                }
             }
+
             if (!db.objectStoreNames.contains('groups')) db.createObjectStore('groups', { keyPath: 'id', autoIncrement: true });
             if (!db.objectStoreNames.contains('subjects')) db.createObjectStore('subjects', { keyPath: 'id', autoIncrement: true });
             if (!db.objectStoreNames.contains('records')) {
@@ -66,7 +75,6 @@ function initDB() {
             }
             if (!db.objectStoreNames.contains('assessmentItems')) {
                 const itemStore = db.createObjectStore('assessmentItems', { keyPath: 'id' });
-                // استفاده از put به جای add تا در صورت وجود آیتم قبلی، خطا ندهد
                 for (const item of defaultAssessmentItems) {
                     itemStore.put(item);
                 }
