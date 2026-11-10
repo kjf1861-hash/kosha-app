@@ -59,7 +59,7 @@ function renderScoreData() {
     if (quranSurahSelect) {
         quranSurahSelect.innerHTML = '<option value="" disabled selected>انتخاب سوره...</option>';
         for (const [surah, ayat] of Object.entries(quranSurahs)) {
-            quranSurahSelect.innerHTML += `<option value="${ayat}" data-surah="${surah}">${surah} (${ayat} آیه)</option>`;
+            quranSurahSelect.innerHTML += `<option value="${ayat}" data-surah="${surah}">${surah} (${toPersianNumber(ayat)} آیه)</option>`;
         }
     }
 
@@ -154,7 +154,7 @@ function renderScoreCalendar(type) {
             ${scoreJalaliMonths.map((m, i) => `<option value="${i + 1}" ${state.month === i + 1 ? 'selected' : ''}>${m}</option>`).join('')}
         </select>
         <select onchange="updateScoreCalendarSelect('${type}', 'year', this.value)">
-            ${[parseInt(window.activeAcademicYear.split('-')[0]), parseInt(window.activeAcademicYear.split('-')[1])].map(y => `<option value="${y}" ${state.year === y ? 'selected' : ''}>${y}</option>`).join('')}
+            ${[parseInt(window.activeAcademicYear.split('-')[0]), parseInt(window.activeAcademicYear.split('-')[1])].map(y => `<option value="${y}" ${state.year === y ? 'selected' : ''}>${toPersianNumber(y)}</option>`).join('')}
         </select>
     `;
 
@@ -196,7 +196,7 @@ function renderScoreCalendar(type) {
 
         const clickHandler = inAcademicYear ? `onclick="selectScoreCalendarDay('${type}', '${dateStr}')"` : `onclick="showToast('این تاریخ خارج از بازه سال تحصیلی است.', 'error')"`;
 
-        grid.innerHTML += `<div class="${classes}" ${clickHandler}>${day}</div>`;
+        grid.innerHTML += `<div class="${classes}" ${clickHandler}>${toPersianNumber(day)}</div>`;
     }
 }
 
@@ -209,7 +209,7 @@ function selectScoreCalendarDay(type, dateStr) {
     scoreCalendarState[type].selectedDate = dateStr;
     
     const displayEl = document.getElementById(`${type}DateDisplay`);
-    if (displayEl) displayEl.textContent = dateStr;
+    if (displayEl) displayEl.textContent = toPersianNumber(dateStr);
 
     const hiddenInputId = type === 'record' ? 'recordDate' : `${type}DateHidden`;
     const hiddenInput = document.getElementById(hiddenInputId);
@@ -243,7 +243,7 @@ function renderScoreDayArchive(type, dateStr) {
     }
 
     archiveContainer.style.display = 'block';
-    archiveList.innerHTML = `<h4>📋 سوابق ثبت‌شده در این روز (${dayRecords.length} مورد):</h4>`;
+    archiveList.innerHTML = `<h4>📋 سوابق ثبت‌شده در این روز (${toPersianNumber(dayRecords.length)} مورد):</h4>`;
     
     dayRecords.forEach(rec => {
         let names = '';
@@ -260,7 +260,7 @@ function renderScoreDayArchive(type, dateStr) {
                     <strong>${rec.title}</strong> 
                     <span style="font-size:0.75rem; color:var(--text-muted);">(${names || 'بدون دانش‌آموز'})</span>
                 </div>
-                <div style="color:var(--primary); font-weight:bold; margin-right:10px;">${rec.finalScore} امتیاز</div>
+                <div style="color:var(--primary); font-weight:bold; margin-right:10px;">${toPersianNumber(rec.finalScore)} امتیاز</div>
             </div>
         `;
     });
@@ -294,7 +294,7 @@ function createGroupedView(container, checkboxClass, viewMode, toggleGroupFnName
     if (window.allGroupsData.length === 0) { container.innerHTML = '<p style="text-align:center; color:#dc2626;">هیچ گروهی ساخته نشده است.</p>'; return; }
     window.allGroupsData.forEach(g => {
         const groupStudents = window.allStudentsData.filter(st => st.groupId === g.id);
-        let groupHtml = `<details class="group-accordion"><summary><div class="group-header-checkbox"><input type="checkbox" class="group-select-all-checkbox" onchange="${toggleGroupFnName}(this, ${g.id}, '${checkboxClass}')"><span>${g.symbol} ${g.name} (${groupStudents.length} نفر)</span></div></summary><div class="group-students-container">`;
+        let groupHtml = `<details class="group-accordion"><summary><div class="group-header-checkbox"><input type="checkbox" class="group-select-all-checkbox" onchange="${toggleGroupFnName}(this, ${g.id}, '${checkboxClass}')"><span>${g.symbol} ${g.name} (${toPersianNumber(groupStudents.length)} نفر)</span></div></summary><div class="group-students-container">`;
         if (groupStudents.length === 0) groupHtml += `<p style="color:#64748b; font-size:0.85rem; text-align:center;">خالی</p>`;
         else groupStudents.forEach(st => { 
             const g2 = window.allGroupsData.find(x => x.id === st.groupId);
@@ -458,7 +458,7 @@ function renderScoreInput(item) {
         select.className = 'form-control'; select.id = 'dynamicLevelInput'; select.required = true;
         select.innerHTML = '<option value="" disabled selected>انتخاب سطح...</option>';
         item.levels.forEach(level => {
-            select.innerHTML += `<option value="${level.score}">${level.name} (${level.score} امتیاز)</option>`;
+            select.innerHTML += `<option value="${level.score}">${level.name} (${toPersianNumber(level.score)} امتیاز)</option>`;
         });
         container.appendChild(select);
     } else if (item.type === 'count') {
@@ -468,7 +468,7 @@ function renderScoreInput(item) {
         container.appendChild(input);
     } else if (item.type === 'fixed') {
         label.textContent = 'امتیاز اختصاص‌یافته:';
-        container.innerHTML = `<p style="font-weight: bold; color: #4A90E2;">${item.score} امتیاز (خودکار)</p>`;
+        container.innerHTML = `<p style="font-weight: bold; color: #4A90E2;">${toPersianNumber(item.score)} امتیاز (خودکار)</p>`;
     } else if (item.type === 'free') {
         label.textContent = item.placeholder || 'امتیاز را وارد کنید:';
         const input = document.createElement('input');
@@ -513,9 +513,9 @@ function showPreview(isFinal) {
 
     document.getElementById('preview-content').innerHTML = `
         <div class="preview-row"><strong>آیتم:</strong> <span>${selectedItem.title}</span></div>
-        <div class="preview-row"><strong>تعداد:</strong> <span>${studentCheckboxes.length} نفر</span></div>
-        <div class="preview-row"><strong>تاریخ:</strong> <span>${dateStr}</span></div>
-        <div class="preview-row" style="background: #eef2ff; padding: 10px; border-radius: 8px; margin-top: 10px;"><strong>امتیاز:</strong> <span style="font-size: 1.2rem; color: #4A90E2;">${finalScore}</span></div>
+        <div class="preview-row"><strong>تعداد:</strong> <span>${toPersianNumber(studentCheckboxes.length)} نفر</span></div>
+        <div class="preview-row"><strong>تاریخ:</strong> <span>${toPersianNumber(dateStr)}</span></div>
+        <div class="preview-row" style="background: #eef2ff; padding: 10px; border-radius: 8px; margin-top: 10px;"><strong>امتیاز:</strong> <span style="font-size: 1.2rem; color: #4A90E2;">${toPersianNumber(finalScore)}</span></div>
     `;
     
     window.tempRecordData = {
@@ -576,7 +576,7 @@ async function saveQuranRecord() {
     const finalScore = (ayat >= threshold) ? ayat * 5 : 0;
     
     if (finalScore === 0) {
-        showToast(`برای دریافت امتیاز، حداقل ${threshold} آیه از سوره ${surahName} باید حفظ شود.`, 'error');
+        showToast(`برای دریافت امتیاز، حداقل ${toPersianNumber(threshold)} آیه از سوره ${surahName} باید حفظ شود.`, 'error');
         return;
     }
 
@@ -586,7 +586,7 @@ async function saveQuranRecord() {
     const recordData = {
         subjectId: null,
         itemName: "پویش حفظ جزء سی قرآن کریم",
-        title: `حفظ سوره ${surahName} - ${ayat} آیه`,
+        title: `حفظ سوره ${surahName} - ${toPersianNumber(ayat)} آیه`,
         date: dateStr,
         students: Array.from(studentCheckboxes).map(cb => parseInt(cb.value)),
         arf: false,
@@ -714,7 +714,7 @@ function loadAssessmentRecords() {
 
     filteredRecords.sort((a, b) => b.date.localeCompare(a.date));
     const countEl = document.getElementById('records-count');
-    if (countEl) countEl.textContent = `تعداد نتایج: ${filteredRecords.length} رکورد`;
+    if (countEl) countEl.textContent = `تعداد نتایج: ${toPersianNumber(filteredRecords.length)} رکورد`;
 
     if (filteredRecords.length === 0) { 
         container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ رکوردی یافت نشد.</p>'; 
@@ -744,9 +744,9 @@ function loadAssessmentRecords() {
             <div class="record-item ${rec.arf ? 'arf-list-item' : ''}">
                 <div class="record-header">
                     <span class="record-title">${rec.title} ${rec.arf ? '🎁' : ''}</span>
-                    <span class="record-score">${rec.finalScore} امتیاز</span>
+                    <span class="record-score">${toPersianNumber(rec.finalScore)} امتیاز</span>
                 </div>
-                <div class="record-details"><span>📚 ${subjectName} | ${rec.itemName}</span><span>📅 ${rec.date}</span></div>
+                <div class="record-details"><span>📚 ${subjectName} | ${rec.itemName}</span><span>📅 ${toPersianNumber(rec.date)}</span></div>
                 <div class="record-details" style="font-size: 0.8rem; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">👥 ${studentNames}</div>
                 <div class="record-actions">
                     <button class="btn btn-secondary btn-sm" onclick="openEditRecordModal(${rec.id})">✏️ ویرایش</button>
@@ -758,7 +758,7 @@ function loadAssessmentRecords() {
     if (pagination) {
         if (totalPages > 1) {
             pagination.style.display = 'flex';
-            document.getElementById('recordsPageInfo').textContent = `صفحه ${currentPage.records} از ${totalPages}`;
+            document.getElementById('recordsPageInfo').textContent = `صفحه ${toPersianNumber(currentPage.records)} از ${toPersianNumber(totalPages)}`;
             document.getElementById('btnPrevRecords').disabled = (currentPage.records === 1);
             document.getElementById('btnNextRecords').disabled = (currentPage.records === totalPages);
         } else { pagination.style.display = 'none'; }
@@ -901,9 +901,9 @@ async function loadQuranRewards() {
         let html = '';
         for (const studentId in grouped) {
             const student = window.allStudentsData.find(s => s.id == studentId);
-            const studentName = student ? `${student.firstName} ${student.lastName}` : `دانش‌آموز ${studentId}`;
+            const studentName = student ? `${student.firstName} ${student.lastName}` : `دانش‌آموز ${toPersianNumber(studentId)}`;
             const latest = grouped[studentId][grouped[studentId].length - 1];
-            html += `<div class="list-item" style="flex-direction: column; align-items: flex-start; padding: 15px; background: var(--arf-bg); border-right: 4px solid var(--arf-border); margin-bottom: 10px;"><strong style="font-size: 1.1rem;">🏅 ${studentName}</strong><span style="font-size: 0.9rem; color: var(--arf-border);">تعداد سوره‌ها: ${latest.totalSurahs} | تعداد آیات: ${latest.totalAyats}</span></div>`;
+            html += `<div class="list-item" style="flex-direction: column; align-items: flex-start; padding: 15px; background: var(--arf-bg); border-right: 4px solid var(--arf-border); margin-bottom: 10px;"><strong style="font-size: 1.1rem;">🏅 ${studentName}</strong><span style="font-size: 0.9rem; color: var(--arf-border);">تعداد سوره‌ها: ${toPersianNumber(latest.totalSurahs)} | تعداد آیات: ${toPersianNumber(latest.totalAyats)}</span></div>`;
         }
         container.innerHTML = html;
     } catch (e) { container.innerHTML = '<p style="color:red;">خطا</p>'; }
