@@ -1,8 +1,8 @@
-const CACHE_NAME = 'kosha-cache-v70';
+const CACHE_NAME = 'kosha-cache-v71';
 const ASSETS_TO_CACHE = [
     './', './index.html', './styles.css', './app.js', './db.js', './manifest.json', './icon.svg', 
     './class.js', './students.js', './lesson.js', './group.js', './session.js', './score.js', './reset.js',
-    './fonts/IRYekan.ttf', './fonts/IRYekan-Bold.ttf', './fonts/IRTerafik.ttf', './fonts/IRTerafik-Bold.ttf', './fonts/IRNumber.ttf'
+    './fonts/IRYekan.ttf?v=1', './fonts/IRYekan-Bold.ttf?v=1', './fonts/IRTerafik.ttf?v=1', './fonts/IRTerafik-Bold.ttf?v=1', './fonts/IRNumber.ttf?v=1'
 ];
 
 self.addEventListener('install', (event) => {
