@@ -67,10 +67,10 @@ function populateScheduleDaysCheckboxes() {
 }
 
 function renderDashboardData() {
-    document.getElementById('stat-students').textContent = window.allStudentsData.length;
-    document.getElementById('stat-subjects').textContent = window.allSubjectsData.length;
-    document.getElementById('stat-sessions').textContent = window.allSessionsData.length;
-    document.getElementById('stat-records').textContent = window.allRecordsData.length;
+    document.getElementById('stat-students').textContent = toPersianNumber(window.allStudentsData.length);
+    document.getElementById('stat-subjects').textContent = toPersianNumber(window.allSubjectsData.length);
+    document.getElementById('stat-sessions').textContent = toPersianNumber(window.allSessionsData.length);
+    document.getElementById('stat-records').textContent = toPersianNumber(window.allRecordsData.length);
 
     const studentScores = window.allStudentsData.map(st => {
         let total = 0;
@@ -118,11 +118,11 @@ function renderActivityCards() {
     const progressPercent = Math.round((usedItems.size / totalItems) * 100);
 
     const cards = [
-        { icon: '🌟', value: totalAyats, label: 'آیه حفظ شده' },
-        { icon: '✍️', value: handwritingCount, label: 'خوش‌خط‌نویسی' },
-        { icon: '🎁', value: specialRewardsCount, label: 'تشویق ویژه' },
-        { icon: '🧪', value: examCount, label: 'آزمون برگزار شده' },
-        { icon: '📈', value: progressPercent + '%', label: 'پیشرفت ارزشیابی' }
+        { icon: '🌟', value: toPersianNumber(totalAyats), label: 'آیه حفظ شده' },
+        { icon: '✍️', value: toPersianNumber(handwritingCount), label: 'خوش‌خط‌نویسی' },
+        { icon: '🎁', value: toPersianNumber(specialRewardsCount), label: 'تشویق ویژه' },
+        { icon: '🧪', value: toPersianNumber(examCount), label: 'آزمون برگزار شده' },
+        { icon: '📈', value: toPersianNumber(progressPercent) + '٪', label: 'پیشرفت ارزشیابی' }
     ];
 
     container.innerHTML = cards.map(c => `
@@ -172,14 +172,14 @@ function renderAttendanceChart() {
                 ${late > 0 ? `<circle cx="50" cy="50" r="${radius}" fill="transparent" stroke="#f59e0b" stroke-width="15" stroke-dasharray="${lDash} ${circumference}" stroke-dashoffset="-${pDash + aDash}" />` : ''}
             </svg>
             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                <span style="font-size: 1.5rem; font-weight: bold; color: #22c55e;">${pp}%</span>
+                <span style="font-size: 1.5rem; font-weight: bold; color: #22c55e;">${toPersianNumber(pp)}٪</span>
                 <span style="font-size: 0.75rem; color: var(--text-muted);">حضور</span>
             </div>
         </div>
         <div class="att-legend" style="flex-direction: column; align-items: flex-start; margin-bottom: 0; margin-right: 20px; gap: 10px;">
-            <div class="att-legend-item"><div class="att-legend-color present"></div>حاضر: ${present} (${pp}%)</div>
-            <div class="att-legend-item"><div class="att-legend-color absent"></div>غایب: ${absent} (${pa}%)</div>
-            <div class="att-legend-item"><div class="att-legend-color late"></div>تأخیر: ${late} (${pl}%)</div>
+            <div class="att-legend-item"><div class="att-legend-color present"></div>حاضر: ${toPersianNumber(present)} (${toPersianNumber(pp)}٪)</div>
+            <div class="att-legend-item"><div class="att-legend-color absent"></div>غایب: ${toPersianNumber(absent)} (${toPersianNumber(pa)}٪)</div>
+            <div class="att-legend-item"><div class="att-legend-color late"></div>تأخیر: ${toPersianNumber(late)} (${toPersianNumber(pl)}٪)</div>
         </div>
     `;
 }
@@ -210,7 +210,7 @@ function renderSubjectAveragesChart() {
             <div>
                 <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 4px;">
                     <span>${sub.symbol || '📚'} ${sub.name}</span>
-                    <strong style="color: var(--primary);">${sub.total} امتیاز</strong>
+                    <strong style="color: var(--primary);">${toPersianNumber(sub.total)} امتیاز</strong>
                 </div>
                 <div class="progress-bar-container">
                     <div class="progress-bar-fill" style="width: ${percent}%;"></div>
@@ -247,7 +247,7 @@ function renderTopStudents(studentScores) {
                     <span style="font-size: 1.1rem; font-weight: bold;">${st.firstName} ${st.lastName}</span>
                     ${groupBadge}
                 </div>
-                <span class="rank-badge" style="background: var(--primary); color: white;">${st.totalScore} امتیاز</span>
+                <span class="rank-badge" style="background: var(--primary); color: white;">${toPersianNumber(st.totalScore)} امتیاز</span>
             </div>
         `;
     }).join('');
@@ -291,7 +291,7 @@ function renderTopGroups() {
                 <span style="font-size:1.3rem;">${g.symbol}</span>
                 <span style="font-size: 1.1rem; font-weight: bold;">${g.name}</span>
             </div>
-            <span class="rank-badge">${g.totalScore} امتیاز</span>
+            <span class="rank-badge">${toPersianNumber(g.totalScore)} امتیاز</span>
         </div>
     `).join('');
 }
@@ -327,8 +327,8 @@ function renderNeedsAttention(studentScores) {
                 <strong>${st.firstName} ${st.lastName}</strong>
             </div>
             <div style="display:flex; gap:8px; font-size: 0.85rem;">
-                <span class="rank-badge" style="background:#fee2e2; color:#b91c1c;">${st.totalScore} امتیاز</span>
-                <span class="rank-badge" style="background:#fef3c7; color:#b45309;">${st.absences} غیبت</span>
+                <span class="rank-badge" style="background:#fee2e2; color:#b91c1c;">${toPersianNumber(st.totalScore)} امتیاز</span>
+                <span class="rank-badge" style="background:#fef3c7; color:#b45309;">${toPersianNumber(st.absences)} غیبت</span>
             </div>
         </div>
     `).join('');
@@ -354,11 +354,11 @@ function renderRecentActivities() {
             <div class="list-item" style="padding: 10px 15px; flex-direction: column; align-items: stretch; gap: 5px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <strong style="color: var(--primary); font-size: 0.95rem;">${rec.title}</strong>
-                    <span style="font-size: 0.75rem; color: var(--text-muted);">${rec.date}</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">${toPersianNumber(rec.date)}</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; font-size: 0.8rem; color: var(--text-muted);">
                     <span>📚 ${subjectName} | 🎯 ${rec.itemName}</span>
-                    <span>👥 ${studentCount} نفر</span>
+                    <span>👥 ${toPersianNumber(studentCount)} نفر</span>
                 </div>
             </div>
         `;
@@ -390,11 +390,11 @@ function renderFullClassReport(studentScores) {
             <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px; margin-bottom: 8px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                     <div style="display:flex; align-items:center; gap:5px;">
-                        <span style="font-weight:bold; min-width:25px; color:var(--text-muted);">${index + 1}.</span>
+                        <span style="font-weight:bold; min-width:25px; color:var(--text-muted);">${toPersianNumber(index + 1)}.</span>
                         <span><strong>${st.firstName} ${st.lastName}</strong></span>
                         ${groupBadge}
                     </div>
-                    <span class="rank-badge">${st.totalScore} امتیاز</span>
+                    <span class="rank-badge">${toPersianNumber(st.totalScore)} امتیاز</span>
                 </div>
                 <div class="score-bar-container">
                     <div class="score-bar-fill ${index === 0 && st.totalScore > 0 ? 'is-first' : ''}" style="width: ${percent}%;"></div>
@@ -406,7 +406,6 @@ function renderFullClassReport(studentScores) {
 
 async function exportClassCSV() {
     try {
-        // استفاده از کاما (,) استاندارد برای سازگاری کامل با Google Sheets
         let csvContent = "ردیف,نام,نام خانوادگی,مجموع امتیاز\r\n";
         const studentScores = window.allStudentsData.map(st => {
             let total = 0;
@@ -425,7 +424,6 @@ async function exportClassCSV() {
             csvContent += `${i + 1},"${st.firstName}","${st.lastName}",${st.totalScore}\r\n`;
         });
 
-        // *** راه‌حل استاندارد: UTF-8 با BOM و پسوند CSV ***
         const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); 
@@ -449,7 +447,7 @@ function printClassReport() {
     let html = `
         <div class="rc-header">
             <h2>گزارش امتیازات کلاس</h2>
-            <p>${classData} - سال تحصیلی ${window.activeAcademicYear}</p>
+            <p>${classData} - سال تحصیلی ${toPersianNumber(window.activeAcademicYear)}</p>
         </div>
         <table style="width:100%; border-collapse: collapse; margin-top:15px; font-family:inherit; text-align:center;">
             <thead>
@@ -478,9 +476,9 @@ function printClassReport() {
     studentScores.forEach((st, i) => {
         html += `
             <tr>
-                <td style="border: 1px solid #cbd5e1; padding: 8px;">${i + 1}</td>
+                <td style="border: 1px solid #cbd5e1; padding: 8px;">${toPersianNumber(i + 1)}</td>
                 <td style="border: 1px solid #cbd5e1; padding: 8px; text-align:right;">${st.firstName} ${st.lastName}</td>
-                <td style="border: 1px solid #cbd5e1; padding: 8px;">${st.totalScore}</td>
+                <td style="border: 1px solid #cbd5e1; padding: 8px;">${toPersianNumber(st.totalScore)}</td>
             </tr>
         `;
     });
