@@ -420,10 +420,10 @@ function changePage(section, direction) {
     else if (section === 'records') { currentPage.records += direction; if(typeof loadAssessmentRecords === 'function') loadAssessmentRecords(); }
 }
 
-// *** تغییر مهم در این بخش: اضافه کردن ?v=73 به آدرس ثبت سرویس ورکر ***
+// *** تغییر مهم: حذف ?v=73 از آدرس ثبت سرویس ورکر ***
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=73').then((reg) => {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
             reg.addEventListener('updatefound', () => {
                 const newWorker = reg.installing;
                 newWorker.addEventListener('statechange', () => {
@@ -431,6 +431,18 @@ if ('serviceWorker' in navigator) {
                 });
             });
         });
+    });
+}
+
+function showUpdateToast(newWorker) {
+    const toast = document.createElement('div');
+    toast.className = 'toast-container';
+    toast.innerHTML = `<span>🚀 نسخه جدید!</span><button class="toast-btn" id="update-btn">به‌روزرسانی</button>`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 100);
+    document.getElementById('update-btn').addEventListener('click', () => {
+        if (newWorker) newWorker.postMessage({ action: 'skipWaiting' });
+        setTimeout(() => window.location.reload(), 500);
     });
 }
 
