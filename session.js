@@ -99,7 +99,7 @@ function renderScheduleView() {
 
     let html = `<thead><tr><th>روز / زنگ</th>`;
     for (let i = 1; i <= maxPeriodToShow; i++) {
-        html += `<th>زنگ ${i}</th>`;
+        html += `<th>زنگ ${toPersianNumber(i)}</th>`;
     }
     html += `</tr></thead><tbody>`;
 
@@ -156,7 +156,7 @@ function renderScheduleEdit() {
             const currentSubId = periods[i] || '';
             html += `
                 <div class="schedule-period-row">
-                    <span>زنگ ${i + 1}:</span>
+                    <span>زنگ ${toPersianNumber(i + 1)}:</span>
                     <select class="schedule-subject-select" data-day="${day}" data-period="${i}">
                         <option value="">-- خالی --</option>
                         ${window.allSubjectsData.map(s => `<option value="${s.id}" ${s.id == currentSubId ? 'selected' : ''}>${s.symbol || ''} ${s.name}</option>`).join('')}
@@ -306,7 +306,7 @@ function exportScheduleHTML() {
                 <table>
                     <thead><tr><th>روز / زنگ</th>`;
         for (let i = 1; i <= maxPeriodToShow; i++) {
-            html += `<th>زنگ ${i}</th>`;
+            html += `<th>زنگ ${toPersianNumber(i)}</th>`;
         }
         html += `</tr></thead><tbody>`;
         
@@ -361,7 +361,7 @@ function printSchedule() {
             <table>
                 <thead><tr><th>روز / زنگ</th>`;
         for (let i = 1; i <= maxPeriodToShow; i++) {
-            html += `<th>زنگ ${i}</th>`;
+            html += `<th>زنگ ${toPersianNumber(i)}</th>`;
         }
         html += `</tr></thead><tbody>`;
         
@@ -437,7 +437,7 @@ function initCalendar() {
 
     yearSelect.innerHTML = '';
     allowedYears.forEach(y => {
-        yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+        yearSelect.innerHTML += `<option value="${y}">${toPersianNumber(y)}</option>`;
     });
     yearSelect.value = currentCalendarYear;
 
@@ -486,7 +486,7 @@ function renderCalendarGrid() {
 
         const clickHandler = inAcademicYear ? `onclick="selectCalendarDay(${day}, '${dateStr}')"` : `onclick="showOutsideRangeError()"`;
 
-        grid.innerHTML += `<div class="${classes}" ${clickHandler}>${day}</div>`;
+        grid.innerHTML += `<div class="${classes}" ${clickHandler}>${toPersianNumber(day)}</div>`;
     }
 }
 
@@ -567,7 +567,7 @@ function selectCalendarDay(day, dateStr) {
         detectedDisplay.style.display = 'block';
         
         if (existingSession) {
-            detectedDisplay.innerHTML = `📅 تاریخ انتخابی: <strong>${selectedSessionDate}</strong> (${selectedSessionDayOfWeek})`;
+            detectedDisplay.innerHTML = `📅 تاریخ انتخابی: <strong>${toPersianNumber(selectedSessionDate)}</strong> (${selectedSessionDayOfWeek})`;
             actionArea.innerHTML = `
                 <div style="text-align:center; margin-bottom:10px; color:#16a34a; font-weight:bold;">✅ جلسه ثبت شده است.</div>
                 <div style="display:flex; gap:5px;">
@@ -728,7 +728,7 @@ async function openSessionDetails(sessionId) {
     currentSessionDay = session.dayOfWeek;
     currentSessionAttendanceState = {};
 
-    document.getElementById('session-details-title').textContent = `📅 حضور و غیاب - ${session.date} (${session.dayOfWeek})`;
+    document.getElementById('session-details-title').textContent = `📅 حضور و غیاب - ${toPersianNumber(session.date)} (${session.dayOfWeek})`;
     document.getElementById('session-details-content').innerHTML = '<p style="text-align:center;">در حال بارگذاری...</p>';
     document.getElementById('session-details-modal').classList.add('show');
 
@@ -769,7 +769,7 @@ function renderSessionDetails(schedule) {
 
         let sectionHtml = `
             <div class="session-period-section" id="session-period-${periodNum}">
-                <div class="session-period-title">🔔 زنگ ${periodNum}: ${subName}</div>
+                <div class="session-period-title">🔔 زنگ ${toPersianNumber(periodNum)}: ${subName}</div>
                 <div style="display:flex; gap:5px; margin-bottom:10px;">
                     <button type="button" class="btn btn-secondary btn-sm" onclick="setAllPeriodAttendance(${periodNum}, 'present')">همه حاضر 🟢</button>
                     <button type="button" class="btn btn-secondary btn-sm" onclick="setAllPeriodAttendance(${periodNum}, 'absent')">همه غایب 🔴</button>
@@ -872,7 +872,7 @@ async function generateAttendanceReports() {
     const tsc = document.getElementById('total-sessions-count');
     if (!container || !tsc) return;
     
-    tsc.textContent = window.allSessionsData.length;
+    tsc.textContent = toPersianNumber(window.allSessionsData.length);
     if (window.allStudentsData.length === 0) { container.innerHTML = '<p style="text-align:center;">لیست خالی است.</p>'; return; }
     
     let tp = 0, ta = 0, tl = 0;
@@ -882,7 +882,7 @@ async function generateAttendanceReports() {
     
     if (tall > 0) {
         const pp = (tp / tall) * 100, pa = (ta / tall) * 100, pl = (tl / tall) * 100;
-        html += `<div class="card" style="background: var(--input-bg); margin-bottom: 20px; border: 1px solid var(--border-color);"><h4 style="margin: 0 0 10px 0; color: var(--primary); text-align: center;">📊 نمودار کلی حضور</h4><div class="att-stacked-bar-container">${pp > 0 ? `<div class="att-stacked-segment present" style="width: ${pp}%;">${Math.round(pp)}%</div>` : ''}${pa > 0 ? `<div class="att-stacked-segment absent" style="width: ${pa}%;">${Math.round(pa)}%</div>` : ''}${pl > 0 ? `<div class="att-stacked-segment late" style="width: ${pl}%;">${Math.round(pl)}%</div>` : ''}</div><div class="att-legend"><div class="att-legend-item"><div class="att-legend-color present"></div>حاضر</div><div class="att-legend-item"><div class="att-legend-color absent"></div>غایب</div><div class="att-legend-item"><div class="att-legend-color late"></div>تأخیر</div></div></div>`;
+        html += `<div class="card" style="background: var(--input-bg); margin-bottom: 20px; border: 1px solid var(--border-color);"><h4 style="margin: 0 0 10px 0; color: var(--primary); text-align: center;">📊 نمودار کلی حضور</h4><div class="att-stacked-bar-container">${pp > 0 ? `<div class="att-stacked-segment present" style="width: ${pp}%;">${toPersianNumber(Math.round(pp))}٪</div>` : ''}${pa > 0 ? `<div class="att-stacked-segment absent" style="width: ${pa}%;">${toPersianNumber(Math.round(pa))}٪</div>` : ''}${pl > 0 ? `<div class="att-stacked-segment late" style="width: ${pl}%;">${toPersianNumber(Math.round(pl))}٪</div>` : ''}</div><div class="att-legend"><div class="att-legend-item"><div class="att-legend-color present"></div>حاضر</div><div class="att-legend-item"><div class="att-legend-color absent"></div>غایب</div><div class="att-legend-item"><div class="att-legend-color late"></div>تأخیر</div></div></div>`;
     }
     
     if (currentAttReportFilter === 'class') {
@@ -898,7 +898,7 @@ async function generateAttendanceReports() {
             });
             const g = window.allGroupsData.find(x => x.id === st.groupId);
             const badge = g ? `<span class="group-label" style="margin-right:5px;">${g.symbol} ${g.name}</span>` : '';
-            html += `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px;"><div style="display: flex; justify-content: space-between; align-items: center;"><div style="font-weight: bold; font-size: 1.05rem;">${st.firstName} ${st.lastName} ${badge}</div></div><div style="display: flex; gap: 5px; flex-wrap: wrap;"><span class="att-report-badge present">حاضر: ${p}</span><span class="att-report-badge absent">غایب: ${a}</span><span class="att-report-badge late">تأخیر: ${l}</span></div></div>`;
+            html += `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px;"><div style="display: flex; justify-content: space-between; align-items: center;"><div style="font-weight: bold; font-size: 1.05rem;">${st.firstName} ${st.lastName} ${badge}</div></div><div style="display: flex; gap: 5px; flex-wrap: wrap;"><span class="att-report-badge present">حاضر: ${toPersianNumber(p)}</span><span class="att-report-badge absent">غایب: ${toPersianNumber(a)}</span><span class="att-report-badge late">تأخیر: ${toPersianNumber(l)}</span></div></div>`;
         });
     } else {
         html += '<h3 style="margin-bottom: 15px;">👥 گزارش حضور گروهی</h3>';
@@ -906,7 +906,7 @@ async function generateAttendanceReports() {
             let p = 0, a = 0, l = 0;
             const gs = window.allStudentsData.filter(s => s.groupId === g.id), gsi = gs.map(s => s.id);
             window.allAttendanceData.forEach(att => { if (gsi.includes(att.studentId)) { if (att.status === 'present') p++; else if (att.status === 'absent') a++; else if (att.status === 'late') l++; } });
-            html += `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px;"><div style="font-weight: bold; font-size: 1.05rem;">${g.symbol} ${g.name} (${gs.length} نفر)</div><div style="display: flex; gap: 5px; flex-wrap: wrap;"><span class="att-report-badge present">حاضر: ${p}</span><span class="att-report-badge absent">غایب: ${a}</span><span class="att-report-badge late">تأخیر: ${l}</span></div></div>`;
+            html += `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px;"><div style="font-weight: bold; font-size: 1.05rem;">${g.symbol} ${g.name} (${toPersianNumber(gs.length)} نفر)</div><div style="display: flex; gap: 5px; flex-wrap: wrap;"><span class="att-report-badge present">حاضر: ${toPersianNumber(p)}</span><span class="att-report-badge absent">غایب: ${toPersianNumber(a)}</span><span class="att-report-badge late">تأخیر: ${toPersianNumber(l)}</span></div></div>`;
         });
     }
     container.innerHTML = html;
@@ -914,7 +914,6 @@ async function generateAttendanceReports() {
 
 async function exportSessionCSV() {
     try {
-        // استفاده از کاما (,) برای سازگاری کامل با Google Sheets
         let csvContent = "ردیف,نام,نام خانوادگی,تعداد حاضر,تعداد غایب,تعداد تأخیر\r\n";
         window.allStudentsData.forEach((st, i) => {
             let p = 0, a = 0, l = 0;
