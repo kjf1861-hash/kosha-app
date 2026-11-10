@@ -25,6 +25,46 @@ function toPersianNumber(num) {
     return num.toString().replace(/\d/g, x => persianDigits[x]);
 }
 
+// *** تابع جدید برای اعتبارسنجی کد ملی ***
+function validateNationalId(nationalId) {
+    if (!/^\d{10}$/.test(nationalId)) return false;
+    if (/^(\d)\1{9}$/.test(nationalId)) return false; // جلوگیری از کدهای تکراری مثل 1111111111
+
+    let check = parseInt(nationalId[9]);
+    let sum = 0;
+    for (let i = 0; i < 9; i++) {
+        sum += parseInt(nationalId[i]) * (10 - i);
+    }
+    let remainder = sum % 11;
+    if ((remainder < 2 && check === remainder) || (remainder >= 2 && check === 11 - remainder)) {
+        return true;
+    }
+    return false;
+}
+
+// *** تابع جدید برای تولید رمز عبور ۴ رقمی از کد ملی ***
+function generateStudentPassword(nationalId) {
+    if (!nationalId || nationalId.length !== 10) return '0000';
+    
+    // تقسیم کد ملی به دو نیمه
+    const part1 = nationalId.substring(0, 5);
+    const part2 = nationalId.substring(5, 10);
+    
+    let sum1 = 0;
+    for (let i = 0; i < part1.length; i++) sum1 += parseInt(part1[i]);
+    
+    let sum2 = 0;
+    for (let i = 0; i < part2.length; i++) sum2 += parseInt(part2[i]);
+    
+    // هش کردن (ضرب در عدد ثابت و توان 2)
+    const hash = Math.pow((sum1 * 7) + (sum2 * 3), 2);
+    
+    // اطمینان از 4 رقمی بودن (باقیمانده تقسیم بر 9000 + 1000)
+    const finalPass = (hash % 9000) + 1000;
+    
+    return finalPass.toString();
+}
+
 const quranSurahs = {
     "ناس": 6, "فلق": 5, "توحید": 4, "مسد": 5, "نصر": 3, "کافرون": 6, "کوثر": 3, "ماعون": 7,
     "قریش": 4, "فیل": 5, "همزه": 9, "عصر": 3, "تکاثر": 8, "قارعه": 11, "عاديات": 11, "زلزال": 8,
@@ -420,7 +460,6 @@ function changePage(section, direction) {
     else if (section === 'records') { currentPage.records += direction; if(typeof loadAssessmentRecords === 'function') loadAssessmentRecords(); }
 }
 
-// *** تغییر مهم: حذف ?v=73 از آدرس ثبت سرویس ورکر ***
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').then((reg) => {
@@ -431,18 +470,6 @@ if ('serviceWorker' in navigator) {
                 });
             });
         });
-    });
-}
-
-function showUpdateToast(newWorker) {
-    const toast = document.createElement('div');
-    toast.className = 'toast-container';
-    toast.innerHTML = `<span>🚀 نسخه جدید!</span><button class="toast-btn" id="update-btn">به‌روزرسانی</button>`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.classList.add('show'), 100);
-    document.getElementById('update-btn').addEventListener('click', () => {
-        if (newWorker) newWorker.postMessage({ action: 'skipWaiting' });
-        setTimeout(() => window.location.reload(), 500);
     });
 }
 
