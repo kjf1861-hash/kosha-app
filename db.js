@@ -3,11 +3,10 @@
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 11; // ارتقا به 11 برای اضافه شدن کد ملی
+const DB_VERSION = 12; // ارتقا به 12 برای اضافه شدن جداول آزمون‌ها
 
 let db;
 
-// آرایه آیتم‌های پیش‌فرض (11 آیتم عمومی)
 const defaultAssessmentItems = [
     { id: 1, title: "پرسش و پاسخ", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
     { id: 2, title: "حفظ و قرائت", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
@@ -43,13 +42,11 @@ function initDB() {
 
             if (!db.objectStoreNames.contains('classProfile')) db.createObjectStore('classProfile', { keyPath: 'id' });
             
-            // جدول دانش‌آموزان با ایندکس یکتا برای کد ملی
             if (!db.objectStoreNames.contains('students')) {
                 const studentStore = db.createObjectStore('students', { keyPath: 'id', autoIncrement: true });
                 studentStore.createIndex('groupId', 'groupId', { unique: false });
-                studentStore.createIndex('nationalId', 'nationalId', { unique: true }); // ایندکس یکتا
+                studentStore.createIndex('nationalId', 'nationalId', { unique: true });
             } else {
-                // اگر جدول از قبل وجود دارد، در آپدیت جدید ایندکس کد ملی را اضافه می‌کنیم
                 const studentStore = event.currentTarget.transaction.objectStore('students');
                 if (!studentStore.indexNames.contains('nationalId')) {
                     studentStore.createIndex('nationalId', 'nationalId', { unique: true });
@@ -81,6 +78,18 @@ function initDB() {
             }
             if (!db.objectStoreNames.contains('weeklySchedule')) {
                 db.createObjectStore('weeklySchedule', { keyPath: 'day' });
+            }
+            
+            // *** جداول جدید برای تب آزمون‌ها ***
+            if (!db.objectStoreNames.contains('exams')) {
+                const examStore = db.createObjectStore('exams', { keyPath: 'id' });
+                examStore.createIndex('subjectId', 'subjectId', { unique: false });
+                examStore.createIndex('date', 'date', { unique: false });
+            }
+            if (!db.objectStoreNames.contains('examResults')) {
+                const resultStore = db.createObjectStore('examResults', { keyPath: 'id' });
+                resultStore.createIndex('examId', 'examId', { unique: false });
+                resultStore.createIndex('studentNationalId', 'studentNationalId', { unique: false });
             }
         };
     });
@@ -155,7 +164,7 @@ function clearStore(storeName) {
 
 async function exportAllData() {
     const data = {};
-    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule'];
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults'];
     for (const store of stores) {
         try { data[store] = await getAllData(store); } catch (e) { data[store] = []; }
     }
@@ -165,7 +174,7 @@ async function exportAllData() {
 async function importAllData(data) {
     if (!data || typeof data !== 'object') throw new Error('داده‌های نامعتبر');
     
-    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule'];
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults'];
     const backup = {};
     for (const store of stores) { backup[store] = await getAllData(store); }
     
