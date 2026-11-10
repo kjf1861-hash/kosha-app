@@ -1,45 +1,18 @@
 /* =========================================
-   تعریف فونت‌های اختصاصی (لوکال)
+   استفاده از فونت وزیرمتن (گوگل فونت)
    ========================================= */
-@font-face {
-    font-family: 'IRANYekan';
-    src: url('./fonts/IRYekan.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'IRANYekan';
-    src: url('./fonts/IRYekan-Bold.ttf') format('truetype');
-    font-weight: bold;
-    font-style: normal;
-    font-display: swap;
+body, button, input, select, textarea, .form-control, .btn, .nav-item, .list-item {
+    font-family: 'Vazirmatn', Tahoma, sans-serif !important;
 }
 
-@font-face {
-    font-family: 'IRTerafik';
-    src: url('./fonts/IRTerafik.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}
-@font-face {
-    font-family: 'IRTerafik';
-    src: url('./fonts/IRTerafik-Bold.ttf') format('truetype');
-    font-weight: bold;
-    font-style: normal;
-    font-display: swap;
+h1, h2, h3, h4, h5, h6, .card-title, .modal-header, .page-header-title, .dc-value, .ac-value, .app-header h1 {
+    font-family: 'Vazirmatn', Tahoma, sans-serif !important;
+    font-weight: bold !important;
 }
 
-@font-face {
-    font-family: 'IRNumber';
-    src: url('./fonts/IRNumber.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
+.rank-badge, .ac-value, .dc-value, .calendar-day, .calendar-title select, .att-report-badge, .pagination-info, .stat-number, .rc-stat-box span, .record-score {
+    font-family: 'Vazirmatn', Tahoma, sans-serif !important;
 }
-
-/* ===== بقیه کدهای CSS شما از اینجا به بعد بدون تغییر ادامه می‌یابد ===== */
 
 /* =========================================
    متغیرهای اصلی (حالت روشن)
