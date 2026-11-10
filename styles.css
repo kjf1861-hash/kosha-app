@@ -1,4 +1,45 @@
 /* =========================================
+   تعریف فونت‌های اختصاصی (IR Fonts)
+   ========================================= */
+@font-face {
+    font-family: 'IRANYekan';
+    src: url('./fonts/IRYekan.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'IRANYekan';
+    src: url('./fonts/IRYekan-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'IRTerafik';
+    src: url('./fonts/IRTerafik.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'IRTerafik';
+    src: url('./fonts/IRTerafik-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'IRNumber';
+    src: url('./fonts/IRNumber.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* =========================================
    متغیرهای اصلی (حالت روشن)
    ========================================= */
 :root {
@@ -53,15 +94,26 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+/* تنظیم فونت پایه برای کل برنامه */
 body {
     margin: 0; padding: 0;
-    font-family: Tahoma, 'Segoe UI', Arial, sans-serif;
+    font-family: 'IRTerafik', Tahoma, sans-serif;
     background: var(--bg-gradient);
     background-attachment: fixed;
     color: var(--text-main);
     line-height: 1.7; direction: rtl;
     overflow-x: hidden; width: 100%; min-height: 100vh;
     transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* اختصاص فونت به عناوین و تیترها */
+h1, h2, h3, h4, h5, h6, .card-title, .modal-header, .page-header-title, .dc-value, .ac-value {
+    font-family: 'IRANYekan', Tahoma, sans-serif;
+}
+
+/* اختصاص فونت به اعداد و آمار */
+.rank-badge, .ac-value, .dc-value, .calendar-day, .calendar-title select, .att-report-badge, .pagination-info, .stat-number {
+    font-family: 'IRNumber', Tahoma, sans-serif;
 }
 
 h1, h2, h3, h4, p { margin-top: 0; }
@@ -84,7 +136,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .app-header h1 { margin: 0; font-size: 1.9rem; position: relative; z-index: 1; letter-spacing: -0.5px; }
 .app-header p { margin: 6px 0 0 0; font-size: 1rem; opacity: 0.9; position: relative; z-index: 1; }
 
-/* دکمه تغییر تم (سمت چپ) */
 .theme-toggle {
     position: absolute; top: 15px; left: 15px; z-index: 10;
     background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3);
@@ -96,7 +147,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .theme-toggle:active { transform: scale(0.9); }
 .theme-toggle:hover { background: rgba(255, 255, 255, 0.3); }
 
-/* دکمه تنظیمات (سمت راست) */
 .settings-toggle {
     position: absolute; top: 15px; right: 15px; z-index: 10;
     background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3);
@@ -146,9 +196,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .dc-value { font-size: 1.8rem; font-weight: bold; color: var(--primary); }
 .dc-label { font-size: 0.9rem; color: var(--text-muted); }
 
-/* =========================================
-   اسکرول افقی و کارت‌های فعالیت
-   ========================================= */
 .horizontal-scroll-container {
     display: flex;
     overflow-x: auto;
@@ -179,9 +226,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .ac-value { font-size: 1.4rem; font-weight: bold; color: var(--primary); }
 .ac-label { font-size: 0.75rem; color: var(--text-muted); line-height: 1.2; }
 
-/* =========================================
-   آکاردئون‌های داشبورد
-   ========================================= */
 .dashboard-accordion {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
@@ -217,9 +261,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
     background: var(--card-bg);
 }
 
-/* =========================================
-   استایل‌های عمومی کارت‌ها و فرم‌ها
-   ========================================= */
 .card {
     background: var(--card-bg);
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -293,14 +334,11 @@ select.form-control {
 .btn-sm { padding: 6px 12px; font-size: 0.85rem; border-radius: 8px; }
 .mt-4 { margin-top: 12px; }
 
-/* =========================================
-   منوی پایین (۷ تب - اصلاح شده برای وسط‌چین شدن)
-   ========================================= */
 .bottom-nav {
     position: fixed; bottom: 0; left: 0; right: 0;
     background: var(--nav-bg); backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px); display: flex; justify-content: space-around; align-items: center;
-    height: 70px; /* ارتفاع ثابت */
+    height: 70px;
     padding: 0 5px;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
     z-index: 100; border-top: 1px solid var(--border-color);
@@ -321,7 +359,6 @@ select.form-control {
 .nav-item.active .icon { transform: translateY(-3px) scale(1.15); }
 .nav-item.active::before { content: ''; position: absolute; top: 0; width: 30px; height: 3px; background: var(--primary); border-radius: 0 0 4px 4px; }
 
-/* استایل چک‌باکس‌های روزهای هفته در تنظیمات */
 .day-checkbox-container {
     display: flex;
     flex-wrap: wrap;
@@ -358,9 +395,7 @@ select.form-control {
     color: var(--primary-dark);
     font-weight: bold;
 }
-/* =========================================
-   استایل‌های جدول برنامه هفتگی (بخش جدید و هوشمند)
-   ========================================= */
+
 .schedule-table-wrapper {
     overflow-x: auto;
     border-radius: var(--radius-sm);
@@ -375,7 +410,7 @@ select.form-control {
     width: 100%;
     border-collapse: collapse;
     text-align: center;
-    table-layout: auto; /* اجازه می‌دهد ستون‌ها بر اساس محتوا اندازه بگیرند */
+    table-layout: auto;
 }
 
 .schedule-table th, .schedule-table td {
@@ -396,7 +431,6 @@ select.form-control {
     top: 0;
 }
 
-/* ستون روزها در سمت راست ثابت می‌ماند */
 .schedule-table tbody th {
     background: var(--primary-light);
     color: var(--primary-dark);
@@ -415,7 +449,6 @@ select.form-control {
     min-width: 70px;
 }
 
-/* نمای ویرایش (آکاردئون روزها) */
 .schedule-edit-accordion {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
@@ -478,9 +511,6 @@ select.form-control {
     outline: none;
 }
 
-/* =========================================
-   استایل‌های عمومی لیست‌ها و مودال‌ها
-   ========================================= */
 .checkbox-group {
     display: flex; align-items: center; gap: 10px;
     padding: 12px; background: var(--arf-bg);
@@ -497,7 +527,6 @@ select.form-control {
 }
 .list-item:hover { background: var(--card-bg); box-shadow: var(--shadow-sm); }
 
-/* استایل برچسب گروه */
 .group-label {
     background: var(--primary-light);
     color: var(--primary-dark);
@@ -659,9 +688,6 @@ details.group-accordion[open] summary::after {
 .rc-subject-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted var(--border-color); }
 .rc-subject-row:last-child { border-bottom: none; }
 
-/* =========================================
-   استایل نمودارها
-   ========================================= */
 .score-bar-container {
     width: 100%;
     height: 10px;
@@ -742,9 +768,6 @@ details.group-accordion[open] summary::after {
 .att-legend-color.absent { background-color: #ef4444; }
 .att-legend-color.late { background-color: #f59e0b; }
 
-/* =========================================
-   استایل پیام‌های شناور (Toast Notifications)
-   ========================================= */
 .custom-toast-container {
     position: fixed;
     bottom: 90px;
@@ -776,9 +799,6 @@ details.group-accordion[open] summary::after {
 .custom-toast-error { border-right: 4px solid #ef4444; }
 .custom-toast-info { border-right: 4px solid #3b82f6; }
 
-/* =========================================
-   تنظیمات چاپ
-   ========================================= */
 @media print {
     :root, [data-theme="dark"] {
         --bg-color: #ffffff;
@@ -804,9 +824,6 @@ details.group-accordion[open] summary::after {
     .container { padding: 0; max-width: 100%; }
 }
 
-/* =========================================
-   استایل صفحه‌بندی (Pagination)
-   ========================================= */
 .pagination-container {
     display: flex;
     justify-content: center;
@@ -837,9 +854,6 @@ details.group-accordion[open] summary::after {
     color: var(--text-main);
 }
 
-/* =========================================
-   استایل مودال مدیریت آیتم‌ها
-   ========================================= */
 .item-management-row {
     display: flex;
     justify-content: space-between;
@@ -860,9 +874,6 @@ details.group-accordion[open] summary::after {
     flex: 1;
 }
 
-/* =========================================
-   استایل‌های متفرقه
-   ========================================= */
 .medal-badge {
     font-size: 1.2rem;
     margin-left: 5px;
@@ -900,9 +911,6 @@ details.group-accordion[open] summary::after {
     padding-bottom: 5px;
 }
 
-/* =========================================
-   استایل‌های تقویم شمسی
-   ========================================= */
 .jalali-calendar-wrapper {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
@@ -1021,9 +1029,6 @@ details.group-accordion[open] summary::after {
     border-radius: var(--radius-sm);
 }
 
-/* =========================================
-   استایل‌های آکاردئون تقویم و بایگانی در تب امتیاز
-   ========================================= */
 .score-calendar-accordion {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
