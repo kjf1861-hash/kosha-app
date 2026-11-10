@@ -422,17 +422,19 @@
             </div>
 
             <!-- تب ۷: آزمون‌ها -->
-            <div id="page-exams" class="page-section">
-                <div class="page-header-title">🎓 آزمون‌ها</div>
-                <div class="card" style="text-align: center; padding: 50px 20px;">
-                    <h3 style="color: var(--primary); margin-bottom: 15px;">🎓 ماژول آزمون‌ها</h3>
-                    <p style="color: var(--text-muted); font-size: 1.1rem;">✨ در نسخه‌های آینده، امکان ثبت و مدیریت آزمون‌ها، نمرات و کارنامه‌ها به برنامه اضافه خواهد شد. ✨</p>
-                </div>
-            </div>
+<div id="page-exams" class="page-section">
+    <div class="page-header-title">🎓 آزمون‌ها</div>
+    
+    <div class="card">
+        <button type="button" class="btn btn-primary btn-block" onclick="openExamEditorModal()">➕ افزودن آزمون جدید</button>
+    </div>
 
-        </div> 
-    </div> 
-    <!-- منوی پایین (۷ تب - فقط ایموجی) -->
+    <div class="card">
+        <h2 class="card-title">📋 لیست آزمون‌ها</h2>
+        <div id="exams-list-container" class="list-group"></div>
+    </div>
+</div>
+        <!-- منوی پایین (۷ تب - فقط ایموجی) -->
     <nav class="bottom-nav" style="display: none;">
         <a href="#" class="nav-item active" onclick="switchPage('page-class', this)" title="کلاس"><span class="icon">🏫</span></a>
         <a href="#" class="nav-item" onclick="switchPage('page-students', this)" title="دانش‌آموزان"><span class="icon">👦</span></a>
