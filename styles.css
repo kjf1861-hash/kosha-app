@@ -1,16 +1,16 @@
 /* =========================================
-   تعریف فونت‌های اختصاصی (از طریق CDN گیت‌هاب)
+   تعریف فونت‌های اختصاصی (لوکال)
    ========================================= */
 @font-face {
     font-family: 'IRANYekan';
-    src: url('https://cdn.jsdelivr.net/gh/kjf1861-hash/kosha-app@main/fonts/IRYekan.ttf') format('truetype');
+    src: url('./fonts/IRYekan.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: 'IRANYekan';
-    src: url('https://cdn.jsdelivr.net/gh/kjf1861-hash/kosha-app@main/fonts/IRYekan-Bold.ttf') format('truetype');
+    src: url('./fonts/IRYekan-Bold.ttf') format('truetype');
     font-weight: bold;
     font-style: normal;
     font-display: swap;
@@ -18,14 +18,14 @@
 
 @font-face {
     font-family: 'IRTerafik';
-    src: url('https://cdn.jsdelivr.net/gh/kjf1861-hash/kosha-app@main/fonts/IRTerafik.ttf') format('truetype');
+    src: url('./fonts/IRTerafik.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: 'IRTerafik';
-    src: url('https://cdn.jsdelivr.net/gh/kjf1861-hash/kosha-app@main/fonts/IRTerafik-Bold.ttf') format('truetype');
+    src: url('./fonts/IRTerafik-Bold.ttf') format('truetype');
     font-weight: bold;
     font-style: normal;
     font-display: swap;
@@ -33,11 +33,13 @@
 
 @font-face {
     font-family: 'IRNumber';
-    src: url('https://cdn.jsdelivr.net/gh/kjf1861-hash/kosha-app@main/fonts/IRNumber.ttf') format('truetype');
+    src: url('./fonts/IRNumber.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
 }
+
+/* ===== بقیه کدهای CSS شما از اینجا به بعد بدون تغییر ادامه می‌یابد ===== */
 
 /* =========================================
    متغیرهای اصلی (حالت روشن)
