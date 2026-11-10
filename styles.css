@@ -3,14 +3,14 @@
    ========================================= */
 @font-face {
     font-family: 'IRANYekan';
-    src: url('./fonts/IRYekan.ttf') format('truetype');
+    src: url('./fonts/IRYekan.ttf?v=1') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: 'IRANYekan';
-    src: url('./fonts/IRYekan-Bold.ttf') format('truetype');
+    src: url('./fonts/IRYekan-Bold.ttf?v=1') format('truetype');
     font-weight: bold;
     font-style: normal;
     font-display: swap;
@@ -18,14 +18,14 @@
 
 @font-face {
     font-family: 'IRTerafik';
-    src: url('./fonts/IRTerafik.ttf') format('truetype');
+    src: url('./fonts/IRTerafik.ttf?v=1') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: 'IRTerafik';
-    src: url('./fonts/IRTerafik-Bold.ttf') format('truetype');
+    src: url('./fonts/IRTerafik-Bold.ttf?v=1') format('truetype');
     font-weight: bold;
     font-style: normal;
     font-display: swap;
@@ -33,7 +33,7 @@
 
 @font-face {
     font-family: 'IRNumber';
-    src: url('./fonts/IRNumber.ttf') format('truetype');
+    src: url('./fonts/IRNumber.ttf?v=1') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -94,10 +94,13 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-/* تنظیم فونت پایه برای کل برنامه */
+/* تنظیم فونت پایه برای کل برنامه با !important برای جلوگیری از بازنویسی */
+body, button, input, select, textarea, .form-control, .btn, .nav-item, .list-item {
+    font-family: 'IRTerafik', Tahoma, sans-serif !important;
+}
+
 body {
     margin: 0; padding: 0;
-    font-family: 'IRTerafik', Tahoma, sans-serif;
     background: var(--bg-gradient);
     background-attachment: fixed;
     color: var(--text-main);
@@ -107,13 +110,13 @@ body {
 }
 
 /* اختصاص فونت به عناوین و تیترها */
-h1, h2, h3, h4, h5, h6, .card-title, .modal-header, .page-header-title, .dc-value, .ac-value {
-    font-family: 'IRANYekan', Tahoma, sans-serif;
+h1, h2, h3, h4, h5, h6, .card-title, .modal-header, .page-header-title, .dc-value, .ac-value, .app-header h1 {
+    font-family: 'IRANYekan', Tahoma, sans-serif !important;
 }
 
 /* اختصاص فونت به اعداد و آمار */
-.rank-badge, .ac-value, .dc-value, .calendar-day, .calendar-title select, .att-report-badge, .pagination-info, .stat-number {
-    font-family: 'IRNumber', Tahoma, sans-serif;
+.rank-badge, .ac-value, .dc-value, .calendar-day, .calendar-title select, .att-report-badge, .pagination-info, .stat-number, .rc-stat-box span, .record-score {
+    font-family: 'IRNumber', Tahoma, sans-serif !important;
 }
 
 h1, h2, h3, h4, p { margin-top: 0; }
@@ -278,7 +281,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .form-label { display: block; margin-bottom: 8px; font-size: 0.95rem; font-weight: bold; color: var(--text-main); }
 .form-control {
     width: 100%; padding: 14px; border: 2px solid transparent;
-    border-radius: var(--radius-sm); font-family: inherit; font-size: 1rem;
+    border-radius: var(--radius-sm); font-size: 1rem;
     color: var(--text-main); background-color: var(--input-bg);
     transition: all 0.25s ease; outline: none;
 }
@@ -311,7 +314,7 @@ select.form-control {
 .btn {
     display: inline-flex; align-items: center; justify-content: center;
     padding: 14px 22px; border: none; border-radius: var(--radius-sm);
-    font-family: inherit; font-size: 1rem; font-weight: bold;
+    font-size: 1rem; font-weight: bold;
     cursor: pointer; transition: all 0.2s ease; gap: 8px;
     position: relative; overflow: hidden;
 }
@@ -506,7 +509,6 @@ select.form-control {
     border: 1px solid var(--border-color);
     background: var(--input-bg);
     color: var(--text-main);
-    font-family: inherit;
     font-size: 0.9rem;
     outline: none;
 }
@@ -582,7 +584,7 @@ select.form-control {
     z-index: 3000; opacity: 0; visibility: hidden; transition: all 0.3s ease;
 }
 .toast-container.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
-.toast-btn { background: var(--primary); border: none; color: white; padding: 8px 16px; border-radius: 20px; font-family: inherit; font-size: 0.9rem; cursor: pointer; font-weight: bold; }
+.toast-btn { background: var(--primary); border: none; color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; cursor: pointer; font-weight: bold; }
 
 .student-checkbox-list {
     max-height: 300px; overflow-y: auto;
@@ -637,7 +639,7 @@ details.group-accordion[open] summary::after {
 @media (min-width: 400px) { .attendance-student-row { flex-direction: row; justify-content: space-between; align-items: center; } }
 .attendance-student-name { font-weight: bold; font-size: 0.95rem; }
 .att-btn-group { display: flex; gap: 5px; width: 100%; }
-.att-btn { flex: 1; padding: 8px 5px; border: 2px solid var(--border-color); background: var(--card-bg); border-radius: 8px; font-family: inherit; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: all 0.2s; color: var(--text-muted); text-align: center; }
+.att-btn { flex: 1; padding: 8px 5px; border: 2px solid var(--border-color); background: var(--card-bg); border-radius: 8px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: all 0.2s; color: var(--text-muted); text-align: center; }
 .att-btn.present.active { background: rgba(34, 197, 94, 0.2); color: #15803d; border-color: #22c55e; }
 .att-btn.absent.active { background: rgba(239, 68, 68, 0.2); color: #b91c1c; border-color: #ef4444; }
 .att-btn.late.active { background: rgba(245, 158, 11, 0.2); color: #b45309; border-color: #f59e0b; }
@@ -785,7 +787,6 @@ details.group-accordion[open] summary::after {
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
-    font-family: inherit;
     font-size: 0.95rem;
     font-weight: bold;
     direction: rtl;
@@ -839,7 +840,6 @@ details.group-accordion[open] summary::after {
     border: none;
     border-radius: var(--radius-sm);
     cursor: pointer;
-    font-family: inherit;
     font-weight: bold;
     transition: all 0.2s;
 }
@@ -935,7 +935,6 @@ details.group-accordion[open] summary::after {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     padding: 6px 12px;
-    font-family: inherit;
     font-size: 0.85rem;
     font-weight: bold;
     color: var(--text-main);
@@ -962,7 +961,6 @@ details.group-accordion[open] summary::after {
     border: 1px solid var(--border-color);
     background: var(--input-bg);
     color: var(--text-main);
-    font-family: inherit;
     font-size: 1rem;
     font-weight: bold;
     outline: none;
