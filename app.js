@@ -145,6 +145,9 @@ function initApp() {
     
     loadAllData();
     checkBackupReminder();
+    // بارگذاری داده‌های آزمون‌ها
+if (typeof loadExamsData === 'function') await loadExamsData();
+if (typeof renderExamsData === 'function') renderExamsData();
 }
 
 async function loadAllData() {
