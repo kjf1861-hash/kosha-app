@@ -3,14 +3,14 @@
    ========================================= */
 @font-face {
     font-family: 'IRANYekan';
-    src: url('./fonts/IRYekan.ttf?v=1') format('truetype');
+    src: url('./fonts/IRYekan.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: 'IRANYekan';
-    src: url('./fonts/IRYekan-Bold.ttf?v=1') format('truetype');
+    src: url('./fonts/IRYekan-Bold.ttf') format('truetype');
     font-weight: bold;
     font-style: normal;
     font-display: swap;
@@ -18,14 +18,14 @@
 
 @font-face {
     font-family: 'IRTerafik';
-    src: url('./fonts/IRTerafik.ttf?v=1') format('truetype');
+    src: url('./fonts/IRTerafik.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: 'IRTerafik';
-    src: url('./fonts/IRTerafik-Bold.ttf?v=1') format('truetype');
+    src: url('./fonts/IRTerafik-Bold.ttf') format('truetype');
     font-weight: bold;
     font-style: normal;
     font-display: swap;
@@ -33,7 +33,7 @@
 
 @font-face {
     font-family: 'IRNumber';
-    src: url('./fonts/IRNumber.ttf?v=1') format('truetype');
+    src: url('./fonts/IRNumber.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
