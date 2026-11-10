@@ -2,7 +2,6 @@
 // فایل reset.js — منطق بازنشانی و پاکسازی داده‌ها
 // ==========================================
 
-// ۱. شروع سال تحصیلی جدید (پاک کردن سوابق)
 async function resetYearlyRecords() {
     const isConfirmed = confirm('⚠️ هشدار مهم:\n\nبا این کار تمام سوابق ارزشیابی، حضور و غیاب‌ها، جلسات و تشویق‌ها پاک می‌شوند.\nاما اطلاعات کلاس، دانش‌آموزان، دروس و گروه‌ها حفظ می‌شوند.\n\nآیا مطمئن هستید؟');
     
@@ -22,9 +21,7 @@ async function resetYearlyRecords() {
     }
 }
 
-// ۲. پاک کردن گروه‌بندی دانش‌آموزان
 async function resetGroupAssignments() {
-    // *** بررسی خالی بودن گروه‌بندی‌ها ***
     const hasAssignedStudents = window.allStudentsData.some(st => st.groupId !== null);
     
     if (!hasAssignedStudents) {
@@ -51,7 +48,6 @@ async function resetGroupAssignments() {
     }
 }
 
-// ۳. حذف سوابق یک درس یا یک فعالیت خاص (اصلاح‌شده)
 async function resetSpecificRecords() {
     const selectedValue = document.getElementById('resetRecordSelect').value;
     if (!selectedValue) {
@@ -59,7 +55,6 @@ async function resetSpecificRecords() {
         return;
     }
 
-    // تشخیص اینکه کاربر درس انتخاب کرده یا یک آیتم/فعالیت
     const type = selectedValue.split('_')[0]; 
     const target = selectedValue.substring(type.length + 1); 
 
@@ -91,7 +86,6 @@ async function resetSpecificRecords() {
     }
 }
 
-// ۴. بازنشانی کامل (تنظیمات کارخانه)
 async function resetFactoryAll() {
     const confirm1 = confirm('⚠️ خطر! آیا می‌خواهید کل اطلاعات برنامه (کلاس، دانش‌آموزان، دروس، سوابق و...) را برای همیشه پاک کنید؟');
     if (!confirm1) return;
@@ -115,7 +109,6 @@ async function resetFactoryAll() {
     }
 }
 
-// ۵. پاکسازی فنی (کش و آپدیت)
 async function resetTechnicalCache() {
     const isConfirmed = confirm('این عملیات فقط حافظه پنهان (کش) برنامه را پاک می‌کند تا آخرین تغییرات بارگذاری شوند. اطلاعات درسی شما دست‌نخورده می‌ماند. ادامه می‌دهید؟');
     if (!isConfirmed) return;
@@ -139,14 +132,12 @@ async function resetTechnicalCache() {
     }
 }
 
-// ۶. پر کردن هوشمند منوی کشویی (دروس + آیتم‌ها)
 function populateResetSelect() {
     const select = document.getElementById('resetRecordSelect');
     if (!select) return;
     
     let html = '<option value="" disabled selected>انتخاب کنید...</option>';
     
-    // دسته اول: دروس
     if (window.allSubjectsData && window.allSubjectsData.length > 0) {
         html += '<optgroup label="📚 دروس (حذف تمام سوابق درس)">';
         window.allSubjectsData.forEach(s => {
@@ -155,7 +146,6 @@ function populateResetSelect() {
         html += '</optgroup>';
     }
     
-    // دسته دوم: روش‌های کسب امتیاز و تشویق‌ها
     html += '<optgroup label="🎯 روش‌های کسب امتیاز و تشویق‌ها">';
     
     if (window.allAssessmentItems) {
@@ -164,7 +154,6 @@ function populateResetSelect() {
         });
     }
     
-    // موارد ثابت سیستم (قرآن و تشویق‌ها)
     html += `<option value="item_پویش حفظ جزء سی قرآن کریم">🌟 پویش حفظ جزء سی قرآن کریم</option>`;
     html += `<option value="item_تشویق ویژه">🎁 تشویق ویژه</option>`;
     html += `<option value="item_تشویق خوش‌خط‌نویسی">✍️ تشویق خوش‌خط‌نویسی</option>`;
