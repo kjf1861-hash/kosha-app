@@ -6,6 +6,12 @@
     <title>کوشا — همیار پرتلاش معلم</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4A90E2">
+    
+    <!-- *** اضافه شدن فونت وزیرمتن از گوگل *** -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="styles.css">
     
     <style>
@@ -68,67 +74,40 @@
 
         <div class="container">
             
-            <!-- تب ۱: کلاس (آمار و ارقام) -->
+            <!-- تب ۱: کلاس -->
             <div id="page-class" class="page-section active">
-                <div class="page-header-title">
-                    🏫 کلاس
-                </div>
-                
+                <div class="page-header-title">🏫 کلاس</div>
                 <div class="dashboard-grid">
-                    <div class="dashboard-card">
-                        <div class="dc-icon">👦</div>
-                        <div class="dc-value" id="stat-students">0</div>
-                        <div class="dc-label">دانش‌آموز</div>
-                    </div>
-                    <div class="dashboard-card">
-                        <div class="dc-icon">📚</div>
-                        <div class="dc-value" id="stat-subjects">0</div>
-                        <div class="dc-label">درس</div>
-                    </div>
-                    <div class="dashboard-card">
-                        <div class="dc-icon">📅</div>
-                        <div class="dc-value" id="stat-sessions">0</div>
-                        <div class="dc-label">جلسه</div>
-                    </div>
-                    <div class="dashboard-card">
-                        <div class="dc-icon">📝</div>
-                        <div class="dc-value" id="stat-records">0</div>
-                        <div class="dc-label">ارزشیابی</div>
-                    </div>
+                    <div class="dashboard-card"><div class="dc-icon">👦</div><div class="dc-value" id="stat-students">0</div><div class="dc-label">دانش‌آموز</div></div>
+                    <div class="dashboard-card"><div class="dc-icon">📚</div><div class="dc-value" id="stat-subjects">0</div><div class="dc-label">درس</div></div>
+                    <div class="dashboard-card"><div class="dc-icon">📅</div><div class="dc-value" id="stat-sessions">0</div><div class="dc-label">جلسه</div></div>
+                    <div class="dashboard-card"><div class="dc-icon">📝</div><div class="dc-value" id="stat-records">0</div><div class="dc-label">ارزشیابی</div></div>
                 </div>
-
                 <div class="horizontal-scroll-container" id="dashboard-activity-cards"></div>
-
                 <details class="dashboard-accordion">
                     <summary>📊 نمودار حضور و غیاب کلاس</summary>
                     <div class="dashboard-accordion-content" id="dashboard-attendance-chart" style="display: flex; justify-content: center; padding: 20px 0;"></div>
                 </details>
-
                 <details class="dashboard-accordion">
                     <summary>📚 میانگین امتیازات دروس</summary>
                     <div class="dashboard-accordion-content" id="dashboard-subject-averages" style="display: flex; flex-direction: column; gap: 12px;"></div>
                 </details>
-
                 <details class="dashboard-accordion" open>
                     <summary>🏆 شاگردان برتر</summary>
                     <div class="dashboard-accordion-content" id="dashboard-top-students"></div>
                 </details>
-
                 <details class="dashboard-accordion">
                     <summary>👥 گروه‌های برتر</summary>
                     <div class="dashboard-accordion-content" id="dashboard-top-groups"></div>
                 </details>
-
                 <div class="card" style="background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); border: 1px solid #f59e0b;">
                     <h2 class="card-title" style="color: #b45309; border-bottom-color: #fcd34d;">⚠️ دانش‌آموزان نیازمند توجه</h2>
                     <div id="dashboard-needs-attention" class="list-group"></div>
                 </div>
-
                 <div class="card">
                     <h2 class="card-title">🕒 آخرین فعالیت‌های کلاس</h2>
                     <div id="dashboard-recent-activities" class="list-group"></div>
                 </div>
-
                 <div class="card">
                     <h2 class="card-title">📈 گزارش امتیازات کلاس</h2>
                     <div id="class-score-report-section">
@@ -143,10 +122,7 @@
 
             <!-- تب ۲: دانش‌آموزان -->
             <div id="page-students" class="page-section">
-                <div class="page-header-title">
-                    👦 دانش‌آموزان
-                </div>
-
+                <div class="page-header-title">👦 دانش‌آموزان</div>
                 <div class="card">
                     <h2 class="card-title">➕ افزودن دانش‌آموز</h2>
                     <form id="student-form">
@@ -155,7 +131,6 @@
                         <button type="submit" class="btn btn-primary mt-4">➕ ثبت دانش‌آموز</button>
                     </form>
                 </div>
-
                 <div class="card">
                     <h2 class="card-title" style="justify-content: space-between;">
                         <span style="display: flex; align-items: center; gap: 8px;">📋 فهرست دانش‌آموزان</span>
@@ -172,9 +147,7 @@
             
             <!-- تب ۳: دروس -->
             <div id="page-lesson" class="page-section">
-                <div class="page-header-title">
-                    📚 دروس
-                </div>
+                <div class="page-header-title">📚 دروس</div>
                 <div class="card">
                     <h2 class="card-title">➕ افزودن مادهٔ درسی</h2>
                     <form id="lesson-form">
@@ -184,7 +157,6 @@
                         <button type="submit" class="btn btn-primary mt-4">➕ ثبت درس</button>
                     </form>
                 </div>
-
                 <div class="card">
                     <h2 class="card-title" style="justify-content: space-between;">
                         <span style="display: flex; align-items: center; gap: 8px;">📋 فهرست مواد درسی</span>
@@ -196,10 +168,7 @@
 
             <!-- تب ۴: گروه‌ها -->
             <div id="page-group" class="page-section">
-                <div class="page-header-title">
-                    👥 گروه‌ها
-                </div>
-
+                <div class="page-header-title">👥 گروه‌ها</div>
                 <div class="card">
                     <h2 class="card-title">➕ ایجاد گروه</h2>
                     <form id="group-form">
@@ -207,12 +176,11 @@
                         <div class="form-group"><label class="form-label" for="groupSymbol">نماد (ایموجی)</label><input type="text" id="groupSymbol" class="form-control" placeholder="🦅" autocomplete="off" required></div>
                         <div class="form-group">
                             <label class="form-label" for="groupMotto">شعار گروه (اختیاری)</label>
-                            <textarea id="groupMotto" class="form-control" placeholder="تیزبین باشیم. (نماد بصیرت و دقت در جزئیات)&#10;پرندگان شکاری همچون شهباز، از بلندی‌ها کوچک‌ترین حرکت‌ها را می‌بینند. واژه «بصیر» به معنای بصیرت و دوراندیشی است. دانش‌آموز بصیر، در درس‌ها و در احساسات دوستانش تیزبین است. این گروه، پرچم‌دار دقت در کلاس است." autocomplete="on" rows="5"></textarea>
+                            <textarea id="groupMotto" class="form-control" placeholder="تیزبین باشیم..." autocomplete="on" rows="5"></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary mt-4">➕ ثبت گروه</button>
                     </form>
                 </div>
-
                 <div class="card">
                     <h2 class="card-title" style="justify-content: space-between;">
                         <span style="display: flex; align-items: center; gap: 8px;">📋 فهرست گروه‌ها</span>
@@ -224,11 +192,7 @@
 
             <!-- تب ۵: جلسات -->
             <div id="page-session" class="page-section">
-                <div class="page-header-title">
-                    📅 جلسات
-                </div>
-                
-                <!-- بخش برنامه هفتگی جدید -->
+                <div class="page-header-title">📅 جلسات</div>
                 <div class="card">
                     <h2 class="card-title" style="justify-content: space-between;">
                         <span style="display: flex; align-items: center; gap: 8px;">📅 برنامهٔ هفتگی</span>
@@ -239,27 +203,22 @@
                             <button type="button" class="btn btn-danger btn-sm" onclick="resetAllWeeklySchedules()" title="حذف کل برنامه">🗑️</button>
                         </div>
                     </h2>
-                    
                     <div class="view-toggle-group" style="margin-bottom: 15px;">
                         <button type="button" id="btnScheduleViewMode" class="view-toggle-btn active" onclick="toggleScheduleMode('view')">👁️ نمای کلی</button>
                         <button type="button" id="btnScheduleEditMode" class="view-toggle-btn" onclick="toggleScheduleMode('edit')">✏️ نمای ویرایش</button>
                     </div>
-
                     <div id="schedule-view-mode">
                         <div class="schedule-table-wrapper">
                             <table class="schedule-table" id="schedule-display-table"></table>
                         </div>
                     </div>
-
                     <div id="schedule-edit-mode" style="display: none;">
                         <div id="schedule-edit-container"></div>
                         <button type="button" class="btn btn-primary btn-block mt-4" onclick="saveAllWeeklySchedules()">💾 ذخیره کل برنامه هفتگی</button>
                     </div>
                 </div>
-
                 <div class="card">
                     <h2 class="card-title">📝 ایجاد جلسهٔ آموزشی</h2>
-                    
                     <div class="form-group">
                         <label class="form-label">تاریخ (تقویم شمسی)</label>
                         <div class="jalali-calendar-wrapper" id="jalali-calendar">
@@ -279,12 +238,9 @@
                             <input type="hidden" id="sessionDateHidden" value="">
                         </div>
                     </div>
-                    
                     <div id="detectedDayDisplay" style="text-align:center; font-weight:bold; color:var(--primary); margin:15px 0; padding:10px; background:var(--input-bg); border-radius:8px; display:none;"></div>
-
                     <div id="sessionActionArea" style="margin-top: 15px;"></div>
                 </div>
-
                 <div class="card">
                     <h2 class="card-title">📅 گزارش حضور و غیاب</h2>
                     <div class="filter-btn-group">
@@ -301,17 +257,13 @@
                     </div>
                 </div>
             </div>
+            
             <!-- تب ۶: امتیازات -->
             <div id="page-score" class="page-section">
-                <div class="page-header-title">
-                    📝 امتیازات
-                </div>
-                
-                <!-- بخش ۱: ارزشیابی عمومی -->
+                <div class="page-header-title">📝 امتیازات</div>
                 <div class="card">
                     <h2 class="card-title">📝 ارزشیابی</h2>
                     <button type="button" class="btn btn-secondary btn-block mb-4" onclick="openItemManagementModal()">⚙️ مدیریت آیتم‌های ارزشیابی</button>
-                    
                     <form id="record-form">
                         <div class="form-group"><label class="form-label" for="recordSubject">درس (الزامی)</label><select id="recordSubject" class="form-control" required></select></div>
                         <div class="form-group"><label class="form-label" for="recordTitle">عنوان (الزامی)</label><input type="text" id="recordTitle" class="form-control" placeholder="امتحان فصل اول: آفرینش" autocomplete="on" required></div>
@@ -335,22 +287,13 @@
                         <div class="form-group">
                             <label class="form-label">تاریخ (الزامی)</label>
                             <details class="score-calendar-accordion" id="record-date-accordion">
-                                <summary>
-                                    <span>📅 انتخاب تاریخ از تقویم</span>
-                                    <span id="recordDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span>
-                                </summary>
+                                <summary><span>📅 انتخاب تاریخ از تقویم</span><span id="recordDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span></summary>
                                 <div class="score-calendar-body" id="record-calendar-body">
-                                    <div class="calendar-header">
-                                        <button type="button" onclick="changeScoreCalendarMonth('record', -1)">◀</button>
-                                        <div class="calendar-title" id="record-calendar-title"></div>
-                                        <button type="button" onclick="changeScoreCalendarMonth('record', 1)">▶</button>
-                                    </div>
+                                    <div class="calendar-header"><button type="button" onclick="changeScoreCalendarMonth('record', -1)">◀</button><div class="calendar-title" id="record-calendar-title"></div><button type="button" onclick="changeScoreCalendarMonth('record', 1)">▶</button></div>
                                     <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
                                     <div class="calendar-grid" id="record-calendar-grid"></div>
                                 </div>
-                                <div class="score-day-archive" id="record-day-archive" style="display:none;">
-                                    <div id="record-day-archive-list"></div>
-                                </div>
+                                <div class="score-day-archive" id="record-day-archive" style="display:none;"><div id="record-day-archive-list"></div></div>
                             </details>
                             <input type="hidden" id="recordDate" value="">
                         </div>
@@ -361,21 +304,11 @@
                         </div>
                     </form>
                 </div>
-
                 <div class="card" style="margin-top: 20px;">
                     <h2 class="card-title">📝 سوابق ارزشیابی</h2>
-                    <div class="form-group" style="margin-bottom: 10px;">
-                        <label class="form-label">فیلتر بر اساس درس</label>
-                        <select id="recordsFilterSubject" class="form-control" onchange="loadAssessmentRecords()"><option value="">همه دروس</option></select>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 10px;">
-                        <label class="form-label">فیلتر بر اساس دانش‌آموز</label>
-                        <select id="recordsFilterStudent" class="form-control" onchange="loadAssessmentRecords()"><option value="">همه دانش‌آموزان</option></select>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 10px;">
-                        <label class="form-label">جستجو در عنوان</label>
-                        <input type="text" id="recordsSearchText" class="form-control" placeholder="مثلاً: حفظ شعر..." oninput="loadAssessmentRecords()">
-                    </div>
+                    <div class="form-group" style="margin-bottom: 10px;"><label class="form-label">فیلتر بر اساس درس</label><select id="recordsFilterSubject" class="form-control" onchange="loadAssessmentRecords()"><option value="">همه دروس</option></select></div>
+                    <div class="form-group" style="margin-bottom: 10px;"><label class="form-label">فیلتر بر اساس دانش‌آموز</label><select id="recordsFilterStudent" class="form-control" onchange="loadAssessmentRecords()"><option value="">همه دانش‌آموزان</option></select></div>
+                    <div class="form-group" style="margin-bottom: 10px;"><label class="form-label">جستجو در عنوان</label><input type="text" id="recordsSearchText" class="form-control" placeholder="مثلاً: حفظ شعر..." oninput="loadAssessmentRecords()"></div>
                     <button type="button" class="btn btn-secondary btn-block mb-4" onclick="clearRecordFilters()" style="margin-bottom: 15px;">🗑️ پاک کردن فیلترها</button>
                     <p id="records-count" style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px;"></p>
                     <div id="assessment-records-list" class="list-group"></div>
@@ -389,16 +322,11 @@
                         <button type="button" class="btn btn-secondary btn-block" onclick="window.print()">🖨️ چاپ</button>
                     </div>
                 </div>
-
-                <!-- بخش ۲: قرآن، عترت و نماز -->
                 <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);">
                     <h2 class="card-title" style="color: #16a34a; border-bottom-color: #86efac;">🌱 قرآن، عترت و نماز</h2>
-                    
-                    <!-- کارت قرآن -->
                     <div class="card" style="border: 2px solid #86efac; background: white;">
                         <h3 style="color: #16a34a; font-size: 1.1rem; margin-bottom: 5px;">🌟 قرآن: ریسمان محکم و نور هدایت</h3>
                         <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 15px;">ثبت پویش حفظ جزء سی قرآن کریم</p>
-                        
                         <form id="quran-form">
                             <div class="form-group">
                                 <label class="form-label">انتخاب دانش‌آموزان</label>
@@ -408,61 +336,35 @@
                                 </div>
                                 <div id="quran-students-container" class="student-checkbox-list"></div>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">انتخاب سوره</label>
-                                <select id="quranSurahSelect" class="form-control" required>
-                                    <option value="" disabled selected>انتخاب سوره...</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">تعداد آیات</label>
-                                <input type="number" id="quranAyatInput" class="form-control" min="1" placeholder="تعداد آیات" required>
-                            </div>
+                            <div class="form-group"><label class="form-label">انتخاب سوره</label><select id="quranSurahSelect" class="form-control" required><option value="" disabled selected>انتخاب سوره...</option></select></div>
+                            <div class="form-group"><label class="form-label">تعداد آیات</label><input type="number" id="quranAyatInput" class="form-control" min="1" placeholder="تعداد آیات" required></div>
                             <div class="form-group">
                                 <label class="form-label">تاریخ (الزامی)</label>
                                 <details class="score-calendar-accordion" id="quran-date-accordion">
-                                    <summary>
-                                        <span>📅 انتخاب تاریخ از تقویم</span>
-                                        <span id="quranDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span>
-                                    </summary>
+                                    <summary><span>📅 انتخاب تاریخ از تقویم</span><span id="quranDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span></summary>
                                     <div class="score-calendar-body" id="quran-calendar-body">
-                                        <div class="calendar-header">
-                                            <button type="button" onclick="changeScoreCalendarMonth('quran', -1)">◀</button>
-                                            <div class="calendar-title" id="quran-calendar-title"></div>
-                                            <button type="button" onclick="changeScoreCalendarMonth('quran', 1)">▶</button>
-                                        </div>
+                                        <div class="calendar-header"><button type="button" onclick="changeScoreCalendarMonth('quran', -1)">◀</button><div class="calendar-title" id="quran-calendar-title"></div><button type="button" onclick="changeScoreCalendarMonth('quran', 1)">▶</button></div>
                                         <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
                                         <div class="calendar-grid" id="quran-calendar-grid"></div>
                                     </div>
-                                    <div class="score-day-archive" id="quran-day-archive" style="display:none;">
-                                        <div id="quran-day-archive-list"></div>
-                                    </div>
+                                    <div class="score-day-archive" id="quran-day-archive" style="display:none;"><div id="quran-day-archive-list"></div></div>
                                 </details>
                                 <input type="hidden" id="quranDateHidden" value="">
                             </div>
                             <button type="button" class="btn btn-primary btn-block" onclick="saveQuranRecord()" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);">✅ ثبت پویش قرآن</button>
                         </form>
                     </div>
-
-                    <!-- کارت عترت -->
                     <div class="card" style="border: 2px solid #bfdbfe; background: white; margin-top: 15px;">
                         <h3 style="color: #2563eb; font-size: 1.1rem; margin-bottom: 5px;">💡 عترت: ستارگان هدایت و کشتی نجات</h3>
                         <p style="color: #64748b; font-size: 0.85rem; text-align: center; padding: 20px;">✨ به زودی... ✨</p>
                     </div>
-
-                    <!-- کارت نماز -->
                     <div class="card" style="border: 2px solid #ddd6fe; background: white; margin-top: 15px;">
                         <h3 style="color: #7c3aed; font-size: 1.1rem; margin-bottom: 5px;">🕌 نماز: نور، ستون و معراج</h3>
                         <p style="color: #64748b; font-size: 0.85rem; text-align: center; padding: 20px;">✨ به زودی... ✨</p>
                     </div>
-
                 </div>
-
-                <!-- بخش ۳: تشویق‌ها -->
                 <div class="card" style="margin-top: 20px; border: 2px solid #3b82f6;">
                     <h2 class="card-title" style="color: #3b82f6;">🎉 تشویق‌ها</h2>
-                    
-                    <!-- تشویق ویژه -->
                     <form id="special-reward-form" style="border-bottom: 1px dashed var(--border-color); padding-bottom: 20px; margin-bottom: 20px;">
                         <h3 style="font-size: 1rem; margin-bottom: 10px; color: var(--text-main);">🎁 تشویق ویژه</h3>
                         <div class="form-group">
@@ -473,40 +375,23 @@
                             </div>
                             <div id="special-reward-students-container" class="student-checkbox-list"></div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">عنوان تشویق</label>
-                            <input type="text" id="specialRewardTitle" class="form-control" placeholder="مثلاً: نظم و انضباط در کلاس" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">امتیاز</label>
-                            <input type="number" id="specialRewardScore" class="form-control" min="1" placeholder="عدد امتیاز" required>
-                        </div>
+                        <div class="form-group"><label class="form-label">عنوان تشویق</label><input type="text" id="specialRewardTitle" class="form-control" placeholder="مثلاً: نظم و انضباط در کلاس" required></div>
+                        <div class="form-group"><label class="form-label">امتیاز</label><input type="number" id="specialRewardScore" class="form-control" min="1" placeholder="عدد امتیاز" required></div>
                         <div class="form-group">
                             <label class="form-label">تاریخ</label>
                             <details class="score-calendar-accordion" id="special-date-accordion">
-                                <summary>
-                                    <span>📅 انتخاب تاریخ از تقویم</span>
-                                    <span id="specialDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span>
-                                </summary>
+                                <summary><span>📅 انتخاب تاریخ از تقویم</span><span id="specialDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span></summary>
                                 <div class="score-calendar-body" id="special-calendar-body">
-                                    <div class="calendar-header">
-                                        <button type="button" onclick="changeScoreCalendarMonth('special', -1)">◀</button>
-                                        <div class="calendar-title" id="special-calendar-title"></div>
-                                        <button type="button" onclick="changeScoreCalendarMonth('special', 1)">▶</button>
-                                    </div>
+                                    <div class="calendar-header"><button type="button" onclick="changeScoreCalendarMonth('special', -1)">◀</button><div class="calendar-title" id="special-calendar-title"></div><button type="button" onclick="changeScoreCalendarMonth('special', 1)">▶</button></div>
                                     <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
                                     <div class="calendar-grid" id="special-calendar-grid"></div>
                                 </div>
-                                <div class="score-day-archive" id="special-day-archive" style="display:none;">
-                                    <div id="special-day-archive-list"></div>
-                                </div>
+                                <div class="score-day-archive" id="special-day-archive" style="display:none;"><div id="special-day-archive-list"></div></div>
                             </details>
                             <input type="hidden" id="specialDateHidden" value="">
                         </div>
                         <button type="button" class="btn btn-primary btn-block" onclick="saveSpecialReward()" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">✅ ثبت تشویق ویژه</button>
                     </form>
-
-                    <!-- تشویق خوش‌خط‌نویسی -->
                     <form id="handwriting-reward-form">
                         <h3 style="font-size: 1rem; margin-bottom: 10px; color: var(--text-main);">✍️ تشویق خوش‌خط‌نویسی</h3>
                         <div class="form-group">
@@ -520,22 +405,13 @@
                         <div class="form-group">
                             <label class="form-label">تاریخ</label>
                             <details class="score-calendar-accordion" id="handwriting-date-accordion">
-                                <summary>
-                                    <span>📅 انتخاب تاریخ از تقویم</span>
-                                    <span id="handwritingDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span>
-                                </summary>
+                                <summary><span>📅 انتخاب تاریخ از تقویم</span><span id="handwritingDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span></summary>
                                 <div class="score-calendar-body" id="handwriting-calendar-body">
-                                    <div class="calendar-header">
-                                        <button type="button" onclick="changeScoreCalendarMonth('handwriting', -1)">◀</button>
-                                        <div class="calendar-title" id="handwriting-calendar-title"></div>
-                                        <button type="button" onclick="changeScoreCalendarMonth('handwriting', 1)">▶</button>
-                                    </div>
+                                    <div class="calendar-header"><button type="button" onclick="changeScoreCalendarMonth('handwriting', -1)">◀</button><div class="calendar-title" id="handwriting-calendar-title"></div><button type="button" onclick="changeScoreCalendarMonth('handwriting', 1)">▶</button></div>
                                     <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
                                     <div class="calendar-grid" id="handwriting-calendar-grid"></div>
                                 </div>
-                                <div class="score-day-archive" id="handwriting-day-archive" style="display:none;">
-                                    <div id="handwriting-day-archive-list"></div>
-                                </div>
+                                <div class="score-day-archive" id="handwriting-day-archive" style="display:none;"><div id="handwriting-day-archive-list"></div></div>
                             </details>
                             <input type="hidden" id="handwritingDateHidden" value="">
                         </div>
@@ -546,19 +422,16 @@
 
             <!-- تب ۷: آزمون‌ها -->
             <div id="page-exams" class="page-section">
-                <div class="page-header-title">
-                    🎓 آزمون‌ها
-                </div>
+                <div class="page-header-title">🎓 آزمون‌ها</div>
                 <div class="card" style="text-align: center; padding: 50px 20px;">
                     <h3 style="color: var(--primary); margin-bottom: 15px;">🎓 ماژول آزمون‌ها</h3>
                     <p style="color: var(--text-muted); font-size: 1.1rem;">✨ در نسخه‌های آینده، امکان ثبت و مدیریت آزمون‌ها، نمرات و کارنامه‌ها به برنامه اضافه خواهد شد. ✨</p>
                 </div>
             </div>
 
-        </div> <!-- پایان container -->
-    </div> <!-- پایان app-container -->
+        </div> 
+    </div> 
 
-    <!-- منوی پایین (۷ تب - فقط ایموجی) -->
     <nav class="bottom-nav" style="display: none;">
         <a href="#" class="nav-item active" onclick="switchPage('page-class', this)" title="کلاس"><span class="icon">🏫</span></a>
         <a href="#" class="nav-item" onclick="switchPage('page-students', this)" title="دانش‌آموزان"><span class="icon">👦</span></a>
@@ -569,12 +442,10 @@
         <a href="#" class="nav-item" onclick="switchPage('page-exams', this)" title="آزمون‌ها"><span class="icon">🎓</span></a>
     </nav>
 
-    <!-- مودال تنظیمات (مشخصات کلاس، بکاپ، بازنشانی) -->
+    <!-- مودال تنظیمات -->
     <div id="settings-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">⚙️ تنظیمات</div>
-            
-            <!-- بخش ۱: مشخصات کلاس -->
             <div class="card" style="border: none; box-shadow: none; padding: 0; margin-bottom: 20px;">
                 <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">🏫 مشخصات کلاس</h3>
                 <form id="class-form">
@@ -595,15 +466,10 @@
                     <div class="form-group"><label class="form-label" for="classGrade">پایه</label><input type="text" id="classGrade" class="form-control" placeholder="پنجم" autocomplete="on" required></div>
                     <div class="form-group"><label class="form-label" for="teacherName">نام آموزگار</label><input type="text" id="teacherName" class="form-control" placeholder="کریم جهانی فانی" autocomplete="on" required></div>
                     <div class="form-group"><label class="form-label" for="schoolName">مدرسه</label><input type="text" id="schoolName" class="form-control" placeholder="مثلاً: دبستان شهید بهشتی" autocomplete="on" required></div>
-                    
                     <hr style="border-top: 1px dashed var(--border-color); margin: 15px 0;">
-                    
-                    <!-- تنظیمات برنامه هفتگی -->
                     <div class="form-group">
                         <label class="form-label">روزهای فعال هفته (برای برنامه هفتگی)</label>
-                        <div id="schedule-days-checkboxes" style="display: flex; flex-wrap: wrap; gap: 10px; background: var(--input-bg); padding: 12px; border-radius: var(--radius-sm);">
-                            <!-- چک‌باکس‌ها از طریق JS پر می‌شوند -->
-                        </div>
+                        <div id="schedule-days-checkboxes" style="display: flex; flex-wrap: wrap; gap: 10px; background: var(--input-bg); padding: 12px; border-radius: var(--radius-sm);"></div>
                         <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">روزهایی را که مدرسه دایر است انتخاب کنید.</p>
                     </div>
                     <div class="form-group">
@@ -611,19 +477,13 @@
                         <input type="number" id="schedulePeriodsCount" class="form-control" min="1" max="6" value="5" required>
                         <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">حداکثر ۶ زنگ در روز</p>
                     </div>
-
                     <button type="submit" class="btn btn-primary btn-block mt-4">💾 ذخیره مشخصات</button>
                 </form>
             </div>
-
             <hr style="border-top: 1px dashed var(--border-color); margin: 20px 0;">
-
-            <!-- بخش ۲: پشتیبان‌گیری و بازیابی -->
             <div class="card" style="border: none; box-shadow: none; padding: 0; margin-bottom: 20px;">
                 <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">📤 پشتیبان‌گیری و بازیابی</h3>
-                <div id="backup-status" style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 10px; padding: 8px; background: var(--input-bg); border-radius: 8px;">
-                    آخرین پشتیبان‌گیری: <strong>نامشخص</strong>
-                </div>
+                <div id="backup-status" style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 10px; padding: 8px; background: var(--input-bg); border-radius: 8px;">آخرین پشتیبان‌گیری: <strong>نامشخص</strong></div>
                 <button type="button" class="btn btn-primary btn-block" onclick="exportData()">📤 خروجی JSON (کل داده‌ها)</button>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; text-align: center;">این فایل را در جای امنی ذخیره کنید.</p>
                 <div style="margin-top: 15px; border-top: 1px dashed var(--border-color); padding-top: 15px;">
@@ -631,42 +491,32 @@
                     <input type="file" id="importFile" accept=".json" class="form-control" onchange="importData(event)">
                 </div>
             </div>
-
             <hr style="border-top: 1px dashed var(--border-color); margin: 20px 0;">
-
-            <!-- بخش ۳: بازنشانی و پاکسازی -->
             <div class="card" style="border: 2px solid #ef4444; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); padding: 15px;">
                 <h3 style="color: #b91c1c; border-bottom: 2px dashed #fca5a5; padding-bottom: 8px; margin-bottom: 15px;">🗑️ بازنشانی و پاکسازی</h3>
-                
                 <div style="display: flex; flex-direction: column; gap: 12px;">
-                    
                     <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
                         <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">📅 شروع سال تحصیلی جدید</strong>
                         <p style="font-size: 0.8rem; color: #64748b; margin: 0 0 10px 0;">پاک کردن تمام سوابق ارزشیابی، حضور و غیاب‌ها و جلسات (دانش‌آموزان و دروس حفظ می‌شوند).</p>
                         <button type="button" class="btn btn-secondary btn-block" onclick="resetYearlyRecords()" style="background: #fca5a5; color: #7f1d1d;">پاک کردن سوابق</button>
                     </div>
-
                     <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
                         <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">🧹 حذف سوابق یک درس یا فعالیت</strong>
                         <select id="resetRecordSelect" class="form-control" style="margin-bottom: 10px;"></select>
                         <button type="button" class="btn btn-secondary btn-block" onclick="resetSpecificRecords()" style="background: #fca5a5; color: #7f1d1d;">حذف سوابق انتخاب شده</button>
                     </div>
-
                     <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
                         <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">🔄 پاکسازی فنی (کش)</strong>
                         <p style="font-size: 0.8rem; color: #64748b; margin: 0 0 10px 0;">اگر برنامه باگ زد یا آپدیت نشد، کش مرورگر را پاک کنید.</p>
                         <button type="button" class="btn btn-secondary btn-block" onclick="resetTechnicalCache()" style="background: #fca5a5; color: #7f1d1d;">پاکسازی کش</button>
                     </div>
-
                     <div style="background: #fef2f2; padding: 12px; border-radius: 8px; border: 2px dashed #ef4444; margin-top: 5px;">
                         <strong style="color: #dc2626; display: block; margin-bottom: 5px;">⚠️ بازنشانی کامل (تنظیمات کارخانه)</strong>
                         <p style="font-size: 0.8rem; color: #7f1d1d; margin: 0 0 10px 0;">حذف کل اطلاعات برنامه (کلاس، دانش‌آموزان، دروس، سوابق و...). این عمل غیرقابل بازگشت است!</p>
                         <button type="button" class="btn btn-primary btn-block" onclick="resetFactoryAll()" style="background: #dc2626; border: none;">حذف کل اطلاعات</button>
                     </div>
-
                 </div>
             </div>
-
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary btn-block" onclick="closeSettingsModal()">بستن</button>
             </div>
@@ -680,75 +530,10 @@
     <div id="report-card-modal" class="modal-overlay"><div class="modal-content report-card-modal"><div class="no-print" style="display: flex; justify-content: space-between; margin-bottom: 15px; flex-wrap: wrap; gap: 5px;"><button type="button" class="btn btn-secondary btn-sm" onclick="copyReportText()" style="background: var(--primary); color: white;">📋 کپی متن کارنامه</button><button type="button" class="btn btn-primary btn-sm" onclick="window.print()">🖨️ چاپ</button><button type="button" class="btn btn-secondary btn-sm" onclick="closeReportCard()">✖️ بستن</button></div><div id="report-card-content"></div></div></div>
     <div id="attendance-details-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header" id="attendance-details-title">📋 جزئیات حضور</div><div id="attendance-details-content"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeAttendanceDetails()">بستن</button></div></div></div>
     <div id="lesson-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="lesson-details-title">📊 جزئیات درس</div><div class="view-toggle-group"><button type="button" id="btnLessonClassView" class="view-toggle-btn active" onclick="switchLessonDetailView('class')">👦 نمای کلاسی</button><button type="button" id="btnLessonGroupView" class="view-toggle-btn" onclick="switchLessonDetailView('group')">👥 نمای گروهی</button></div><div id="lesson-details-content" class="list-group"></div><div class="modal-footer"><button type="button" class="btn btn-secondary btn-block" onclick="closeLessonDetails()">بستن</button></div></div></div>
-    
-    <!-- مودال جزئیات گروه -->
-    <div id="group-details-modal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header" id="group-details-title">📊 جزئیات گروه</div>
-            <div style="background: var(--input-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--border-color);">
-                <label class="form-label" style="font-size: 0.9rem; margin-bottom: 5px;">➕ افزودن دانش‌آموز به این گروه</label>
-                <div style="display: flex; gap: 8px;">
-                    <select id="assignStudentSelectModal" class="form-control" style="flex: 1;"></select>
-                    <button type="button" class="btn btn-primary" onclick="assignStudentFromModal()">افزودن</button>
-                </div>
-            </div>
-            <div id="group-details-content" class="list-group" style="max-height: 40vh; overflow-y: auto;"></div>
-            <div class="modal-footer" style="flex-direction: column; gap: 10px; margin-top: 20px;">
-                <button type="button" class="btn btn-secondary btn-block" onclick="closeGroupDetails()">بستن</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- مودال ویرایش گروه -->
-    <div id="edit-group-modal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">✏️ ویرایش گروه</div>
-            <form id="edit-group-form">
-                <input type="hidden" id="editGroupIdModal">
-                <div class="form-group"><label class="form-label">نام گروه</label><input type="text" id="editGroupNameModal" class="form-control" required></div>
-                <div class="form-group"><label class="form-label">نماد (ایموجی)</label><input type="text" id="editGroupSymbolModal" class="form-control" required></div>
-                <div class="form-group"><label class="form-label">شعار گروه (اختیاری)</label><textarea id="editGroupMottoModal" class="form-control" rows="4"></textarea></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeEditGroupModal()">انصراف</button>
-                    <button type="button" class="btn btn-primary" onclick="saveEditedGroup(event)">💾 ذخیره تغییرات</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- مودال ویرایش دانش‌آموز -->
-    <div id="edit-student-modal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">✏️ ویرایش دانش‌آموز</div>
-            <form id="edit-student-form">
-                <input type="hidden" id="editStudentIdModal">
-                <div class="form-group"><label class="form-label">نام</label><input type="text" id="editStudentFirstNameModal" class="form-control" required></div>
-                <div class="form-group"><label class="form-label">نام خانوادگی</label><input type="text" id="editStudentLastNameModal" class="form-control" required></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeEditStudentModal()">انصراف</button>
-                    <button type="button" class="btn btn-primary" onclick="saveEditedStudent(event)">💾 ذخیره تغییرات</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- مودال ویرایش درس -->
-    <div id="edit-lesson-modal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">✏️ ویرایش درس</div>
-            <form id="edit-lesson-form">
-                <input type="hidden" id="editLessonIdModal">
-                <div class="form-group"><label class="form-label">عنوان</label><input type="text" id="editLessonNameModal" class="form-control" required></div>
-                <div class="form-group"><label class="form-label">نماد (ایموجی)</label><input type="text" id="editLessonSymbolModal" class="form-control"></div>
-                <div class="form-group"><label class="form-label">شعار (اختیاری)</label><input type="text" id="editLessonMottoModal" class="form-control"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeEditLessonModal()">انصراف</button>
-                    <button type="button" class="btn btn-primary" onclick="saveEditedLesson(event)">💾 ذخیره تغییرات</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
+    <div id="group-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="group-details-title">📊 جزئیات گروه</div><div style="background: var(--input-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--border-color);"><label class="form-label" style="font-size: 0.9rem; margin-bottom: 5px;">➕ افزودن دانش‌آموز به این گروه</label><div style="display: flex; gap: 8px;"><select id="assignStudentSelectModal" class="form-control" style="flex: 1;"></select><button type="button" class="btn btn-primary" onclick="assignStudentFromModal()">افزودن</button></div></div><div id="group-details-content" class="list-group" style="max-height: 40vh; overflow-y: auto;"></div><div class="modal-footer" style="flex-direction: column; gap: 10px; margin-top: 20px;"><button type="button" class="btn btn-secondary btn-block" onclick="closeGroupDetails()">بستن</button></div></div></div>
+    <div id="edit-group-modal" class="modal-overlay"><div class="modal-content" style="max-width: 500px;"><div class="modal-header">✏️ ویرایش گروه</div><form id="edit-group-form"><input type="hidden" id="editGroupIdModal"><div class="form-group"><label class="form-label">نام گروه</label><input type="text" id="editGroupNameModal" class="form-control" required></div><div class="form-group"><label class="form-label">نماد (ایموجی)</label><input type="text" id="editGroupSymbolModal" class="form-control" required></div><div class="form-group"><label class="form-label">شعار گروه (اختیاری)</label><textarea id="editGroupMottoModal" class="form-control" rows="4"></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeEditGroupModal()">انصراف</button><button type="button" class="btn btn-primary" onclick="saveEditedGroup(event)">💾 ذخیره تغییرات</button></div></form></div></div>
+    <div id="edit-student-modal" class="modal-overlay"><div class="modal-content" style="max-width: 500px;"><div class="modal-header">✏️ ویرایش دانش‌آموز</div><form id="edit-student-form"><input type="hidden" id="editStudentIdModal"><div class="form-group"><label class="form-label">نام</label><input type="text" id="editStudentFirstNameModal" class="form-control" required></div><div class="form-group"><label class="form-label">نام خانوادگی</label><input type="text" id="editStudentLastNameModal" class="form-control" required></div><div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeEditStudentModal()">انصراف</button><button type="button" class="btn btn-primary" onclick="saveEditedStudent(event)">💾 ذخیره تغییرات</button></div></form></div></div>
+    <div id="edit-lesson-modal" class="modal-overlay"><div class="modal-content" style="max-width: 500px;"><div class="modal-header">✏️ ویرایش درس</div><form id="edit-lesson-form"><input type="hidden" id="editLessonIdModal"><div class="form-group"><label class="form-label">عنوان</label><input type="text" id="editLessonNameModal" class="form-control" required></div><div class="form-group"><label class="form-label">نماد (ایموجی)</label><input type="text" id="editLessonSymbolModal" class="form-control"></div><div class="form-group"><label class="form-label">شعار (اختیاری)</label><input type="text" id="editLessonMottoModal" class="form-control"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeEditLessonModal()">انصراف</button><button type="button" class="btn btn-primary" onclick="saveEditedLesson(event)">💾 ذخیره تغییرات</button></div></form></div></div>
     <div id="session-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="session-details-title">📅 جزئیات جلسه</div><div id="session-details-content"></div><div class="modal-footer" style="flex-direction: column; gap: 10px;"><button type="button" class="btn btn-primary btn-block" onclick="saveAllSessionAttendance()">💾 ذخیره کل حضور و غیاب</button><button type="button" class="btn btn-secondary btn-block" onclick="closeSessionDetails()">بستن</button></div></div></div>
     <div id="student-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="student-details-title">👤 جزئیات دانش‌آموز</div><div id="student-details-content" style="max-height: 60vh; overflow-y: auto;"></div><div class="modal-footer"><button type="button" class="btn btn-secondary btn-block" onclick="closeStudentDetails()">بستن</button></div></div></div>
 
@@ -830,24 +615,25 @@
             if (pageId === 'page-score' && typeof renderScoreData === 'function') renderScoreData();
         }
     </script>
-<!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) -->
-<script>
-    if (localStorage.getItem('kosha-version') !== 'v75') {
-        localStorage.setItem('kosha-version', 'v75');
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for(let registration of registrations) {
-                    registration.unregister();
-                }
-                caches.keys().then(function(names) {
-                    for (let name of names) caches.delete(name);
-                    window.location.reload(true);
+
+    <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) - ارتقا به v76 -->
+    <script>
+        if (localStorage.getItem('kosha-version') !== 'v76') {
+            localStorage.setItem('kosha-version', 'v76');
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) {
+                        registration.unregister();
+                    }
+                    caches.keys().then(function(names) {
+                        for (let name of names) caches.delete(name);
+                        window.location.reload(true);
+                    });
                 });
-            });
-        } else {
-            window.location.reload(true);
+            } else {
+                window.location.reload(true);
+            }
         }
-    }
-</script>
+    </script>
 </body>
 </html>
