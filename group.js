@@ -8,11 +8,9 @@ function initGroupEvents() {
     document.getElementById('group-form').addEventListener('submit', saveGroup);
 }
 
-// فقط برای افزودن گروه جدید
 async function saveGroup(e) {
     e.preventDefault();
 
-    // *** بررسی محدودیت ۱۲ گروه ***
     if (window.allGroupsData.length >= 12) {
         showToast('حداکثر تعداد مجاز گروه (۱۲ گروه) تکمیل شده است.', 'error');
         return;
@@ -44,7 +42,6 @@ function renderGroupsList() {
         return;
     }
 
-    // 1. محاسبه امتیاز کل هر گروه
     const groupScores = window.allGroupsData.map(g => {
         let total = 0;
         window.allRecordsData.forEach(rec => {
@@ -58,13 +55,11 @@ function renderGroupsList() {
         return { ...g, totalScore: total };
     });
 
-    // 2. مرتب‌سازی: امتیاز (نزولی) -> نام گروه (الفبا)
     groupScores.sort((a, b) => {
         if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
         return a.name.localeCompare(b.name, 'fa');
     });
 
-    // 3. تعیین مدال‌ها (قانون تساوی)
     const uniqueScores = [...new Set(groupScores.map(g => g.totalScore))].filter(s => s > 0).sort((a, b) => b - a);
     const goldScore = uniqueScores.length > 0 ? uniqueScores[0] : -1;
     const silverScore = uniqueScores.length > 1 ? uniqueScores[1] : -1;
@@ -84,15 +79,15 @@ function renderGroupsList() {
             <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px; padding: 15px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-weight:bold; color:var(--text-muted); min-width:20px;">${rank}.</span>
+                        <span style="font-weight:bold; color:var(--text-muted); min-width:20px;">${toPersianNumber(rank)}.</span>
                         <span class="medal-badge" style="font-size:1.3rem;">${medal}</span>
                         <span style="font-size:1.5rem;">${g.symbol}</span>
                         <div>
                             <strong>${g.name}</strong>
-                            <div style="font-size:0.8rem; color:var(--text-muted);">${studentCount} دانش‌آموز</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">${toPersianNumber(studentCount)} دانش‌آموز</div>
                         </div>
                     </div>
-                    <span class="rank-badge">${g.totalScore} امتیاز</span>
+                    <span class="rank-badge">${toPersianNumber(g.totalScore)} امتیاز</span>
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:5px; margin-top:5px; border-top:1px dashed var(--border-color); padding-top:10px;">
                     <button class="btn btn-secondary btn-sm" onclick="openGroupDetails(${g.id})" title="مشاهده جزئیات و مدیریت اعضا">👁️</button>
@@ -104,7 +99,6 @@ function renderGroupsList() {
     });
 }
 
-// باز کردن مودال ویرایش
 async function editGroup(id) {
     const group = await getDataById('groups', id);
     if (group) {
@@ -127,7 +121,7 @@ async function saveEditedGroup(e) {
         id: id,
         name: document.getElementById('editGroupNameModal').value,
         symbol: document.getElementById('editGroupSymbolModal').value,
-        motto: document.getElementById('editGroupMottoModal').value // اختیاری
+        motto: document.getElementById('editGroupMottoModal').value
     };
     
     await saveData('groups', data);
@@ -150,9 +144,6 @@ async function deleteGroup(id) {
     loadAllData();
 }
 
-// ==========================================
-// مشاهده جزئیات گروه و مدیریت اعضا (👁️)
-// ==========================================
 function openGroupDetails(id) {
     currentGroupDetailsId = id;
     const group = window.allGroupsData.find(g => g.id === id);
@@ -160,7 +151,6 @@ function openGroupDetails(id) {
 
     document.getElementById('group-details-title').textContent = `📊 جزئیات گروه: ${group.symbol} ${group.name}`;
     
-    // پر کردن منوی کشویی داخل مودال
     populateModalStudentSelect(); 
     
     renderGroupDetails();
@@ -176,7 +166,6 @@ function populateModalStudentSelect() {
     const select = document.getElementById('assignStudentSelectModal');
     if (!select) return;
     
-    // فقط دانش‌آموزانی که در این گروه نیستند را نشان بده
     const availableStudents = window.allStudentsData.filter(st => st.groupId !== currentGroupDetailsId);
     
     if (availableStudents.length === 0) {
@@ -201,10 +190,8 @@ async function assignStudentFromModal() {
             await saveData('students', student);
             showToast('دانش‌آموز با موفقیت به گروه اضافه شد.', 'success');
             
-            // رفرش کامل لیست‌های پس‌زمینه
             await loadAllData(); 
             
-            // رفرش محتوای مودال و منوی کشویی
             populateModalStudentSelect(); 
             renderGroupDetails(); 
         }
@@ -253,12 +240,12 @@ function renderGroupDetails() {
         html += `
             <div class="details-list-item" style="background: var(--card-bg); margin-bottom: 5px; border-radius: 8px; border: 1px solid var(--border-color);">
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-weight:bold; color:var(--text-muted); min-width:25px;">${index + 1}.</span>
+                    <span style="font-weight:bold; color:var(--text-muted); min-width:25px;">${toPersianNumber(index + 1)}.</span>
                     <span class="medal-badge" style="font-size:1.2rem;">${medal}</span>
                     <strong>${st.firstName} ${st.lastName}</strong>
                 </div>
                 <div style="display:flex; align-items:center; gap:5px;">
-                    <span class="rank-badge" style="font-size:0.9rem;">${st.totalScore} امتیاز</span>
+                    <span class="rank-badge" style="font-size:0.9rem;">${toPersianNumber(st.totalScore)} امتیاز</span>
                     <button class="btn btn-danger btn-sm" onclick="removeStudentFromGroup(${st.id})" title="حذف از گروه">🗑️</button>
                 </div>
             </div>
