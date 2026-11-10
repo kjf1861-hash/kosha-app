@@ -2,7 +2,6 @@
 // فایل students.js — منطق تب دانش‌آموزان
 // ==========================================
 
-// فقط برای افزودن دانش‌آموز جدید
 async function saveStudent(e) {
     e.preventDefault();
     
@@ -50,7 +49,6 @@ function renderStudentsList() {
         return a.lastName.localeCompare(b.lastName, 'fa');
     });
 
-    // مدال‌دهی (فقط برای کسانی که امتیاز بالای ۰ دارند)
     const uniqueScores = [...new Set(studentScores.map(s => s.totalScore))].filter(s => s > 0).sort((a, b) => b - a);
     const goldScore = uniqueScores.length > 0 ? uniqueScores[0] : -1;
     const silverScore = uniqueScores.length > 1 ? uniqueScores[1] : -1;
@@ -68,7 +66,7 @@ function renderStudentsList() {
         const globalRank = startIndex + index + 1;
         
         let medalHtml = '';
-        if (st.totalScore > 0) { // شرط اعطای مدال
+        if (st.totalScore > 0) { 
             if (st.totalScore === goldScore) medalHtml = '<span class="medal-badge">🥇</span>';
             else if (st.totalScore === silverScore) medalHtml = '<span class="medal-badge">🥈</span>';
             else if (st.totalScore === bronzeScore) medalHtml = '<span class="medal-badge">🥉</span>';
@@ -81,13 +79,13 @@ function renderStudentsList() {
             <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                     <div style="display:flex; align-items:center; gap:5px;">
-                        <span style="font-weight:bold; min-width:25px; color:var(--text-muted);">${globalRank}.</span>
+                        <span style="font-weight:bold; min-width:25px; color:var(--text-muted);">${toPersianNumber(globalRank)}.</span>
                         ${medalHtml}
                         <span><strong>${st.firstName} ${st.lastName}</strong></span>
                         ${groupBadge}
                     </div>
                     <div style="display:flex; align-items:center; gap:5px;">
-                        <span class="rank-badge">${st.totalScore} امتیاز</span>
+                        <span class="rank-badge">${toPersianNumber(st.totalScore)} امتیاز</span>
                         <button class="btn btn-secondary btn-sm" onclick="openStudentDetails(${st.id})" title="مشاهده جزئیات">👁️</button>
                         <button class="btn btn-secondary btn-sm" onclick="editStudent(${st.id})" title="ویرایش">✏️</button>
                         <button class="btn btn-danger btn-sm" onclick="deleteStudent(${st.id})" title="حذف">🗑️</button>
@@ -101,7 +99,7 @@ function renderStudentsList() {
     if (pagination) {
         if (totalPages > 1) {
             pagination.style.display = 'flex';
-            document.getElementById('studentsPageInfo').textContent = `صفحه ${currentPage.students} از ${totalPages}`;
+            document.getElementById('studentsPageInfo').textContent = `صفحه ${toPersianNumber(currentPage.students)} از ${toPersianNumber(totalPages)}`;
             document.getElementById('btnPrevStudents').disabled = (currentPage.students === 1);
             document.getElementById('btnNextStudents').disabled = (currentPage.students === totalPages);
         } else {
@@ -207,7 +205,7 @@ async function openStudentDetails(id) {
         subRecords.forEach(r => total += r.finalScore);
         
         if (subRecords.length > 0) {
-            subjectHtml += `<div class="details-list-item"><span>${sub.symbol || ''} ${sub.name}</span><strong>${total} امتیاز</strong></div>`;
+            subjectHtml += `<div class="details-list-item"><span>${sub.symbol || ''} ${sub.name}</span><strong>${toPersianNumber(total)} امتیاز</strong></div>`;
             hasSubjects = true;
         }
     });
@@ -224,7 +222,7 @@ async function openStudentDetails(id) {
     });
 
     for (const [itemName, stats] of Object.entries(itemCounts)) {
-        itemHtml += `<div class="details-list-item"><span>${itemName}</span><span style="color:var(--text-muted); font-size:0.85rem;">${stats.count} بار (${stats.totalScore} امتیاز)</span></div>`;
+        itemHtml += `<div class="details-list-item"><span>${itemName}</span><span style="color:var(--text-muted); font-size:0.85rem;">${toPersianNumber(stats.count)} بار (${toPersianNumber(stats.totalScore)} امتیاز)</span></div>`;
         hasItems = true;
     }
     if (!hasItems) itemHtml += '<p style="color:#64748b; font-size:0.9rem; text-align:center;">هیچ ارزشیابی ثبت نشده است.</p>';
