@@ -1,16 +1,16 @@
 /* =========================================
-   تعریف فونت‌های اختصاصی (IR Fonts)
+   تعریف فونت‌های اختصاصی (از طریق CDN گیت‌هاب)
    ========================================= */
 @font-face {
     font-family: 'IRANYekan';
-    src: url('./fonts/IRYekan.ttf') format('truetype');
+    src: url('https://cdn.jsdelivr.net/gh/kjf1861-hash/kosha-app@main/fonts/IRYekan.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: 'IRANYekan';
-    src: url('./fonts/IRYekan-Bold.ttf') format('truetype');
+    src: url('https://cdn.jsdelivr.net/gh/kjf1861-hash/kosha-app@main/fonts/IRYekan-Bold.ttf') format('truetype');
     font-weight: bold;
     font-style: normal;
     font-display: swap;
@@ -18,14 +18,14 @@
 
 @font-face {
     font-family: 'IRTerafik';
-    src: url('./fonts/IRTerafik.ttf') format('truetype');
+    src: url('https://cdn.jsdelivr.net/gh/kjf1861-hash/kosha-app@main/fonts/IRTerafik.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: 'IRTerafik';
-    src: url('./fonts/IRTerafik-Bold.ttf') format('truetype');
+    src: url('https://cdn.jsdelivr.net/gh/kjf1861-hash/kosha-app@main/fonts/IRTerafik-Bold.ttf') format('truetype');
     font-weight: bold;
     font-style: normal;
     font-display: swap;
@@ -33,7 +33,7 @@
 
 @font-face {
     font-family: 'IRNumber';
-    src: url('./fonts/IRNumber.ttf') format('truetype');
+    src: url('https://cdn.jsdelivr.net/gh/kjf1861-hash/kosha-app@main/fonts/IRNumber.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -94,7 +94,7 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-/* تنظیم فونت پایه برای کل برنامه با !important برای جلوگیری از بازنویسی */
+/* تنظیم فونت پایه برای کل برنامه با !important */
 body, button, input, select, textarea, .form-control, .btn, .nav-item, .list-item {
     font-family: 'IRTerafik', Tahoma, sans-serif !important;
 }
