@@ -830,5 +830,24 @@
             if (pageId === 'page-score' && typeof renderScoreData === 'function') renderScoreData();
         }
     </script>
+<!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) -->
+<script>
+    if (localStorage.getItem('kosha-version') !== 'v75') {
+        localStorage.setItem('kosha-version', 'v75');
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
+                caches.keys().then(function(names) {
+                    for (let name of names) caches.delete(name);
+                    window.location.reload(true);
+                });
+            });
+        } else {
+            window.location.reload(true);
+        }
+    }
+</script>
 </body>
 </html>
