@@ -5,7 +5,11 @@
 let currentGroupDetailsId = null;
 
 function initGroupEvents() {
-    document.getElementById('group-form').addEventListener('submit', saveGroup);
+    const groupForm = document.getElementById('group-form');
+    if (groupForm && !groupForm.dataset.listenerAttached) {
+        groupForm.addEventListener('submit', saveGroup);
+        groupForm.dataset.listenerAttached = 'true';
+    }
 }
 
 async function saveGroup(e) {
@@ -16,15 +20,21 @@ async function saveGroup(e) {
         return;
     }
 
+    const nameEl = document.getElementById('groupName');
+    const symbolEl = document.getElementById('groupSymbol');
+    const mottoEl = document.getElementById('groupMotto');
+    if (!nameEl || !symbolEl) return;
+
     const data = { 
-        name: document.getElementById('groupName').value,
-        symbol: document.getElementById('groupSymbol').value,
-        motto: document.getElementById('groupMotto').value
+        name: nameEl.value,
+        symbol: symbolEl.value,
+        motto: mottoEl ? mottoEl.value : ''
     };
     
     await saveData('groups', data);
     
-    document.getElementById('group-form').reset();
+    const form = document.getElementById('group-form');
+    if (form) form.reset();
     showToast('گروه جدید با موفقیت ثبت شد!', 'success');
     loadAllData();
 }
@@ -102,21 +112,29 @@ function renderGroupsList() {
 async function editGroup(id) {
     const group = await getDataById('groups', id);
     if (group) {
-        document.getElementById('editGroupIdModal').value = group.id;
-        document.getElementById('editGroupNameModal').value = group.name;
-        document.getElementById('editGroupSymbolModal').value = group.symbol;
-        document.getElementById('editGroupMottoModal').value = group.motto;
-        document.getElementById('edit-group-modal').classList.add('show');
+        const editId = document.getElementById('editGroupIdModal');
+        const editName = document.getElementById('editGroupNameModal');
+        const editSymbol = document.getElementById('editGroupSymbolModal');
+        const editMotto = document.getElementById('editGroupMottoModal');
+        if(editId) editId.value = group.id;
+        if(editName) editName.value = group.name;
+        if(editSymbol) editSymbol.value = group.symbol;
+        if(editMotto) editMotto.value = group.motto;
+        const modal = document.getElementById('edit-group-modal');
+        if (modal) modal.classList.add('show');
     }
 }
 
 function closeEditGroupModal() {
-    document.getElementById('edit-group-modal').classList.remove('show');
+    const modal = document.getElementById('edit-group-modal');
+    if (modal) modal.classList.remove('show');
 }
 
 async function saveEditedGroup(e) {
     if(e) e.preventDefault();
-    const id = parseInt(document.getElementById('editGroupIdModal').value);
+    const idEl = document.getElementById('editGroupIdModal');
+    if (!idEl) return;
+    const id = parseInt(idEl.value);
     const data = {
         id: id,
         name: document.getElementById('editGroupNameModal').value,
@@ -145,20 +163,28 @@ async function deleteGroup(id) {
 }
 
 function openGroupDetails(id) {
-    currentGroupDetailsId = id;
+    // *** رفع باگ ۱۰: ابتدا گروه را پیدا می‌کنیم، بعد ID را تنظیم می‌کنیم ***
     const group = window.allGroupsData.find(g => g.id === id);
-    if (!group) return;
+    if (!group) {
+        showToast('گروه یافت نشد.', 'error');
+        return;
+    }
+    
+    currentGroupDetailsId = id;
 
-    document.getElementById('group-details-title').textContent = `📊 جزئیات گروه: ${group.symbol} ${group.name}`;
+    const titleEl = document.getElementById('group-details-title');
+    if (titleEl) titleEl.textContent = `📊 جزئیات گروه: ${group.symbol} ${group.name}`;
     
     populateModalStudentSelect(); 
     
     renderGroupDetails();
-    document.getElementById('group-details-modal').classList.add('show');
+    const modal = document.getElementById('group-details-modal');
+    if (modal) modal.classList.add('show');
 }
 
 function closeGroupDetails() {
-    document.getElementById('group-details-modal').classList.remove('show');
+    const modal = document.getElementById('group-details-modal');
+    if (modal) modal.classList.remove('show');
     currentGroupDetailsId = null;
 }
 
@@ -177,7 +203,9 @@ function populateModalStudentSelect() {
 }
 
 async function assignStudentFromModal() {
-    const studentId = document.getElementById('assignStudentSelectModal').value;
+    const select = document.getElementById('assignStudentSelectModal');
+    if (!select) return;
+    const studentId = select.value;
     if (!studentId) {
         showToast('لطفاً یک دانش‌آموز را از لیست انتخاب کنید.', 'error');
         return;
@@ -238,7 +266,7 @@ function renderGroupDetails() {
         else if (st.totalScore === bronzeScore) medal = '🥉';
 
         html += `
-            <div class="details-list-item" style="background: var(--card-bg); margin-bottom: 5px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <div class="details-list-item" style="background: var(--card-bg); margin-bottom: 5px; border-radius: 8px; border: 1px solid var(--border-color); padding: 10px;">
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="font-weight:bold; color:var(--text-muted); min-width:25px;">${toPersianNumber(index + 1)}.</span>
                     <span class="medal-badge" style="font-size:1.2rem;">${medal}</span>
