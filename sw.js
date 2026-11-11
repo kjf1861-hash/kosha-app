@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kosha-cache-v84';
+const CACHE_NAME = 'kosha-cache-v85';
 const ASSETS_TO_CACHE = [
     './', './index.html', './styles.css', './app.js', './db.js', './manifest.json', './icon.svg', 
     './class.js', './students.js', './lesson.js', './group.js', './session.js', './score.js', './reset.js',
