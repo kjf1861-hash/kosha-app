@@ -117,7 +117,7 @@
                         </div>
                     </div>
                 </div>
-<!-- ===== کارت گزارش جامع آزمون‌ها ===== -->
+                <!-- ===== کارت گزارش جامع آزمون‌ها ===== -->
 <div class="card" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border: 2px solid #a5b4fc;">
     <h2 class="card-title" style="color: #4f46e5; border-bottom-color: #c7d2fe;">🎓 گزارش جامع آزمون‌ها</h2>
     <div id="dashboard-exams-report">
@@ -175,6 +175,35 @@
                     <div id="lessons-list" class="list-group"></div>
                 </div>
             </div>
+
+<!-- تب ۵: تقویم -->
+<div id="page-calendar" class="page-section">
+    <div class="page-header-title">📅 تقویم</div>
+    
+    <!-- تقویم جامع -->
+    <div class="card">
+        <h2 class="card-title" style="justify-content: space-between;">
+            <span style="display: flex; align-items: center; gap: 8px;">📅 تقویم جامع</span>
+            <div style="display:flex; gap:5px;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="fullCalendarPrevMonth()" title="ماه قبل">◀</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="fullCalendarNextMonth()" title="ماه بعد">▶</button>
+            </div>
+        </h2>
+        
+        <div class="calendar-title" id="full-calendar-title" style="margin-bottom: 15px;"></div>
+        
+        <div class="calendar-weekdays">
+            <span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span>
+        </div>
+        
+        <div class="full-calendar-grid" id="full-calendar-grid"></div>
+    </div>
+    
+    <!-- لیست مناسبت‌ها -->
+    <div class="card" style="margin-top: 15px;">
+        <div id="full-calendar-events"></div>
+    </div>
+</div>
 
             <!-- تب ۴: گروه‌ها -->
             <div id="page-group" class="page-section">
@@ -447,14 +476,15 @@
     </div> 
         <!-- منوی پایین (۷ تب - فقط ایموجی) -->
     <nav class="bottom-nav" style="display: none;">
-        <a href="#" class="nav-item active" onclick="switchPage('page-class', this)" title="کلاس"><span class="icon">🏫</span></a>
-        <a href="#" class="nav-item" onclick="switchPage('page-students', this)" title="دانش‌آموزان"><span class="icon">👦</span></a>
-        <a href="#" class="nav-item" onclick="switchPage('page-lesson', this)" title="درس‌ها"><span class="icon">📚</span></a>
-        <a href="#" class="nav-item" onclick="switchPage('page-group', this)" title="گروه‌ها"><span class="icon">👥</span></a>
-        <a href="#" class="nav-item" onclick="switchPage('page-session', this)" title="جلسات"><span class="icon">📅</span></a>
-        <a href="#" class="nav-item" onclick="switchPage('page-score', this)" title="امتیازات"><span class="icon">📝</span></a>
-        <a href="#" class="nav-item" onclick="switchPage('page-exams', this)" title="آزمون‌ها"><span class="icon">🎓</span></a>
-    </nav>
+    <a href="#" class="nav-item active" onclick="switchPage('page-class', this)" title="کلاس"><span class="icon">🏫</span></a>
+    <a href="#" class="nav-item" onclick="switchPage('page-students', this)" title="دانش‌آموزان"><span class="icon">👦</span></a>
+    <a href="#" class="nav-item" onclick="switchPage('page-group', this)" title="گروه‌ها"><span class="icon">👥</span></a>
+    <a href="#" class="nav-item" onclick="switchPage('page-lesson', this)" title="دروس"><span class="icon">📚</span></a>
+    <a href="#" class="nav-item" onclick="switchPage('page-calendar', this)" title="تقویم"><span class="icon">📅</span></a>
+    <a href="#" class="nav-item" onclick="switchPage('page-session', this)" title="جلسات"><span class="icon">📆</span></a>
+    <a href="#" class="nav-item" onclick="switchPage('page-score', this)" title="امتیازات"><span class="icon">📝</span></a>
+    <a href="#" class="nav-item" onclick="switchPage('page-exams', this)" title="آزمون‌ها"><span class="icon">🎓</span></a>
+</nav>
 
     <!-- ========================================================= -->
     <!-- بخش مودال‌ها (این بخش در پیام بعدی ارسال می‌شود) -->
@@ -758,8 +788,8 @@
 </div>
 
     <!-- ===== اسکریپت‌ها ===== -->
-<script src="calendar-data.js"></script>
-<script src="calendar.js"></script>
+    <script src="calendar-data.js"></script>
+    <script src="calendar.js"></script>
     <script src="db.js"></script>
     <script src="app.js"></script>
     <script src="class.js"></script>
@@ -834,6 +864,7 @@
             if (pageId === 'page-class' && typeof renderDashboardData === 'function') renderDashboardData();
             if (pageId === 'page-students' && typeof renderStudentsList === 'function') renderStudentsList();
             if (pageId === 'page-lesson' && typeof renderLessonData === 'function') renderLessonData();
+            if (pageId === 'page-calendar' && typeof initFullCalendar === 'function') initFullCalendar();
             if (pageId === 'page-group' && typeof renderGroupData === 'function') renderGroupData();
             if (pageId === 'page-session' && typeof renderSessionData === 'function') renderSessionData();
             if (pageId === 'page-score' && typeof renderScoreData === 'function') renderScoreData();
@@ -844,7 +875,7 @@
     <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) -->
     <script>
         (function() {
-            const APP_VERSION = 'v91';
+            const APP_VERSION = 'v92';
             const storedVersion = localStorage.getItem('kosha-version');
             
             if (storedVersion !== APP_VERSION) {
