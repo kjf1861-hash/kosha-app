@@ -19,17 +19,29 @@ let scoreCalendarState = {
 const scoreJalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
 const scoreLeapYears = [1408]; 
 
-function initScoreEvents() {
-    document.getElementById('recordItem').addEventListener('change', (e) => {
-        if (e.target.value !== "") {
-            const item = window.allAssessmentItems.find(i => i.id == e.target.value);
-            if(item) renderScoreInput(item);
-        } else {
-            document.getElementById('dynamic-score-section').style.display = 'none';
-        }
-    });
+// *** برای جلوگیری از رندر غیرضروری چک‌باکس‌ها ***
+let _lastStudentsHash = '';
 
-    document.getElementById('edit-record-form').addEventListener('submit', saveEditedRecord);
+function getStudentsHash() {
+    return window.allStudentsData.map(s => s.id).join(',') + '|' + window.allGroupsData.map(g => g.id).join(',');
+}
+
+// *** اصلاح باگ ۲ و ۳: initScoreEvents فقط رویدادهای مختص خودش را ثبت می‌کند ***
+function initScoreEvents() {
+    // رویداد change روی recordItem
+    const recordItem = document.getElementById('recordItem');
+    if (recordItem && !recordItem.dataset.listenerAttached) {
+        recordItem.addEventListener('change', (e) => {
+            if (e.target.value !== "") {
+                const item = window.allAssessmentItems.find(i => i.id == e.target.value);
+                if(item) renderScoreInput(item);
+            } else {
+                const section = document.getElementById('dynamic-score-section');
+                if (section) section.style.display = 'none';
+            }
+        });
+        recordItem.dataset.listenerAttached = 'true';
+    }
 }
 
 function renderScoreData() {
@@ -64,11 +76,17 @@ function renderScoreData() {
     }
 
     initScoreCalendars();
-
-    renderStudentCheckboxes();
-    renderQuranStudentCheckboxes();
-    renderSpecialStudentCheckboxes();
-    renderHandwritingStudentCheckboxes();
+    
+    // *** اصلاح باگ ۵: رندر چک‌باکس‌ها فقط در صورت تغییر داده‌ها ***
+    const currentHash = getStudentsHash();
+    if (currentHash !== _lastStudentsHash) {
+        renderStudentCheckboxes();
+        renderQuranStudentCheckboxes();
+        renderSpecialStudentCheckboxes();
+        renderHandwritingStudentCheckboxes();
+        _lastStudentsHash = currentHash;
+    }
+    
     loadAssessmentRecords();
     loadQuranRewards();
 }
@@ -96,7 +114,8 @@ function getScoreFirstDayOfWeek(year, month) {
 }
 
 function initScoreCalendars() {
-    const [startYearStr, endYearStr] = window.activeAcademicYear.split('-');
+    const ay = window.activeAcademicYear || '1405-1406';
+    const [startYearStr] = ay.split('-');
     const startYear = parseInt(startYearStr);
     
     ['record', 'quran', 'special', 'handwriting'].forEach(type => {
@@ -109,7 +128,8 @@ function initScoreCalendars() {
 }
 
 function changeScoreCalendarMonth(type, delta) {
-    const [startYearStr, endYearStr] = window.activeAcademicYear.split('-');
+    const ay = window.activeAcademicYear || '1405-1406';
+    const [startYearStr, endYearStr] = ay.split('-');
     const startYear = parseInt(startYearStr);
     const endYear = parseInt(endYearStr);
 
@@ -133,8 +153,11 @@ function changeScoreCalendarMonth(type, delta) {
 
     if (state.year < startYear || state.year > endYear) {
         showToast('این ماه خارج از بازه سال تحصیلی است.', 'error');
-        state.year = parseInt(document.getElementById(`${type}-calendar-title`).dataset.year);
-        state.month = parseInt(document.getElementById(`${type}-calendar-title`).dataset.month);
+        const titleEl = document.getElementById(`${type}-calendar-title`);
+        if (titleEl && titleEl.dataset.year) {
+            state.year = parseInt(titleEl.dataset.year);
+            state.month = parseInt(titleEl.dataset.month);
+        }
         return;
     }
 
@@ -149,12 +172,16 @@ function renderScoreCalendar(type) {
     
     titleEl.dataset.year = state.year;
     titleEl.dataset.month = state.month;
+    
+    const ay = window.activeAcademicYear || '1405-1406';
+    const [startY, endY] = ay.split('-');
+    
     titleEl.innerHTML = `
         <select onchange="updateScoreCalendarSelect('${type}', 'month', this.value)">
             ${scoreJalaliMonths.map((m, i) => `<option value="${i + 1}" ${state.month === i + 1 ? 'selected' : ''}>${m}</option>`).join('')}
         </select>
         <select onchange="updateScoreCalendarSelect('${type}', 'year', this.value)">
-            ${[parseInt(window.activeAcademicYear.split('-')[0]), parseInt(window.activeAcademicYear.split('-')[1])].map(y => `<option value="${y}" ${state.year === y ? 'selected' : ''}>${toPersianNumber(y)}</option>`).join('')}
+            ${[parseInt(startY), parseInt(endY)].map(y => `<option value="${y}" ${state.year === y ? 'selected' : ''}>${toPersianNumber(y)}</option>`).join('')}
         </select>
     `;
 
@@ -165,7 +192,6 @@ function renderScoreCalendar(type) {
     const firstDay = getScoreFirstDayOfWeek(state.year, state.month);
     const daysInMonth = getScoreDaysInMonth(state.year, state.month);
     
-    const [startY, endY] = window.activeAcademicYear.split('-');
     const startBound = `${startY}/07/01`;
     const endBound = `${endY}/06/31`;
 
@@ -284,13 +310,13 @@ function resetScoreCalendar(type) {
 // ==========================================
 // 1. توابع کمکی برای رندر چک‌باکس‌ها
 // ==========================================
-function createStudentLabel(st, checkboxClass, viewMode) {
+function createStudentLabel(st, checkboxClass) {
     const g = window.allGroupsData.find(x => x.id === st.groupId);
     const badge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
     return `<label class="student-checkbox-item"><input type="checkbox" class="${checkboxClass}" value="${st.id}"><div class="student-checkbox-item-content"><span>${st.firstName} ${st.lastName}</span>${badge}</div></label>`;
 }
 
-function createGroupedView(container, checkboxClass, viewMode, toggleGroupFnName) {
+function createGroupedView(container, checkboxClass, toggleGroupFnName) {
     if (window.allGroupsData.length === 0) { container.innerHTML = '<p style="text-align:center; color:#dc2626;">هیچ گروهی ساخته نشده است.</p>'; return; }
     window.allGroupsData.forEach(g => {
         const groupStudents = window.allStudentsData.filter(st => st.groupId === g.id);
@@ -323,14 +349,16 @@ function renderStudentCheckboxes() {
     if (currentStudentView === 'flat') {
         window.allStudentsData.forEach(st => { container.innerHTML += createStudentLabel(st, 'student-checkbox'); });
     } else {
-        createGroupedView(container, 'student-checkbox', 'grouped', 'toggleGroupSelection');
+        createGroupedView(container, 'student-checkbox', 'toggleGroupSelection');
     }
 }
 
 function switchStudentView(view) {
     currentStudentView = view;
-    document.getElementById('btnFlatView').classList.toggle('active', view === 'flat');
-    document.getElementById('btnGroupView').classList.toggle('active', view === 'grouped');
+    const btnFlat = document.getElementById('btnFlatView');
+    const btnGroup = document.getElementById('btnGroupView');
+    if (btnFlat) btnFlat.classList.toggle('active', view === 'flat');
+    if (btnGroup) btnGroup.classList.toggle('active', view === 'grouped');
     renderStudentCheckboxes();
 }
 
@@ -362,14 +390,16 @@ function renderQuranStudentCheckboxes() {
     if (currentQuranStudentView === 'flat') {
         window.allStudentsData.forEach(st => { container.innerHTML += createStudentLabel(st, 'quran-student-checkbox'); });
     } else {
-        createGroupedView(container, 'quran-student-checkbox', 'grouped', 'toggleQuranGroupSelection');
+        createGroupedView(container, 'quran-student-checkbox', 'toggleQuranGroupSelection');
     }
 }
 
 function switchQuranStudentView(view) {
     currentQuranStudentView = view;
-    document.getElementById('btnQuranFlatView').classList.toggle('active', view === 'flat');
-    document.getElementById('btnQuranGroupView').classList.toggle('active', view === 'grouped');
+    const btnFlat = document.getElementById('btnQuranFlatView');
+    const btnGroup = document.getElementById('btnQuranGroupView');
+    if (btnFlat) btnFlat.classList.toggle('active', view === 'flat');
+    if (btnGroup) btnGroup.classList.toggle('active', view === 'grouped');
     renderQuranStudentCheckboxes();
 }
 
@@ -394,14 +424,16 @@ function renderSpecialStudentCheckboxes() {
     if (currentSpecialStudentView === 'flat') {
         window.allStudentsData.forEach(st => { container.innerHTML += createStudentLabel(st, 'special-student-checkbox'); });
     } else {
-        createGroupedView(container, 'special-student-checkbox', 'grouped', 'toggleSpecialGroupSelection');
+        createGroupedView(container, 'special-student-checkbox', 'toggleSpecialGroupSelection');
     }
 }
 
 function switchSpecialStudentView(view) {
     currentSpecialStudentView = view;
-    document.getElementById('btnSpecialFlatView').classList.toggle('active', view === 'flat');
-    document.getElementById('btnSpecialGroupView').classList.toggle('active', view === 'grouped');
+    const btnFlat = document.getElementById('btnSpecialFlatView');
+    const btnGroup = document.getElementById('btnSpecialGroupView');
+    if (btnFlat) btnFlat.classList.toggle('active', view === 'flat');
+    if (btnGroup) btnGroup.classList.toggle('active', view === 'grouped');
     renderSpecialStudentCheckboxes();
 }
 
@@ -426,14 +458,16 @@ function renderHandwritingStudentCheckboxes() {
     if (currentHandwritingStudentView === 'flat') {
         window.allStudentsData.forEach(st => { container.innerHTML += createStudentLabel(st, 'handwriting-student-checkbox'); });
     } else {
-        createGroupedView(container, 'handwriting-student-checkbox', 'grouped', 'toggleHandwritingGroupSelection');
+        createGroupedView(container, 'handwriting-student-checkbox', 'toggleHandwritingGroupSelection');
     }
 }
 
 function switchHandwritingStudentView(view) {
     currentHandwritingStudentView = view;
-    document.getElementById('btnHandwritingFlatView').classList.toggle('active', view === 'flat');
-    document.getElementById('btnHandwritingGroupView').classList.toggle('active', view === 'grouped');
+    const btnFlat = document.getElementById('btnHandwritingFlatView');
+    const btnGroup = document.getElementById('btnHandwritingGroupView');
+    if (btnFlat) btnFlat.classList.toggle('active', view === 'flat');
+    if (btnGroup) btnGroup.classList.toggle('active', view === 'grouped');
     renderHandwritingStudentCheckboxes();
 }
 
@@ -448,6 +482,7 @@ function renderScoreInput(item) {
     const section = document.getElementById('dynamic-score-section');
     const container = document.getElementById('score-input-container');
     const label = document.getElementById('score-label');
+    if (!section || !container || !label) return;
     section.style.display = 'block';
     container.innerHTML = '';
     if (!item) { section.style.display = 'none'; return; }
@@ -482,7 +517,9 @@ function renderScoreInput(item) {
 // ==========================================
 function showPreview(isFinal) {
     isSaveAndNext = !isFinal;
-    const selectedIndex = document.getElementById('recordItem').value;
+    const selectedIndexEl = document.getElementById('recordItem');
+    if (!selectedIndexEl) return;
+    const selectedIndex = selectedIndexEl.value;
     if (selectedIndex === "") { showToast('آیتم ارزشیابی را انتخاب کنید.', 'error'); return; }
     
     const selectedItem = window.allAssessmentItems.find(i => i.id == selectedIndex);
@@ -511,12 +548,15 @@ function showPreview(isFinal) {
         showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return;
     }
 
-    document.getElementById('preview-content').innerHTML = `
-        <div class="preview-row"><strong>آیتم:</strong> <span>${selectedItem.title}</span></div>
-        <div class="preview-row"><strong>تعداد:</strong> <span>${toPersianNumber(studentCheckboxes.length)} نفر</span></div>
-        <div class="preview-row"><strong>تاریخ:</strong> <span>${toPersianNumber(dateStr)}</span></div>
-        <div class="preview-row" style="background: #eef2ff; padding: 10px; border-radius: 8px; margin-top: 10px;"><strong>امتیاز:</strong> <span style="font-size: 1.2rem; color: #4A90E2;">${toPersianNumber(finalScore)}</span></div>
-    `;
+    const previewContent = document.getElementById('preview-content');
+    if (previewContent) {
+        previewContent.innerHTML = `
+            <div class="preview-row"><strong>آیتم:</strong> <span>${selectedItem.title}</span></div>
+            <div class="preview-row"><strong>تعداد:</strong> <span>${toPersianNumber(studentCheckboxes.length)} نفر</span></div>
+            <div class="preview-row"><strong>تاریخ:</strong> <span>${toPersianNumber(dateStr)}</span></div>
+            <div class="preview-row" style="background: #eef2ff; padding: 10px; border-radius: 8px; margin-top: 10px;"><strong>امتیاز:</strong> <span style="font-size: 1.2rem; color: #4A90E2;">${toPersianNumber(finalScore)}</span></div>
+        `;
+    }
     
     window.tempRecordData = {
         subjectId: parseInt(document.getElementById('recordSubject').value),
@@ -528,10 +568,14 @@ function showPreview(isFinal) {
         finalScore: finalScore,
         academicYear: window.activeAcademicYear
     };
-    document.getElementById('preview-modal').classList.add('show');
+    const previewModal = document.getElementById('preview-modal');
+    if (previewModal) previewModal.classList.add('show');
 }
 
-function closePreviewModal() { document.getElementById('preview-modal').classList.remove('show'); }
+function closePreviewModal() { 
+    const modal = document.getElementById('preview-modal');
+    if (modal) modal.classList.remove('show'); 
+}
 
 async function confirmAndSaveRecord() {
     if (!window.tempRecordData) return;
@@ -545,12 +589,15 @@ async function confirmAndSaveRecord() {
             document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = false);
             const scoreInput = document.getElementById('dynamicLevelInput') || document.getElementById('dynamicCountInput') || document.getElementById('dynamicFreeInput');
             if (scoreInput) scoreInput.value = '';
-            document.getElementById('record-form').scrollIntoView({ behavior: 'smooth' });
+            const recordForm = document.getElementById('record-form');
+            if (recordForm) recordForm.scrollIntoView({ behavior: 'smooth' });
             loadAllData(); 
         } else {
-            document.getElementById('record-form').reset(); 
+            const recordForm = document.getElementById('record-form');
+            if (recordForm) recordForm.reset(); 
             resetScoreCalendar('record');
-            document.getElementById('dynamic-score-section').style.display = 'none'; 
+            const dynSection = document.getElementById('dynamic-score-section');
+            if (dynSection) dynSection.style.display = 'none'; 
             loadAllData();
         }
     } catch (error) { showToast('خطا در ذخیره!', 'error'); closePreviewModal(); }
@@ -619,7 +666,8 @@ async function saveQuranRecord() {
         }
 
         showToast('پویش قرآن با موفقیت ثبت شد!', 'success');
-        document.getElementById('quran-form').reset();
+        const form = document.getElementById('quran-form');
+        if (form) form.reset();
         resetScoreCalendar('quran');
         loadAllData();
     } catch (e) { console.error(e); showToast('خطا در ثبت پویش قرآن.', 'error'); }
@@ -632,7 +680,8 @@ async function saveSpecialReward() {
     const studentCheckboxes = document.querySelectorAll('.special-student-checkbox:checked');
     if (studentCheckboxes.length === 0) { showToast('دانش‌آموز انتخاب کنید.', 'error'); return; }
 
-    const title = document.getElementById('specialRewardTitle').value.trim();
+    const titleEl = document.getElementById('specialRewardTitle');
+    const title = titleEl.value.trim();
     if (!title) { showToast('عنوان تشویق را وارد کنید.', 'error'); return; }
 
     const score = parseInt(document.getElementById('specialRewardScore').value);
@@ -655,7 +704,8 @@ async function saveSpecialReward() {
     try {
         await saveData('records', recordData);
         showToast('تشویق ویژه با موفقیت ثبت شد!', 'success');
-        document.getElementById('special-reward-form').reset();
+        const form = document.getElementById('special-reward-form');
+        if (form) form.reset();
         resetScoreCalendar('special');
         loadAllData();
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق ویژه.', 'error'); }
@@ -685,7 +735,8 @@ async function saveHandwritingReward() {
     try {
         await saveData('records', recordData);
         showToast('تشویق خوش‌خط‌نویسی با موفقیت ثبت شد!', 'success');
-        document.getElementById('handwriting-reward-form').reset();
+        const form = document.getElementById('handwriting-reward-form');
+        if (form) form.reset();
         resetScoreCalendar('handwriting');
         loadAllData();
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق خوش‌خط‌نویسی.', 'error'); }
@@ -701,9 +752,9 @@ function loadAssessmentRecords() {
     
     container.innerHTML = '<p style="text-align:center;">در حال بارگذاری...</p>';
     
-    const filterSubject = document.getElementById('recordsFilterSubject').value;
-    const filterStudent = document.getElementById('recordsFilterStudent').value;
-    const searchText = document.getElementById('recordsSearchText').value.trim();
+    const filterSubject = document.getElementById('recordsFilterSubject')?.value || '';
+    const filterStudent = document.getElementById('recordsFilterStudent')?.value || '';
+    const searchText = document.getElementById('recordsSearchText')?.value.trim() || '';
 
     let filteredRecords = window.allRecordsData.filter(rec => {
         if (filterSubject && rec.subjectId != filterSubject) return false;
@@ -758,17 +809,23 @@ function loadAssessmentRecords() {
     if (pagination) {
         if (totalPages > 1) {
             pagination.style.display = 'flex';
-            document.getElementById('recordsPageInfo').textContent = `صفحه ${toPersianNumber(currentPage.records)} از ${toPersianNumber(totalPages)}`;
-            document.getElementById('btnPrevRecords').disabled = (currentPage.records === 1);
-            document.getElementById('btnNextRecords').disabled = (currentPage.records === totalPages);
+            const pageInfo = document.getElementById('recordsPageInfo');
+            if (pageInfo) pageInfo.textContent = `صفحه ${toPersianNumber(currentPage.records)} از ${toPersianNumber(totalPages)}`;
+            const btnPrev = document.getElementById('btnPrevRecords');
+            const btnNext = document.getElementById('btnNextRecords');
+            if (btnPrev) btnPrev.disabled = (currentPage.records === 1);
+            if (btnNext) btnNext.disabled = (currentPage.records === totalPages);
         } else { pagination.style.display = 'none'; }
     }
 }
 
 function clearRecordFilters() {
-    document.getElementById('recordsFilterSubject').value = '';
-    document.getElementById('recordsFilterStudent').value = '';
-    document.getElementById('recordsSearchText').value = '';
+    const el1 = document.getElementById('recordsFilterSubject');
+    const el2 = document.getElementById('recordsFilterStudent');
+    const el3 = document.getElementById('recordsSearchText');
+    if (el1) el1.value = '';
+    if (el2) el2.value = '';
+    if (el3) el3.value = '';
     currentPage.records = 1;
     loadAssessmentRecords();
 }
@@ -780,54 +837,65 @@ async function deleteRecord(id) {
 }
 
 // ==========================================
-// 12. ویرایش رکورد
+// 12. ویرایش رکورد (با اعتبارسنجی تاریخ - رفع باگ ۷)
 // ==========================================
 async function openEditRecordModal(id) {
     try {
         const record = await getDataById('records', id);
         if (!record) return;
         
-        document.getElementById('editRecordId').value = record.id;
-        document.getElementById('editRecordTitle').value = record.title;
-        document.getElementById('editRecordDate').value = record.date;
-        document.getElementById('editRecordScore').value = record.finalScore;
+        const editId = document.getElementById('editRecordId');
+        if (editId) editId.value = record.id;
+        const editTitle = document.getElementById('editRecordTitle');
+        if (editTitle) editTitle.value = record.title;
+        const editDate = document.getElementById('editRecordDate');
+        if (editDate) editDate.value = record.date;
+        const editScore = document.getElementById('editRecordScore');
+        if (editScore) editScore.value = record.finalScore;
         
         const subjectSelect = document.getElementById('editRecordSubject');
         const itemSelect = document.getElementById('editRecordItem');
 
-        if (record.subjectId && record.itemName !== "پویش حفظ جزء سی قرآن کریم" && record.itemName !== "تشویق ویژه" && record.itemName !== "تشویق خوش‌خط‌نویسی") {
-            subjectSelect.value = record.subjectId;
-            const itemInList = window.allAssessmentItems.find(i => i.title === record.itemName);
-            if (itemInList) itemSelect.value = itemInList.id;
-            subjectSelect.disabled = false;
-            itemSelect.disabled = false;
-        } else {
-            subjectSelect.value = '';
-            itemSelect.value = '';
-            subjectSelect.disabled = true;
-            itemSelect.disabled = true;
+        if (subjectSelect && itemSelect) {
+            if (record.subjectId && record.itemName !== "پویش حفظ جزء سی قرآن کریم" && record.itemName !== "تشویق ویژه" && record.itemName !== "تشویق خوش‌خط‌نویسی") {
+                subjectSelect.value = record.subjectId;
+                const itemInList = window.allAssessmentItems.find(i => i.title === record.itemName);
+                if (itemInList) itemSelect.value = itemInList.id;
+                subjectSelect.disabled = false;
+                itemSelect.disabled = false;
+            } else {
+                subjectSelect.value = '';
+                itemSelect.value = '';
+                subjectSelect.disabled = true;
+                itemSelect.disabled = true;
+            }
         }
         
         const container = document.getElementById('edit-record-students-container');
-        container.innerHTML = '';
-        
-        window.allStudentsData.forEach(st => {
-            const g = window.allGroupsData.find(x => x.id === st.groupId);
-            const badge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
-            const isChecked = record.students.includes(st.id) ? 'checked' : '';
-            container.innerHTML += `
-                <label class="student-checkbox-item">
-                    <input type="checkbox" class="edit-student-checkbox" value="${st.id}" ${isChecked}>
-                    <div class="student-checkbox-item-content"><span>${st.firstName} ${st.lastName}</span>${badge}</div>
-                </label>
-            `;
-        });
+        if (container) {
+            container.innerHTML = '';
+            window.allStudentsData.forEach(st => {
+                const g = window.allGroupsData.find(x => x.id === st.groupId);
+                const badge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
+                const isChecked = record.students.includes(st.id) ? 'checked' : '';
+                container.innerHTML += `
+                    <label class="student-checkbox-item">
+                        <input type="checkbox" class="edit-student-checkbox" value="${st.id}" ${isChecked}>
+                        <div class="student-checkbox-item-content"><span>${st.firstName} ${st.lastName}</span>${badge}</div>
+                    </label>
+                `;
+            });
+        }
 
-        document.getElementById('edit-record-modal').classList.add('show');
+        const modal = document.getElementById('edit-record-modal');
+        if (modal) modal.classList.add('show');
     } catch (e) { console.error(e); showToast('خطا در باز کردن فرم ویرایش.', 'error'); }
 }
 
-function closeEditModal() { document.getElementById('edit-record-modal').classList.remove('show'); }
+function closeEditModal() { 
+    const modal = document.getElementById('edit-record-modal');
+    if (modal) modal.classList.remove('show'); 
+}
 
 async function saveEditedRecord(event) {
     if(event) event.preventDefault();
@@ -838,7 +906,7 @@ async function saveEditedRecord(event) {
     const subjectId = (subjectSelect.value) ? parseInt(subjectSelect.value) : null;
     const itemId = itemSelect.value;
     const newTitle = document.getElementById('editRecordTitle').value;
-    const newDate = document.getElementById('editRecordDate').value;
+    const newDate = document.getElementById('editRecordDate').value.trim();
     const newScore = parseInt(document.getElementById('editRecordScore').value);
     
     const studentCheckboxes = document.querySelectorAll('.edit-student-checkbox:checked');
@@ -850,8 +918,14 @@ async function saveEditedRecord(event) {
         itemName = selectedItem ? selectedItem.title : '';
     }
 
-    if (!newTitle || !newDate || isNaN(newScore)) { 
-        showToast('لطفاً عنوان، تاریخ و امتیاز را پر کنید.', 'error'); return; 
+    // *** اعتبارسنجی تاریخ ***
+    if (!/^\d{4}\/\d{2}\/\d{2}$/.test(newDate)) {
+        showToast('فرمت تاریخ نامعتبر است. مثلاً: 1405/08/15', 'error');
+        return;
+    }
+
+    if (!newTitle || isNaN(newScore)) { 
+        showToast('لطفاً عنوان و امتیاز را پر کنید.', 'error'); return; 
     }
     if (students.length === 0) {
         showToast('حداقل یک دانش‌آموز را انتخاب کنید.', 'error'); return;
@@ -859,7 +933,10 @@ async function saveEditedRecord(event) {
 
     try {
         const record = await getDataById('records', id);
-        if (!record) return;
+        if (!record) {
+            showToast('رکورد یافت نشد.', 'error');
+            return;
+        }
         
         if (subjectId !== null && itemName) {
             record.subjectId = subjectId;
@@ -910,11 +987,10 @@ async function loadQuranRewards() {
 }
 
 // ==========================================
-// 14. خروجی اکسل سوابق ارزشیابی (استاندارد نهایی)
+// 14. خروجی اکسل سوابق ارزشیابی
 // ==========================================
 async function exportScoreCSV() {
     try {
-        // استفاده از کاما (,) برای سازگاری کامل با Google Sheets
         let csvContent = "ردیف,عنوان,درس,آیتم,تاریخ,امتیاز,ارفاق\r\n";
         const sorted = [...window.allRecordsData].sort((a, b) => b.date.localeCompare(a.date));
         
@@ -924,7 +1000,6 @@ async function exportScoreCSV() {
             csvContent += `${i + 1},"${rec.title}","${sn}","${rec.itemName}","${rec.date}",${rec.finalScore},"${rec.arf ? 'دارد' : 'ندارد'}"\r\n`;
         });
 
-        // *** راه‌حل استاندارد: UTF-8 با BOM و پسوند CSV ***
         const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); 
