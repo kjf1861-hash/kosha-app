@@ -35,6 +35,35 @@ async function renderSessionData() {
 }
 
 // ==========================================
+// توابع جدید برای ذخیره و بازیابی وضعیت تقویم جلسات
+// ==========================================
+function saveSessionCalendarState() {
+    try {
+        localStorage.setItem('kosha-session-cal', JSON.stringify({
+            year: currentCalendarYear,
+            month: currentCalendarMonth,
+            selectedDate: selectedSessionDate,
+            dayOfWeek: selectedSessionDayOfWeek
+        }));
+    } catch (e) { console.log('خطا در ذخیره تقویم جلسات', e); }
+}
+
+function loadSessionCalendarState(startYear, endYear) {
+    try {
+        const saved = localStorage.getItem('kosha-session-cal');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed && parsed.year >= startYear && parsed.year <= endYear) {
+                currentCalendarYear = parsed.year;
+                currentCalendarMonth = parsed.month;
+                selectedSessionDate = parsed.selectedDate || "";
+                selectedSessionDayOfWeek = parsed.dayOfWeek || "";
+            }
+        }
+    } catch (e) { console.log('خطا در بازیابی تقویم جلسات', e); }
+}
+
+// ==========================================
 // 1. برنامه هفتگی جدید (جدول و ویرایش)
 // ==========================================
 function toggleScheduleMode(mode) {
@@ -420,18 +449,15 @@ function initCalendar() {
     const endYear = parseInt(endYearStr);
     const allowedYears = [startYear, endYear];
 
-    let savedYear = localStorage.getItem('kosha-calendar-year');
-    let savedMonth = localStorage.getItem('kosha-calendar-month');
-    
-    currentCalendarYear = savedYear ? parseInt(savedYear) : startYear;
-    currentCalendarMonth = savedMonth ? parseInt(savedMonth) : 1;
+    // *** بازیابی وضعیت تقویم از localStorage ***
+    loadSessionCalendarState(startYear, endYear);
 
-    if (!allowedYears.includes(currentCalendarYear)) {
+    // اگر هنوز تنظیم نشده بود (اولین بار)
+    if (!currentCalendarYear || currentCalendarYear < startYear || currentCalendarYear > endYear) {
         currentCalendarYear = startYear;
         currentCalendarMonth = 7;
-        localStorage.setItem('kosha-calendar-year', currentCalendarYear);
-        localStorage.setItem('kosha-calendar-month', currentCalendarMonth);
     }
+    if (!currentCalendarMonth) currentCalendarMonth = 7;
 
     yearSelect.innerHTML = '';
     allowedYears.forEach(y => {
@@ -446,6 +472,51 @@ function initCalendar() {
     monthSelect.value = currentCalendarMonth;
 
     renderCalendarGrid();
+    
+    // *** اگر روزی از قبل انتخاب شده بود، اطلاعات آن را نمایش بده ***
+    if (selectedSessionDate && selectedSessionDayOfWeek) {
+        // ما فقط گرید را رندر می‌کنیم. برای نمایش دکمه‌ها، از تابع selectCalendarDay استفاده می‌کنیم
+        // اما چون در init هستیم، ممکن است المان‌ها هنوز آماده نباشند. پس کمی تاخیر می‌دهیم.
+        setTimeout(() => {
+            const day = parseInt(selectedSessionDate.split('/')[2]);
+            const firstDay = getFirstDayOfWeek(currentCalendarYear, currentCalendarMonth);
+            // شبیه‌سازی انتخاب
+            const hiddenDate = document.getElementById('sessionDateHidden');
+            if (hiddenDate) hiddenDate.value = selectedSessionDate;
+            
+            const detectedDisplay = document.getElementById('detectedDayDisplay');
+            const actionArea = document.getElementById('sessionActionArea');
+            const existingSession = window.allSessionsData.find(s => s.date === selectedSessionDate);
+            const isHoliday = officialHolidays[currentCalendarYear]?.includes(selectedSessionDate) || false;
+            const isActiveDay = (window.scheduleActiveDays || []).includes(selectedSessionDayOfWeek);
+            
+            if (detectedDisplay && actionArea) {
+                detectedDisplay.style.display = 'block';
+                if (existingSession) {
+                    detectedDisplay.innerHTML = `📅 تاریخ انتخابی: <strong>${toPersianNumber(selectedSessionDate)}</strong> (${selectedSessionDayOfWeek})`;
+                    actionArea.innerHTML = `
+                        <div style="text-align:center; margin-bottom:10px; color:#16a34a; font-weight:bold;">✅ جلسه ثبت شده است.</div>
+                        <div style="display:flex; gap:5px;">
+                            <button type="button" class="btn btn-primary" style="flex:2;" onclick="openSessionDetails(${existingSession.id})">👁️ مشاهده حضور و غیاب</button>
+                            <button type="button" class="btn btn-secondary" style="flex:1;" onclick="editSessionDate(${existingSession.id}, '${existingSession.date}')">✏️</button>
+                            <button type="button" class="btn btn-danger" style="flex:1;" onclick="deleteSession(${existingSession.id})">🗑️</button>
+                        </div>
+                    `;
+                } else {
+                    if (isHoliday) {
+                        detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong> (تعطیل رسمی)<br><span style="font-size:0.85rem; color:#dc2626;">⚠️ امکان ثبت جلسه در تعطیلات رسمی وجود ندارد.</span>`;
+                        actionArea.innerHTML = '';
+                    } else if (!isActiveDay) {
+                        detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#dc2626;">⚠️ این روز در تنظیمات کلاس به عنوان روز فعال انتخاب نشده است.</span>`;
+                        actionArea.innerHTML = '';
+                    } else {
+                        detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong>`;
+                        actionArea.innerHTML = `<button type="button" class="btn btn-primary btn-block" onclick="createNewSession()">➕ ثبت جلسه</button>`;
+                    }
+                }
+            }
+        }, 100);
+    }
 }
 
 function renderCalendarGrid() {
@@ -531,8 +602,8 @@ function changeCalendarMonth(delta) {
         return;
     }
 
-    localStorage.setItem('kosha-calendar-year', currentCalendarYear);
-    localStorage.setItem('kosha-calendar-month', currentCalendarMonth);
+    // *** ذخیره وضعیت تقویم جلسات ***
+    saveSessionCalendarState();
 
     document.getElementById('calendarYearSelect').value = currentCalendarYear;
     document.getElementById('calendarMonthSelect').value = currentCalendarMonth;
@@ -542,7 +613,8 @@ function changeCalendarMonth(delta) {
 
 function changeCalendarYear() {
     currentCalendarYear = parseInt(document.getElementById('calendarYearSelect').value);
-    localStorage.setItem('kosha-calendar-year', currentCalendarYear);
+    // *** ذخیره وضعیت تقویم جلسات ***
+    saveSessionCalendarState();
     renderCalendarGrid();
 }
 
@@ -555,6 +627,9 @@ function selectCalendarDay(day, dateStr) {
     const dayOfWeekIndex = (firstDay + day - 1) % 7;
     const dayNames = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
     selectedSessionDayOfWeek = dayNames[dayOfWeekIndex];
+
+    // *** ذخیره وضعیت تقویم جلسات ***
+    saveSessionCalendarState();
 
     const detectedDisplay = document.getElementById('detectedDayDisplay');
     const actionArea = document.getElementById('sessionActionArea');
@@ -643,14 +718,10 @@ async function createNewSession() {
     });
     showToast('جلسه با موفقیت ثبت شد!', 'success');
     
-    selectedSessionDate = "";
-    selectedSessionDayOfWeek = "";
-    const hiddenDate = document.getElementById('sessionDateHidden');
-    if (hiddenDate) hiddenDate.value = "";
-    const detectedDisplay = document.getElementById('detectedDayDisplay');
-    if (detectedDisplay) detectedDisplay.style.display = 'none';
-    const actionArea = document.getElementById('sessionActionArea');
-    if (actionArea) actionArea.innerHTML = '';
+    // *** فقط روز انتخاب‌شده را حفظ می‌کنیم تا کاربر راحت باشد ***
+    // selectedSessionDate = ""; 
+    // selectedSessionDayOfWeek = "";
+    // saveSessionCalendarState();
     
     loadAllData();
 }
@@ -675,20 +746,16 @@ async function deleteSession(sessionId) {
     if (!confirm('آیا از حذف این جلسه و تمام حضور و غیاب‌های آن مطمئن هستید؟')) return;
 
     try {
-        // *** رفع باگ ۹: حذف مستقیم از دیتابیس و به‌روزرسانی state بدون نیاز به loadAllData کامل ***
         const sessionToDelete = window.allSessionsData.find(s => s.id === sessionId);
         
-        // حذف حضور و غیاب‌ها
         const allAtt = await getAllData('attendance');
         const sessionAtt = allAtt.filter(a => a.sessionId === sessionId);
         for (const att of sessionAtt) {
             await deleteData('attendance', att.id);
         }
 
-        // حذف جلسه
         await deleteData('sessions', sessionId);
         
-        // به‌روزرسانی state
         window.allSessionsData = window.allSessionsData.filter(s => s.id !== sessionId);
         const deletedAttIds = sessionAtt.map(a => a.id);
         window.allAttendanceData = window.allAttendanceData.filter(a => !deletedAttIds.includes(a.id));
@@ -697,13 +764,14 @@ async function deleteSession(sessionId) {
         
         if (selectedSessionDate === sessionToDelete?.date) {
             selectedSessionDate = "";
+            selectedSessionDayOfWeek = "";
+            saveSessionCalendarState();
             const actionArea = document.getElementById('sessionActionArea');
             if (actionArea) actionArea.innerHTML = '';
             const detectedDisplay = document.getElementById('detectedDayDisplay');
             if (detectedDisplay) detectedDisplay.style.display = 'none';
         }
         
-        // رفرش بخش‌های مربوطه
         renderCalendarGrid();
         generateAttendanceReports();
         if (typeof renderDashboardData === 'function') renderDashboardData();
@@ -734,6 +802,8 @@ async function resetAllSessions() {
         
         showToast('تمام جلسات سال جاری با موفقیت حذف شدند.', 'success');
         selectedSessionDate = "";
+        selectedSessionDayOfWeek = "";
+        saveSessionCalendarState();
         const actionArea = document.getElementById('sessionActionArea');
         if (actionArea) actionArea.innerHTML = '';
         const detectedDisplay = document.getElementById('detectedDayDisplay');
@@ -875,7 +945,6 @@ async function saveAllSessionAttendance() {
         
         await saveBulkData('attendance', recordsToSave);
         
-        // به‌روزرسانی state
         window.allAttendanceData = window.allAttendanceData.filter(a => a.sessionId !== currentSessionId);
         const savedAtt = await getAllData('attendance');
         window.allAttendanceData = savedAtt.filter(a => window.allSessionsData.some(s => s.id === a.sessionId));
