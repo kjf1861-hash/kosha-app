@@ -1,34 +1,144 @@
-const CACHE_NAME = 'kosha-cache-v90';
+// ==========================================
+// فایل sw.js — سرویس‌ورکر بهینه‌شده (نسخه v91)
+// ==========================================
+
+const CACHE_NAME = 'kosha-cache-v91';
 const ASSETS_TO_CACHE = [
-    './', './index.html', './styles.css', './app.js', './db.js', './manifest.json', './icon.svg', 
-    './class.js', './students.js', './lesson.js', './group.js', './session.js', './score.js', './reset.js',
+    './', 
+    './index.html', 
+    './styles.css', 
+    './app.js', 
+    './db.js', 
+    './manifest.json', 
+    './icon.svg', 
+    './class.js', 
+    './students.js', 
+    './lesson.js', 
+    './group.js', 
+    './session.js', 
+    './score.js', 
+    './reset.js',
     './exam.js'
 ];
 
+// فایل‌هایی که همیشه باید از شبکه به‌روز شوند (حساس به تغییر)
+const NETWORK_FIRST_ASSETS = [
+    './index.html',
+    './app.js',
+    './exam.js',
+    './score.js',
+    './session.js'
+];
+
+// ==========================================
+// نصب: کش کردن فایل‌های اصلی
+// ==========================================
 self.addEventListener('install', (event) => {
-    event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE)));
-    self.skipWaiting();
-});
-
-self.addEventListener('activate', (event) => {
-    event.waitUntil(caches.keys().then((names) => Promise.all(names.map((n) => { if (n !== CACHE_NAME) return caches.delete(n); }))));
-    return self.clients.claim();
-});
-
-self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        fetch(event.request)
-        .then((response) => {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, responseClone);
-            });
-            return response;
-        })
-        .catch(() => caches.match(event.request))
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.addAll(ASSETS_TO_CACHE);
+        }).then(() => self.skipWaiting())
     );
 });
 
+// ==========================================
+// فعال‌سازی: پاک کردن کش‌های قدیمی
+// ==========================================
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cacheName) => {
+                    // هر کشی که نامش با CACHE_NAME فعلی فرق دارد، حذف شود
+                    if (cacheName !== CACHE_NAME) {
+                        console.log('🗑️ پاک کردن کش قدیمی:', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim())
+    );
+});
+
+// ==========================================
+// استراتژی هوشمند Fetch
+// ==========================================
+self.addEventListener('fetch', (event) => {
+    const url = new URL(event.request.url);
+    
+    // فقط درخواست‌های GET را مدیریت کن
+    if (event.request.method !== 'GET') return;
+    
+    // فقط درخواست‌های مربوط به دامنه خودمان را مدیریت کن
+    // (فونت‌های گوگل و سایر منابع خارجی را به مرورگر واگذار کن)
+    if (url.origin !== self.location.origin) {
+        return;
+    }
+    
+    // تعیین استراتژی بر اساس نوع فایل
+    const isNetworkFirst = NETWORK_FIRST_ASSETS.some(asset => url.pathname.endsWith(asset.replace('./', '')));
+    
+    if (isNetworkFirst) {
+        // استراتژی Network First (برای فایل‌های حساس)
+        // ابتدا سعی کن از شبکه بیاوری، اگر نشد از کش
+        event.respondWith(
+            fetch(event.request)
+                .then((response) => {
+                    // فقط پاسخ‌های موفق را کش کن
+                    if (response && response.status === 200) {
+                        const responseClone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseClone);
+                        });
+                    }
+                    return response;
+                })
+                .catch(() => {
+                    // در صورت قطعی، از کش بده
+                    return caches.match(event.request);
+                })
+        );
+    } else {
+        // استراتژی Cache First (برای فایل‌های ثابت)
+        // ابتدا از کش بده، اگر نبود از شبکه بگیر
+        event.respondWith(
+            caches.match(event.request).then((cachedResponse) => {
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+                return fetch(event.request).then((response) => {
+                    if (response && response.status === 200) {
+                        const responseClone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseClone);
+                        });
+                    }
+                    return response;
+                });
+            })
+        );
+    }
+});
+
+// ==========================================
+// پیام‌ها (برای به‌روزرسانی خودکار)
+// ==========================================
 self.addEventListener('message', (event) => {
-    if (event.data && event.data.action === 'skipWaiting') self.skipWaiting();
+    if (event.data && event.data.action === 'skipWaiting') {
+        self.skipWaiting();
+    }
+    // پاک کردن کش از داخل اپلیکیشن
+    if (event.data && event.data.action === 'clearCache') {
+        event.waitUntil(
+            caches.keys().then((cacheNames) => {
+                return Promise.all(
+                    cacheNames.map((cacheName) => caches.delete(cacheName))
+                );
+            }).then(() => {
+                if (event.source) {
+                    event.source.postMessage({ action: 'cacheCleared' });
+                }
+            })
+        );
+    }
 });
