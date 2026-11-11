@@ -401,6 +401,10 @@ async function saveItem(e) {
         return;
     }
     
+    // *** پیدا کردن آیتم قدیمی برای بررسی تغییر نام ***
+    const oldItem = id ? assessmentItems.find(i => i.id === parseInt(id)) : null;
+    const oldTitle = oldItem ? oldItem.title : null;
+
     let itemData = { title, type };
     if (id) {
         itemData.id = parseInt(id);
@@ -432,6 +436,23 @@ async function saveItem(e) {
     
     try {
         await saveData('assessmentItems', itemData);
+        
+        // *** همگام‌سازی: اگر نام آیتم تغییر کرده باشد، رکوردهای قدیمی را به‌روزرسانی می‌کنیم ***
+        if (oldTitle && oldTitle !== title) {
+            const allRecords = await getAllData('records');
+            let updatedCount = 0;
+            for (let rec of allRecords) {
+                if (rec.itemName === oldTitle) {
+                    rec.itemName = title;
+                    await saveData('records', rec);
+                    updatedCount++;
+                }
+            }
+            if (updatedCount > 0) {
+                showToast(`نام آیتم در ${toPersianNumber(updatedCount)} رکورد قبلی نیز به‌روزرسانی شد.`, 'info');
+            }
+        }
+
         showToast('آیتم با موفقیت ذخیره شد!', 'success');
         
         const freshItems = await getAllData('assessmentItems');
@@ -441,7 +462,7 @@ async function saveItem(e) {
         renderItemsList();
         resetItemForm();
         
-        // *** رفع باگ ۶: به‌روزرسانی هر دو select به صورت همزمان ***
+        // به‌روزرسانی هر دو select
         const itemSelect = document.getElementById('recordItem');
         if (itemSelect) {
             itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
@@ -450,6 +471,12 @@ async function saveItem(e) {
         if (editItemSelect) {
             editItemSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
         }
+
+        // اگر آیتم در حال ویرایش بود و نامش عوض شد، باید لیست سوابق هم رفرش شود
+        if (oldTitle && oldTitle !== title) {
+            await loadAllData();
+        }
+
     } catch (error) { 
         console.error(error); 
         showToast('خطا در ذخیره آیتم!', 'error'); 
