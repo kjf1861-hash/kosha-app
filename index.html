@@ -717,9 +717,21 @@
                     </div>
                     <div style="display: flex; gap: 15px;">
                         <div class="form-group" style="flex: 1;">
-                            <label class="form-label" for="examDate">تاریخ آزمون</label>
-                            <input type="text" id="examDate" class="form-control" placeholder="مثلاً: 1405/08/15" required>
-                        </div>
+    <label class="form-label" for="examDate">تاریخ آزمون</label>
+    <details class="score-calendar-accordion" id="exam-date-accordion">
+        <summary><span>📅 انتخاب تاریخ از تقویم</span><span id="examDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span></summary>
+        <div class="score-calendar-body" id="exam-calendar-body">
+            <div class="calendar-header">
+                <button type="button" onclick="changeExamCalendarMonth(-1)">◀</button>
+                <div class="calendar-title" id="exam-calendar-title"></div>
+                <button type="button" onclick="changeExamCalendarMonth(1)">▶</button>
+            </div>
+            <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
+            <div class="calendar-grid" id="exam-calendar-grid"></div>
+        </div>
+    </details>
+    <input type="hidden" id="examDate" value="">
+</div>
                         <div class="form-group" style="flex: 1;">
                             <label class="form-label" for="examMaxScore">نمره کل</label>
                             <input type="number" id="examMaxScore" class="form-control" value="20" min="1" required>
@@ -797,9 +809,9 @@
     <script src="lesson.js"></script>
     <script src="group.js"></script>
     <script src="session.js?v=4"></script>
-    <script src="score.js?v=4"></script>
+    <script src="score.js?v=5"></script>
     <script src="reset.js"></script>
-    <script src="exam.js"></script>
+    <script src="exam.js?v=5"></script>
     
     <script>
         function initTheme() {
