@@ -449,7 +449,7 @@
     <!-- ========================================================= -->
     <!-- بخش مودال‌ها (این بخش در پیام بعدی ارسال می‌شود) -->
     <!-- ========================================================= -->
-    <!-- ===== مودال تنظیمات ===== -->
+        <!-- ===== مودال تنظیمات ===== -->
     <div id="settings-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">⚙️ تنظیمات</div>
@@ -628,7 +628,32 @@
 
     <div id="session-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="session-details-title">📅 جزئیات جلسه</div><div id="session-details-content"></div><div class="modal-footer" style="flex-direction: column; gap: 10px;"><button type="button" class="btn btn-primary btn-block" onclick="saveAllSessionAttendance()">💾 ذخیره کل حضور و غیاب</button><button type="button" class="btn btn-secondary btn-block" onclick="closeSessionDetails()">بستن</button></div></div></div>
     
-    <div id="student-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="student-details-title">👤 جزئیات دانش‌آموز</div><div id="student-details-content" style="max-height: 60vh; overflow-y: auto;"></div><div class="modal-footer"><button type="button" class="btn btn-secondary btn-block" onclick="closeStudentDetails()">بستن</button></div></div></div>
+    <!-- ===== مودال جزئیات دانش‌آموز (با تب جدید آزمون‌ها) ===== -->
+<div id="student-details-modal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header" id="student-details-title">👤 جزئیات دانش‌آموز</div>
+        
+        <!-- تب‌های داخل مودال -->
+        <div class="view-toggle-group" style="margin-bottom: 15px;">
+            <button type="button" id="btnStudentTabSummary" class="view-toggle-btn active" onclick="switchStudentDetailsTab('summary')">📋 خلاصه</button>
+            <button type="button" id="btnStudentTabExams" class="view-toggle-btn" onclick="switchStudentDetailsTab('exams')">🎓 آزمون‌ها</button>
+        </div>
+        
+        <!-- تب ۱: خلاصه (همان اطلاعات قبلی) -->
+        <div id="student-details-summary" style="max-height: 60vh; overflow-y: auto;">
+            <div id="student-details-content"></div>
+        </div>
+        
+        <!-- تب ۲: نتایج آزمون‌ها -->
+        <div id="student-details-exams" style="max-height: 60vh; overflow-y: auto; display: none;">
+            <div id="student-exams-content"></div>
+        </div>
+        
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary btn-block" onclick="closeStudentDetails()">بستن</button>
+        </div>
+    </div>
+</div>
 
     <!-- ===== مودال جدید: سازنده آزمون (Exam Editor) ===== -->
     <div id="exam-editor-modal" class="modal-overlay">
