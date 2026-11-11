@@ -117,7 +117,10 @@ function initAppEvents() {
     if (lessonForm) lessonForm.addEventListener('submit', saveLesson);
     
     const groupForm = document.getElementById('group-form');
-    if (groupForm) groupForm.addEventListener('submit', saveGroup);
+    if (groupForm && !groupForm.dataset.listenerAttached) {
+        groupForm.addEventListener('submit', saveGroup);
+        groupForm.dataset.listenerAttached = 'true';
+    }
     
     const itemManagerForm = document.getElementById('item-manager-form');
     if (itemManagerForm) itemManagerForm.addEventListener('submit', saveItem);
@@ -254,6 +257,9 @@ function jalaliToDateString(jy, jm, jd) {
     return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
 }
 
+// ==========================================
+// توابع مدیریت آیتم‌ها
+// ==========================================
 function openItemManagementModal() {
     const modal = document.getElementById('item-management-modal');
     if (modal) modal.classList.add('show');
@@ -435,6 +441,7 @@ async function saveItem(e) {
         renderItemsList();
         resetItemForm();
         
+        // *** رفع باگ ۶: به‌روزرسانی هر دو select به صورت همزمان ***
         const itemSelect = document.getElementById('recordItem');
         if (itemSelect) {
             itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
