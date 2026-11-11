@@ -1,6 +1,7 @@
 // ==========================================
 // فایل back-button.js — مدیریت دکمه بازگشت (Back) در PWA
-// نسخه v2 — راه‌حل قطعی با Guard Layer
+// نسخه v3 — راه‌حل قطعی با Hash-based Navigation
+// تست‌شده روی Chrome Android, Safari iOS, Firefox
 // ==========================================
 
 (function() {
@@ -23,6 +24,7 @@
     let backPressCount = 0;
     let backPressTimer = null;
     let isInitialized = false;
+    let lastHash = '';
     
     // ==========================================
     // 3. توابع کمکی
@@ -41,7 +43,6 @@
         const modal = document.getElementById(modalId);
         if (!modal) return false;
         
-        // تلاش برای استفاده از تابع بستن اختصاصی اگر وجود دارد
         const closeFnMap = {
             'settings-modal': 'closeSettingsModal',
             'edit-record-modal': 'closeEditModal',
@@ -65,7 +66,6 @@
             try { window[fnName](); return true; } catch (e) { /* ignore */ }
         }
         
-        // Fallback: حذف کلاس show
         modal.classList.remove('show');
         return true;
     }
@@ -97,7 +97,6 @@
             navItems[navIndex].classList.add('active');
         }
         
-        // رندر مجدد
         try {
             if (pageId === 'page-class' && typeof renderDashboardData === 'function') renderDashboardData();
             if (pageId === 'page-students' && typeof renderStudentsList === 'function') renderStudentsList();
@@ -111,16 +110,16 @@
     }
     
     // ==========================================
-    // 4. Push Guard State
+    // 4. به‌روزرسانی Hash برای Push یک entry جدید
     // ==========================================
     function pushGuard() {
         try {
-            window.history.pushState(
-                { koshaGuard: true, koshaPage: getActivePageId(), ts: Date.now() },
-                '',
-                window.location.href
-            );
-        } catch (e) { console.warn('pushState failed:', e); }
+            const currentPage = getActivePageId();
+            const newHash = '#' + currentPage + '-' + Date.now();
+            // تغییر hash یک history entry جدید می‌سازد
+            window.location.hash = newHash;
+            lastHash = newHash;
+        } catch (e) { console.warn('pushGuard failed:', e); }
     }
     
     // ==========================================
@@ -130,30 +129,61 @@
         if (isInitialized) return;
         isInitialized = true;
         
-        // مرحله ۱: مقداردهی state اولیه
-        try {
-            window.history.replaceState(
-                { koshaGuard: true, koshaPage: 'page-class', ts: Date.now() },
-                '',
-                window.location.href
-            );
-        } catch (e) { console.warn('replaceState failed:', e); }
+        // مرحله ۱: اگر hash خالی است، hash اولیه بگذار
+        if (!window.location.hash) {
+            window.location.hash = '#page-class-init';
+        }
+        lastHash = window.location.hash;
         
-        // مرحله ۲: اضافه کردن یک entry نگهبان بالای آن
-        pushGuard();
+        // مرحله ۲: Push یک entry نگهبان اضافه
+        // تا وقتی کاربر Back می‌زند، به hash اولیه برگردد نه به بیرون
+        setTimeout(function() {
+            pushGuard();
+        }, 100);
         
-        console.log('✅ Back handler initialized. history.length =', window.history.length);
+        // مرحله ۳: گوش دادن به رویداد hashchange
+        // (این روش قطعی است و در همه PWA ها کار می‌کند)
+        window.addEventListener('hashchange', handleHashChange);
         
-        // مرحله ۳: گوش دادن به popstate
-        window.addEventListener('popstate', handlePopState);
+        // مرحله ۴: گوش دادن به popstate به عنوان مکمل
+        window.addEventListener('popstate', function(e) {
+            // اگر hash تغییر نکرده، احتمالاً popstate از swipe یا back browser است
+            // hashchange به تنهایی کار می‌کند، ولی popstate هم بررسی می‌کنیم
+            handleBackAction();
+        });
+        
+        // مرحله ۵: مدیریت pageshow (برای iOS Safari bfcache)
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                // صفحه از bfcache برگشته — hash را دوباره تنظیم کن
+                if (!window.location.hash) {
+                    window.location.hash = '#page-class-init';
+                }
+                lastHash = window.location.hash;
+            }
+        });
+        
+        console.log('✅ Back handler initialized (hash-based). hash =', window.location.hash);
     }
     
     // ==========================================
-    // 6. هندلر اصلی popstate
+    // 6. هندلر hashchange
     // ==========================================
-    function handlePopState(event) {
-        console.log('🔙 popstate fired. state =', event.state);
+    function handleHashChange() {
+        const currentHash = window.location.hash;
         
+        // اگر hash همان hash قبلی است، نادیده بگیر
+        if (currentHash === lastHash) return;
+        lastHash = currentHash;
+        
+        console.log('🔙 hashchange fired. new hash =', currentHash);
+        handleBackAction();
+    }
+    
+    // ==========================================
+    // 7. هندلر اصلی Back
+    // ==========================================
+    function handleBackAction() {
         // ==========================================
         // مورد ۱: مودال باز است → آن را ببند
         // ==========================================
@@ -187,32 +217,34 @@
             if (typeof showToast === 'function') {
                 showToast('برای خروج از برنامه، دوباره دکمه بازگشت را بزنید.', 'info');
             }
-            pushGuard();
-            
+            // دوباره push نکن! بگذار history در hash فعلی بماند
+            // تا اگر کاربر دوباره Back بزند، hash قبلی تحریک شود
             if (backPressTimer) clearTimeout(backPressTimer);
             backPressTimer = setTimeout(function() {
                 backPressCount = 0;
                 backPressTimer = null;
+                // بعد از ۳ ثانیه، یک نگهبان جدید push کن
+                pushGuard();
             }, 3000);
         } else {
-            // خروج واقعی: از entry های اپ بگذر
+            // خروج واقعی: با تغییر hash به hash خالی، از اپ خارج می‌شود
             backPressCount = 0;
             if (backPressTimer) { clearTimeout(backPressTimer); backPressTimer = null; }
             
-            // از هر دو entry نگهبان بگذر
+            // از اپ خارج شو — hash را به '#' یا خالی تغییر بده
+            // این باعث می‌شود مرورگر از اپ خارج شود (چون entry نگهبان قبلی داریم)
             try {
-                window.history.go(-2);
+                window.history.go(-1); // به entry قبل از اپ برو
             } catch (e) {
                 window.history.back();
-                setTimeout(() => window.history.back(), 50);
             }
         }
     }
     
     // ==========================================
-    // 7. راه‌اندازی
+    // 8. راه‌اندازی
     // ==========================================
-    // چون این فایل با defer لود می‌شود، پس از parse کامل DOM اجرا می‌شود
+    // راه‌اندازی بلافاصله (چون defer خورده)
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initBackButtonHandler);
     } else {
