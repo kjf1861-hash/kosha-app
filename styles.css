@@ -1766,3 +1766,12 @@ details.group-accordion[open] summary::after {
 [data-theme="dark"] .event-highlight {
     background: linear-gradient(135deg, rgba(74, 144, 226, 0.15) 0%, rgba(74, 144, 226, 0.05) 100%);
 }
+/* کلاس جدید برای نشانه‌ی ملایم روزهای دارای مناسبت */
+.full-calendar-day.has-event-soft {
+    background: rgba(74, 144, 226, 0.06);
+    border: 1px solid rgba(74, 144, 226, 0.15);
+}
+[data-theme="dark"] .full-calendar-day.has-event-soft {
+    background: rgba(74, 144, 226, 0.15);
+    border: 1px solid rgba(74, 144, 226, 0.25);
+}
