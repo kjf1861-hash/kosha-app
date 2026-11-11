@@ -1079,3 +1079,352 @@ details.group-accordion[open] summary::after {
     color: var(--primary);
     font-weight: bold;
 }
+/* =========================================
+   استایل‌های اختصاصی مودال «سازنده آزمون» (Exam Editor)
+   ========================================= */
+
+/* تنظیمات کلی مودال آزمون */
+#exam-editor-modal .modal-content {
+    max-width: 700px;
+    width: 95%;
+}
+
+#exam-editor-modal fieldset {
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 20px;
+    background: var(--card-bg);
+    transition: border-color 0.3s;
+}
+
+#exam-editor-modal fieldset:focus-within {
+    border-color: var(--primary);
+}
+
+#exam-editor-modal legend {
+    font-weight: bold;
+    color: var(--primary);
+    padding: 0 12px;
+    font-size: 1.05rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+}
+
+/* بخش سوالات */
+#exam-questions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    min-height: 100px;
+    padding: 5px 0;
+}
+
+#exam-questions-container:empty::before {
+    content: 'هنوز سوالی اضافه نشده است. روی دکمه زیر کلیک کنید.';
+    display: block;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    padding: 25px 10px;
+    background: var(--input-bg);
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--border-color);
+}
+
+/* هر سوال */
+.exam-question-item {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 15px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.exam-question-item:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.exam-question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.exam-question-number {
+    font-weight: bold;
+    color: var(--primary);
+    background: var(--primary-light);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+}
+
+.exam-question-delete-btn {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.exam-question-delete-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    transform: scale(1.1);
+}
+
+.exam-question-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* فیلدهای هر سوال */
+.exam-question-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.exam-question-field label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: bold;
+}
+
+.exam-question-field input,
+.exam-question-field textarea,
+.exam-question-field select {
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.exam-question-field input:focus,
+.exam-question-field textarea:focus,
+.exam-question-field select:focus {
+    border-color: var(--primary);
+}
+
+.exam-question-field textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+/* گزینه‌های چندگزینه‌ای */
+.exam-options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    background: var(--card-bg);
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--border-color);
+}
+
+.exam-option-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.exam-option-row input[type="radio"] {
+    accent-color: var(--primary);
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.exam-option-row input[type="text"] {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-family: inherit;
+}
+
+.exam-option-row .exam-option-delete {
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 4px;
+    transition: transform 0.2s;
+}
+
+.exam-option-row .exam-option-delete:hover {
+    transform: scale(1.2);
+}
+
+/* دکمه افزودن گزینه */
+.exam-add-option-btn {
+    background: transparent;
+    border: 1px dashed var(--primary);
+    color: var(--primary);
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-family: inherit;
+    transition: all 0.2s;
+    margin-top: 5px;
+}
+
+.exam-add-option-btn:hover {
+    background: var(--primary-light);
+}
+
+/* بخش نمره سوال */
+.exam-question-score-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.exam-question-score-row label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.exam-question-score-row input {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--card-bg);
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+
+/* استایل‌های مختلف برای هر نوع سوال */
+.exam-question-type-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.exam-question-type-badge.multiple-choice {
+    background: rgba(59, 130, 246, 0.15);
+    color: #2563eb;
+}
+
+.exam-question-type-badge.essay {
+    background: rgba(168, 85, 247, 0.15);
+    color: #7c3aed;
+}
+
+.exam-question-type-badge.fill-blank {
+    background: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+}
+
+.exam-question-type-badge.true-false {
+    background: rgba(245, 158, 11, 0.15);
+    color: #b45309;
+}
+
+/* استایل هشدار وقتی تعداد سوالات زیاد شود */
+.exam-questions-warning {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: var(--radius-sm);
+    padding: 10px 15px;
+    font-size: 0.85rem;
+    color: #92400e;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* استایل دارک مود */
+[data-theme="dark"] .exam-question-item {
+    background: var(--card-bg);
+}
+
+[data-theme="dark"] .exam-question-number {
+    background: var(--primary);
+    color: white;
+}
+
+[data-theme="dark"] .exam-questions-warning {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: #f59e0b;
+    color: #fbbf24;
+}
+
+/* =========================================
+   استایل لیست آزمون‌ها (برای آینده)
+   ========================================= */
+.exam-list-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 15px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.exam-list-item:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.exam-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.exam-list-title {
+    font-weight: bold;
+    color: var(--primary);
+    font-size: 1.05rem;
+}
+
+.exam-list-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.exam-list-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 5px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-color);
+}
