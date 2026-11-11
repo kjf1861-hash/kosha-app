@@ -2,7 +2,7 @@
 // فایل sw.js — سرویس‌ورکر بهینه‌شده (نسخه v98)
 // ==========================================
 
-const CACHE_NAME = 'kosha-cache-v98';
+const CACHE_NAME = 'kosha-cache-v99';
 const ASSETS_TO_CACHE = [
     './', 
     './index.html', 
