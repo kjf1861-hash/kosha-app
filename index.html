@@ -714,26 +714,27 @@
         }
     </script>
 
-    <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) - ارتقا به v77 -->
-    <script>
-        if (localStorage.getItem('kosha-version') !== 'v77') {
-            localStorage.setItem('kosha-version', 'v77');
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for(let registration of registrations) {
-                        registration.unregister();
-                    }
-                    caches.keys().then(function(names) {
-                        for (let name of names) caches.delete(name);
-                        window.location.reload(true);
-                    });
+    <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) - ارتقا به v79 -->
+<script>
+    if (localStorage.getItem('kosha-version') !== 'v79') {
+        localStorage.setItem('kosha-version', 'v79');
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
+                caches.keys().then(function(names) {
+                    for (let name of names) caches.delete(name);
+                    window.location.reload(true);
                 });
-            } else {
-                window.location.reload(true);
-            }
+            });
+        } else {
+            window.location.reload(true);
         }
-    </script>
-<script src="score.js"></script>
+    }
+</script>
+
+    <script src="score.js"></script>
 <script src="exam.js"></script> <!-- این خط اضافه شود -->
 <script src="reset.js"></script>
 </body>
