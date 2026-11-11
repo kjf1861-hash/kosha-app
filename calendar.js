@@ -1,26 +1,23 @@
 // ==========================================
-// فایل calendar.js — منطق مشترک تقویم شمسی (نسخه اصلاح‌شده)
+// فایل calendar.js — منطق مشترک تقویم شمسی (نسخه اصلاح‌شده برای مرحله ۲)
 // ==========================================
 
 // ==========================================
 // 1. توابع پایه تقویم شمسی
 // ==========================================
 
-// بررسی سال کبیسه (در حال حاضر ۱۴۰۸ کبیسه است)
 const JALALI_LEAP_YEARS = [1408, 1412, 1416];
 
 function isJalaliLeapYear(year) {
     return JALALI_LEAP_YEARS.includes(year);
 }
 
-// تعداد روزهای یک ماه شمسی
 function getJalaliDaysInMonth(year, month) {
     if (month <= 6) return 31;
     if (month <= 11) return 30;
     return isJalaliLeapYear(year) ? 30 : 29;
 }
 
-// پیدا کردن روز اول ماه (۰ = شنبه، ۶ = جمعه)
 function getJalaliFirstDayOfWeek(year, month) {
     let daysPassed = 0;
     for (let y = 1405; y < year; y++) {
@@ -36,27 +33,21 @@ function getJalaliFirstDayOfWeek(year, month) {
 // 2. توابع کمکی
 // ==========================================
 
-// نام روزهای هفته
 const JALALI_DAY_NAMES = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
-
-// نام ماه‌های شمسی
 const JALALI_MONTH_NAMES = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
 
-// دریافت نام روز هفته از شماره
 function getJalaliDayName(dayIndex) {
     return JALALI_DAY_NAMES[dayIndex] || '';
 }
 
-// دریافت نام ماه از شماره
 function getJalaliMonthName(monthIndex) {
     return JALALI_MONTH_NAMES[monthIndex - 1] || '';
 }
 
 // ==========================================
-// 3. توابع جدید برای تب تقویم جامع
+// 3. توابع دریافت مناسبت‌ها
 // ==========================================
 
-// دریافت مناسبت‌های یک ماه خاص از calendar-data.js
 function getMonthEvents(year, month) {
     if (typeof CALENDAR_EVENTS === 'undefined') {
         console.warn('CALENDAR_EVENTS تعریف نشده است. فایل calendar-data.js را بررسی کنید.');
@@ -69,37 +60,64 @@ function getMonthEvents(year, month) {
     const monthStr = month.toString();
     if (!CALENDAR_EVENTS[yearStr][monthStr]) return {};
     
-    // ساختار جدید: آبجکت با کلید روز
     return CALENDAR_EVENTS[yearStr][monthStr];
 }
 
-// دریافت مناسبت‌های یک روز خاص
 function getDayEvents(year, month, day) {
     const monthEvents = getMonthEvents(year, month);
     return monthEvents[day] || null;
 }
 
-// بررسی اینکه آیا یک روز مناسبت دارد یا نه
 function hasEventOnDay(year, month, day) {
     return getDayEvents(year, month, day) !== null;
 }
 
 // ==========================================
-// 4. رندر تقویم جامع در تب تقویم
+// 4. توابع جدید برای استفاده در سایر تب‌ها
 // ==========================================
 
-// متغیرهای وضعیت تقویم جامع
+// دریافت مناسبت یک تاریخ به صورت رشته (مثلاً "1405/08/08")
+function getEventsForDateString(dateStr) {
+    if (!dateStr || !/^\d{4}\/\d{2}\/\d{2}$/.test(dateStr)) return null;
+    const parts = dateStr.split('/');
+    const year = parseInt(parts[0]);
+    const month = parseInt(parts[1]);
+    const day = parseInt(parts[2]);
+    return getDayEvents(year, month, day);
+}
+
+// بررسی وجود مناسبت در یک تاریخ
+function hasEventOnDateString(dateStr) {
+    return getEventsForDateString(dateStr) !== null;
+}
+
+// دریافت متن مناسبت (یا رشته خالی)
+function getEventTitleForDateString(dateStr) {
+    const event = getEventsForDateString(dateStr);
+    return event || '';
+}
+
+// *** تابع جدید: خروجی آماده برای نمایش در tooltip یا باکس زیر تقویم ***
+// اگر مناسبت وجود داشته باشد، متن را با پیشوند "🎉 مناسبت: " برمی‌گرداند
+function getFormattedEventsForDate(dateStr) {
+    const event = getEventsForDateString(dateStr);
+    if (!event) return '';
+    return `🎉 مناسبت: ${event}`;
+}
+
+// ==========================================
+// 5. رندر تقویم جامع در تب تقویم
+// ==========================================
+
 let fullCalendarYear = 1405;
 let fullCalendarMonth = 1;
 let fullCalendarSelectedDay = null;
 
-// مقداردهی اولیه تقویم جامع
 function initFullCalendar() {
     const ay = window.activeAcademicYear || '1405-1406';
     const [startYearStr] = ay.split('-');
     const startYear = parseInt(startYearStr);
     
-    // بازیابی وضعیت از localStorage
     try {
         const saved = localStorage.getItem('kosha-full-calendar');
         if (saved) {
@@ -110,11 +128,11 @@ function initFullCalendar() {
                 fullCalendarSelectedDay = parsed.day || null;
             } else {
                 fullCalendarYear = startYear;
-                fullCalendarMonth = 7; // پیش‌فرض مهر
+                fullCalendarMonth = 7;
             }
         } else {
             fullCalendarYear = startYear;
-            fullCalendarMonth = 7; // پیش‌فرض مهر
+            fullCalendarMonth = 7;
         }
     } catch (e) {
         fullCalendarYear = startYear;
@@ -124,7 +142,6 @@ function initFullCalendar() {
     renderFullCalendar();
 }
 
-// ذخیره وضعیت تقویم جامع
 function saveFullCalendarState() {
     try {
         localStorage.setItem('kosha-full-calendar', JSON.stringify({
@@ -135,14 +152,12 @@ function saveFullCalendarState() {
     } catch (e) { console.log(e); }
 }
 
-// رندر کل تب تقویم جامع
 function renderFullCalendar() {
     renderFullCalendarHeader();
     renderFullCalendarGrid();
     renderFullCalendarEventsList();
 }
 
-// رندر هدر (انتخاب ماه و سال)
 function renderFullCalendarHeader() {
     const titleEl = document.getElementById('full-calendar-title');
     if (!titleEl) return;
@@ -162,21 +177,19 @@ function renderFullCalendarHeader() {
     `;
 }
 
-// تغییر ماه در تقویم جامع
 function changeFullCalendarMonth(month) {
     fullCalendarMonth = parseInt(month);
     saveFullCalendarState();
     renderFullCalendar();
 }
 
-// تغییر سال در تقویم جامع
 function changeFullCalendarYear(year) {
     fullCalendarYear = parseInt(year);
     saveFullCalendarState();
     renderFullCalendar();
 }
 
-// رندر شبکه روزهای تقویم جامع
+// *** تغییر اصلی: حذف نقطه قرمز و استفاده از یک نشانه‌ی بسیار ملایم ***
 function renderFullCalendarGrid() {
     const grid = document.getElementById('full-calendar-grid');
     if (!grid) return;
@@ -187,12 +200,10 @@ function renderFullCalendarGrid() {
     const daysInMonth = getJalaliDaysInMonth(fullCalendarYear, fullCalendarMonth);
     const eventsMap = getMonthEvents(fullCalendarYear, fullCalendarMonth);
     
-    // خانه‌های خالی
     for (let i = 0; i < firstDay; i++) {
         grid.innerHTML += `<div class="full-calendar-day empty"></div>`;
     }
     
-    // روزهای ماه
     for (let day = 1; day <= daysInMonth; day++) {
         const isFriday = ((firstDay + day - 1) % 7) === 6;
         const hasEvent = eventsMap[day] !== undefined;
@@ -200,19 +211,20 @@ function renderFullCalendarGrid() {
         
         let classes = 'full-calendar-day';
         if (isFriday) classes += ' friday';
-        if (hasEvent) classes += ' has-event';
+        if (hasEvent) classes += ' has-event-soft';  // کلاس جدید: نشانه‌ی ملایم
         if (isSelected) classes += ' selected';
         
+        // tooltip به جای نقطه قرمز
+        const tooltipText = hasEvent ? eventsMap[day] : '';
+        
         grid.innerHTML += `
-            <div class="${classes}" onclick="selectFullCalendarDay(${day})" title="${hasEvent ? eventsMap[day].substring(0, 50) + '...' : ''}">
+            <div class="${classes}" onclick="selectFullCalendarDay(${day})" title="${tooltipText}">
                 ${toPersianNumber(day)}
-                ${hasEvent ? '<div class="event-dot"></div>' : ''}
             </div>
         `;
     }
 }
 
-// انتخاب یک روز در تقویم جامع
 function selectFullCalendarDay(day) {
     fullCalendarSelectedDay = day;
     saveFullCalendarState();
@@ -220,7 +232,6 @@ function selectFullCalendarDay(day) {
     renderFullCalendarEventsList();
 }
 
-// رندر لیست مناسبت‌های ماه
 function renderFullCalendarEventsList() {
     const container = document.getElementById('full-calendar-events');
     if (!container) return;
@@ -239,7 +250,6 @@ function renderFullCalendarEventsList() {
         </h3>
     `;
     
-    // اگر روزی انتخاب شده، فقط مناسبت‌های آن روز را نشان بده
     if (fullCalendarSelectedDay && eventsMap[fullCalendarSelectedDay]) {
         html += `
             <div class="event-highlight">
@@ -250,7 +260,6 @@ function renderFullCalendarEventsList() {
         `;
     }
     
-    // لیست همه مناسبت‌های ماه
     const sortedDays = Object.keys(eventsMap).map(Number).sort((a, b) => a - b);
     
     html += '<div class="events-list">';
@@ -268,7 +277,6 @@ function renderFullCalendarEventsList() {
     container.innerHTML = html;
 }
 
-// رفتن به ماه قبل
 function fullCalendarPrevMonth() {
     fullCalendarMonth--;
     if (fullCalendarMonth < 1) {
@@ -279,7 +287,6 @@ function fullCalendarPrevMonth() {
     renderFullCalendar();
 }
 
-// رفتن به ماه بعد
 function fullCalendarNextMonth() {
     fullCalendarMonth++;
     if (fullCalendarMonth > 12) {
@@ -288,29 +295,4 @@ function fullCalendarNextMonth() {
     }
     saveFullCalendarState();
     renderFullCalendar();
-}
-
-// ==========================================
-// 5. توابع جدید برای استفاده در سایر تب‌ها (جلسات و امتیازات)
-// ==========================================
-
-// دریافت مناسبت‌های یک روز خاص برای نمایش در سایر تب‌ها
-function getEventsForDateString(dateStr) {
-    if (!dateStr || !/^\d{4}\/\d{2}\/\d{2}$/.test(dateStr)) return null;
-    const parts = dateStr.split('/');
-    const year = parseInt(parts[0]);
-    const month = parseInt(parts[1]);
-    const day = parseInt(parts[2]);
-    return getDayEvents(year, month, day);
-}
-
-// بررسی اینکه آیا یک تاریخ مناسبت دارد یا نه (برای استفاده در تقویم‌های دیگر)
-function hasEventOnDateString(dateStr) {
-    return getEventsForDateString(dateStr) !== null;
-}
-
-// دریافت متن مناسبت برای نمایش در title تقویم‌های دیگر
-function getEventTitleForDateString(dateStr) {
-    const event = getEventsForDateString(dateStr);
-    return event || '';
 }
