@@ -2,7 +2,7 @@
 // فایل sw.js — سرویس‌ورکر بهینه‌شده (نسخه v91)
 // ==========================================
 
-const CACHE_NAME = 'kosha-cache-v91';
+const CACHE_NAME = 'kosha-cache-v92';
 const ASSETS_TO_CACHE = [
     './', 
     './index.html', 
@@ -19,6 +19,8 @@ const ASSETS_TO_CACHE = [
     './score.js', 
     './reset.js',
     './exam.js'
+    './calendar-data.js'
+    './calendar.js'
 ];
 
 // فایل‌هایی که همیشه باید از شبکه به‌روز شوند (حساس به تغییر)
