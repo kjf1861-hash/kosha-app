@@ -1,5 +1,5 @@
 // ==========================================
-// فایل score.js — منطق تب امتیاز (ارزشیابی)
+// فایل score.js — منطق تب امتیاز (ارزشیابی) — نسخه اصلاح‌شده مرحله ۲
 // ==========================================
 
 let isSaveAndNext = false;
@@ -19,14 +19,12 @@ let scoreCalendarState = {
 const scoreJalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
 const scoreLeapYears = [1408]; 
 
-// *** برای جلوگیری از رندر غیرضروری چک‌باکس‌ها ***
 let _lastStudentsHash = '';
 
 function getStudentsHash() {
     return window.allStudentsData.map(s => s.id).join(',') + '|' + window.allGroupsData.map(g => g.id).join(',');
 }
 
-// *** توابع جدید برای ذخیره و بازیابی وضعیت تقویم ***
 function saveScoreCalendarState(type) {
     try {
         localStorage.setItem(`kosha-score-cal-${type}`, JSON.stringify(scoreCalendarState[type]));
@@ -137,16 +135,13 @@ function initScoreCalendars() {
     const startYear = parseInt(startYearStr);
     
     ['record', 'quran', 'special', 'handwriting'].forEach(type => {
-        // بازیابی وضعیت از localStorage
         loadScoreCalendarState(type, startYear);
         
-        // اگر هنوز تنظیم نشده بود (اولین بار)
         if (!scoreCalendarState[type].year || scoreCalendarState[type].year < startYear) {
             scoreCalendarState[type].year = startYear;
             if (!scoreCalendarState[type].month) scoreCalendarState[type].month = 7;
         }
         
-        // بازتاب دادن به فیلدهای مخفی و نمایش‌دهنده‌ها
         if (scoreCalendarState[type].selectedDate) {
             const displayEl = document.getElementById(`${type}DateDisplay`);
             if (displayEl) displayEl.textContent = toPersianNumber(scoreCalendarState[type].selectedDate);
@@ -194,7 +189,7 @@ function changeScoreCalendarMonth(type, delta) {
         return;
     }
 
-    saveScoreCalendarState(type); // *** ذخیره وضعیت ***
+    saveScoreCalendarState(type);
     renderScoreCalendar(type);
 }
 
@@ -262,13 +257,13 @@ function renderScoreCalendar(type) {
 
 function updateScoreCalendarSelect(type, field, value) {
     scoreCalendarState[type][field] = parseInt(value);
-    saveScoreCalendarState(type); // *** ذخیره وضعیت ***
+    saveScoreCalendarState(type);
     renderScoreCalendar(type);
 }
-
+// *** تغییر اصلی: اضافه کردن نمایش مناسبت به تابع selectScoreCalendarDay ***
 function selectScoreCalendarDay(type, dateStr) {
     scoreCalendarState[type].selectedDate = dateStr;
-    saveScoreCalendarState(type); // *** ذخیره وضعیت ***
+    saveScoreCalendarState(type);
     
     const displayEl = document.getElementById(`${type}DateDisplay`);
     if (displayEl) displayEl.textContent = toPersianNumber(dateStr);
@@ -284,10 +279,16 @@ function selectScoreCalendarDay(type, dateStr) {
     if (accordion) accordion.removeAttribute('open');
 }
 
+// *** تغییر اصلی: نمایش مناسبت در باکس آرشیو روز ***
 function renderScoreDayArchive(type, dateStr) {
     const archiveContainer = document.getElementById(`${type}-day-archive`);
     const archiveList = document.getElementById(`${type}-day-archive-list`);
     if (!archiveContainer || !archiveList) return;
+
+    // دریافت مناسبت این روز
+    const eventText = (typeof getEventTitleForDateString === 'function') 
+        ? getEventTitleForDateString(dateStr) 
+        : '';
 
     const dayRecords = (window.allRecordsData || []).filter(rec => {
         if (rec.date !== dateStr) return false;
@@ -298,38 +299,59 @@ function renderScoreDayArchive(type, dateStr) {
         return false;
     });
 
-    if (dayRecords.length === 0) {
+    // اگر نه مناسبت هست و نه رکورد، باکس را مخفی کن
+    if (!eventText && dayRecords.length === 0) {
         archiveContainer.style.display = 'none';
         return;
     }
 
     archiveContainer.style.display = 'block';
-    archiveList.innerHTML = `<h4>📋 سوابق ثبت‌شده در این روز (${toPersianNumber(dayRecords.length)} مورد):</h4>`;
-    
-    dayRecords.forEach(rec => {
-        let names = '';
-        if (rec.students && rec.students.length > 0) {
-            names = rec.students.map(id => {
-                const st = window.allStudentsData.find(s => s.id === id);
-                return st ? `${st.firstName} ${st.lastName}` : '';
-            }).filter(n => n !== '').join('، ');
-        }
-        
+    archiveList.innerHTML = '';
+
+    // *** نمایش مناسبت (اگر وجود داشته باشد) ***
+    if (eventText) {
         archiveList.innerHTML += `
-            <div class="score-archive-item">
-                <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                    <strong>${rec.title}</strong> 
-                    <span style="font-size:0.75rem; color:var(--text-muted);">(${names || 'بدون دانش‌آموز'})</span>
+            <div style="background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); border: 1px solid #c4b5fd; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px;">
+                <span style="font-size: 1.2rem; flex-shrink: 0;">🎉</span>
+                <div>
+                    <div style="font-size: 0.75rem; color: #7c3aed; font-weight: bold; margin-bottom: 2px;">مناسبت این روز</div>
+                    <div style="font-size: 0.9rem; color: #5b21b6; line-height: 1.5;">${eventText}</div>
                 </div>
-                <div style="color:var(--primary); font-weight:bold; margin-right:10px;">${toPersianNumber(rec.finalScore)} امتیاز</div>
             </div>
         `;
-    });
+    }
+
+    // نمایش رکوردهای روز
+    if (dayRecords.length > 0) {
+        archiveList.innerHTML += `<h4 style="margin: 8px 0;">📋 سوابق ثبت‌شده در این روز (${toPersianNumber(dayRecords.length)} مورد):</h4>`;
+        
+        dayRecords.forEach(rec => {
+            let names = '';
+            if (rec.students && rec.students.length > 0) {
+                names = rec.students.map(id => {
+                    const st = window.allStudentsData.find(s => s.id === id);
+                    return st ? `${st.firstName} ${st.lastName}` : '';
+                }).filter(n => n !== '').join('، ');
+            }
+            
+            archiveList.innerHTML += `
+                <div class="score-archive-item">
+                    <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                        <strong>${rec.title}</strong> 
+                        <span style="font-size:0.75rem; color:var(--text-muted);">(${names || 'بدون دانش‌آموز'})</span>
+                    </div>
+                    <div style="color:var(--primary); font-weight:bold; margin-right:10px;">${toPersianNumber(rec.finalScore)} امتیاز</div>
+                </div>
+            `;
+        });
+    } else {
+        archiveList.innerHTML += `<p style="text-align:center; color: var(--text-muted); font-size: 0.85rem; margin: 8px 0;">هیچ رکوردی برای این روز ثبت نشده است.</p>`;
+    }
 }
 
 function resetScoreCalendar(type) {
     scoreCalendarState[type].selectedDate = '';
-    saveScoreCalendarState(type); // *** ذخیره وضعیت ***
+    saveScoreCalendarState(type);
     
     const displayEl = document.getElementById(`${type}DateDisplay`);
     if (displayEl) displayEl.textContent = 'انتخاب نشده';
@@ -343,7 +365,6 @@ function resetScoreCalendar(type) {
 
     renderScoreCalendar(type);
 }
-
 function createStudentLabel(st, checkboxClass) {
     const g = window.allGroupsData.find(x => x.id === st.groupId);
     const badge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
@@ -571,10 +592,16 @@ function showPreview(isFinal) {
 
     const previewContent = document.getElementById('preview-content');
     if (previewContent) {
+        // نمایش مناسبت در پیش‌نمایش (اختیاری)
+        const eventText = (typeof getFormattedEventsForDate === 'function') 
+            ? getFormattedEventsForDate(dateStr) 
+            : '';
+        
         previewContent.innerHTML = `
             <div class="preview-row"><strong>آیتم:</strong> <span>${selectedItem.title}</span></div>
             <div class="preview-row"><strong>تعداد:</strong> <span>${toPersianNumber(studentCheckboxes.length)} نفر</span></div>
             <div class="preview-row"><strong>تاریخ:</strong> <span>${toPersianNumber(dateStr)}</span></div>
+            ${eventText ? `<div class="preview-row" style="background: #ede9fe; padding: 8px 10px; border-radius: 8px; margin-top: 5px; font-size: 0.85rem; color: #5b21b6;"><span>${eventText}</span></div>` : ''}
             <div class="preview-row" style="background: #eef2ff; padding: 10px; border-radius: 8px; margin-top: 10px;"><strong>امتیاز:</strong> <span style="font-size: 1.2rem; color: #4A90E2;">${toPersianNumber(finalScore)}</span></div>
         `;
     }
@@ -686,7 +713,6 @@ async function saveQuranRecord() {
         showToast('پویش قرآن با موفقیت ثبت شد!', 'success');
         const form = document.getElementById('quran-form');
         if (form) form.reset();
-        // resetScoreCalendar('quran'); // دیگر روز را پاک نمی‌کنیم تا کاربر راحت باشد
         loadAllData();
     } catch (e) { console.error(e); showToast('خطا در ثبت پویش قرآن.', 'error'); }
 }
@@ -721,7 +747,6 @@ async function saveSpecialReward() {
         showToast('تشویق ویژه با موفقیت ثبت شد!', 'success');
         const form = document.getElementById('special-reward-form');
         if (form) form.reset();
-        // resetScoreCalendar('special');
         loadAllData();
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق ویژه.', 'error'); }
 }
@@ -749,11 +774,9 @@ async function saveHandwritingReward() {
         showToast('تشویق خوش‌خط‌نویسی با موفقیت ثبت شد!', 'success');
         const form = document.getElementById('handwriting-reward-form');
         if (form) form.reset();
-        // resetScoreCalendar('handwriting');
         loadAllData();
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق خوش‌خط‌نویسی.', 'error'); }
 }
-
 function loadAssessmentRecords() {
     const container = document.getElementById('assessment-records-list');
     const pagination = document.getElementById('records-pagination');
