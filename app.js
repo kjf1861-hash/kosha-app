@@ -18,14 +18,12 @@ let currentStudentView = 'flat';
 let currentPage = { students: 1, records: 1, reports: 1 };
 const itemsPerPage = 40;
 
-// *** تابع جدید برای فارسی‌سازی اعداد ***
 function toPersianNumber(num) {
     if (num === undefined || num === null || num === '') return '';
     const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
     return num.toString().replace(/\d/g, x => persianDigits[x]);
 }
 
-// *** تابع جدید برای اعتبارسنجی کد ملی ***
 function validateNationalId(nationalId) {
     if (!/^\d{10}$/.test(nationalId)) return false;
     if (/^(\d)\1{9}$/.test(nationalId)) return false;
@@ -42,7 +40,6 @@ function validateNationalId(nationalId) {
     return false;
 }
 
-// *** تابع جدید برای تولید رمز عبور ۴ رقمی از کد ملی ***
 function generateStudentPassword(nationalId) {
     if (!nationalId || nationalId.length !== 10) return '0000';
     
@@ -109,9 +106,7 @@ function applyEmojiRestriction(inputId) {
     }
 }
 
-// *** اصلاح باگ ۳ و ۴: مدیریت متمرکز رویدادها با بررسی وجود المان ***
 function initAppEvents() {
-    // اتصال رویدادهای فرم‌ها با بررسی وجود المان
     const classForm = document.getElementById('class-form');
     if (classForm) classForm.addEventListener('submit', saveClassProfile);
     
@@ -129,17 +124,12 @@ function initAppEvents() {
     
     const itemType = document.getElementById('itemType');
     if (itemType) itemType.addEventListener('change', toggleItemTypeFields);
-
-    // *** اصلاح باگ ۲: حذف رویداد تکراری change از app.js ***
-    // رویداد change روی recordItem فقط در score.js (initScoreEvents) مدیریت می‌شود
     
-    // اتصال رویدادهای سایر فایل‌ها
     if (typeof initScoreEvents === 'function') initScoreEvents();
     if (typeof initGroupEvents === 'function') initGroupEvents();
     if (typeof initLessonEvents === 'function') initLessonEvents();
     if (typeof initSessionEvents === 'function') initSessionEvents();
     
-    // ثبت رویدادهای مودال‌های ویرایش
     const editRecordForm = document.getElementById('edit-record-form');
     if (editRecordForm) editRecordForm.addEventListener('submit', saveEditedRecord);
     
@@ -264,9 +254,6 @@ function jalaliToDateString(jy, jm, jd) {
     return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
 }
 
-// ==========================================
-// توابع مدیریت آیتم‌ها
-// ==========================================
 function openItemManagementModal() {
     const modal = document.getElementById('item-management-modal');
     if (modal) modal.classList.add('show');
@@ -448,7 +435,6 @@ async function saveItem(e) {
         renderItemsList();
         resetItemForm();
         
-        // به‌روزرسانی هر دو select (recordItem و editRecordItem)
         const itemSelect = document.getElementById('recordItem');
         if (itemSelect) {
             itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
