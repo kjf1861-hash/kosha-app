@@ -446,7 +446,10 @@
         <a href="#" class="nav-item" onclick="switchPage('page-exams', this)" title="آزمون‌ها"><span class="icon">🎓</span></a>
     </nav>
 
-    <!-- مودال تنظیمات -->
+    <!-- ========================================================= -->
+    <!-- بخش مودال‌ها (این بخش در پیام بعدی ارسال می‌شود) -->
+    <!-- ========================================================= -->
+    <!-- ===== مودال تنظیمات ===== -->
     <div id="settings-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">⚙️ تنظیمات</div>
@@ -545,7 +548,7 @@
         </div>
     </div>
 
-    <!-- مودال‌های دیگر -->
+    <!-- ===== مودال‌های دیگر ===== -->
     <div id="preview-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header">👁️ پیش‌نمایش</div><div id="preview-content"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closePreviewModal()">انصراف</button><button type="button" class="btn btn-primary" onclick="confirmAndSaveRecord()">✅ تأیید و ذخیره</button></div></div></div>
     
     <div id="edit-record-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header">✏️ ویرایش کامل رکورد ارزشیابی</div><form id="edit-record-form"><input type="hidden" id="editRecordId"><div class="form-group"><label class="form-label">درس</label><select id="editRecordSubject" class="form-control" required></select></div><div class="form-group"><label class="form-label">آیتم ارزشیابی</label><select id="editRecordItem" class="form-control" required></select></div><div class="form-group"><label class="form-label">عنوان</label><input type="text" id="editRecordTitle" class="form-control" required></div><div class="form-group"><label class="form-label">تاریخ</label><input type="text" id="editRecordDate" class="form-control" required></div><div class="form-group"><label class="form-label">امتیاز</label><input type="number" id="editRecordScore" class="form-control" required></div><div class="form-group"><label class="form-label">دانش‌آموزان</label><div id="edit-record-students-container" class="student-checkbox-list"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeEditModal()">انصراف</button><button type="button" class="btn btn-primary" onclick="saveEditedRecord(event)">💾 ذخیره تغییرات</button></div></form></div></div>
@@ -627,15 +630,56 @@
     
     <div id="student-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="student-details-title">👤 جزئیات دانش‌آموز</div><div id="student-details-content" style="max-height: 60vh; overflow-y: auto;"></div><div class="modal-footer"><button type="button" class="btn btn-secondary btn-block" onclick="closeStudentDetails()">بستن</button></div></div></div>
 
-    <!-- مودال‌های آزمون (فاز بعدی) -->
+    <!-- ===== مودال جدید: سازنده آزمون (Exam Editor) ===== -->
     <div id="exam-editor-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">✏️ ویرایش آزمون</div>
-            <p style="text-align:center; padding:20px;">این بخش در فازهای بعدی تکمیل می‌شود.</p>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary btn-block" onclick="document.getElementById('exam-editor-modal').classList.remove('show')">بستن</button></div>
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header" id="exam-editor-title">➕ ساخت آزمون جدید</div>
+            <form id="exam-editor-form">
+                <input type="hidden" id="examEditId" value="">
+
+                <!-- اطلاعات کلی آزمون -->
+                <fieldset style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 15px; margin-bottom: 20px;">
+                    <legend style="font-weight: bold; color: var(--primary); padding: 0 10px;">📋 اطلاعات کلی</legend>
+                    <div class="form-group">
+                        <label class="form-label" for="examTitle">عنوان آزمون</label>
+                        <input type="text" id="examTitle" class="form-control" placeholder="مثلاً: آزمون ریاضی فصل اول" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="examSubject">درس</label>
+                        <select id="examSubject" class="form-control" required>
+                            <option value="" disabled selected>یک درس را انتخاب کنید...</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 15px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label" for="examDate">تاریخ آزمون</label>
+                            <input type="text" id="examDate" class="form-control" placeholder="مثلاً: 1405/08/15" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label" for="examMaxScore">نمره کل</label>
+                            <input type="number" id="examMaxScore" class="form-control" value="20" min="1" required>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- مدیریت سوالات -->
+                <fieldset style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 15px;">
+                    <legend style="font-weight: bold; color: var(--primary); padding: 0 10px;">❓ سوالات آزمون</legend>
+                    <div id="exam-questions-container">
+                        <!-- سوالات به صورت پویا اینجا اضافه می‌شوند -->
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-block mt-4" onclick="addExamQuestion()">➕ افزودن سوال</button>
+                </fieldset>
+
+                <div class="modal-footer" style="margin-top: 25px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeExamEditorModal()">انصراف</button>
+                    <button type="submit" class="btn btn-primary">💾 ذخیره آزمون</button>
+                </div>
+            </form>
         </div>
     </div>
 
+    <!-- ===== اسکریپت‌ها ===== -->
     <script src="db.js"></script>
     <script src="app.js"></script>
     <script src="class.js"></script>
@@ -717,10 +761,10 @@
         }
     </script>
 
-    <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) - اصلاح شده -->
+    <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) -->
     <script>
         (function() {
-            const APP_VERSION = 'v83';
+            const APP_VERSION = 'v84';
             const storedVersion = localStorage.getItem('kosha-version');
             
             if (storedVersion !== APP_VERSION) {
