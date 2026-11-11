@@ -1,5 +1,5 @@
 // ==========================================
-// فایل exam.js — منطق کامل تب آزمون‌ها (فاز ۲، ۳ و ۴)
+// فایل exam.js — منطق کامل تب آزمون‌ها (نسخه اصلاح‌شده با تقویم)
 // ==========================================
 
 window.allExamsData = [];
@@ -7,6 +7,13 @@ window.allExamResultsData = [];
 
 let examQuestionCounter = 0;
 let currentGradingExamId = null;
+
+// *** متغیرهای وضعیت تقویم آزمون ***
+let examCalendarState = {
+    year: 1405,
+    month: 7,
+    selectedDate: ''
+};
 
 async function loadExamsData() {
     try {
@@ -18,7 +25,7 @@ async function loadExamsData() {
 }
 
 // ==========================================
-// 1. نمایش لیست آزمون‌ها (با دکمه بازی)
+// 1. نمایش لیست آزمون‌ها
 // ==========================================
 function renderExamsData() {
     const container = document.getElementById('exams-list-container');
@@ -78,7 +85,198 @@ function renderExamsData() {
 }
 
 // ==========================================
-// 2. باز کردن مودال سازنده آزمون
+// 2. تقویم آزمون
+// ==========================================
+function saveExamCalendarState() {
+    try {
+        localStorage.setItem('kosha-exam-cal', JSON.stringify(examCalendarState));
+    } catch (e) { console.log('خطا در ذخیره تقویم آزمون', e); }
+}
+
+function loadExamCalendarState() {
+    try {
+        const saved = localStorage.getItem('kosha-exam-cal');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed && parsed.year) {
+                examCalendarState = parsed;
+            }
+        }
+    } catch (e) { console.log('خطا در بازیابی تقویم آزمون', e); }
+}
+
+function initExamCalendar() {
+    const ay = window.activeAcademicYear || '1405-1406';
+    const [startYearStr] = ay.split('-');
+    const startYear = parseInt(startYearStr);
+    
+    loadExamCalendarState();
+    
+    if (!examCalendarState.year || examCalendarState.year < startYear) {
+        examCalendarState.year = startYear;
+        examCalendarState.month = 7;
+        examCalendarState.selectedDate = '';
+    }
+    
+    const displayEl = document.getElementById('examDateDisplay');
+    if (displayEl) {
+        if (examCalendarState.selectedDate) {
+            displayEl.textContent = toPersianNumber(examCalendarState.selectedDate);
+        } else {
+            displayEl.textContent = 'انتخاب نشده';
+        }
+    }
+    
+    const hiddenInput = document.getElementById('examDate');
+    if (hiddenInput) hiddenInput.value = examCalendarState.selectedDate;
+    
+    renderExamCalendar();
+}
+
+function isExamLeapYear(year) { return [1408, 1412, 1416].includes(year); }
+
+function getExamDaysInMonth(year, month) {
+    if (month <= 6) return 31;
+    if (month <= 11) return 30;
+    return isExamLeapYear(year) ? 30 : 29;
+}
+
+function getExamFirstDayOfWeek(year, month) {
+    let daysPassed = 0;
+    for (let y = 1405; y < year; y++) {
+        daysPassed += isExamLeapYear(y) ? 366 : 365;
+    }
+    for (let m = 1; m < month; m++) {
+        daysPassed += getExamDaysInMonth(year, m);
+    }
+    return daysPassed % 7;
+}
+
+function changeExamCalendarMonth(delta) {
+    const ay = window.activeAcademicYear || '1405-1406';
+    const [startYearStr, endYearStr] = ay.split('-');
+    const startYear = parseInt(startYearStr);
+    const endYear = parseInt(endYearStr);
+
+    if (delta === -1) {
+        if (examCalendarState.year === startYear && examCalendarState.month === 7) {
+            showToast('شما در ابتدای سال تحصیلی هستید.', 'error');
+            return;
+        }
+    } else if (delta === 1) {
+        if (examCalendarState.year === endYear && examCalendarState.month === 6) {
+            showToast('شما در انتهای سال تحصیلی هستید.', 'error');
+            return;
+        }
+    }
+
+    examCalendarState.month += delta;
+    if (examCalendarState.month < 1) { examCalendarState.month = 12; examCalendarState.year--; }
+    else if (examCalendarState.month > 12) { examCalendarState.month = 1; examCalendarState.year++; }
+
+    if (examCalendarState.year < startYear || examCalendarState.year > endYear) {
+        showToast('این ماه خارج از بازه سال تحصیلی است.', 'error');
+        examCalendarState.year = parseInt(document.getElementById('exam-calendar-title').dataset.year);
+        examCalendarState.month = parseInt(document.getElementById('exam-calendar-title').dataset.month);
+        return;
+    }
+
+    saveExamCalendarState();
+    renderExamCalendar();
+}
+
+function updateExamCalendarSelect(field, value) {
+    examCalendarState[field] = parseInt(value);
+    saveExamCalendarState();
+    renderExamCalendar();
+}
+
+function renderExamCalendar() {
+    const titleEl = document.getElementById('exam-calendar-title');
+    if (!titleEl) return;
+    
+    titleEl.dataset.year = examCalendarState.year;
+    titleEl.dataset.month = examCalendarState.month;
+    
+    const ay = window.activeAcademicYear || '1405-1406';
+    const [startY, endY] = ay.split('-');
+    const monthNames = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
+    
+    titleEl.innerHTML = `
+        <select onchange="updateExamCalendarSelect('month', this.value)">
+            ${monthNames.map((m, i) => `<option value="${i + 1}" ${examCalendarState.month === i + 1 ? 'selected' : ''}>${m}</option>`).join('')}
+        </select>
+        <select onchange="updateExamCalendarSelect('year', this.value)">
+            ${[parseInt(startY), parseInt(endY)].map(y => `<option value="${y}" ${examCalendarState.year === y ? 'selected' : ''}>${toPersianNumber(y)}</option>`).join('')}
+        </select>
+    `;
+
+    const grid = document.getElementById('exam-calendar-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const firstDay = getExamFirstDayOfWeek(examCalendarState.year, examCalendarState.month);
+    const daysInMonth = getExamDaysInMonth(examCalendarState.year, examCalendarState.month);
+    
+    const startBound = `${startY}/07/01`;
+    const endBound = `${endY}/06/31`;
+
+    for (let i = 0; i < firstDay; i++) {
+        grid.innerHTML += `<div class="calendar-day empty"></div>`;
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const isFriday = ((firstDay + day - 1) % 7) === 6;
+        const dateStr = `${examCalendarState.year}/${String(examCalendarState.month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+        const inAcademicYear = (dateStr >= startBound && dateStr <= endBound);
+        
+        let classes = 'calendar-day';
+        if (isFriday) classes += ' holiday';
+        if (examCalendarState.selectedDate === dateStr) classes += ' selected';
+        if (!inAcademicYear) classes += ' outside-range';
+
+        const clickHandler = inAcademicYear 
+            ? `onclick="selectExamCalendarDay('${dateStr}')"` 
+            : `onclick="showToast('این تاریخ خارج از بازه سال تحصیلی است.', 'error')"`;
+
+        grid.innerHTML += `<div class="${classes}" ${clickHandler}>${toPersianNumber(day)}</div>`;
+    }
+}
+
+function selectExamCalendarDay(dateStr) {
+    examCalendarState.selectedDate = dateStr;
+    saveExamCalendarState();
+    
+    const displayEl = document.getElementById('examDateDisplay');
+    if (displayEl) displayEl.textContent = toPersianNumber(dateStr);
+    
+    const hiddenInput = document.getElementById('examDate');
+    if (hiddenInput) hiddenInput.value = dateStr;
+
+    renderExamCalendar();
+    
+    // نمایش مناسبت زیر تقویم (اختیاری)
+    const calendarBody = document.getElementById('exam-calendar-body');
+    if (calendarBody) {
+        const existingEventBox = calendarBody.querySelector('.exam-event-display');
+        if (existingEventBox) existingEventBox.remove();
+        
+        const eventText = (typeof getFormattedEventsForDate === 'function') 
+            ? getFormattedEventsForDate(dateStr) 
+            : '';
+        
+        if (eventText) {
+            const eventBox = document.createElement('div');
+            eventBox.className = 'exam-event-display';
+            eventBox.style.cssText = 'background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); border: 1px solid #c4b5fd; border-radius: 8px; padding: 8px 10px; margin-top: 10px; font-size: 0.85rem; color: #5b21b6; display: flex; align-items: flex-start; gap: 6px;';
+            eventBox.innerHTML = `<span>🎉</span><span>${eventText}</span>`;
+            calendarBody.appendChild(eventBox);
+        }
+    }
+}
+
+// ==========================================
+// 3. باز کردن مودال سازنده آزمون
 // ==========================================
 async function openExamEditorModal(examId = null) {
     const modal = document.getElementById('exam-editor-modal');
@@ -108,17 +306,26 @@ async function openExamEditorModal(examId = null) {
         document.getElementById('examEditId').value = exam.id;
         document.getElementById('examTitle').value = exam.title;
         document.getElementById('examSubject').value = exam.subjectId;
-        document.getElementById('examDate').value = exam.date;
         document.getElementById('examMaxScore').value = exam.maxScore;
+        
+        // *** تنظیم تقویم بر اساس تاریخ آزمون ***
+        if (exam.date && /^\d{4}\/\d{2}\/\d{2}$/.test(exam.date)) {
+            const parts = exam.date.split('/');
+            examCalendarState.year = parseInt(parts[0]);
+            examCalendarState.month = parseInt(parts[1]);
+            examCalendarState.selectedDate = exam.date;
+        }
         
         if (exam.questions && exam.questions.length > 0) {
             exam.questions.forEach(q => addExamQuestion(q));
         }
     } else {
         titleEl.textContent = '➕ ساخت آزمون جدید';
+        examCalendarState.selectedDate = '';
         addExamQuestion();
     }
 
+    initExamCalendar();
     modal.classList.add('show');
 }
 
@@ -128,7 +335,7 @@ function closeExamEditorModal() {
 }
 
 // ==========================================
-// 3. مدیریت سوالات در مودال
+// 4. مدیریت سوالات در مودال
 // ==========================================
 function addExamQuestion(questionData = null) {
     const container = document.getElementById('exam-questions-container');
@@ -279,10 +486,9 @@ function updateQuestionNumbers() {
 }
 
 // ==========================================
-// 4. ذخیره آزمون (اصلاح‌شده: جلوگیری از رفرش صفحه)
+// 5. ذخیره آزمون
 // ==========================================
 async function saveExam(event) {
-    // *** جلوگیری از رفرش شدن صفحه ***
     if (event) {
         event.preventDefault();
         event.stopPropagation();
@@ -296,7 +502,7 @@ async function saveExam(event) {
     
     if (!title) { showToast('عنوان آزمون را وارد کنید.', 'error'); return; }
     if (!subjectId || isNaN(subjectId)) { showToast('درس را انتخاب کنید.', 'error'); return; }
-    if (!/^\d{4}\/\d{2}\/\d{2}$/.test(date)) { showToast('فرمت تاریخ نامعتبر است. مثلاً: 1405/08/15', 'error'); return; }
+    if (!/^\d{4}\/\d{2}\/\d{2}$/.test(date)) { showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return; }
     if (isNaN(maxScore) || maxScore <= 0) { showToast('نمره کل معتبر وارد کنید.', 'error'); return; }
     
     const questionItems = document.querySelectorAll('#exam-questions-container .exam-question-item');
@@ -398,7 +604,7 @@ async function saveExam(event) {
 }
 
 // ==========================================
-// 5. حذف آزمون
+// 6. حذف آزمون
 // ==========================================
 async function deleteExam(examId) {
     if (!confirm('آیا از حذف این آزمون و تمام نتایج آن مطمئن هستید؟')) return;
@@ -421,7 +627,7 @@ async function deleteExam(examId) {
 }
 
 // ==========================================
-// 6. باز کردن مودال ثبت نمرات
+// 7. باز کردن مودال ثبت نمرات
 // ==========================================
 async function openExamGradingModal(examId) {
     const modal = document.getElementById('exam-grading-modal');
@@ -598,7 +804,7 @@ async function saveExamGrades() {
 }
 
 // ==========================================
-// 7. تولید فایل بازی برای دانش‌آموز (آفلاین)
+// 8. تولید فایل بازی برای دانش‌آموز (آفلاین)
 // ==========================================
 async function generateGameFile(examId) {
     const exam = await getDataById('exams', examId);
@@ -646,7 +852,7 @@ async function generateGameFile(examId) {
 }
 
 // ==========================================
-// 8. ساخت HTML فایل بازی
+// 9. ساخت HTML فایل بازی
 // ==========================================
 function buildGameHtml(exam, subName, questions) {
     const questionsJson = JSON.stringify(questions);
