@@ -7,7 +7,6 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4A90E2">
     
-    <!-- *** اضافه شدن فونت وزیرمتن از گوگل *** -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
@@ -436,23 +435,22 @@
             </div>
         </div> 
     </div> 
-    <!-- منوی پایین (۷ تب - فقط ایموجی) -->
+        <!-- منوی پایین (۷ تب - فقط ایموجی) -->
     <nav class="bottom-nav" style="display: none;">
         <a href="#" class="nav-item active" onclick="switchPage('page-class', this)" title="کلاس"><span class="icon">🏫</span></a>
         <a href="#" class="nav-item" onclick="switchPage('page-students', this)" title="دانش‌آموزان"><span class="icon">👦</span></a>
-        <a href="#" class="nav-item" onclick="switchPage('page-lesson', this)" title="دروس"><span class="icon">📚</span></a>
+        <a href="#" class="nav-item" onclick="switchPage('page-lesson', this)" title="درس‌ها"><span class="icon">📚</span></a>
         <a href="#" class="nav-item" onclick="switchPage('page-group', this)" title="گروه‌ها"><span class="icon">👥</span></a>
         <a href="#" class="nav-item" onclick="switchPage('page-session', this)" title="جلسات"><span class="icon">📅</span></a>
         <a href="#" class="nav-item" onclick="switchPage('page-score', this)" title="امتیازات"><span class="icon">📝</span></a>
         <a href="#" class="nav-item" onclick="switchPage('page-exams', this)" title="آزمون‌ها"><span class="icon">🎓</span></a>
     </nav>
 
-    <!-- مودال تنظیمات (مشخصات کلاس، بکاپ، بازنشانی) -->
+    <!-- مودال تنظیمات -->
     <div id="settings-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">⚙️ تنظیمات</div>
             
-            <!-- بخش ۱: مشخصات کلاس -->
             <div class="card" style="border: none; box-shadow: none; padding: 0; margin-bottom: 20px;">
                 <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">🏫 مشخصات کلاس</h3>
                 <form id="class-form">
@@ -476,11 +474,9 @@
                     
                     <hr style="border-top: 1px dashed var(--border-color); margin: 15px 0;">
                     
-                    <!-- تنظیمات برنامه هفتگی -->
                     <div class="form-group">
                         <label class="form-label">روزهای فعال هفته (برای برنامه هفتگی)</label>
                         <div id="schedule-days-checkboxes" style="display: flex; flex-wrap: wrap; gap: 10px; background: var(--input-bg); padding: 12px; border-radius: var(--radius-sm);">
-                            <!-- چک‌باکس‌ها از طریق JS پر می‌شوند -->
                         </div>
                         <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">روزهایی را که مدرسه دایر است انتخاب کنید.</p>
                     </div>
@@ -496,7 +492,6 @@
 
             <hr style="border-top: 1px dashed var(--border-color); margin: 20px 0;">
 
-            <!-- بخش ۲: پشتیبان‌گیری و بازیابی -->
             <div class="card" style="border: none; box-shadow: none; padding: 0; margin-bottom: 20px;">
                 <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">📤 پشتیبان‌گیری و بازیابی</h3>
                 <div id="backup-status" style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 10px; padding: 8px; background: var(--input-bg); border-radius: 8px;">
@@ -512,7 +507,6 @@
 
             <hr style="border-top: 1px dashed var(--border-color); margin: 20px 0;">
 
-            <!-- بخش ۳: بازنشانی و پاکسازی -->
             <div class="card" style="border: 2px solid #ef4444; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); padding: 15px;">
                 <h3 style="color: #b91c1c; border-bottom: 2px dashed #fca5a5; padding-bottom: 8px; margin-bottom: 15px;">🗑️ بازنشانی و پاکسازی</h3>
                 
@@ -564,7 +558,6 @@
     
     <div id="lesson-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="lesson-details-title">📊 جزئیات درس</div><div class="view-toggle-group"><button type="button" id="btnLessonClassView" class="view-toggle-btn active" onclick="switchLessonDetailView('class')">👦 نمای کلاسی</button><button type="button" id="btnLessonGroupView" class="view-toggle-btn" onclick="switchLessonDetailView('group')">👥 نمای گروهی</button></div><div id="lesson-details-content" class="list-group"></div><div class="modal-footer"><button type="button" class="btn btn-secondary btn-block" onclick="closeLessonDetails()">بستن</button></div></div></div>
     
-    <!-- مودال جزئیات گروه -->
     <div id="group-details-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header" id="group-details-title">📊 جزئیات گروه</div>
@@ -582,7 +575,6 @@
         </div>
     </div>
 
-    <!-- مودال ویرایش گروه -->
     <div id="edit-group-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">✏️ ویرایش گروه</div>
@@ -599,7 +591,6 @@
         </div>
     </div>
 
-    <!-- مودال ویرایش دانش‌آموز -->
     <div id="edit-student-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">✏️ ویرایش دانش‌آموز</div>
@@ -616,7 +607,6 @@
         </div>
     </div>
 
-    <!-- مودال ویرایش درس -->
     <div id="edit-lesson-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">✏️ ویرایش درس</div>
@@ -636,6 +626,15 @@
     <div id="session-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="session-details-title">📅 جزئیات جلسه</div><div id="session-details-content"></div><div class="modal-footer" style="flex-direction: column; gap: 10px;"><button type="button" class="btn btn-primary btn-block" onclick="saveAllSessionAttendance()">💾 ذخیره کل حضور و غیاب</button><button type="button" class="btn btn-secondary btn-block" onclick="closeSessionDetails()">بستن</button></div></div></div>
     
     <div id="student-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="student-details-title">👤 جزئیات دانش‌آموز</div><div id="student-details-content" style="max-height: 60vh; overflow-y: auto;"></div><div class="modal-footer"><button type="button" class="btn btn-secondary btn-block" onclick="closeStudentDetails()">بستن</button></div></div></div>
+
+    <!-- مودال‌های آزمون (فاز بعدی) -->
+    <div id="exam-editor-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">✏️ ویرایش آزمون</div>
+            <p style="text-align:center; padding:20px;">این بخش در فازهای بعدی تکمیل می‌شود.</p>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary btn-block" onclick="document.getElementById('exam-editor-modal').classList.remove('show')">بستن</button></div>
+        </div>
+    </div>
 
     <script src="db.js"></script>
     <script src="app.js"></script>
@@ -714,43 +713,41 @@
             if (pageId === 'page-group' && typeof renderGroupData === 'function') renderGroupData();
             if (pageId === 'page-session' && typeof renderSessionData === 'function') renderSessionData();
             if (pageId === 'page-score' && typeof renderScoreData === 'function') renderScoreData();
-            if (pageId === 'page-exams' && typeof renderExamsData === 'function') renderExamsData(); // این خط مهم است
+            if (pageId === 'page-exams' && typeof renderExamsData === 'function') renderExamsData();
         }
     </script>
 
- <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) - اصلاح شده -->
-<script>
-    (function() {
-        const APP_VERSION = 'v82'; // تغییر به v82
-        const storedVersion = localStorage.getItem('kosha-version');
-        
-        if (storedVersion !== APP_VERSION) {
-            console.log('🔄 در حال به‌روزرسانی کش و سرویس‌ورکر...');
+    <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) - اصلاح شده -->
+    <script>
+        (function() {
+            const APP_VERSION = 'v83';
+            const storedVersion = localStorage.getItem('kosha-version');
             
-            // ابتدا نسخه را ذخیره می‌کنیم تا در رفرش بعدی دوباره وارد این شرط نشویم
-            localStorage.setItem('kosha-version', APP_VERSION);
-            
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for(let registration of registrations) {
-                        registration.unregister();
-                    }
-                    caches.keys().then(function(names) {
-                        for (let name of names) caches.delete(name);
-                        
-                        // تاخیر برای اطمینان از پاک شدن کامل
-                        setTimeout(() => {
-                            window.location.reload(true);
-                        }, 500);
+            if (storedVersion !== APP_VERSION) {
+                console.log('🔄 در حال به‌روزرسانی کش و سرویس‌ورکر...');
+                
+                localStorage.setItem('kosha-version', APP_VERSION);
+                
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) {
+                            registration.unregister();
+                        }
+                        caches.keys().then(function(names) {
+                            for (let name of names) caches.delete(name);
+                            
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 500);
+                        });
                     });
-                });
-            } else {
-                setTimeout(() => {
-                    window.location.reload(true);
-                }, 500);
+                } else {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                }
             }
-        }
-    })();
-</script>
+        })();
+    </script>
 </body>
 </html>
