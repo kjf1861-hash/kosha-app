@@ -13,6 +13,13 @@ async function resetYearlyRecords() {
         await clearStore('sessions');
         await clearStore('badgesSettings');
         
+        // پاک کردن وضعیت تقویم‌ها تا به حالت اولیه برگردند
+        localStorage.removeItem('kosha-session-cal');
+        localStorage.removeItem('kosha-score-cal-record');
+        localStorage.removeItem('kosha-score-cal-quran');
+        localStorage.removeItem('kosha-score-cal-special');
+        localStorage.removeItem('kosha-score-cal-handwriting');
+        
         showToast('سوابق با موفقیت پاک شد. سال تحصیلی جدید آغاز شد!', 'success');
         loadAllData();
     } catch (e) {
@@ -94,12 +101,12 @@ async function resetFactoryAll() {
     if (!confirm2) return;
 
     try {
-        // *** جداول جدید آزمون‌ها به این لیست اضافه شدند ***
         const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults'];
         for (const store of stores) {
             await clearStore(store);
         }
         
+        // پاک کردن تمام حافظه محلی
         localStorage.clear();
         
         showToast('برنامه با موفقیت بازنشانی شد. در حال راه‌اندازی مجدد...', 'info');
