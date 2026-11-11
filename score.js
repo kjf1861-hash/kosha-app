@@ -275,8 +275,7 @@ function selectScoreCalendarDay(type, dateStr) {
     renderScoreCalendar(type);
     renderScoreDayArchive(type, dateStr);
     
-    const accordion = document.getElementById(`${type}-date-accordion`);
-    if (accordion) accordion.removeAttribute('open');
+    // آکاردئون باز می‌ماند تا کاربر خودش ببندد
 }
 
 // *** تغییر اصلی: نمایش مناسبت در باکس آرشیو روز ***
