@@ -29,7 +29,7 @@ async function saveClassProfile(e) {
     const schoolNameEl = document.getElementById('schoolName');
     const academicYearEl = document.getElementById('academicYear');
 
-    if (!classNameEl) return; // اطمینان از وجود فرم
+    if (!classNameEl) return;
 
     const data = {
         id: 1,
@@ -53,7 +53,6 @@ async function saveClassProfile(e) {
     const headerSubtitle = document.getElementById('header-subtitle');
     if (headerSubtitle) headerSubtitle.textContent = data.name;
     
-    // *** رفع باگ ۱۵: ابتدا مودال را می‌بندیم، سپس داده‌ها را لود می‌کنیم ***
     if(typeof closeSettingsModal === 'function') closeSettingsModal();
     
     await loadAllData();
@@ -105,6 +104,9 @@ function renderDashboardData() {
     renderNeedsAttention(studentScores);
     renderRecentActivities();
     renderFullClassReport(studentScores);
+    
+    // *** کارت جدید گزارش آزمون‌ها ***
+    renderExamsDashboard();
 }
 
 function renderActivityCards() {
@@ -419,6 +421,106 @@ function renderFullClassReport(studentScores) {
             </div>
         `;
     }).join('');
+}
+
+// ==========================================
+// گزارش جامع آزمون‌ها در داشبورد
+// ==========================================
+function renderExamsDashboard() {
+    const container = document.getElementById('dashboard-exams-report');
+    if (!container) return;
+    
+    // بارگذاری داده‌های آزمون اگر قبلاً انجام نشده
+    if (!window.allExamsData) window.allExamsData = [];
+    if (!window.allExamResultsData) window.allExamResultsData = [];
+    
+    const exams = window.allExamsData;
+    const results = window.allExamResultsData;
+    
+    if (exams.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#64748b; padding: 15px;">هنوز آزمونی تعریف نشده است. از تب «آزمون‌ها» اولین آزمون را بسازید.</p>';
+        return;
+    }
+    
+    // آمار کلی
+    const totalExams = exams.length;
+    const totalResults = results.length;
+    
+    // میانگین کل
+    let totalScorePercent = 0;
+    let validResults = 0;
+    results.forEach(r => {
+        const exam = exams.find(e => e.id === r.examId);
+        if (exam) {
+            totalScorePercent += (r.score / exam.maxScore) * 100;
+            validResults++;
+        }
+    });
+    const avgPercent = validResults > 0 ? Math.round(totalScorePercent / validResults) : 0;
+    
+    // بهترین دانش‌آموز (بیشترین میانگین درصد)
+    const studentPercentMap = {};
+    results.forEach(r => {
+        const exam = exams.find(e => e.id === r.examId);
+        if (!exam) return;
+        const percent = (r.score / exam.maxScore) * 100;
+        if (!studentPercentMap[r.studentId]) studentPercentMap[r.studentId] = { total: 0, count: 0 };
+        studentPercentMap[r.studentId].total += percent;
+        studentPercentMap[r.studentId].count++;
+    });
+    
+    let bestStudentId = null;
+    let bestAvg = -1;
+    for (const sid in studentPercentMap) {
+        const avg = studentPercentMap[sid].total / studentPercentMap[sid].count;
+        if (avg > bestAvg) {
+            bestAvg = avg;
+            bestStudentId = parseInt(sid);
+        }
+    }
+    
+    let bestStudentHtml = '';
+    if (bestStudentId) {
+        const st = window.allStudentsData.find(s => s.id === bestStudentId);
+        if (st) {
+            bestStudentHtml = `
+                <div style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); padding: 12px; border-radius: 12px; text-align: center; color: white;">
+                    <div style="font-size: 1.8rem; margin-bottom: 4px;">🏆</div>
+                    <div style="font-size: 0.75rem; opacity: 0.9;">بهترین دانش‌آموز</div>
+                    <div style="font-weight: bold; font-size: 1rem; margin-top: 4px;">${st.firstName} ${st.lastName}</div>
+                    <div style="font-size: 0.8rem; margin-top: 2px;">میانگین: ${toPersianNumber(Math.round(bestAvg))}٪</div>
+                </div>
+            `;
+        }
+    } else {
+        bestStudentHtml = `
+            <div style="background: var(--input-bg); padding: 12px; border-radius: 12px; text-align: center; color: var(--text-muted);">
+                <div style="font-size: 1.8rem; margin-bottom: 4px;">🏆</div>
+                <div style="font-size: 0.85rem;">هنوز نمره‌ای ثبت نشده</div>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+            <div class="dashboard-card" style="padding: 12px 8px;">
+                <div class="dc-icon" style="font-size: 1.5rem;">🎓</div>
+                <div class="dc-value" style="font-size: 1.4rem;">${toPersianNumber(totalExams)}</div>
+                <div class="dc-label" style="font-size: 0.75rem;">آزمون</div>
+            </div>
+            <div class="dashboard-card" style="padding: 12px 8px;">
+                <div class="dc-icon" style="font-size: 1.5rem;">👥</div>
+                <div class="dc-value" style="font-size: 1.4rem;">${toPersianNumber(totalResults)}</div>
+                <div class="dc-label" style="font-size: 0.75rem;">نمره ثبت‌شده</div>
+            </div>
+            <div class="dashboard-card" style="padding: 12px 8px;">
+                <div class="dc-icon" style="font-size: 1.5rem;">📊</div>
+                <div class="dc-value" style="font-size: 1.4rem; color: ${avgPercent >= 60 ? '#22c55e' : avgPercent >= 40 ? '#f59e0b' : '#ef4444'};">${toPersianNumber(avgPercent)}٪</div>
+                <div class="dc-label" style="font-size: 0.75rem;">میانگین کل</div>
+            </div>
+        </div>
+        ${bestStudentHtml}
+    `;
 }
 
 async function exportClassCSV() {
