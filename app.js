@@ -113,7 +113,8 @@ function applyEmojiRestriction(inputId) {
     }
 }
 
-function initApp() {
+// *** تغییر مهم: اضافه شدن کلمه async به ابتدای تابع ***
+async function initApp() {
     applyEmojiRestriction('classSymbol');
     applyEmojiRestriction('lessonSymbol');
     applyEmojiRestriction('groupSymbol');
@@ -137,19 +138,6 @@ function initApp() {
                     const item = window.allAssessmentItems.find(i => i.id == e.target.value);
                     if(item) renderScoreInput(item);
                 } else {
-                    document.getElementById('dynamic-score-section').style.display = 'none';
-                }
-            });
-        }
-    } catch (error) { console.error("خطا در اتصال رویدادها:", error); }
-    
-    loadAllData();
-    checkBackupReminder();
-    // بارگذاری داده‌های آزمون‌ها
-if (typeof loadExamsData === 'function') await loadExamsData();
-if (typeof renderExamsData === 'function') renderExamsData();
-}
-
 async function loadAllData() {
     try {
         const classData = await getDataById('classProfile', 1);
@@ -486,4 +474,17 @@ function showUpdateToast(newWorker) {
         if (newWorker) newWorker.postMessage({ action: 'skipWaiting' });
         setTimeout(() => window.location.reload(), 500);
     });
+}                    document.getElementById('dynamic-score-section').style.display = 'none';
+                }
+            });
+        }
+    } catch (error) { console.error("خطا در اتصال رویدادها:", error); }
+    
+    // *** تغییر مهم: اضافه شدن await به بارگذاری داده‌ها ***
+    await loadAllData();
+    checkBackupReminder();
+    
+    // بارگذاری داده‌های آزمون‌ها
+    if (typeof loadExamsData === 'function') await loadExamsData();
+    if (typeof renderExamsData === 'function') renderExamsData();
 }
