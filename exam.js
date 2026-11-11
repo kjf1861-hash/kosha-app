@@ -1,5 +1,5 @@
 // ==========================================
-// فایل exam.js — منطق کامل تب آزمون‌ها (فاز ۲)
+// فایل exam.js — منطق کامل تب آزمون‌ها (فاز ۲ و ۳)
 // ==========================================
 
 window.allExamsData = [];
@@ -7,6 +7,9 @@ window.allExamResultsData = [];
 
 // شمارنده برای شناسه‌های موقت سوالات
 let examQuestionCounter = 0;
+
+// شناسه آزمون در حال ثبت نمره
+let currentGradingExamId = null;
 
 async function loadExamsData() {
     try {
@@ -41,6 +44,15 @@ function renderExamsData() {
         const participantCount = results.length;
         const questionCount = exam.questions ? exam.questions.length : 0;
         
+        // محاسبه میانگین اگر نمره ثبت شده باشد
+        let avgHtml = '';
+        if (participantCount > 0) {
+            const avg = results.reduce((sum, r) => sum + r.score, 0) / participantCount;
+            avgHtml = `<span>📊 میانگین: <strong style="color:var(--primary);">${toPersianNumber(avg.toFixed(1))}</strong></span>`;
+        } else {
+            avgHtml = `<span style="color:#dc2626;">⚠️ نمره ثبت نشده</span>`;
+        }
+        
         html += `
             <div class="exam-list-item">
                 <div class="exam-list-header">
@@ -55,7 +67,11 @@ function renderExamsData() {
                     <span>❓ ${toPersianNumber(questionCount)} سوال</span>
                     <span>👥 ${toPersianNumber(participantCount)} شرکت‌کننده</span>
                 </div>
-                <div class="exam-list-actions">
+                <div class="exam-list-details" style="margin-top: 4px;">
+                    ${avgHtml}
+                </div>
+                <div class="exam-list-actions" style="flex-wrap: wrap;">
+                    <button class="btn btn-primary btn-sm" onclick="openExamGradingModal(${exam.id})" title="ثبت نمرات">📝 ثبت نمرات</button>
                     <button class="btn btn-secondary btn-sm" onclick="openExamEditorModal(${exam.id})" title="ویرایش آزمون">✏️ ویرایش</button>
                     <button class="btn btn-danger btn-sm" onclick="deleteExam(${exam.id})" title="حذف آزمون">🗑️ حذف</button>
                 </div>
@@ -79,7 +95,6 @@ async function openExamEditorModal(examId = null) {
         return;
     }
 
-    // پاکسازی فرم
     form.reset();
     questionsContainer.innerHTML = '';
     examQuestionCounter = 0;
@@ -91,7 +106,6 @@ async function openExamEditorModal(examId = null) {
         window.allSubjectsData.map(s => `<option value="${s.id}">${s.symbol || ''} ${s.name}</option>`).join('');
 
     if (examId) {
-        // حالت ویرایش
         const exam = await getDataById('exams', examId);
         if (!exam) { showToast('آزمون یافت نشد.', 'error'); return; }
         
@@ -102,20 +116,12 @@ async function openExamEditorModal(examId = null) {
         document.getElementById('examDate').value = exam.date;
         document.getElementById('examMaxScore').value = exam.maxScore;
         
-        // بارگذاری سوالات
         if (exam.questions && exam.questions.length > 0) {
             exam.questions.forEach(q => addExamQuestion(q));
         }
     } else {
-        // حالت ایجاد جدید
         titleEl.textContent = '➕ ساخت آزمون جدید';
-        
-        // اضافه کردن یک سوال پیش‌فرض
         addExamQuestion();
-        
-        // تنظیم تاریخ پیش‌فرض (امروز)
-        const today = new Date();
-        // (این بخش ساده است، در صورت نیاز می‌توان از تقویم شمسی استفاده کرد)
     }
 
     modal.classList.add('show');
@@ -185,7 +191,7 @@ function getQuestionTypeHtml(type, data = null) {
         options.forEach((opt, i) => {
             optionsHtml += `
                 <div class="exam-option-row">
-                    <input type="radio" name="correct_${Date.now()}" ${i === correctIndex ? 'checked' : ''} onchange="setCorrectOption(this)">
+                    <input type="radio" name="correct_${Date.now()}" ${i === correctIndex ? 'checked' : ''}>
                     <input type="text" class="exam-option-text" placeholder="گزینه ${toPersianNumber(i + 1)}" value="${opt}">
                     <button type="button" class="exam-option-delete" onclick="removeExamOption(this)" title="حذف گزینه">🗑️</button>
                 </div>
@@ -230,9 +236,6 @@ function getQuestionTypeHtml(type, data = null) {
     return '';
 }
 
-// ==========================================
-// 5. تغییر نوع سوال
-// ==========================================
 function changeQuestionType(selectEl) {
     const questionItem = selectEl.closest('.exam-question-item');
     const type = selectEl.value;
@@ -242,9 +245,6 @@ function changeQuestionType(selectEl) {
     }
 }
 
-// ==========================================
-// 6. مدیریت گزینه‌ها (برای چندگزینه‌ای)
-// ==========================================
 function addExamOption(btn) {
     const container = btn.closest('.exam-options-container');
     const optionCount = container.querySelectorAll('.exam-option-row').length;
@@ -252,7 +252,7 @@ function addExamOption(btn) {
     const newRow = document.createElement('div');
     newRow.className = 'exam-option-row';
     newRow.innerHTML = `
-        <input type="radio" name="correct_${Date.now()}" onchange="setCorrectOption(this)">
+        <input type="radio" name="correct_${Date.now()}">
         <input type="text" class="exam-option-text" placeholder="گزینه ${toPersianNumber(optionCount + 1)}">
         <button type="button" class="exam-option-delete" onclick="removeExamOption(this)" title="حذف گزینه">🗑️</button>
     `;
@@ -269,14 +269,6 @@ function removeExamOption(btn) {
     btn.closest('.exam-option-row').remove();
 }
 
-function setCorrectOption(radioEl) {
-    // این تابع فقط برای اطمینان از یکتا بودن radio در هر سوال است
-    // (در HTML به صورت خودکار مدیریت می‌شود)
-}
-
-// ==========================================
-// 7. حذف سوال
-// ==========================================
 function removeExamQuestion(btn) {
     const questionItem = btn.closest('.exam-question-item');
     if (!questionItem) return;
@@ -296,7 +288,7 @@ function updateQuestionNumbers() {
 }
 
 // ==========================================
-// 8. ذخیره آزمون
+// 5. ذخیره آزمون
 // ==========================================
 async function saveExam(event) {
     if (event) event.preventDefault();
@@ -307,13 +299,11 @@ async function saveExam(event) {
     const date = document.getElementById('examDate').value.trim();
     const maxScore = parseFloat(document.getElementById('examMaxScore').value);
     
-    // اعتبارسنجی
     if (!title) { showToast('عنوان آزمون را وارد کنید.', 'error'); return; }
     if (!subjectId || isNaN(subjectId)) { showToast('درس را انتخاب کنید.', 'error'); return; }
     if (!/^\d{4}\/\d{2}\/\d{2}$/.test(date)) { showToast('فرمت تاریخ نامعتبر است. مثلاً: 1405/08/15', 'error'); return; }
     if (isNaN(maxScore) || maxScore <= 0) { showToast('نمره کل معتبر وارد کنید.', 'error'); return; }
     
-    // جمع‌آوری سوالات
     const questionItems = document.querySelectorAll('#exam-questions-container .exam-question-item');
     if (questionItems.length === 0) { showToast('حداقل یک سوال اضافه کنید.', 'error'); return; }
     
@@ -379,14 +369,12 @@ async function saveExam(event) {
     
     if (hasError) return;
     
-    // بررسی نمره کل
     if (totalQuestionScores > maxScore) {
         if (!confirm(`مجموع نمرات سوالات (${toPersianNumber(totalQuestionScores)}) از نمره کل آزمون (${toPersianNumber(maxScore)}) بیشتر است. آیا مطمئن هستید؟`)) {
             return;
         }
     }
     
-    // ساخت آبجکت نهایی
     const examData = {
         title: title,
         subjectId: subjectId,
@@ -415,7 +403,7 @@ async function saveExam(event) {
 }
 
 // ==========================================
-// 9. حذف آزمون
+// 6. حذف آزمون
 // ==========================================
 async function deleteExam(examId) {
     if (!confirm('آیا از حذف این آزمون و تمام نتایج آن مطمئن هستید؟')) return;
@@ -423,7 +411,6 @@ async function deleteExam(examId) {
     try {
         await deleteData('exams', examId);
         
-        // حذف نتایج مرتبط
         const results = window.allExamResultsData.filter(r => r.examId === examId);
         for (const result of results) {
             await deleteData('examResults', result.id);
@@ -439,10 +426,205 @@ async function deleteExam(examId) {
 }
 
 // ==========================================
-// 10. اتصال رویداد submit فرم
+// 7. باز کردن مودال ثبت نمرات
+// ==========================================
+async function openExamGradingModal(examId) {
+    const modal = document.getElementById('exam-grading-modal');
+    if (!modal) { showToast('مودال ثبت نمرات یافت نشد.', 'error'); return; }
+    
+    const exam = await getDataById('exams', examId);
+    if (!exam) { showToast('آزمون یافت نشد.', 'error'); return; }
+    
+    currentGradingExamId = examId;
+    
+    // پر کردن اطلاعات آزمون
+    const sub = window.allSubjectsData.find(s => s.id === exam.subjectId);
+    document.getElementById('grading-exam-title').textContent = exam.title;
+    document.getElementById('grading-exam-subject').textContent = sub ? `${sub.symbol || ''} ${sub.name}` : 'بدون درس';
+    document.getElementById('grading-exam-date').textContent = toPersianNumber(exam.date);
+    document.getElementById('grading-exam-max').textContent = toPersianNumber(exam.maxScore);
+    
+    // گرفتن نمرات ثبت‌شده قبلی (اگر وجود دارد)
+    const existingResults = window.allExamResultsData.filter(r => r.examId === examId);
+    const scoresMap = {};
+    existingResults.forEach(r => { scoresMap[r.studentId] = r.score; });
+    
+    // ساخت لیست دانش‌آموزان
+    const container = document.getElementById('exam-grading-students-list');
+    if (!window.allStudentsData || window.allStudentsData.length === 0) {
+        container.innerHTML = '<p class="exam-grading-empty">هیچ دانش‌آموزی ثبت نشده است.</p>';
+    } else {
+        container.innerHTML = '';
+        window.allStudentsData.forEach((st, index) => {
+            const g = window.allGroupsData.find(x => x.id === st.groupId);
+            const groupBadge = g ? `<span class="exam-grading-student-group">${g.symbol} ${g.name}</span>` : '';
+            
+            const currentScore = scoresMap[st.id] !== undefined ? scoresMap[st.id] : '';
+            
+            container.innerHTML += `
+                <div class="exam-grading-row" data-student-id="${st.id}">
+                    <div class="exam-grading-student-info">
+                        <span class="exam-grading-student-rank">${toPersianNumber(index + 1)}.</span>
+                        <span class="exam-grading-student-name">${st.firstName} ${st.lastName}</span>
+                        ${groupBadge}
+                    </div>
+                    <div class="exam-grading-score-wrapper">
+                        <input type="number" 
+                               class="exam-grading-score-input ${currentScore !== '' ? 'has-value' : ''}" 
+                               data-student-id="${st.id}"
+                               min="0" 
+                               max="${exam.maxScore}" 
+                               step="0.25" 
+                               value="${currentScore}"
+                               placeholder="نمره"
+                               oninput="updateGradingStats()">
+                        <span class="exam-grading-score-max">از ${toPersianNumber(exam.maxScore)}</span>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    updateGradingStats();
+    modal.classList.add('show');
+}
+
+function closeExamGradingModal() {
+    const modal = document.getElementById('exam-grading-modal');
+    if (modal) modal.classList.remove('show');
+    currentGradingExamId = null;
+}
+
+// ==========================================
+// 8. محاسبه لحظه‌ای آمار
+// ==========================================
+function updateGradingStats() {
+    const inputs = document.querySelectorAll('.exam-grading-score-input');
+    const scores = [];
+    inputs.forEach(input => {
+        const val = parseFloat(input.value);
+        if (!isNaN(val) && val >= 0) {
+            scores.push(val);
+            input.classList.add('has-value');
+        } else {
+            input.classList.remove('has-value');
+        }
+    });
+    
+    const avgEl = document.getElementById('grading-stat-avg');
+    const maxEl = document.getElementById('grading-stat-max');
+    const minEl = document.getElementById('grading-stat-min');
+    
+    if (scores.length === 0) {
+        if (avgEl) avgEl.textContent = '-';
+        if (maxEl) maxEl.textContent = '-';
+        if (minEl) minEl.textContent = '-';
+        return;
+    }
+    
+    const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+    const max = Math.max(...scores);
+    const min = Math.min(...scores);
+    
+    if (avgEl) avgEl.textContent = toPersianNumber(avg.toFixed(1));
+    if (maxEl) maxEl.textContent = toPersianNumber(max);
+    if (minEl) minEl.textContent = toPersianNumber(min);
+}
+
+// ==========================================
+// 9. دکمه‌های عملیات سریع
+// ==========================================
+function setAllExamScores(value) {
+    const exam = window.allExamsData.find(e => e.id === currentGradingExamId);
+    if (!exam) return;
+    
+    const inputs = document.querySelectorAll('.exam-grading-score-input');
+    inputs.forEach(input => {
+        if (value === 'clear') {
+            input.value = '';
+        } else if (value === 'max') {
+            input.value = exam.maxScore;
+        } else {
+            input.value = value;
+        }
+    });
+    updateGradingStats();
+}
+
+// ==========================================
+// 10. ذخیره نمرات
+// ==========================================
+async function saveExamGrades() {
+    if (!currentGradingExamId) return;
+    
+    const exam = window.allExamsData.find(e => e.id === currentGradingExamId);
+    if (!exam) { showToast('آزمون یافت نشد.', 'error'); return; }
+    
+    const inputs = document.querySelectorAll('.exam-grading-score-input');
+    const newResults = [];
+    let hasError = false;
+    
+    inputs.forEach(input => {
+        const studentId = parseInt(input.getAttribute('data-student-id'));
+        const rawValue = input.value.trim();
+        
+        if (rawValue === '') {
+            // اگر خالی باشد، نمره‌ای ثبت نمی‌شود (می‌تواند غایب باشد)
+            return;
+        }
+        
+        const score = parseFloat(rawValue);
+        if (isNaN(score) || score < 0) {
+            showToast('نمرات وارد شده معتبر نیستند.', 'error');
+            hasError = true;
+            return;
+        }
+        
+        if (score > exam.maxScore) {
+            showToast(`نمره ${toPersianNumber(score)} برای یک دانش‌آموز از نمره کل (${toPersianNumber(exam.maxScore)}) بیشتر است.`, 'error');
+            hasError = true;
+            return;
+        }
+        
+        newResults.push({
+            examId: currentGradingExamId,
+            studentId: studentId,
+            score: score,
+            academicYear: window.activeAcademicYear
+        });
+    });
+    
+    if (hasError) return;
+    
+    try {
+        // حذف نتایج قبلی این آزمون
+        const oldResults = window.allExamResultsData.filter(r => r.examId === currentGradingExamId);
+        for (const r of oldResults) {
+            await deleteData('examResults', r.id);
+        }
+        
+        // ذخیره نتایج جدید
+        for (const r of newResults) {
+            r.id = Date.now() + Math.random();
+            await saveData('examResults', r);
+        }
+        
+        showToast(`نمرات ${toPersianNumber(newResults.length)} دانش‌آموز ذخیره شد!`, 'success');
+        closeExamGradingModal();
+        
+        // بارگذاری مجدد و رفرش لیست
+        await loadExamsData();
+        renderExamsData();
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در ذخیره نمرات.', 'error');
+    }
+}
+
+// ==========================================
+// 11. اتصال رویداد submit فرم آزمون
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    // صبر می‌کنیم تا DOM آماده شود
     setTimeout(() => {
         const examForm = document.getElementById('exam-editor-form');
         if (examForm && !examForm.dataset.listenerAttached) {
