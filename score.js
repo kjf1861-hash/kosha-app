@@ -26,6 +26,25 @@ function getStudentsHash() {
     return window.allStudentsData.map(s => s.id).join(',') + '|' + window.allGroupsData.map(g => g.id).join(',');
 }
 
+// *** توابع جدید برای ذخیره و بازیابی وضعیت تقویم ***
+function saveScoreCalendarState(type) {
+    try {
+        localStorage.setItem(`kosha-score-cal-${type}`, JSON.stringify(scoreCalendarState[type]));
+    } catch (e) { console.log('خطا در ذخیره تقویم', e); }
+}
+
+function loadScoreCalendarState(type, startYear) {
+    try {
+        const saved = localStorage.getItem(`kosha-score-cal-${type}`);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed && parsed.year >= startYear) {
+                scoreCalendarState[type] = parsed;
+            }
+        }
+    } catch (e) { console.log('خطا در بازیابی تقویم', e); }
+}
+
 function initScoreEvents() {
     const recordItem = document.getElementById('recordItem');
     if (recordItem && !recordItem.dataset.listenerAttached) {
@@ -73,7 +92,6 @@ function renderScoreData() {
         }
     }
 
-    // *** رفع باگ ۱۷: اطمینان از بارگذاری داده‌ها قبل از رندر تقویم ***
     if (window.allRecordsData && Array.isArray(window.allRecordsData)) {
         initScoreCalendars();
     }
@@ -119,11 +137,25 @@ function initScoreCalendars() {
     const startYear = parseInt(startYearStr);
     
     ['record', 'quran', 'special', 'handwriting'].forEach(type => {
-        // *** رفع باگ ۱۶: استفاده از مقادیر داینامیک و حفظ ماه جاری ***
+        // بازیابی وضعیت از localStorage
+        loadScoreCalendarState(type, startYear);
+        
+        // اگر هنوز تنظیم نشده بود (اولین بار)
         if (!scoreCalendarState[type].year || scoreCalendarState[type].year < startYear) {
             scoreCalendarState[type].year = startYear;
             if (!scoreCalendarState[type].month) scoreCalendarState[type].month = 7;
         }
+        
+        // بازتاب دادن به فیلدهای مخفی و نمایش‌دهنده‌ها
+        if (scoreCalendarState[type].selectedDate) {
+            const displayEl = document.getElementById(`${type}DateDisplay`);
+            if (displayEl) displayEl.textContent = toPersianNumber(scoreCalendarState[type].selectedDate);
+            
+            const hiddenInputId = type === 'record' ? 'recordDate' : `${type}DateHidden`;
+            const hiddenInput = document.getElementById(hiddenInputId);
+            if (hiddenInput) hiddenInput.value = scoreCalendarState[type].selectedDate;
+        }
+        
         renderScoreCalendar(type);
     });
 }
@@ -162,6 +194,7 @@ function changeScoreCalendarMonth(type, delta) {
         return;
     }
 
+    saveScoreCalendarState(type); // *** ذخیره وضعیت ***
     renderScoreCalendar(type);
 }
 
@@ -229,11 +262,13 @@ function renderScoreCalendar(type) {
 
 function updateScoreCalendarSelect(type, field, value) {
     scoreCalendarState[type][field] = parseInt(value);
+    saveScoreCalendarState(type); // *** ذخیره وضعیت ***
     renderScoreCalendar(type);
 }
 
 function selectScoreCalendarDay(type, dateStr) {
     scoreCalendarState[type].selectedDate = dateStr;
+    saveScoreCalendarState(type); // *** ذخیره وضعیت ***
     
     const displayEl = document.getElementById(`${type}DateDisplay`);
     if (displayEl) displayEl.textContent = toPersianNumber(dateStr);
@@ -243,7 +278,6 @@ function selectScoreCalendarDay(type, dateStr) {
     if (hiddenInput) hiddenInput.value = dateStr;
 
     renderScoreCalendar(type);
-
     renderScoreDayArchive(type, dateStr);
     
     const accordion = document.getElementById(`${type}-date-accordion`);
@@ -295,6 +329,8 @@ function renderScoreDayArchive(type, dateStr) {
 
 function resetScoreCalendar(type) {
     scoreCalendarState[type].selectedDate = '';
+    saveScoreCalendarState(type); // *** ذخیره وضعیت ***
+    
     const displayEl = document.getElementById(`${type}DateDisplay`);
     if (displayEl) displayEl.textContent = 'انتخاب نشده';
     
@@ -363,7 +399,6 @@ function toggleGroupSelection(checkbox, groupId, checkboxClass = 'student-checkb
     });
 }
 
-// *** رفع باگ ۱۱: پشتیبانی از همه کلاس‌های چک‌باکس ***
 function toggleAllStudents(checked, checkboxClass = 'student-checkbox') { 
     document.querySelectorAll(`.${checkboxClass}`).forEach(cb => cb.checked = checked); 
     const section = checkboxClass === 'student-checkbox' ? null : document.getElementById(`${checkboxClass.replace('-student-checkbox', '')}-students-container`);
@@ -651,7 +686,7 @@ async function saveQuranRecord() {
         showToast('پویش قرآن با موفقیت ثبت شد!', 'success');
         const form = document.getElementById('quran-form');
         if (form) form.reset();
-        resetScoreCalendar('quran');
+        // resetScoreCalendar('quran'); // دیگر روز را پاک نمی‌کنیم تا کاربر راحت باشد
         loadAllData();
     } catch (e) { console.error(e); showToast('خطا در ثبت پویش قرآن.', 'error'); }
 }
@@ -686,7 +721,7 @@ async function saveSpecialReward() {
         showToast('تشویق ویژه با موفقیت ثبت شد!', 'success');
         const form = document.getElementById('special-reward-form');
         if (form) form.reset();
-        resetScoreCalendar('special');
+        // resetScoreCalendar('special');
         loadAllData();
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق ویژه.', 'error'); }
 }
@@ -714,7 +749,7 @@ async function saveHandwritingReward() {
         showToast('تشویق خوش‌خط‌نویسی با موفقیت ثبت شد!', 'success');
         const form = document.getElementById('handwriting-reward-form');
         if (form) form.reset();
-        resetScoreCalendar('handwriting');
+        // resetScoreCalendar('handwriting');
         loadAllData();
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق خوش‌خط‌نویسی.', 'error'); }
 }
@@ -748,8 +783,6 @@ function loadAssessmentRecords() {
     }
 
     const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
-    
-    // *** رفع باگ ۲۰: مدیریت بهتر محدوده صفحه ***
     if (currentPage.records > totalPages) currentPage.records = totalPages;
     if (currentPage.records < 1) currentPage.records = 1;
     
