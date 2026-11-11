@@ -57,6 +57,7 @@ function getJalaliMonthName(monthIndex) {
 // ==========================================
 
 // دریافت مناسبت‌های یک ماه خاص از calendar-data.js
+// *** اصلاح‌شده: حالا با ساختار آبجکت (کلید = روز) کار می‌کند ***
 function getMonthEvents(year, month) {
     if (typeof CALENDAR_EVENTS === 'undefined') {
         console.warn('CALENDAR_EVENTS تعریف نشده است. فایل calendar-data.js را بررسی کنید.');
@@ -69,18 +70,8 @@ function getMonthEvents(year, month) {
     const monthStr = month.toString();
     if (!CALENDAR_EVENTS[yearStr][monthStr]) return {};
     
-    // تبدیل آرایه به آبجکت با کلید روز
-    const eventsMap = {};
-    CALENDAR_EVENTS[yearStr][monthStr].forEach((eventText, dayIndex) => {
-        // چون ایندکس آرایه از ۰ شروع می‌شود، روز = index + 1
-        // اما ممکن است بعضی روزها مناسبت نداشته باشند و با "" پر شده باشند
-        if (eventText && eventText.trim() !== '') {
-            const day = dayIndex + 1;
-            eventsMap[day] = eventText;
-        }
-    });
-    
-    return eventsMap;
+    // ساختار جدید: آبجکت با کلید روز
+    return CALENDAR_EVENTS[yearStr][monthStr];
 }
 
 // دریافت مناسبت‌های یک روز خاص
