@@ -1,6 +1,6 @@
 // ==========================================
 // فایل back-button.js — مدیریت دکمه بازگشت (Back) در PWA
-// نسخه v4 — راه‌حل قطعی و بدون تداخل با لینک‌های هش
+// نسخه v5 — اصلاح منطق هشدار و خروج
 // ==========================================
 
 (function() {
@@ -98,13 +98,12 @@
         } catch (e) { console.warn('render error:', e); }
     }
     
-    // تابعی برای ثبت یک گام جدید در تاریخچه مرورگر (بدون تغییر آدرس)
     function pushGuard() {
         try {
             window.history.pushState(
                 { koshaGuard: true, page: getActivePageId(), ts: Date.now() },
                 '',
-                window.location.href // آدرس فعلی (حتی اگر # داشته باشد) را حفظ می‌کند
+                window.location.href
             );
         } catch (e) { console.warn('pushState failed:', e); }
     }
@@ -113,7 +112,6 @@
         if (isInitialized) return;
         isInitialized = true;
         
-        // مرحله ۱: ذخیره وضعیت اولیه
         try {
             window.history.replaceState(
                 { koshaGuard: true, page: 'page-class', ts: Date.now() },
@@ -122,12 +120,10 @@
             );
         } catch (e) { console.warn('replaceState failed:', e); }
         
-        // مرحله ۲: ثبت گام نگهبان
         pushGuard();
         
         console.log('✅ Back handler initialized.');
         
-        // مرحله ۳: شنونده رویداد popstate (مخصوص دکمه Back گوشی/مرورگر)
         window.addEventListener('popstate', function(event) {
             console.log('🔙 popstate fired.');
             handleBackAction();
@@ -155,13 +151,15 @@
             return;
         }
         
-        // ۳. در تب کلاس هستیم (پیام خروج)
+        // ۳. در تب کلاس هستیم (مدیریت خروج)
         backPressCount++;
         
         if (backPressCount === 1) {
+            // نمایش پیام هشدار
             if (typeof showToast === 'function') {
                 showToast('برای خروج از برنامه، دوباره دکمه بازگشت را بزنید.', 'info');
             }
+            // ثبت گام جدید تا کاربر در اپ بماند
             pushGuard();
             
             if (backPressTimer) clearTimeout(backPressTimer);
@@ -174,8 +172,9 @@
             backPressCount = 0;
             if (backPressTimer) { clearTimeout(backPressTimer); backPressTimer = null; }
             
+            // چون دو بار pushState زدیم، باید دو گام به عقب برویم
             try {
-                window.history.go(-2); // رد شدن از هر دو گام ثبت شده
+                window.history.go(-2);
             } catch (e) {
                 window.history.back();
             }
