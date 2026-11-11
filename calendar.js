@@ -1,5 +1,5 @@
 // ==========================================
-// فایل calendar.js — منطق مشترک تقویم شمسی
+// فایل calendar.js — منطق مشترک تقویم شمسی (نسخه اصلاح‌شده)
 // ==========================================
 
 // ==========================================
@@ -57,7 +57,6 @@ function getJalaliMonthName(monthIndex) {
 // ==========================================
 
 // دریافت مناسبت‌های یک ماه خاص از calendar-data.js
-// *** اصلاح‌شده: حالا با ساختار آبجکت (کلید = روز) کار می‌کند ***
 function getMonthEvents(year, month) {
     if (typeof CALENDAR_EVENTS === 'undefined') {
         console.warn('CALENDAR_EVENTS تعریف نشده است. فایل calendar-data.js را بررسی کنید.');
@@ -111,11 +110,11 @@ function initFullCalendar() {
                 fullCalendarSelectedDay = parsed.day || null;
             } else {
                 fullCalendarYear = startYear;
-                fullCalendarMonth = 7;
+                fullCalendarMonth = 7; // پیش‌فرض مهر
             }
         } else {
             fullCalendarYear = startYear;
-            fullCalendarMonth = 7;
+            fullCalendarMonth = 7; // پیش‌فرض مهر
         }
     } catch (e) {
         fullCalendarYear = startYear;
@@ -289,4 +288,29 @@ function fullCalendarNextMonth() {
     }
     saveFullCalendarState();
     renderFullCalendar();
+}
+
+// ==========================================
+// 5. توابع جدید برای استفاده در سایر تب‌ها (جلسات و امتیازات)
+// ==========================================
+
+// دریافت مناسبت‌های یک روز خاص برای نمایش در سایر تب‌ها
+function getEventsForDateString(dateStr) {
+    if (!dateStr || !/^\d{4}\/\d{2}\/\d{2}$/.test(dateStr)) return null;
+    const parts = dateStr.split('/');
+    const year = parseInt(parts[0]);
+    const month = parseInt(parts[1]);
+    const day = parseInt(parts[2]);
+    return getDayEvents(year, month, day);
+}
+
+// بررسی اینکه آیا یک تاریخ مناسبت دارد یا نه (برای استفاده در تقویم‌های دیگر)
+function hasEventOnDateString(dateStr) {
+    return getEventsForDateString(dateStr) !== null;
+}
+
+// دریافت متن مناسبت برای نمایش در title تقویم‌های دیگر
+function getEventTitleForDateString(dateStr) {
+    const event = getEventsForDateString(dateStr);
+    return event || '';
 }
