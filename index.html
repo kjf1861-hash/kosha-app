@@ -422,19 +422,21 @@
             </div>
 
             <!-- تب ۷: آزمون‌ها -->
-<div id="page-exams" class="page-section">
-    <div class="page-header-title">🎓 آزمون‌ها</div>
-    
-    <div class="card">
-        <button type="button" class="btn btn-primary btn-block" onclick="openExamEditorModal()">➕ افزودن آزمون جدید</button>
-    </div>
+            <div id="page-exams" class="page-section">
+                <div class="page-header-title">🎓 آزمون‌ها</div>
+                
+                <div class="card">
+                    <button type="button" class="btn btn-primary btn-block" onclick="openExamEditorModal()">➕ افزودن آزمون جدید</button>
+                </div>
 
-    <div class="card">
-        <h2 class="card-title">📋 لیست آزمون‌ها</h2>
-        <div id="exams-list-container" class="list-group"></div>
-    </div>
-</div>
-        <!-- منوی پایین (۷ تب - فقط ایموجی) -->
+                <div class="card">
+                    <h2 class="card-title">📋 لیست آزمون‌ها</h2>
+                    <div id="exams-list-container" class="list-group"></div>
+                </div>
+            </div>
+        </div> 
+    </div> 
+    <!-- منوی پایین (۷ تب - فقط ایموجی) -->
     <nav class="bottom-nav" style="display: none;">
         <a href="#" class="nav-item active" onclick="switchPage('page-class', this)" title="کلاس"><span class="icon">🏫</span></a>
         <a href="#" class="nav-item" onclick="switchPage('page-students', this)" title="دانش‌آموزان"><span class="icon">👦</span></a>
@@ -644,6 +646,7 @@
     <script src="session.js"></script>
     <script src="score.js"></script>
     <script src="reset.js"></script>
+    <script src="exam.js"></script>
     
     <script>
         function initTheme() {
@@ -681,7 +684,7 @@
         window.addEventListener('load', async () => {
             try { await initDB(); } catch (error) { console.warn('دیتابیس محلی غیرفعال است.'); }
             try {
-                if (typeof initApp === 'function') initApp();
+                if (typeof initApp === 'function') await initApp();
             } catch (error) {
                 console.error("Init Error:", error);
             }
@@ -711,31 +714,28 @@
             if (pageId === 'page-group' && typeof renderGroupData === 'function') renderGroupData();
             if (pageId === 'page-session' && typeof renderSessionData === 'function') renderSessionData();
             if (pageId === 'page-score' && typeof renderScoreData === 'function') renderScoreData();
+            if (pageId === 'page-exams' && typeof renderExamsData === 'function') renderExamsData(); // این خط مهم است
         }
     </script>
 
-    <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) - ارتقا به v79 -->
-<script>
-    if (localStorage.getItem('kosha-version') !== 'v79') {
-        localStorage.setItem('kosha-version', 'v79');
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for(let registration of registrations) {
-                    registration.unregister();
-                }
-                caches.keys().then(function(names) {
-                    for (let name of names) caches.delete(name);
-                    window.location.reload(true);
+    <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) - ارتقا به v80 -->
+    <script>
+        if (localStorage.getItem('kosha-version') !== 'v80') {
+            localStorage.setItem('kosha-version', 'v80');
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) {
+                        registration.unregister();
+                    }
+                    caches.keys().then(function(names) {
+                        for (let name of names) caches.delete(name);
+                        window.location.reload(true);
+                    });
                 });
-            });
-        } else {
-            window.location.reload(true);
+            } else {
+                window.location.reload(true);
+            }
         }
-    }
-</script>
-
-    <script src="score.js"></script>
-<script src="exam.js"></script> <!-- این خط اضافه شود -->
-<script src="reset.js"></script>
+    </script>
 </body>
 </html>
