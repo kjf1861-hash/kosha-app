@@ -52,6 +52,6 @@ function renderExamsData() {
 }
 
 function openExamEditorModal(examId = null) {
-    // این بخش در فاز ۲ پیاده‌سازی خواهد شد
-    showToast('این بخش در فازهای بعدی تکمیل می‌شود.', 'info');
+    const modal = document.getElementById('exam-editor-modal');
+    if (modal) modal.classList.add('show');
 }
