@@ -679,6 +679,49 @@
         </div>
     </div>
 
+<!-- ===== مودال جدید: ثبت نمرات آزمون ===== -->
+<div id="exam-grading-modal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header" id="exam-grading-title">📝 ثبت نمرات آزمون</div>
+        
+        <!-- اطلاعات آزمون -->
+        <div id="exam-grading-info" style="background: var(--input-bg); padding: 12px 15px; border-radius: var(--radius-sm); margin-bottom: 15px; border: 1px dashed var(--border-color);">
+            <div style="display:flex; justify-content:space-between; font-size: 0.9rem; margin-bottom: 4px;">
+                <span><strong>آزمون:</strong> <span id="grading-exam-title">-</span></span>
+                <span><strong>درس:</strong> <span id="grading-exam-subject">-</span></span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size: 0.85rem; color: var(--text-muted);">
+                <span>📅 <span id="grading-exam-date">-</span></span>
+                <span>🎯 نمره کل: <span id="grading-exam-max">-</span></span>
+            </div>
+        </div>
+
+        <!-- دکمه‌های عملیات سریع -->
+        <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="setAllExamScores(0)">همه صفر</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="setAllExamScores('max')">همه نمره کل</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="setAllExamScores('clear')">پاک کردن همه</button>
+        </div>
+
+        <!-- لیست دانش‌آموزان با فیلد نمره -->
+        <div id="exam-grading-students-list" class="student-checkbox-list" style="max-height: 50vh; overflow-y: auto;">
+            <!-- توسط JS پر می‌شود -->
+        </div>
+
+        <!-- آمار سریع -->
+        <div id="exam-grading-stats" style="margin-top: 12px; padding: 10px 15px; background: var(--primary-light); border-radius: var(--radius-sm); font-size: 0.85rem; display: flex; justify-content: space-around;">
+            <span>📊 میانگین: <strong id="grading-stat-avg">-</strong></span>
+            <span>🔺 بالاترین: <strong id="grading-stat-max">-</strong></span>
+            <span>🔻 پایین‌ترین: <strong id="grading-stat-min">-</strong></span>
+        </div>
+
+        <div class="modal-footer" style="margin-top: 20px; display: flex; gap: 10px;">
+            <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeExamGradingModal()">انصراف</button>
+            <button type="button" class="btn btn-primary" style="flex: 2;" onclick="saveExamGrades()">💾 ذخیره نمرات</button>
+        </div>
+    </div>
+</div>
+
     <!-- ===== اسکریپت‌ها ===== -->
     <script src="db.js"></script>
     <script src="app.js"></script>
