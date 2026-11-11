@@ -718,9 +718,9 @@
         }
     </script>
 
-    <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) - ارتقا به v80 -->
+    <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) - ارتقا به v81 -->
     <script>
-        if (localStorage.getItem('kosha-version') !== 'v80') {
+        if (localStorage.getItem('kosha-version') !== 'v81') {
             localStorage.setItem('kosha-version', 'v80');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(function(registrations) {
