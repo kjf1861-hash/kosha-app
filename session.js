@@ -1,5 +1,5 @@
 // ==========================================
-// فایل session.js — منطق تب جلسه
+// فایل session.js — منطق تب جلسه (نسخه اصلاح‌شده مرحله ۲)
 // ==========================================
 
 let currentSessionId = null;
@@ -438,6 +438,7 @@ function getFirstDayOfWeek(year, month) {
     return daysPassed % 7;
 }
 
+// *** تغییر: initCalendar اصلاح شد تا مناسبت را نمایش دهد ***
 function initCalendar() {
     const yearSelect = document.getElementById('calendarYearSelect');
     const monthSelect = document.getElementById('calendarMonthSelect');
@@ -449,10 +450,8 @@ function initCalendar() {
     const endYear = parseInt(endYearStr);
     const allowedYears = [startYear, endYear];
 
-    // *** بازیابی وضعیت تقویم از localStorage ***
     loadSessionCalendarState(startYear, endYear);
 
-    // اگر هنوز تنظیم نشده بود (اولین بار)
     if (!currentCalendarYear || currentCalendarYear < startYear || currentCalendarYear > endYear) {
         currentCalendarYear = startYear;
         currentCalendarMonth = 7;
@@ -473,14 +472,8 @@ function initCalendar() {
 
     renderCalendarGrid();
     
-    // *** اگر روزی از قبل انتخاب شده بود، اطلاعات آن را نمایش بده ***
     if (selectedSessionDate && selectedSessionDayOfWeek) {
-        // ما فقط گرید را رندر می‌کنیم. برای نمایش دکمه‌ها، از تابع selectCalendarDay استفاده می‌کنیم
-        // اما چون در init هستیم، ممکن است المان‌ها هنوز آماده نباشند. پس کمی تاخیر می‌دهیم.
         setTimeout(() => {
-            const day = parseInt(selectedSessionDate.split('/')[2]);
-            const firstDay = getFirstDayOfWeek(currentCalendarYear, currentCalendarMonth);
-            // شبیه‌سازی انتخاب
             const hiddenDate = document.getElementById('sessionDateHidden');
             if (hiddenDate) hiddenDate.value = selectedSessionDate;
             
@@ -490,10 +483,20 @@ function initCalendar() {
             const isHoliday = officialHolidays[currentCalendarYear]?.includes(selectedSessionDate) || false;
             const isActiveDay = (window.scheduleActiveDays || []).includes(selectedSessionDayOfWeek);
             
+            // *** جدید: دریافت مناسبت ***
+            const eventText = (typeof getFormattedEventsForDate === 'function') 
+                ? getFormattedEventsForDate(selectedSessionDate) 
+                : '';
+            
             if (detectedDisplay && actionArea) {
                 detectedDisplay.style.display = 'block';
+                let displayHtml = `📅 تاریخ انتخابی: <strong>${toPersianNumber(selectedSessionDate)}</strong> (${selectedSessionDayOfWeek})`;
+                if (eventText) {
+                    displayHtml += `<br><span style="color: #7c3aed; font-size: 0.9rem; font-weight: normal;">${eventText}</span>`;
+                }
+                
                 if (existingSession) {
-                    detectedDisplay.innerHTML = `📅 تاریخ انتخابی: <strong>${toPersianNumber(selectedSessionDate)}</strong> (${selectedSessionDayOfWeek})`;
+                    detectedDisplay.innerHTML = displayHtml;
                     actionArea.innerHTML = `
                         <div style="text-align:center; margin-bottom:10px; color:#16a34a; font-weight:bold;">✅ جلسه ثبت شده است.</div>
                         <div style="display:flex; gap:5px;">
@@ -504,13 +507,13 @@ function initCalendar() {
                     `;
                 } else {
                     if (isHoliday) {
-                        detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong> (تعطیل رسمی)<br><span style="font-size:0.85rem; color:#dc2626;">⚠️ امکان ثبت جلسه در تعطیلات رسمی وجود ندارد.</span>`;
+                        detectedDisplay.innerHTML = displayHtml + `<br><span style="font-size:0.85rem; color:#dc2626;">⚠️ امکان ثبت جلسه در تعطیلات رسمی وجود ندارد.</span>`;
                         actionArea.innerHTML = '';
                     } else if (!isActiveDay) {
-                        detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#dc2626;">⚠️ این روز در تنظیمات کلاس به عنوان روز فعال انتخاب نشده است.</span>`;
+                        detectedDisplay.innerHTML = displayHtml + `<br><span style="font-size:0.85rem; color:#dc2626;">⚠️ این روز در تنظیمات کلاس به عنوان روز فعال انتخاب نشده است.</span>`;
                         actionArea.innerHTML = '';
                     } else {
-                        detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong>`;
+                        detectedDisplay.innerHTML = displayHtml;
                         actionArea.innerHTML = `<button type="button" class="btn btn-primary btn-block" onclick="createNewSession()">➕ ثبت جلسه</button>`;
                     }
                 }
@@ -559,7 +562,6 @@ function renderCalendarGrid() {
         grid.innerHTML += `<div class="${classes}" ${clickHandler}>${toPersianNumber(day)}</div>`;
     }
 }
-
 function showOutsideRangeError() {
     showToast('این تاریخ خارج از بازه سال تحصیلی جاری است.', 'error');
 }
@@ -602,7 +604,6 @@ function changeCalendarMonth(delta) {
         return;
     }
 
-    // *** ذخیره وضعیت تقویم جلسات ***
     saveSessionCalendarState();
 
     document.getElementById('calendarYearSelect').value = currentCalendarYear;
@@ -613,11 +614,11 @@ function changeCalendarMonth(delta) {
 
 function changeCalendarYear() {
     currentCalendarYear = parseInt(document.getElementById('calendarYearSelect').value);
-    // *** ذخیره وضعیت تقویم جلسات ***
     saveSessionCalendarState();
     renderCalendarGrid();
 }
 
+// *** تغییر اصلی: نمایش مناسبت در باکس تاریخ انتخاب شده ***
 function selectCalendarDay(day, dateStr) {
     selectedSessionDate = dateStr;
     const hiddenDate = document.getElementById('sessionDateHidden');
@@ -628,7 +629,6 @@ function selectCalendarDay(day, dateStr) {
     const dayNames = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
     selectedSessionDayOfWeek = dayNames[dayOfWeekIndex];
 
-    // *** ذخیره وضعیت تقویم جلسات ***
     saveSessionCalendarState();
 
     const detectedDisplay = document.getElementById('detectedDayDisplay');
@@ -639,11 +639,22 @@ function selectCalendarDay(day, dateStr) {
     
     const isActiveDay = (window.scheduleActiveDays || []).includes(selectedSessionDayOfWeek);
 
+    // *** جدید: دریافت مناسبت ***
+    const eventText = (typeof getFormattedEventsForDate === 'function') 
+        ? getFormattedEventsForDate(dateStr) 
+        : '';
+
     if (detectedDisplay && actionArea) {
         detectedDisplay.style.display = 'block';
         
+        // ساخت متن پایه با احتساب مناسبت
+        let baseDisplayHtml = `📅 تاریخ انتخابی: <strong>${toPersianNumber(selectedSessionDate)}</strong> (${selectedSessionDayOfWeek})`;
+        if (eventText) {
+            baseDisplayHtml += `<br><span style="color: #7c3aed; font-size: 0.9rem; font-weight: normal;">${eventText}</span>`;
+        }
+        
         if (existingSession) {
-            detectedDisplay.innerHTML = `📅 تاریخ انتخابی: <strong>${toPersianNumber(selectedSessionDate)}</strong> (${selectedSessionDayOfWeek})`;
+            detectedDisplay.innerHTML = baseDisplayHtml;
             actionArea.innerHTML = `
                 <div style="text-align:center; margin-bottom:10px; color:#16a34a; font-weight:bold;">✅ جلسه ثبت شده است.</div>
                 <div style="display:flex; gap:5px;">
@@ -654,19 +665,19 @@ function selectCalendarDay(day, dateStr) {
             `;
         } else {
             if (isHoliday) {
-                 detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong> (تعطیل رسمی)<br><span style="font-size:0.85rem; color:#dc2626;">⚠️ امکان ثبت جلسه در تعطیلات رسمی وجود ندارد.</span>`;
+                 detectedDisplay.innerHTML = baseDisplayHtml + `<br><span style="font-size:0.85rem; color:#dc2626;">⚠️ امکان ثبت جلسه در تعطیلات رسمی وجود ندارد.</span>`;
                  actionArea.innerHTML = '';
             } else if (!isActiveDay) {
-                 detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#dc2626;">⚠️ این روز در تنظیمات کلاس به عنوان روز فعال انتخاب نشده است.</span>`;
+                 detectedDisplay.innerHTML = baseDisplayHtml + `<br><span style="font-size:0.85rem; color:#dc2626;">⚠️ این روز در تنظیمات کلاس به عنوان روز فعال انتخاب نشده است.</span>`;
                  actionArea.innerHTML = '';
             } else {
                 const hasSchedule = window.allWeeklyScheduleData.some(s => s.day === selectedSessionDayOfWeek && s.periods && s.periods.some(p => p !== null && p !== undefined));
                 
                 if (hasSchedule) {
-                    detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#16a34a;">✅ برنامه هفتگی برای این روز تعریف شده است.</span>`;
+                    detectedDisplay.innerHTML = baseDisplayHtml + `<br><span style="font-size:0.85rem; color:#16a34a;">✅ برنامه هفتگی برای این روز تعریف شده است.</span>`;
                     actionArea.innerHTML = `<button type="button" class="btn btn-primary btn-block" onclick="createNewSession()">➕ ثبت جلسه</button>`;
                 } else {
-                    detectedDisplay.innerHTML = `📅 روز انتخابی: <strong>${selectedSessionDayOfWeek}</strong><br><span style="font-size:0.85rem; color:#dc2626;">⚠️ برنامه‌ای برای این روز تعریف نشده است.</span>`;
+                    detectedDisplay.innerHTML = baseDisplayHtml + `<br><span style="font-size:0.85rem; color:#dc2626;">⚠️ برنامه‌ای برای این روز تعریف نشده است.</span>`;
                     actionArea.innerHTML = `<button type="button" class="btn btn-primary btn-block" onclick="createNewSession()">➕ ثبت جلسه</button>`;
                 }
             }
@@ -717,11 +728,6 @@ async function createNewSession() {
         academicYear: window.activeAcademicYear
     });
     showToast('جلسه با موفقیت ثبت شد!', 'success');
-    
-    // *** فقط روز انتخاب‌شده را حفظ می‌کنیم تا کاربر راحت باشد ***
-    // selectedSessionDate = ""; 
-    // selectedSessionDayOfWeek = "";
-    // saveSessionCalendarState();
     
     loadAllData();
 }
