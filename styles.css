@@ -1572,3 +1572,197 @@ details.group-accordion[open] summary::after {
     color: var(--text-muted);
     font-size: 0.95rem;
 }
+/* =========================================
+   استایل‌های اختصاصی تب تقویم جامع (Calendar Tab)
+   ========================================= */
+
+/* شبکه تقویم */
+.full-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-top: 10px;
+}
+
+/* خانه‌های روز در تقویم جامع */
+.full-calendar-day {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 45px;
+    border-radius: var(--radius-sm);
+    background: var(--input-bg);
+    border: 1px solid transparent;
+    font-size: 0.95rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    position: relative;
+    color: var(--text-main);
+}
+
+.full-calendar-day:hover {
+    background: var(--primary-light);
+    transform: scale(1.05);
+}
+
+.full-calendar-day.empty {
+    background: transparent;
+    cursor: default;
+    border: none;
+    pointer-events: none;
+}
+
+.full-calendar-day.friday {
+    color: #ef4444;
+}
+
+.full-calendar-day.has-event {
+    border: 1px dashed var(--primary);
+    background: rgba(74, 144, 226, 0.05);
+}
+
+.full-calendar-day.selected {
+    background: var(--primary);
+    color: white !important;
+    border: 1px solid var(--primary);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
+    transform: scale(1.05);
+}
+
+/* نقطه‌ی مناسبت روی روز */
+.full-calendar-day .event-dot {
+    width: 6px;
+    height: 6px;
+    background: #ef4444;
+    border-radius: 50%;
+    position: absolute;
+    bottom: 4px;
+}
+
+.full-calendar-day.selected .event-dot {
+    background: white;
+}
+
+/* لیست مناسبت‌ها */
+.events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.event-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.event-item:hover {
+    border-color: var(--primary);
+    background: var(--input-bg);
+}
+
+.event-item.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+}
+
+.event-day-badge {
+    background: var(--primary);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.event-text {
+    flex: 1;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-main);
+}
+
+/* هایلایت روز انتخاب شده */
+.event-highlight {
+    background: linear-gradient(135deg, var(--primary-light) 0%, rgba(74, 144, 226, 0.1) 100%);
+    border: 2px solid var(--primary);
+    border-radius: var(--radius-md);
+    padding: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: fadeIn 0.3s ease;
+}
+
+.event-highlight-day {
+    background: var(--primary);
+    color: white;
+    padding: 8px 15px;
+    border-radius: var(--radius-sm);
+    font-weight: bold;
+    white-space: nowrap;
+    font-size: 0.95rem;
+}
+
+.event-highlight-text {
+    font-size: 0.95rem;
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* استایل دکمه‌های ماه قبل/بعد در هدر */
+.calendar-title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.calendar-title select {
+    padding: 8px 15px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-main);
+    font-size: 1rem;
+    font-weight: bold;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.calendar-title select:hover {
+    border-color: var(--primary);
+}
+
+/* حالت دارک */
+[data-theme="dark"] .full-calendar-day.has-event {
+    background: rgba(74, 144, 226, 0.15);
+}
+
+[data-theme="dark"] .event-highlight {
+    background: linear-gradient(135deg, rgba(74, 144, 226, 0.15) 0%, rgba(74, 144, 226, 0.05) 100%);
+}
