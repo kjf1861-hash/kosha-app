@@ -21,15 +21,25 @@ async function saveClassProfile(e) {
     if (isNaN(periodsCount) || periodsCount < 1) periodsCount = 5;
     if (periodsCount > 6) periodsCount = 6;
 
+    const classNameEl = document.getElementById('className');
+    const classSymbolEl = document.getElementById('classSymbol');
+    const classMottoEl = document.getElementById('classMotto');
+    const classGradeEl = document.getElementById('classGrade');
+    const teacherNameEl = document.getElementById('teacherName');
+    const schoolNameEl = document.getElementById('schoolName');
+    const academicYearEl = document.getElementById('academicYear');
+
+    if (!classNameEl) return; // اطمینان از وجود فرم
+
     const data = {
         id: 1,
-        name: document.getElementById('className').value,
-        symbol: document.getElementById('classSymbol').value,
-        motto: document.getElementById('classMotto').value,
-        grade: document.getElementById('classGrade').value,
-        teacherName: document.getElementById('teacherName').value,
-        schoolName: document.getElementById('schoolName').value,
-        academicYear: document.getElementById('academicYear').value,
+        name: classNameEl.value,
+        symbol: classSymbolEl ? classSymbolEl.value : '',
+        motto: classMottoEl ? classMottoEl.value : '',
+        grade: classGradeEl ? classGradeEl.value : '',
+        teacherName: teacherNameEl ? teacherNameEl.value : '',
+        schoolName: schoolNameEl ? schoolNameEl.value : '',
+        academicYear: academicYearEl ? academicYearEl.value : window.activeAcademicYear,
         scheduleActiveDays: selectedDays,
         schedulePeriodsCount: periodsCount
     };
@@ -40,11 +50,13 @@ async function saveClassProfile(e) {
     window.schedulePeriodsCount = periodsCount;
 
     showToast('مشخصات کلاس ذخیره شد!', 'success');
-    document.getElementById('header-subtitle').textContent = data.name;
+    const headerSubtitle = document.getElementById('header-subtitle');
+    if (headerSubtitle) headerSubtitle.textContent = data.name;
     
+    // *** رفع باگ ۱۵: ابتدا مودال را می‌بندیم، سپس داده‌ها را لود می‌کنیم ***
     if(typeof closeSettingsModal === 'function') closeSettingsModal();
     
-    loadAllData();
+    await loadAllData();
 }
 
 function populateScheduleDaysCheckboxes() {
@@ -67,10 +79,15 @@ function populateScheduleDaysCheckboxes() {
 }
 
 function renderDashboardData() {
-    document.getElementById('stat-students').textContent = toPersianNumber(window.allStudentsData.length);
-    document.getElementById('stat-subjects').textContent = toPersianNumber(window.allSubjectsData.length);
-    document.getElementById('stat-sessions').textContent = toPersianNumber(window.allSessionsData.length);
-    document.getElementById('stat-records').textContent = toPersianNumber(window.allRecordsData.length);
+    const statStudents = document.getElementById('stat-students');
+    const statSubjects = document.getElementById('stat-subjects');
+    const statSessions = document.getElementById('stat-sessions');
+    const statRecords = document.getElementById('stat-records');
+
+    if (statStudents) statStudents.textContent = toPersianNumber(window.allStudentsData.length);
+    if (statSubjects) statSubjects.textContent = toPersianNumber(window.allSubjectsData.length);
+    if (statSessions) statSessions.textContent = toPersianNumber(window.allSessionsData.length);
+    if (statRecords) statRecords.textContent = toPersianNumber(window.allRecordsData.length);
 
     const studentScores = window.allStudentsData.map(st => {
         let total = 0;
@@ -442,7 +459,8 @@ function printClassReport() {
     const content = document.getElementById('report-card-content');
     if(!content) return;
     
-    const classData = document.getElementById('header-subtitle').textContent;
+    const headerSubtitle = document.getElementById('header-subtitle');
+    const classData = headerSubtitle ? headerSubtitle.textContent : '';
     
     let html = `
         <div class="rc-header">
@@ -486,7 +504,8 @@ function printClassReport() {
     html += `</tbody></table>`;
     content.innerHTML = html;
     
-    document.getElementById('report-card-modal').classList.add('show');
+    const modal = document.getElementById('report-card-modal');
+    if (modal) modal.classList.add('show');
     setTimeout(() => {
         window.print();
     }, 100);
