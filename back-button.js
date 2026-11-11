@@ -1,11 +1,14 @@
 // ==========================================
 // فایل back-button.js — مدیریت دکمه بازگشت (Back) در PWA
+// نسخه v2 — راه‌حل قطعی با Guard Layer
 // ==========================================
 
 (function() {
     'use strict';
     
-    // لیست مودال‌ها و توابع بستن آنها
+    // ==========================================
+    // 1. لیست مودال‌ها
+    // ==========================================
     const MODAL_IDS = [
         'settings-modal', 'preview-modal', 'edit-record-modal', 'item-management-modal',
         'report-card-modal', 'attendance-details-modal', 'lesson-details-modal',
@@ -14,11 +17,16 @@
         'exam-editor-modal', 'exam-grading-modal'
     ];
     
-    // شمارنده برای دکمه back
+    // ==========================================
+    // 2. متغیرهای داخلی
+    // ==========================================
     let backPressCount = 0;
     let backPressTimer = null;
+    let isInitialized = false;
     
-    // بررسی اینکه آیا مودالی باز است
+    // ==========================================
+    // 3. توابع کمکی
+    // ==========================================
     function getOpenModal() {
         for (let i = 0; i < MODAL_IDS.length; i++) {
             const modal = document.getElementById(MODAL_IDS[i]);
@@ -29,48 +37,59 @@
         return null;
     }
     
-    // بستن مودال
     function closeModal(modalId) {
         const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.classList.remove('show');
-            return true;
+        if (!modal) return false;
+        
+        // تلاش برای استفاده از تابع بستن اختصاصی اگر وجود دارد
+        const closeFnMap = {
+            'settings-modal': 'closeSettingsModal',
+            'edit-record-modal': 'closeEditModal',
+            'edit-group-modal': 'closeEditGroupModal',
+            'edit-student-modal': 'closeEditStudentModal',
+            'edit-lesson-modal': 'closeEditLessonModal',
+            'group-details-modal': 'closeGroupDetails',
+            'lesson-details-modal': 'closeLessonDetails',
+            'student-details-modal': 'closeStudentDetails',
+            'session-details-modal': 'closeSessionDetails',
+            'item-management-modal': 'closeItemManagementModal',
+            'exam-editor-modal': 'closeExamEditorModal',
+            'exam-grading-modal': 'closeExamGradingModal',
+            'preview-modal': 'closePreviewModal',
+            'report-card-modal': 'closeReportCard',
+            'attendance-details-modal': 'closeAttendanceDetails'
+        };
+        
+        const fnName = closeFnMap[modalId];
+        if (fnName && typeof window[fnName] === 'function') {
+            try { window[fnName](); return true; } catch (e) { /* ignore */ }
         }
-        return false;
+        
+        // Fallback: حذف کلاس show
+        modal.classList.remove('show');
+        return true;
     }
     
-    // تعیین تب فعال فعلی
     function getActivePageId() {
         const activePage = document.querySelector('.page-section.active');
         return activePage ? activePage.id : 'page-class';
     }
     
-    // رفتن به یک تب خاص
     function goToPage(pageId) {
         const page = document.getElementById(pageId);
         if (!page) return;
         
-        // تغییر کلاس active
         document.querySelectorAll('.page-section').forEach(function(p) {
             p.classList.remove('active');
         });
         page.classList.add('active');
         
-        // به‌روزرسانی نویگیشن
         const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(function(nav) {
-            nav.classList.remove('active');
-        });
+        navItems.forEach(function(nav) { nav.classList.remove('active'); });
         
         const pageToNavIndex = {
-            'page-class': 0,
-            'page-students': 1,
-            'page-group': 2,
-            'page-lesson': 3,
-            'page-calendar': 4,
-            'page-session': 5,
-            'page-score': 6,
-            'page-exams': 7
+            'page-class': 0, 'page-students': 1, 'page-group': 2, 'page-lesson': 3,
+            'page-calendar': 4, 'page-session': 5, 'page-score': 6, 'page-exams': 7
         };
         
         const navIndex = pageToNavIndex[pageId];
@@ -78,79 +97,126 @@
             navItems[navIndex].classList.add('active');
         }
         
-        // رندر مجدد محتوا
-        if (pageId === 'page-class' && typeof renderDashboardData === 'function') renderDashboardData();
-        if (pageId === 'page-students' && typeof renderStudentsList === 'function') renderStudentsList();
-        if (pageId === 'page-lesson' && typeof renderLessonData === 'function') renderLessonData();
-        if (pageId === 'page-calendar' && typeof initFullCalendar === 'function') initFullCalendar();
-        if (pageId === 'page-group' && typeof renderGroupData === 'function') renderGroupData();
-        if (pageId === 'page-session' && typeof renderSessionData === 'function') renderSessionData();
-        if (pageId === 'page-score' && typeof renderScoreData === 'function') renderScoreData();
-        if (pageId === 'page-exams' && typeof renderExamsData === 'function') renderExamsData();
+        // رندر مجدد
+        try {
+            if (pageId === 'page-class' && typeof renderDashboardData === 'function') renderDashboardData();
+            if (pageId === 'page-students' && typeof renderStudentsList === 'function') renderStudentsList();
+            if (pageId === 'page-lesson' && typeof renderLessonData === 'function') renderLessonData();
+            if (pageId === 'page-calendar' && typeof initFullCalendar === 'function') initFullCalendar();
+            if (pageId === 'page-group' && typeof renderGroupData === 'function') renderGroupData();
+            if (pageId === 'page-session' && typeof renderSessionData === 'function') renderSessionData();
+            if (pageId === 'page-score' && typeof renderScoreData === 'function') renderScoreData();
+            if (pageId === 'page-exams' && typeof renderExamsData === 'function') renderExamsData();
+        } catch (e) { console.warn('render error:', e); }
     }
     
-    // مقداردهی اولیه
+    // ==========================================
+    // 4. Push Guard State
+    // ==========================================
+    function pushGuard() {
+        try {
+            window.history.pushState(
+                { koshaGuard: true, koshaPage: getActivePageId(), ts: Date.now() },
+                '',
+                window.location.href
+            );
+        } catch (e) { console.warn('pushState failed:', e); }
+    }
+    
+    // ==========================================
+    // 5. راه‌اندازی اولیه
+    // ==========================================
     function initBackButtonHandler() {
-        // فقط یک بار state اولیه را اضافه کن
-        if (window.history.state === null || window.history.state.koshaPage === undefined) {
-            window.history.replaceState({ koshaPage: 'page-class' }, '', window.location.href);
+        if (isInitialized) return;
+        isInitialized = true;
+        
+        // مرحله ۱: مقداردهی state اولیه
+        try {
+            window.history.replaceState(
+                { koshaGuard: true, koshaPage: 'page-class', ts: Date.now() },
+                '',
+                window.location.href
+            );
+        } catch (e) { console.warn('replaceState failed:', e); }
+        
+        // مرحله ۲: اضافه کردن یک entry نگهبان بالای آن
+        pushGuard();
+        
+        console.log('✅ Back handler initialized. history.length =', window.history.length);
+        
+        // مرحله ۳: گوش دادن به popstate
+        window.addEventListener('popstate', handlePopState);
+    }
+    
+    // ==========================================
+    // 6. هندلر اصلی popstate
+    // ==========================================
+    function handlePopState(event) {
+        console.log('🔙 popstate fired. state =', event.state);
+        
+        // ==========================================
+        // مورد ۱: مودال باز است → آن را ببند
+        // ==========================================
+        const openModal = getOpenModal();
+        if (openModal) {
+            closeModal(openModal);
+            pushGuard();
+            backPressCount = 0;
+            if (backPressTimer) { clearTimeout(backPressTimer); backPressTimer = null; }
+            return;
         }
         
-        // گوش دادن به رویداد popstate
-        window.addEventListener('popstate', function(event) {
-            console.log('🔙 دکمه back زده شد. State:', event.state);
-            
-            // ۱. بررسی مودال باز
-            const openModal = getOpenModal();
-            if (openModal) {
-                closeModal(openModal);
-                // state را دوباره push کن تا از اپ خارج نشویم
-                window.history.pushState({ koshaPage: getActivePageId() }, '', window.location.href);
-                backPressCount = 0;
-                return;
-            }
-            
-            // ۲. بررسی تب
-            const activePage = getActivePageId();
-            if (activePage && activePage !== 'page-class') {
-                goToPage('page-class');
-                window.history.pushState({ koshaPage: 'page-class' }, '', window.location.href);
-                backPressCount = 0;
-                return;
-            }
-            
-            // ۳. در تب کلاس هستیم و مودالی باز نیست
-            backPressCount++;
-            
-            if (backPressCount === 1) {
-                // اولین back: هشدار
-                if (typeof showToast === 'function') {
-                    showToast('برای خروج از برنامه، دوباره دکمه بازگشت را بزنید.', 'info');
-                }
-                // state را دوباره push کن
-                window.history.pushState({ koshaPage: 'page-class' }, '', window.location.href);
-                
-                // ریست شمارنده بعد از ۳ ثانیه
-                if (backPressTimer) clearTimeout(backPressTimer);
-                backPressTimer = setTimeout(function() {
-                    backPressCount = 0;
-                }, 3000);
-            } else {
-                // دومین back: اجازه بده از اپ خارج شود
-                backPressCount = 0;
-                if (backPressTimer) clearTimeout(backPressTimer);
-                window.history.back();
-            }
-        });
+        // ==========================================
+        // مورد ۲: در تب غیر از کلاس → به کلاس برگرد
+        // ==========================================
+        const activePage = getActivePageId();
+        if (activePage && activePage !== 'page-class') {
+            goToPage('page-class');
+            pushGuard();
+            backPressCount = 0;
+            if (backPressTimer) { clearTimeout(backPressTimer); backPressTimer = null; }
+            return;
+        }
         
-        console.log('✅ مدیریت دکمه Back فعال شد.');
+        // ==========================================
+        // مورد ۳: در تب کلاس بدون مودال → پیام خروج
+        // ==========================================
+        backPressCount++;
+        
+        if (backPressCount === 1) {
+            if (typeof showToast === 'function') {
+                showToast('برای خروج از برنامه، دوباره دکمه بازگشت را بزنید.', 'info');
+            }
+            pushGuard();
+            
+            if (backPressTimer) clearTimeout(backPressTimer);
+            backPressTimer = setTimeout(function() {
+                backPressCount = 0;
+                backPressTimer = null;
+            }, 3000);
+        } else {
+            // خروج واقعی: از entry های اپ بگذر
+            backPressCount = 0;
+            if (backPressTimer) { clearTimeout(backPressTimer); backPressTimer = null; }
+            
+            // از هر دو entry نگهبان بگذر
+            try {
+                window.history.go(-2);
+            } catch (e) {
+                window.history.back();
+                setTimeout(() => window.history.back(), 50);
+            }
+        }
     }
     
-    // اجرا وقتی صفحه کاملاً لود شد
+    // ==========================================
+    // 7. راه‌اندازی
+    // ==========================================
+    // چون این فایل با defer لود می‌شود، پس از parse کامل DOM اجرا می‌شود
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initBackButtonHandler);
     } else {
-        // اگر صفحه قبلاً لود شده
-        setTimeout(initBackButtonHandler, 300);
+        initBackButtonHandler();
     }
+    
 })();
