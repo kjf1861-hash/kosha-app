@@ -1,8 +1,8 @@
 // ==========================================
-// فایل sw.js — سرویس‌ورکر بهینه‌شده (نسخه v95)
+// فایل sw.js — سرویس‌ورکر بهینه‌شده (نسخه v96)
 // ==========================================
 
-const CACHE_NAME = 'kosha-cache-v95';
+const CACHE_NAME = 'kosha-cache-v96';
 const ASSETS_TO_CACHE = [
     './', 
     './index.html', 
@@ -20,7 +20,8 @@ const ASSETS_TO_CACHE = [
     './reset.js',
     './exam.js',
     './calendar-data.js',
-    './calendar.js'
+    './calendar.js',
+    './back-button.js'
 ];
 
 // فایل‌هایی که همیشه باید از شبکه به‌روز شوند (حساس به تغییر)
@@ -29,7 +30,8 @@ const NETWORK_FIRST_ASSETS = [
     './app.js',
     './exam.js',
     './score.js',
-    './session.js'
+    './session.js',
+    './back-button.js'
 ];
 
 // ==========================================
