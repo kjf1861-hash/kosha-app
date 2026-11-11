@@ -177,11 +177,9 @@ async function initApp() {
         if (typeof renderExamsData === 'function') renderExamsData();
     } catch (error) { console.error("خطا در بارگذاری آزمون‌ها:", error); }
 }
-
 // *** جدا کردن بارگذاری داده از رندر UI ***
 async function loadAllData() {
     try {
-        // 1. بارگذاری داده‌ها از دیتابیس
         const classData = await getDataById('classProfile', 1);
         if (classData) {
             if (classData.academicYear) window.activeAcademicYear = classData.academicYear;
@@ -224,7 +222,6 @@ async function loadAllData() {
         assessmentItems = await getAllData('assessmentItems');
         window.allAssessmentItems = assessmentItems;
 
-        // 2. رندر UI
         renderUI();
 
         if (migrationNeeded) showToast('اطلاعات قبلی به سال تحصیلی جدید منتقل شد.', 'info');
@@ -565,3 +562,143 @@ function showUpdateToast(newWorker) {
         setTimeout(() => window.location.reload(), 500);
     });
 }
+
+// ==========================================
+// *** توابع جدید: مدیریت دکمه Back ***
+// ==========================================
+
+// لیست مودال‌های باز (برای بستن با دکمه back)
+const MODAL_IDS = [
+    'settings-modal',
+    'preview-modal',
+    'edit-record-modal',
+    'item-management-modal',
+    'report-card-modal',
+    'attendance-details-modal',
+    'lesson-details-modal',
+    'group-details-modal',
+    'edit-group-modal',
+    'edit-student-modal',
+    'edit-lesson-modal',
+    'session-details-modal',
+    'student-details-modal',
+    'exam-editor-modal',
+    'exam-grading-modal'
+];
+
+// توابع بستن مودال‌ها (برای فراخوانی در popstate)
+const MODAL_CLOSE_FUNCTIONS = {
+    'settings-modal': () => { if (typeof closeSettingsModal === 'function') closeSettingsModal(); },
+    'preview-modal': () => { if (typeof closePreviewModal === 'function') closePreviewModal(); },
+    'edit-record-modal': () => { if (typeof closeEditModal === 'function') closeEditModal(); },
+    'item-management-modal': () => { if (typeof closeItemManagementModal === 'function') closeItemManagementModal(); },
+    'report-card-modal': () => { const m = document.getElementById('report-card-modal'); if (m) m.classList.remove('show'); },
+    'attendance-details-modal': () => { const m = document.getElementById('attendance-details-modal'); if (m) m.classList.remove('show'); },
+    'lesson-details-modal': () => { if (typeof closeLessonDetails === 'function') closeLessonDetails(); },
+    'group-details-modal': () => { if (typeof closeGroupDetails === 'function') closeGroupDetails(); },
+    'edit-group-modal': () => { if (typeof closeEditGroupModal === 'function') closeEditGroupModal(); },
+    'edit-student-modal': () => { if (typeof closeEditStudentModal === 'function') closeEditStudentModal(); },
+    'edit-lesson-modal': () => { if (typeof closeEditLessonModal === 'function') closeEditLessonModal(); },
+    'session-details-modal': () => { if (typeof closeSessionDetails === 'function') closeSessionDetails(); },
+    'student-details-modal': () => { if (typeof closeStudentDetails === 'function') closeStudentDetails(); },
+    'exam-editor-modal': () => { if (typeof closeExamEditorModal === 'function') closeExamEditorModal(); },
+    'exam-grading-modal': () => { if (typeof closeExamGradingModal === 'function') closeExamGradingModal(); }
+};
+
+// بررسی اینکه آیا مودالی باز است
+function getOpenModal() {
+    for (const id of MODAL_IDS) {
+        const modal = document.getElementById(id);
+        if (modal && modal.classList.contains('show')) {
+            return id;
+        }
+    }
+    return null;
+}
+
+// تعیین تب فعال فعلی
+function getActivePageId() {
+    const activePage = document.querySelector('.page-section.active');
+    return activePage ? activePage.id : 'page-class';
+}
+
+// رفتن به یک تب خاص
+function goToPage(pageId) {
+    const page = document.getElementById(pageId);
+    if (!page) return;
+    
+    document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+    page.classList.add('active');
+    
+    // به‌روزرسانی نویگیشن
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(nav => nav.classList.remove('active'));
+    
+    // پیدا کردن nav مناسب
+    const pageToNavIndex = {
+        'page-class': 0,
+        'page-students': 1,
+        'page-group': 2,
+        'page-lesson': 3,
+        'page-calendar': 4,
+        'page-session': 5,
+        'page-score': 6,
+        'page-exams': 7
+    };
+    
+    const navIndex = pageToNavIndex[pageId];
+    if (navIndex !== undefined && navItems[navIndex]) {
+        navItems[navIndex].classList.add('active');
+    }
+    
+    // رندر مجدد محتوای تب
+    if (pageId === 'page-class' && typeof renderDashboardData === 'function') renderDashboardData();
+    if (pageId === 'page-students' && typeof renderStudentsList === 'function') renderStudentsList();
+    if (pageId === 'page-lesson' && typeof renderLessonData === 'function') renderLessonData();
+    if (pageId === 'page-calendar' && typeof initFullCalendar === 'function') initFullCalendar();
+    if (pageId === 'page-group' && typeof renderGroupData === 'function') renderGroupData();
+    if (pageId === 'page-session' && typeof renderSessionData === 'function') renderSessionData();
+    if (pageId === 'page-score' && typeof renderScoreData === 'function') renderScoreData();
+    if (pageId === 'page-exams' && typeof renderExamsData === 'function') renderExamsData();
+}
+
+// مقداردهی اولیه history برای مدیریت دکمه back
+function initBackButtonHandler() {
+    // اضافه کردن یک state اولیه به history
+    if (window.history.state === null || window.history.state.page === undefined) {
+        window.history.replaceState({ page: 'page-class', modal: null }, '', window.location.href);
+    }
+    
+    // گوش دادن به رویداد popstate (وقتی کاربر دکمه back را می‌زند)
+    window.addEventListener('popstate', function(event) {
+        const state = event.state;
+        
+        // ۱. اگر مودالی باز است، آن را ببند
+        const openModal = getOpenModal();
+        if (openModal) {
+            const closeFn = MODAL_CLOSE_FUNCTIONS[openModal];
+            if (closeFn) closeFn();
+            // دوباره state را push کن تا از اپ خارج نشویم
+            window.history.pushState({ page: getActivePageId(), modal: null }, '', window.location.href);
+            return;
+        }
+        
+        // ۲. اگر در تبی غیر از «کلاس» هستیم، به تب «کلاس» برگرد
+        const activePage = getActivePageId();
+        if (activePage && activePage !== 'page-class') {
+            goToPage('page-class');
+            window.history.pushState({ page: 'page-class', modal: null }, '', window.location.href);
+            return;
+        }
+        
+        // ۳. اگر در تب کلاس و مودالی باز نبود، اجازه بده از اپ خارج شود
+        // (یعنی هیچ کاری نکن)
+    });
+}
+
+// فراخوانی مقداردهی اولیه هنگام بارگذاری
+window.addEventListener('load', function() {
+    setTimeout(() => {
+        initBackButtonHandler();
+    }, 500);
+});
