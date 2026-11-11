@@ -718,10 +718,18 @@
         }
     </script>
 
-    <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) - ارتقا به v81 -->
-    <script>
-        if (localStorage.getItem('kosha-version') !== 'v81') {
-            localStorage.setItem('kosha-version', 'v80');
+ <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) - اصلاح شده -->
+<script>
+    (function() {
+        const APP_VERSION = 'v82'; // تغییر به v82
+        const storedVersion = localStorage.getItem('kosha-version');
+        
+        if (storedVersion !== APP_VERSION) {
+            console.log('🔄 در حال به‌روزرسانی کش و سرویس‌ورکر...');
+            
+            // ابتدا نسخه را ذخیره می‌کنیم تا در رفرش بعدی دوباره وارد این شرط نشویم
+            localStorage.setItem('kosha-version', APP_VERSION);
+            
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(function(registrations) {
                     for(let registration of registrations) {
@@ -729,13 +737,20 @@
                     }
                     caches.keys().then(function(names) {
                         for (let name of names) caches.delete(name);
-                        window.location.reload(true);
+                        
+                        // تاخیر برای اطمینان از پاک شدن کامل
+                        setTimeout(() => {
+                            window.location.reload(true);
+                        }, 500);
                     });
                 });
             } else {
-                window.location.reload(true);
+                setTimeout(() => {
+                    window.location.reload(true);
+                }, 500);
             }
         }
-    </script>
+    })();
+</script>
 </body>
 </html>
