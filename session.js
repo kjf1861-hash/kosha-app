@@ -7,8 +7,7 @@ let currentSessionDay = null;
 let currentSessionAttendanceState = {};
 let currentAttReportFilter = 'class';
 
-// متغیر حالت برنامه هفتگی
-let currentScheduleMode = 'view'; // 'view' or 'edit'
+let currentScheduleMode = 'view';
 
 const jalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
 const leapYears = [1408];
@@ -251,7 +250,6 @@ function exportScheduleCSV() {
         const { matrix, maxPeriodToShow } = getScheduleDataMatrix(); 
         if (matrix.length === 0) { showToast('برنامه‌ای برای خروجی وجود ندارد.', 'error'); return; }
 
-        // استفاده از کاما (,) برای سازگاری با Google Sheets
         let csvContent = '"روز / زنگ"';
         for (let i = 1; i <= maxPeriodToShow; i++) {
             csvContent += `,"زنگ ${i}"`;
@@ -263,7 +261,6 @@ function exportScheduleCSV() {
             csvContent += rowData + "\r\n";
         });
 
-        // *** راه‌حل قطعی: UTF-8 با BOM و پسوند CSV ***
         const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' }); 
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); 
@@ -417,7 +414,8 @@ function initCalendar() {
     const monthSelect = document.getElementById('calendarMonthSelect');
     if (!yearSelect || !monthSelect) return;
 
-    const [startYearStr, endYearStr] = window.activeAcademicYear.split('-');
+    const ay = window.activeAcademicYear || '1405-1406';
+    const [startYearStr, endYearStr] = ay.split('-');
     const startYear = parseInt(startYearStr);
     const endYear = parseInt(endYearStr);
     const allowedYears = [startYear, endYear];
@@ -458,7 +456,8 @@ function renderCalendarGrid() {
     const firstDay = getFirstDayOfWeek(currentCalendarYear, currentCalendarMonth);
     const daysInMonth = getDaysInMonth(currentCalendarYear, currentCalendarMonth);
     
-    const [startYear, endYear] = window.activeAcademicYear.split('-');
+    const ay = window.activeAcademicYear || '1405-1406';
+    const [startYear, endYear] = ay.split('-');
     const startBound = `${startYear}/07/01`;
     const endBound = `${endYear}/06/31`;
     const dayNames = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
@@ -495,7 +494,8 @@ function showOutsideRangeError() {
 }
 
 function changeCalendarMonth(delta) {
-    const [startYearStr, endYearStr] = window.activeAcademicYear.split('-');
+    const ay = window.activeAcademicYear || '1405-1406';
+    const [startYearStr, endYearStr] = ay.split('-');
     const startYear = parseInt(startYearStr);
     const endYear = parseInt(endYearStr);
 
@@ -548,7 +548,8 @@ function changeCalendarYear() {
 
 function selectCalendarDay(day, dateStr) {
     selectedSessionDate = dateStr;
-    document.getElementById('sessionDateHidden').value = dateStr;
+    const hiddenDate = document.getElementById('sessionDateHidden');
+    if (hiddenDate) hiddenDate.value = dateStr;
     
     const firstDay = getFirstDayOfWeek(currentCalendarYear, currentCalendarMonth);
     const dayOfWeekIndex = (firstDay + day - 1) % 7;
@@ -644,9 +645,12 @@ async function createNewSession() {
     
     selectedSessionDate = "";
     selectedSessionDayOfWeek = "";
-    document.getElementById('sessionDateHidden').value = "";
-    document.getElementById('detectedDayDisplay').style.display = 'none';
-    document.getElementById('sessionActionArea').innerHTML = '';
+    const hiddenDate = document.getElementById('sessionDateHidden');
+    if (hiddenDate) hiddenDate.value = "";
+    const detectedDisplay = document.getElementById('detectedDayDisplay');
+    if (detectedDisplay) detectedDisplay.style.display = 'none';
+    const actionArea = document.getElementById('sessionActionArea');
+    if (actionArea) actionArea.innerHTML = '';
     
     loadAllData();
 }
@@ -670,21 +674,43 @@ async function editSessionDate(sessionId, currentDate) {
 async function deleteSession(sessionId) {
     if (!confirm('آیا از حذف این جلسه و تمام حضور و غیاب‌های آن مطمئن هستید؟')) return;
 
-    const sessionToDelete = window.allSessionsData.find(s => s.id === sessionId);
-    const allAtt = await getAllData('attendance');
-    const sessionAtt = allAtt.filter(a => a.sessionId === sessionId);
-    for (const att of sessionAtt) await deleteData('attendance', att.id);
+    try {
+        // *** رفع باگ ۹: حذف مستقیم از دیتابیس و به‌روزرسانی state بدون نیاز به loadAllData کامل ***
+        const sessionToDelete = window.allSessionsData.find(s => s.id === sessionId);
+        
+        // حذف حضور و غیاب‌ها
+        const allAtt = await getAllData('attendance');
+        const sessionAtt = allAtt.filter(a => a.sessionId === sessionId);
+        for (const att of sessionAtt) {
+            await deleteData('attendance', att.id);
+        }
 
-    await deleteData('sessions', sessionId);
-    showToast('جلسه و سوابق آن حذف شد.', 'success');
-    
-    if (selectedSessionDate === sessionToDelete?.date) {
-        selectedSessionDate = "";
-        document.getElementById('sessionActionArea').innerHTML = '';
-        document.getElementById('detectedDayDisplay').style.display = 'none';
+        // حذف جلسه
+        await deleteData('sessions', sessionId);
+        
+        // به‌روزرسانی state
+        window.allSessionsData = window.allSessionsData.filter(s => s.id !== sessionId);
+        const deletedAttIds = sessionAtt.map(a => a.id);
+        window.allAttendanceData = window.allAttendanceData.filter(a => !deletedAttIds.includes(a.id));
+
+        showToast('جلسه و سوابق آن حذف شد.', 'success');
+        
+        if (selectedSessionDate === sessionToDelete?.date) {
+            selectedSessionDate = "";
+            const actionArea = document.getElementById('sessionActionArea');
+            if (actionArea) actionArea.innerHTML = '';
+            const detectedDisplay = document.getElementById('detectedDayDisplay');
+            if (detectedDisplay) detectedDisplay.style.display = 'none';
+        }
+        
+        // رفرش بخش‌های مربوطه
+        renderCalendarGrid();
+        generateAttendanceReports();
+        if (typeof renderDashboardData === 'function') renderDashboardData();
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در حذف جلسه!', 'error');
     }
-    
-    loadAllData();
 }
 
 async function resetAllSessions() {
@@ -708,8 +734,10 @@ async function resetAllSessions() {
         
         showToast('تمام جلسات سال جاری با موفقیت حذف شدند.', 'success');
         selectedSessionDate = "";
-        document.getElementById('sessionActionArea').innerHTML = '';
-        document.getElementById('detectedDayDisplay').style.display = 'none';
+        const actionArea = document.getElementById('sessionActionArea');
+        if (actionArea) actionArea.innerHTML = '';
+        const detectedDisplay = document.getElementById('detectedDayDisplay');
+        if (detectedDisplay) detectedDisplay.style.display = 'none';
         loadAllData();
     } catch (e) {
         console.error(e);
@@ -728,15 +756,18 @@ async function openSessionDetails(sessionId) {
     currentSessionDay = session.dayOfWeek;
     currentSessionAttendanceState = {};
 
-    document.getElementById('session-details-title').textContent = `📅 حضور و غیاب - ${toPersianNumber(session.date)} (${session.dayOfWeek})`;
-    document.getElementById('session-details-content').innerHTML = '<p style="text-align:center;">در حال بارگذاری...</p>';
-    document.getElementById('session-details-modal').classList.add('show');
+    const titleEl = document.getElementById('session-details-title');
+    if (titleEl) titleEl.textContent = `📅 حضور و غیاب - ${toPersianNumber(session.date)} (${session.dayOfWeek})`;
+    const contentEl = document.getElementById('session-details-content');
+    if (contentEl) contentEl.innerHTML = '<p style="text-align:center;">در حال بارگذاری...</p>';
+    const modal = document.getElementById('session-details-modal');
+    if (modal) modal.classList.add('show');
 
     const schedules = await getAllData('weeklySchedule');
     const schedule = schedules.find(s => s.day === session.dayOfWeek);
     
     if (!schedule || !schedule.periods || !schedule.periods.some(p => p !== null && p !== undefined)) {
-        document.getElementById('session-details-content').innerHTML = '<p style="text-align:center; color:red;">برنامه‌ای برای این روز تعریف نشده است.</p>';
+        if (contentEl) contentEl.innerHTML = '<p style="text-align:center; color:red;">برنامه‌ای برای این روز تعریف نشده است.</p>';
         return;
     }
 
@@ -758,6 +789,7 @@ async function openSessionDetails(sessionId) {
 
 function renderSessionDetails(schedule) {
     const container = document.getElementById('session-details-content');
+    if (!container) return;
     container.innerHTML = '';
 
     schedule.periods.forEach((subId, index) => {
@@ -842,8 +874,15 @@ async function saveAllSessionAttendance() {
         for (const rec of existing) await deleteData('attendance', rec.id);
         
         await saveBulkData('attendance', recordsToSave);
+        
+        // به‌روزرسانی state
+        window.allAttendanceData = window.allAttendanceData.filter(a => a.sessionId !== currentSessionId);
+        const savedAtt = await getAllData('attendance');
+        window.allAttendanceData = savedAtt.filter(a => window.allSessionsData.some(s => s.id === a.sessionId));
+        
         showToast('حضور و غیاب کل جلسه ذخیره شد!', 'success');
-        loadAllData();
+        generateAttendanceReports();
+        if (typeof renderDashboardData === 'function') renderDashboardData();
     } catch (e) {
         console.error(e);
         showToast('خطا در ذخیره حضور و غیاب!', 'error');
@@ -851,7 +890,8 @@ async function saveAllSessionAttendance() {
 }
 
 function closeSessionDetails() {
-    document.getElementById('session-details-modal').classList.remove('show');
+    const modal = document.getElementById('session-details-modal');
+    if (modal) modal.classList.remove('show');
     currentSessionId = null;
     currentSessionDay = null;
     currentSessionAttendanceState = {};
@@ -927,7 +967,6 @@ async function exportSessionCSV() {
             csvContent += `${i + 1},"${st.firstName}","${st.lastName}",${p},${a},${l}\r\n`;
         });
 
-        // *** راه‌حل استاندارد: UTF-8 با BOM و پسوند CSV ***
         const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); 
