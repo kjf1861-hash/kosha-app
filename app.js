@@ -18,6 +18,17 @@ let currentStudentView = 'flat';
 let currentPage = { students: 1, records: 1, reports: 1 };
 const itemsPerPage = 40;
 
+// *** مدیریت خطای سراسری ***
+window.onerror = function(msg, url, line, col, error) {
+    console.error('خطای سراسری:', msg, 'در', url, line);
+    showToast('خطایی رخ داد. لطفاً صفحه را رفرش کنید.', 'error');
+    return true;
+};
+window.onunhandledrejection = function(event) {
+    console.error('خطای Promise:', event.reason);
+    showToast('خطایی رخ داد. لطفاً صفحه را رفرش کنید.', 'error');
+};
+
 function toPersianNumber(num) {
     if (num === undefined || num === null || num === '') return '';
     const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
@@ -155,59 +166,31 @@ async function initApp() {
         initAppEvents();
     } catch (error) { console.error("خطا در اتصال رویدادها:", error); }
     
-    await loadAllData();
+    try {
+        await loadAllData();
+    } catch (error) { console.error("خطا در بارگذاری داده‌ها:", error); }
+    
     checkBackupReminder();
     
-    if (typeof loadExamsData === 'function') await loadExamsData();
-    if (typeof renderExamsData === 'function') renderExamsData();
+    try {
+        if (typeof loadExamsData === 'function') await loadExamsData();
+        if (typeof renderExamsData === 'function') renderExamsData();
+    } catch (error) { console.error("خطا در بارگذاری آزمون‌ها:", error); }
 }
 
+// *** جدا کردن بارگذاری داده از رندر UI ***
 async function loadAllData() {
     try {
+        // 1. بارگذاری داده‌ها از دیتابیس
         const classData = await getDataById('classProfile', 1);
         if (classData) {
-            const classNameEl = document.getElementById('className');
-            if(classNameEl) classNameEl.value = classData.name || '';
-            const classSymbolEl = document.getElementById('classSymbol');
-            if(classSymbolEl) classSymbolEl.value = classData.symbol || '';
-            const classMottoEl = document.getElementById('classMotto');
-            if(classMottoEl) classMottoEl.value = classData.motto || '';
-            const classGradeEl = document.getElementById('classGrade');
-            if(classGradeEl) classGradeEl.value = classData.grade || '';
-            const teacherNameEl = document.getElementById('teacherName');
-            if(teacherNameEl) teacherNameEl.value = classData.teacherName || '';
-            const schoolNameEl = document.getElementById('schoolName');
-            if(schoolNameEl) schoolNameEl.value = classData.schoolName || '';
-            
-            if (classData.academicYear) {
-                window.activeAcademicYear = classData.academicYear;
-            } else {
-                classData.academicYear = window.activeAcademicYear;
-            }
-
+            if (classData.academicYear) window.activeAcademicYear = classData.academicYear;
             if (classData.scheduleActiveDays && Array.isArray(classData.scheduleActiveDays)) {
                 window.scheduleActiveDays = classData.scheduleActiveDays;
-            } else if (classData.scheduleDaysCount) {
-                const days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
-                window.scheduleActiveDays = days.slice(0, classData.scheduleDaysCount);
-                classData.scheduleActiveDays = window.scheduleActiveDays;
-            } else {
-                classData.scheduleActiveDays = window.scheduleActiveDays;
             }
-
             if (classData.schedulePeriodsCount) {
                 window.schedulePeriodsCount = parseInt(classData.schedulePeriodsCount);
-            } else {
-                classData.schedulePeriodsCount = window.schedulePeriodsCount;
             }
-
-            await saveData('classProfile', classData);
-            
-            const aySelect = document.getElementById('academicYear');
-            if (aySelect) aySelect.value = window.activeAcademicYear;
-            
-            const headerSubtitle = document.getElementById('header-subtitle');
-            if (headerSubtitle) headerSubtitle.textContent = classData.name || 'همیار پرتلاش معلم';
         }
 
         const rawStudents = await getAllData('students');
@@ -240,17 +223,29 @@ async function loadAllData() {
 
         assessmentItems = await getAllData('assessmentItems');
         window.allAssessmentItems = assessmentItems;
+
+        // 2. رندر UI
+        renderUI();
+
+        if (migrationNeeded) showToast('اطلاعات قبلی به سال تحصیلی جدید منتقل شد.', 'info');
         
+    } catch (e) { 
+        console.error('خطا در بارگذاری داده‌ها:', e); 
+        showToast('خطا در بارگذاری داده‌ها.', 'error');
+    }
+}
+
+function renderUI() {
+    try {
         if (typeof renderDashboardData === 'function') renderDashboardData();
         if (typeof renderStudentsList === 'function') renderStudentsList();
         if (typeof renderLessonData === 'function') renderLessonData();
         if (typeof renderGroupData === 'function') renderGroupData();
         if (typeof renderSessionData === 'function') renderSessionData();
         if (typeof renderScoreData === 'function') renderScoreData();
-        
-        if (migrationNeeded) showToast('اطلاعات قبلی به سال تحصیلی جدید منتقل شد.', 'info');
-        
-    } catch (e) { console.log('خطا در بارگذاری داده‌ها:', e); }
+    } catch (e) {
+        console.error('خطا در رندر UI:', e);
+    }
 }
 
 function jalaliToDateString(jy, jm, jd) {
@@ -401,7 +396,6 @@ async function saveItem(e) {
         return;
     }
     
-    // *** پیدا کردن آیتم قدیمی برای بررسی تغییر نام ***
     const oldItem = id ? assessmentItems.find(i => i.id === parseInt(id)) : null;
     const oldTitle = oldItem ? oldItem.title : null;
 
@@ -437,7 +431,6 @@ async function saveItem(e) {
     try {
         await saveData('assessmentItems', itemData);
         
-        // *** همگام‌سازی: اگر نام آیتم تغییر کرده باشد، رکوردهای قدیمی را به‌روزرسانی می‌کنیم ***
         if (oldTitle && oldTitle !== title) {
             const allRecords = await getAllData('records');
             let updatedCount = 0;
@@ -462,7 +455,6 @@ async function saveItem(e) {
         renderItemsList();
         resetItemForm();
         
-        // به‌روزرسانی هر دو select
         const itemSelect = document.getElementById('recordItem');
         if (itemSelect) {
             itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
@@ -472,7 +464,6 @@ async function saveItem(e) {
             editItemSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
         }
 
-        // اگر آیتم در حال ویرایش بود و نامش عوض شد، باید لیست سوابق هم رفرش شود
         if (oldTitle && oldTitle !== title) {
             await loadAllData();
         }
