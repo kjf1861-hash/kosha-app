@@ -564,48 +564,35 @@ function showUpdateToast(newWorker) {
 }
 
 // ==========================================
-// *** توابع جدید: مدیریت دکمه Back ***
+// *** توابع جدید: مدیریت دکمه Back (نسخه اصلاح‌شده) ***
 // ==========================================
 
-// لیست مودال‌های باز (برای بستن با دکمه back)
 const MODAL_IDS = [
-    'settings-modal',
-    'preview-modal',
-    'edit-record-modal',
-    'item-management-modal',
-    'report-card-modal',
-    'attendance-details-modal',
-    'lesson-details-modal',
-    'group-details-modal',
-    'edit-group-modal',
-    'edit-student-modal',
-    'edit-lesson-modal',
-    'session-details-modal',
-    'student-details-modal',
-    'exam-editor-modal',
-    'exam-grading-modal'
+    'settings-modal', 'preview-modal', 'edit-record-modal', 'item-management-modal',
+    'report-card-modal', 'attendance-details-modal', 'lesson-details-modal',
+    'group-details-modal', 'edit-group-modal', 'edit-student-modal',
+    'edit-lesson-modal', 'session-details-modal', 'student-details-modal',
+    'exam-editor-modal', 'exam-grading-modal'
 ];
 
-// توابع بستن مودال‌ها (برای فراخوانی در popstate)
 const MODAL_CLOSE_FUNCTIONS = {
-    'settings-modal': () => { if (typeof closeSettingsModal === 'function') closeSettingsModal(); },
-    'preview-modal': () => { if (typeof closePreviewModal === 'function') closePreviewModal(); },
-    'edit-record-modal': () => { if (typeof closeEditModal === 'function') closeEditModal(); },
+    'settings-modal': () => { const m = document.getElementById('settings-modal'); if (m) m.classList.remove('show'); },
+    'preview-modal': () => { const m = document.getElementById('preview-modal'); if (m) m.classList.remove('show'); },
+    'edit-record-modal': () => { const m = document.getElementById('edit-record-modal'); if (m) m.classList.remove('show'); },
     'item-management-modal': () => { if (typeof closeItemManagementModal === 'function') closeItemManagementModal(); },
     'report-card-modal': () => { const m = document.getElementById('report-card-modal'); if (m) m.classList.remove('show'); },
     'attendance-details-modal': () => { const m = document.getElementById('attendance-details-modal'); if (m) m.classList.remove('show'); },
-    'lesson-details-modal': () => { if (typeof closeLessonDetails === 'function') closeLessonDetails(); },
-    'group-details-modal': () => { if (typeof closeGroupDetails === 'function') closeGroupDetails(); },
-    'edit-group-modal': () => { if (typeof closeEditGroupModal === 'function') closeEditGroupModal(); },
-    'edit-student-modal': () => { if (typeof closeEditStudentModal === 'function') closeEditStudentModal(); },
-    'edit-lesson-modal': () => { if (typeof closeEditLessonModal === 'function') closeEditLessonModal(); },
-    'session-details-modal': () => { if (typeof closeSessionDetails === 'function') closeSessionDetails(); },
-    'student-details-modal': () => { if (typeof closeStudentDetails === 'function') closeStudentDetails(); },
-    'exam-editor-modal': () => { if (typeof closeExamEditorModal === 'function') closeExamEditorModal(); },
-    'exam-grading-modal': () => { if (typeof closeExamGradingModal === 'function') closeExamGradingModal(); }
+    'lesson-details-modal': () => { const m = document.getElementById('lesson-details-modal'); if (m) m.classList.remove('show'); },
+    'group-details-modal': () => { const m = document.getElementById('group-details-modal'); if (m) m.classList.remove('show'); },
+    'edit-group-modal': () => { const m = document.getElementById('edit-group-modal'); if (m) m.classList.remove('show'); },
+    'edit-student-modal': () => { const m = document.getElementById('edit-student-modal'); if (m) m.classList.remove('show'); },
+    'edit-lesson-modal': () => { const m = document.getElementById('edit-lesson-modal'); if (m) m.classList.remove('show'); },
+    'session-details-modal': () => { const m = document.getElementById('session-details-modal'); if (m) m.classList.remove('show'); },
+    'student-details-modal': () => { const m = document.getElementById('student-details-modal'); if (m) m.classList.remove('show'); },
+    'exam-editor-modal': () => { const m = document.getElementById('exam-editor-modal'); if (m) m.classList.remove('show'); },
+    'exam-grading-modal': () => { const m = document.getElementById('exam-grading-modal'); if (m) m.classList.remove('show'); }
 };
 
-// بررسی اینکه آیا مودالی باز است
 function getOpenModal() {
     for (const id of MODAL_IDS) {
         const modal = document.getElementById(id);
@@ -616,13 +603,11 @@ function getOpenModal() {
     return null;
 }
 
-// تعیین تب فعال فعلی
 function getActivePageId() {
     const activePage = document.querySelector('.page-section.active');
     return activePage ? activePage.id : 'page-class';
 }
 
-// رفتن به یک تب خاص
 function goToPage(pageId) {
     const page = document.getElementById(pageId);
     if (!page) return;
@@ -630,20 +615,12 @@ function goToPage(pageId) {
     document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
     page.classList.add('active');
     
-    // به‌روزرسانی نویگیشن
     const navItems = document.querySelectorAll('.nav-item');
     navItems.forEach(nav => nav.classList.remove('active'));
     
-    // پیدا کردن nav مناسب
     const pageToNavIndex = {
-        'page-class': 0,
-        'page-students': 1,
-        'page-group': 2,
-        'page-lesson': 3,
-        'page-calendar': 4,
-        'page-session': 5,
-        'page-score': 6,
-        'page-exams': 7
+        'page-class': 0, 'page-students': 1, 'page-group': 2, 'page-lesson': 3,
+        'page-calendar': 4, 'page-session': 5, 'page-score': 6, 'page-exams': 7
     };
     
     const navIndex = pageToNavIndex[pageId];
@@ -651,7 +628,6 @@ function goToPage(pageId) {
         navItems[navIndex].classList.add('active');
     }
     
-    // رندر مجدد محتوای تب
     if (pageId === 'page-class' && typeof renderDashboardData === 'function') renderDashboardData();
     if (pageId === 'page-students' && typeof renderStudentsList === 'function') renderStudentsList();
     if (pageId === 'page-lesson' && typeof renderLessonData === 'function') renderLessonData();
@@ -662,24 +638,26 @@ function goToPage(pageId) {
     if (pageId === 'page-exams' && typeof renderExamsData === 'function') renderExamsData();
 }
 
-// مقداردهی اولیه history برای مدیریت دکمه back
+// *** نسخه جدید: مدیریت دکمه back با شمارنده ***
+let backPressCount = 0;
+let backPressTimer = null;
+
 function initBackButtonHandler() {
     // اضافه کردن یک state اولیه به history
     if (window.history.state === null || window.history.state.page === undefined) {
         window.history.replaceState({ page: 'page-class', modal: null }, '', window.location.href);
     }
     
-    // گوش دادن به رویداد popstate (وقتی کاربر دکمه back را می‌زند)
+    // گوش دادن به رویداد popstate
     window.addEventListener('popstate', function(event) {
-        const state = event.state;
-        
-        // ۱. اگر مودالی باز است، آن را ببند
+        // ۱. اگر مودالی باز است، آن را ببند و یک state جدید push کن
         const openModal = getOpenModal();
         if (openModal) {
             const closeFn = MODAL_CLOSE_FUNCTIONS[openModal];
             if (closeFn) closeFn();
-            // دوباره state را push کن تا از اپ خارج نشویم
+            // state جدید push کن تا کاربر از اپ خارج نشود
             window.history.pushState({ page: getActivePageId(), modal: null }, '', window.location.href);
+            backPressCount = 0;
             return;
         }
         
@@ -688,11 +666,32 @@ function initBackButtonHandler() {
         if (activePage && activePage !== 'page-class') {
             goToPage('page-class');
             window.history.pushState({ page: 'page-class', modal: null }, '', window.location.href);
+            backPressCount = 0;
             return;
         }
         
-        // ۳. اگر در تب کلاس و مودالی باز نبود، اجازه بده از اپ خارج شود
-        // (یعنی هیچ کاری نکن)
+        // ۳. اگر در تب کلاس هستیم و مودالی باز نیست
+        backPressCount++;
+        
+        if (backPressCount === 1) {
+            // اولین back: یک هشدار نمایش بده
+            showToast('برای خروج از برنامه، دوباره دکمه بازگشت را بزنید.', 'info');
+            // state جدید push کن تا کاربر از اپ خارج نشود
+            window.history.pushState({ page: 'page-class', modal: null }, '', window.location.href);
+            
+            // ریست کردن شمارنده بعد از ۳ ثانیه
+            if (backPressTimer) clearTimeout(backPressTimer);
+            backPressTimer = setTimeout(() => {
+                backPressCount = 0;
+            }, 3000);
+        } else {
+            // دومین back: اجازه بده کاربر از اپ خارج شود
+            // (هیچ کاری نکن، مرورگر خودش از اپ خارج می‌شود)
+            backPressCount = 0;
+            if (backPressTimer) clearTimeout(backPressTimer);
+            // تاریخچه را پاک کن
+            window.history.back();
+        }
     });
 }
 
