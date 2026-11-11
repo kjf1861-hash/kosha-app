@@ -1,8 +1,8 @@
 // ==========================================
-// فایل sw.js — سرویس‌ورکر بهینه‌شده (نسخه v94)
+// فایل sw.js — سرویس‌ورکر بهینه‌شده (نسخه v95)
 // ==========================================
 
-const CACHE_NAME = 'kosha-cache-v94';
+const CACHE_NAME = 'kosha-cache-v95';
 const ASSETS_TO_CACHE = [
     './', 
     './index.html', 
@@ -18,8 +18,8 @@ const ASSETS_TO_CACHE = [
     './session.js', 
     './score.js', 
     './reset.js',
-    './exam.js'
-    './calendar-data.js'
+    './exam.js',
+    './calendar-data.js',
     './calendar.js'
 ];
 
@@ -51,7 +51,6 @@ self.addEventListener('activate', (event) => {
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    // هر کشی که نامش با CACHE_NAME فعلی فرق دارد، حذف شود
                     if (cacheName !== CACHE_NAME) {
                         console.log('🗑️ پاک کردن کش قدیمی:', cacheName);
                         return caches.delete(cacheName);
@@ -68,25 +67,18 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
     
-    // فقط درخواست‌های GET را مدیریت کن
     if (event.request.method !== 'GET') return;
     
-    // فقط درخواست‌های مربوط به دامنه خودمان را مدیریت کن
-    // (فونت‌های گوگل و سایر منابع خارجی را به مرورگر واگذار کن)
     if (url.origin !== self.location.origin) {
         return;
     }
     
-    // تعیین استراتژی بر اساس نوع فایل
     const isNetworkFirst = NETWORK_FIRST_ASSETS.some(asset => url.pathname.endsWith(asset.replace('./', '')));
     
     if (isNetworkFirst) {
-        // استراتژی Network First (برای فایل‌های حساس)
-        // ابتدا سعی کن از شبکه بیاوری، اگر نشد از کش
         event.respondWith(
             fetch(event.request)
                 .then((response) => {
-                    // فقط پاسخ‌های موفق را کش کن
                     if (response && response.status === 200) {
                         const responseClone = response.clone();
                         caches.open(CACHE_NAME).then((cache) => {
@@ -96,13 +88,10 @@ self.addEventListener('fetch', (event) => {
                     return response;
                 })
                 .catch(() => {
-                    // در صورت قطعی، از کش بده
                     return caches.match(event.request);
                 })
         );
     } else {
-        // استراتژی Cache First (برای فایل‌های ثابت)
-        // ابتدا از کش بده، اگر نبود از شبکه بگیر
         event.respondWith(
             caches.match(event.request).then((cachedResponse) => {
                 if (cachedResponse) {
@@ -129,7 +118,6 @@ self.addEventListener('message', (event) => {
     if (event.data && event.data.action === 'skipWaiting') {
         self.skipWaiting();
     }
-    // پاک کردن کش از داخل اپلیکیشن
     if (event.data && event.data.action === 'clearCache') {
         event.waitUntil(
             caches.keys().then((cacheNames) => {
