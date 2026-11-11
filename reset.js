@@ -94,7 +94,8 @@ async function resetFactoryAll() {
     if (!confirm2) return;
 
     try {
-        const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule'];
+        // *** جداول جدید آزمون‌ها به این لیست اضافه شدند ***
+        const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults'];
         for (const store of stores) {
             await clearStore(store);
         }
