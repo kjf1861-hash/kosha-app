@@ -26,9 +26,7 @@ function getStudentsHash() {
     return window.allStudentsData.map(s => s.id).join(',') + '|' + window.allGroupsData.map(g => g.id).join(',');
 }
 
-// *** اصلاح باگ ۲ و ۳: initScoreEvents فقط رویدادهای مختص خودش را ثبت می‌کند ***
 function initScoreEvents() {
-    // رویداد change روی recordItem
     const recordItem = document.getElementById('recordItem');
     if (recordItem && !recordItem.dataset.listenerAttached) {
         recordItem.addEventListener('change', (e) => {
@@ -77,7 +75,6 @@ function renderScoreData() {
 
     initScoreCalendars();
     
-    // *** اصلاح باگ ۵: رندر چک‌باکس‌ها فقط در صورت تغییر داده‌ها ***
     const currentHash = getStudentsHash();
     if (currentHash !== _lastStudentsHash) {
         renderStudentCheckboxes();
@@ -307,9 +304,6 @@ function resetScoreCalendar(type) {
     renderScoreCalendar(type);
 }
 
-// ==========================================
-// 1. توابع کمکی برای رندر چک‌باکس‌ها
-// ==========================================
 function createStudentLabel(st, checkboxClass) {
     const g = window.allGroupsData.find(x => x.id === st.groupId);
     const badge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
@@ -332,9 +326,6 @@ function createGroupedView(container, checkboxClass, toggleGroupFnName) {
     });
 }
 
-// ==========================================
-// 2. رندر چک‌باکس‌های بخش ارزشیابی عمومی
-// ==========================================
 function renderStudentCheckboxes() {
     const container = document.getElementById('students-checkbox-container');
     if (!container) return;
@@ -373,9 +364,6 @@ function toggleAllStudents(checked) {
     document.querySelectorAll('.group-select-all-checkbox').forEach(cb => cb.checked = checked);
 }
 
-// ==========================================
-// 3. رندر چک‌باکس‌های بخش پویش قرآن
-// ==========================================
 function renderQuranStudentCheckboxes() {
     const container = document.getElementById('quran-students-container');
     if (!container) return;
@@ -407,9 +395,6 @@ function toggleQuranGroupSelection(checkbox, groupId, checkboxClass) {
     document.querySelectorAll(`.quran-student-checkbox.group-student-${groupId}`).forEach(cb => cb.checked = checkbox.checked);
 }
 
-// ==========================================
-// 4. رندر چک‌باکس‌های بخش تشویق ویژه
-// ==========================================
 function renderSpecialStudentCheckboxes() {
     const container = document.getElementById('special-reward-students-container');
     if (!container) return;
@@ -441,9 +426,6 @@ function toggleSpecialGroupSelection(checkbox, groupId, checkboxClass) {
     document.querySelectorAll(`.special-student-checkbox.group-student-${groupId}`).forEach(cb => cb.checked = checkbox.checked);
 }
 
-// ==========================================
-// 5. رندر چک‌باکس‌های بخش خوش‌خط‌نویسی
-// ==========================================
 function renderHandwritingStudentCheckboxes() {
     const container = document.getElementById('handwriting-students-container');
     if (!container) return;
@@ -475,9 +457,6 @@ function toggleHandwritingGroupSelection(checkbox, groupId, checkboxClass) {
     document.querySelectorAll(`.handwriting-student-checkbox.group-student-${groupId}`).forEach(cb => cb.checked = checkbox.checked);
 }
 
-// ==========================================
-// 6. منطق نمایش فرم امتیاز (پویا) برای ارزشیابی عمومی
-// ==========================================
 function renderScoreInput(item) {
     const section = document.getElementById('dynamic-score-section');
     const container = document.getElementById('score-input-container');
@@ -512,9 +491,6 @@ function renderScoreInput(item) {
     }
 }
 
-// ==========================================
-// 7. پیش‌نمایش و ثبت ارزشیابی عمومی
-// ==========================================
 function showPreview(isFinal) {
     isSaveAndNext = !isFinal;
     const selectedIndexEl = document.getElementById('recordItem');
@@ -603,9 +579,6 @@ async function confirmAndSaveRecord() {
     } catch (error) { showToast('خطا در ذخیره!', 'error'); closePreviewModal(); }
 }
 
-// ==========================================
-// 8. منطق ثبت پویش قرآن کریم
-// ==========================================
 async function saveQuranRecord() {
     const studentCheckboxes = document.querySelectorAll('.quran-student-checkbox:checked');
     if (studentCheckboxes.length === 0) { showToast('دانش‌آموز انتخاب کنید.', 'error'); return; }
@@ -673,9 +646,6 @@ async function saveQuranRecord() {
     } catch (e) { console.error(e); showToast('خطا در ثبت پویش قرآن.', 'error'); }
 }
 
-// ==========================================
-// 9. منطق ثبت تشویق ویژه
-// ==========================================
 async function saveSpecialReward() {
     const studentCheckboxes = document.querySelectorAll('.special-student-checkbox:checked');
     if (studentCheckboxes.length === 0) { showToast('دانش‌آموز انتخاب کنید.', 'error'); return; }
@@ -711,9 +681,6 @@ async function saveSpecialReward() {
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق ویژه.', 'error'); }
 }
 
-// ==========================================
-// 10. منطق ثبت تشویق خوش‌خط‌نویسی
-// ==========================================
 async function saveHandwritingReward() {
     const studentCheckboxes = document.querySelectorAll('.handwriting-student-checkbox:checked');
     if (studentCheckboxes.length === 0) { showToast('دانش‌آموز انتخاب کنید.', 'error'); return; }
@@ -742,9 +709,6 @@ async function saveHandwritingReward() {
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق خوش‌خط‌نویسی.', 'error'); }
 }
 
-// ==========================================
-// 11. سوابق ارزشیابی (لیست، فیلتر، صفحه‌بندی)
-// ==========================================
 function loadAssessmentRecords() {
     const container = document.getElementById('assessment-records-list');
     const pagination = document.getElementById('records-pagination');
@@ -836,9 +800,6 @@ async function deleteRecord(id) {
     catch (e) { console.error(e); showToast('خطا در حذف رکورد.', 'error'); }
 }
 
-// ==========================================
-// 12. ویرایش رکورد (با اعتبارسنجی تاریخ - رفع باگ ۷)
-// ==========================================
 async function openEditRecordModal(id) {
     try {
         const record = await getDataById('records', id);
@@ -918,7 +879,6 @@ async function saveEditedRecord(event) {
         itemName = selectedItem ? selectedItem.title : '';
     }
 
-    // *** اعتبارسنجی تاریخ ***
     if (!/^\d{4}\/\d{2}\/\d{2}$/.test(newDate)) {
         showToast('فرمت تاریخ نامعتبر است. مثلاً: 1405/08/15', 'error');
         return;
@@ -957,9 +917,6 @@ async function saveEditedRecord(event) {
     } catch (e) { console.error(e); showToast('خطا در ذخیره.', 'error'); }
 }
 
-// ==========================================
-// 13. تشویق‌های پویش قرآن (لیست)
-// ==========================================
 async function loadQuranRewards() {
     const container = document.getElementById('quran-rewards-list');
     if (!container) return;
@@ -986,9 +943,6 @@ async function loadQuranRewards() {
     } catch (e) { container.innerHTML = '<p style="color:red;">خطا</p>'; }
 }
 
-// ==========================================
-// 14. خروجی اکسل سوابق ارزشیابی
-// ==========================================
 async function exportScoreCSV() {
     try {
         let csvContent = "ردیف,عنوان,درس,آیتم,تاریخ,امتیاز,ارفاق\r\n";
