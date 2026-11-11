@@ -73,7 +73,10 @@ function renderScoreData() {
         }
     }
 
-    initScoreCalendars();
+    // *** رفع باگ ۱۷: اطمینان از بارگذاری داده‌ها قبل از رندر تقویم ***
+    if (window.allRecordsData && Array.isArray(window.allRecordsData)) {
+        initScoreCalendars();
+    }
     
     const currentHash = getStudentsHash();
     if (currentHash !== _lastStudentsHash) {
@@ -116,9 +119,10 @@ function initScoreCalendars() {
     const startYear = parseInt(startYearStr);
     
     ['record', 'quran', 'special', 'handwriting'].forEach(type => {
+        // *** رفع باگ ۱۶: استفاده از مقادیر داینامیک و حفظ ماه جاری ***
         if (!scoreCalendarState[type].year || scoreCalendarState[type].year < startYear) {
             scoreCalendarState[type].year = startYear;
-            scoreCalendarState[type].month = 7; 
+            if (!scoreCalendarState[type].month) scoreCalendarState[type].month = 7;
         }
         renderScoreCalendar(type);
     });
@@ -196,7 +200,7 @@ function renderScoreCalendar(type) {
         grid.innerHTML += `<div class="calendar-day empty"></div>`;
     }
 
-    const relevantRecords = window.allRecordsData.filter(rec => {
+    const relevantRecords = (window.allRecordsData || []).filter(rec => {
         if (type === 'quran') return rec.itemName === "پویش حفظ جزء سی قرآن کریم";
         if (type === 'special') return rec.itemName === "تشویق ویژه";
         if (type === 'handwriting') return rec.itemName === "تشویق خوش‌خط‌نویسی";
@@ -251,7 +255,7 @@ function renderScoreDayArchive(type, dateStr) {
     const archiveList = document.getElementById(`${type}-day-archive-list`);
     if (!archiveContainer || !archiveList) return;
 
-    const dayRecords = window.allRecordsData.filter(rec => {
+    const dayRecords = (window.allRecordsData || []).filter(rec => {
         if (rec.date !== dateStr) return false;
         if (type === 'quran') return rec.itemName === "پویش حفظ جزء سی قرآن کریم";
         if (type === 'special') return rec.itemName === "تشویق ویژه";
@@ -359,9 +363,15 @@ function toggleGroupSelection(checkbox, groupId, checkboxClass = 'student-checkb
     });
 }
 
-function toggleAllStudents(checked) { 
-    document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = checked); 
-    document.querySelectorAll('.group-select-all-checkbox').forEach(cb => cb.checked = checked);
+// *** رفع باگ ۱۱: پشتیبانی از همه کلاس‌های چک‌باکس ***
+function toggleAllStudents(checked, checkboxClass = 'student-checkbox') { 
+    document.querySelectorAll(`.${checkboxClass}`).forEach(cb => cb.checked = checked); 
+    const section = checkboxClass === 'student-checkbox' ? null : document.getElementById(`${checkboxClass.replace('-student-checkbox', '')}-students-container`);
+    if (section) {
+        section.querySelectorAll('.group-select-all-checkbox').forEach(cb => cb.checked = checked);
+    } else {
+        document.querySelectorAll('.group-select-all-checkbox').forEach(cb => cb.checked = checked);
+    }
 }
 
 function renderQuranStudentCheckboxes() {
@@ -738,8 +748,11 @@ function loadAssessmentRecords() {
     }
 
     const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+    
+    // *** رفع باگ ۲۰: مدیریت بهتر محدوده صفحه ***
     if (currentPage.records > totalPages) currentPage.records = totalPages;
     if (currentPage.records < 1) currentPage.records = 1;
+    
     const startIndex = (currentPage.records - 1) * itemsPerPage;
     const paginatedRecords = filteredRecords.slice(startIndex, startIndex + itemsPerPage);
 
