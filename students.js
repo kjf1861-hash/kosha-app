@@ -2,6 +2,9 @@
 // فایل students.js — منطق تب دانش‌آموزان
 // ==========================================
 
+// متغیر برای نگهداری شناسه دانش‌آموز فعلی در مودال
+let currentStudentDetailsId = null;
+
 async function saveStudent(e) {
     e.preventDefault();
     
@@ -12,13 +15,11 @@ async function saveStudent(e) {
 
     const nationalId = document.getElementById('studentNationalId').value.trim();
     
-    // اعتبارسنجی کد ملی
     if (!validateNationalId(nationalId)) {
         showToast('کد ملی وارد شده معتبر نیست. لطفاً ۱۰ رقم صحیح وارد کنید.', 'error');
         return;
     }
 
-    // بررسی تکراری نبودن کد ملی
     const isDuplicate = window.allStudentsData.some(st => st.nationalId === nationalId);
     if (isDuplicate) {
         showToast('این کد ملی قبلاً برای دانش‌آموز دیگری ثبت شده است.', 'error');
@@ -91,7 +92,6 @@ function renderStudentsList() {
         const g = window.allGroupsData.find(x => x.id === st.groupId);
         const groupBadge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
         
-        // تولید رمز عبور برای نمایش
         const studentPass = st.nationalId ? generateStudentPassword(st.nationalId) : '---';
 
         container.innerHTML += `
@@ -151,13 +151,11 @@ async function saveEditedStudent(e) {
     const id = parseInt(document.getElementById('editStudentIdModal').value);
     const newNationalId = document.getElementById('editStudentNationalIdModal').value.trim();
 
-    // اعتبارسنجی کد ملی
     if (!validateNationalId(newNationalId)) {
         showToast('کد ملی وارد شده معتبر نیست.', 'error');
         return;
     }
 
-    // بررسی تکراری نبودن کد ملی (به جز خود دانش‌آموز)
     const isDuplicate = window.allStudentsData.some(st => st.nationalId === newNationalId && st.id !== id);
     if (isDuplicate) {
         showToast('این کد ملی برای دانش‌آموز دیگری ثبت شده است.', 'error');
@@ -165,7 +163,11 @@ async function saveEditedStudent(e) {
     }
 
     const existing = await getDataById('students', id);
-    const existingGroupId = existing ? existing.groupId : null;
+    if (!existing) {
+        showToast('دانش‌آموز یافت نشد!', 'error');
+        return;
+    }
+    const existingGroupId = existing.groupId;
 
     const data = {
         id: id,
@@ -226,16 +228,25 @@ async function resetAllStudents() {
     }
 }
 
+// ==========================================
+// 4. جزئیات دانش‌آموز (با تب‌های جدید)
+// ==========================================
 async function openStudentDetails(id) {
     const student = window.allStudentsData.find(s => s.id === id);
     if (!student) return;
 
+    currentStudentDetailsId = id;
+
     document.getElementById('student-details-title').textContent = `👤 جزئیات ${student.firstName} ${student.lastName}`;
+    
+    // بازگشت به تب خلاصه
+    switchStudentDetailsTab('summary');
+    
+    // محاسبه خلاصه
     const content = document.getElementById('student-details-content');
     content.innerHTML = '<p style="text-align:center;">در حال محاسبه...</p>';
 
     const srs = window.allRecordsData.filter(rec => rec.students && rec.students.includes(id));
-    
     const studentPass = student.nationalId ? generateStudentPassword(student.nationalId) : '---';
 
     let headerHtml = `
@@ -276,9 +287,119 @@ async function openStudentDetails(id) {
     if (!hasItems) itemHtml += '<p style="color:#64748b; font-size:0.9rem; text-align:center;">هیچ ارزشیابی ثبت نشده است.</p>';
 
     content.innerHTML = headerHtml + subjectHtml + itemHtml;
+
+    // بارگذاری نتایج آزمون‌ها (تب دوم)
+    loadStudentExamsForDetails(id);
+
+    // نمایش مودال
     document.getElementById('student-details-modal').classList.add('show');
 }
 
 function closeStudentDetails() {
     document.getElementById('student-details-modal').classList.remove('show');
+    currentStudentDetailsId = null;
+}
+
+function switchStudentDetailsTab(tab) {
+    const btnSummary = document.getElementById('btnStudentTabSummary');
+    const btnExams = document.getElementById('btnStudentTabExams');
+    const summaryEl = document.getElementById('student-details-summary');
+    const examsEl = document.getElementById('student-details-exams');
+    
+    if (tab === 'summary') {
+        if (btnSummary) btnSummary.classList.add('active');
+        if (btnExams) btnExams.classList.remove('active');
+        if (summaryEl) summaryEl.style.display = 'block';
+        if (examsEl) examsEl.style.display = 'none';
+    } else {
+        if (btnSummary) btnSummary.classList.remove('active');
+        if (btnExams) btnExams.classList.add('active');
+        if (summaryEl) summaryEl.style.display = 'none';
+        if (examsEl) examsEl.style.display = 'block';
+    }
+}
+
+// ==========================================
+// 5. نمایش نتایج آزمون‌های دانش‌آموز
+// ==========================================
+async function loadStudentExamsForDetails(studentId) {
+    const container = document.getElementById('student-exams-content');
+    if (!container) return;
+    
+    container.innerHTML = '<p style="text-align:center;">در حال بارگذاری...</p>';
+    
+    // اگر داده‌های آزمون بارگذاری نشده، بارگذاری کن
+    if (!window.allExamsData || window.allExamsData.length === 0) {
+        if (typeof loadExamsData === 'function') {
+            await loadExamsData();
+        }
+    }
+    
+    const exams = window.allExamsData || [];
+    const results = window.allExamResultsData || [];
+    
+    // فیلتر نتایج این دانش‌آموز
+    const studentResults = results.filter(r => r.studentId === studentId);
+    
+    if (exams.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#64748b;">هنوز آزمونی تعریف نشده است.</p>';
+        return;
+    }
+    
+    let html = '';
+    
+    // محاسبه آمار کلی
+    const totalExamsWithScore = studentResults.length;
+    const totalScores = studentResults.reduce((sum, r) => sum + r.score, 0);
+    const avgScore = totalExamsWithScore > 0 ? (totalScores / totalExamsWithScore).toFixed(1) : 0;
+    
+    // کارت آمار
+    html += `
+        <div style="background: var(--primary-light); padding: 12px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; font-size: 0.85rem;">
+            <span>📊 تعداد آزمون: <strong style="color:var(--primary);">${toPersianNumber(totalExamsWithScore)}</strong></span>
+            <span>🎯 میانگین نمرات: <strong style="color:var(--primary);">${toPersianNumber(avgScore)}</strong></span>
+        </div>
+    `;
+    
+    // مرتب‌سازی آزمون‌ها بر اساس تاریخ
+    const sortedExams = [...exams].sort((a, b) => b.date.localeCompare(a.date));
+    
+    html += '<h4 style="color:var(--primary); margin-bottom: 10px;">📋 نتایج آزمون‌ها</h4>';
+    
+    sortedExams.forEach(exam => {
+        const sub = window.allSubjectsData.find(s => s.id === exam.subjectId);
+        const subName = sub ? `${sub.symbol || ''} ${sub.name}` : 'بدون درس';
+        
+        const result = studentResults.find(r => r.examId === exam.id);
+        
+        let scoreHtml = '';
+        let badgeColor = '#94a3b8';
+        
+        if (result) {
+            const percent = (result.score / exam.maxScore) * 100;
+            if (percent >= 85) badgeColor = '#22c55e';
+            else if (percent >= 60) badgeColor = '#3b82f6';
+            else if (percent >= 40) badgeColor = '#f59e0b';
+            else badgeColor = '#ef4444';
+            
+            scoreHtml = `<span class="rank-badge" style="background: ${badgeColor}20; color: ${badgeColor}; font-weight: bold;">${toPersianNumber(result.score)} از ${toPersianNumber(exam.maxScore)} (${toPersianNumber(Math.round(percent))}٪)</span>`;
+        } else {
+            scoreHtml = `<span class="rank-badge" style="background:#f1f5f9; color:#94a3b8;">ثبت نشده</span>`;
+        }
+        
+        html += `
+            <div class="details-list-item" style="flex-direction: column; align-items: stretch; gap: 5px; padding: 10px; background: var(--input-bg); border-radius: 8px; margin-bottom: 8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong style="color:var(--text-main); font-size: 0.95rem;">${exam.title}</strong>
+                    ${scoreHtml}
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size: 0.8rem; color: var(--text-muted);">
+                    <span>📚 ${subName}</span>
+                    <span>📅 ${toPersianNumber(exam.date)}</span>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
 }
