@@ -1428,3 +1428,147 @@ details.group-accordion[open] summary::after {
     padding-top: 8px;
     border-top: 1px dashed var(--border-color);
 }
+
+/* =========================================
+   استایل‌های اختصاصی مودال «ثبت نمرات آزمون»
+   ========================================= */
+
+#exam-grading-modal .modal-content {
+    max-width: 700px;
+    width: 95%;
+}
+
+/* ردیف هر دانش‌آموز */
+.exam-grading-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    transition: all 0.2s;
+}
+
+.exam-grading-row:hover {
+    border-color: var(--primary);
+    background: var(--input-bg);
+}
+
+.exam-grading-student-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.exam-grading-student-rank {
+    font-weight: bold;
+    color: var(--text-muted);
+    min-width: 25px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.exam-grading-student-name {
+    font-weight: bold;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.exam-grading-student-group {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    white-space: nowrap;
+}
+
+/* فیلد نمره */
+.exam-grading-score-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.exam-grading-score-input {
+    width: 80px;
+    padding: 8px 10px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: bold;
+    text-align: center;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.exam-grading-score-input:focus {
+    border-color: var(--primary);
+    background: var(--input-focus-bg);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+}
+
+.exam-grading-score-input.has-value {
+    border-color: #22c55e;
+    background: rgba(34, 197, 94, 0.05);
+}
+
+.exam-grading-score-input.invalid {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+    animation: shake 0.3s ease-in-out;
+}
+
+.exam-grading-score-max {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* آمار سریع */
+#exam-grading-stats {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#exam-grading-stats span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+#exam-grading-stats strong {
+    color: var(--primary);
+    font-size: 1.05rem;
+}
+
+/* حالت دارک */
+[data-theme="dark"] .exam-grading-score-input.has-value {
+    background: rgba(34, 197, 94, 0.1);
+}
+
+[data-theme="dark"] .exam-grading-score-input.invalid {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* پیام خالی بودن لیست */
+.exam-grading-empty {
+    text-align: center;
+    padding: 30px 15px;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
