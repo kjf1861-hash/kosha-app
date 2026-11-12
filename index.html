@@ -344,7 +344,7 @@
                         </div>
                     </form>
                 </div>
-            <div class="card" style="margin-top: 20px;">
+                            <div class="card" style="margin-top: 20px;">
                 <h2 class="card-title">📝 سوابق ارزشیابی</h2>
                 <div class="form-group" style="margin-bottom: 10px;"><label class="form-label">فیلتر بر اساس درس</label><select id="recordsFilterSubject" class="form-control" onchange="loadAssessmentRecords()"><option value="">همه دروس</option></select></div>
                 <div class="form-group" style="margin-bottom: 10px;"><label class="form-label">فیلتر بر اساس دانش‌آموز</label><select id="recordsFilterStudent" class="form-control" onchange="loadAssessmentRecords()"><option value="">همه دانش‌آموزان</option></select></div>
@@ -918,7 +918,7 @@
     </div>
 
     <!-- ===== مودال اجباری انتخاب سال تحصیلی ===== -->
-    <div id="academic-year-modal" class="modal-overlay" style="z-index: 3000;">
+    <div id="academic-year-modal" class="modal-overlay" style="z-index: 9000;">
         <div class="modal-content" style="max-width: 450px; text-align: center;">
             <div class="modal-header" style="color: var(--primary); border-bottom: 2px dashed var(--primary); padding-bottom: 15px;">
                 🎓 انتخاب سال تحصیلی
@@ -960,8 +960,8 @@
     <script src="jalali-utils.js?v=1"></script>
     <script src="calendar-data.js?v=4"></script>
     <script src="calendar.js?v=5"></script>
-    <script src="db.js?v=3"></script>
-    <script src="app.js?v=10"></script>
+    <script src="db.js?v=4"></script>
+    <script src="app.js?v=11"></script>
     <script src="back-button.js?v=6" defer></script>
     <script src="class.js"></script>
     <script src="students.js"></script>
@@ -1070,7 +1070,7 @@
     <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) -->
     <script>
         (function() {
-            const APP_VERSION = 'v109';
+            const APP_VERSION = 'v110';
             const storedVersion = localStorage.getItem('kosha-version');
             
             if (storedVersion !== APP_VERSION) {
