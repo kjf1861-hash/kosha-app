@@ -4,30 +4,8 @@
 
 // ==========================================
 // 1. توابع پایه تقویم شمسی
+// (این توابع حالا از jalali-utils.js می‌آیند)
 // ==========================================
-
-const JALALI_LEAP_YEARS = [1408, 1412, 1416];
-
-function isJalaliLeapYear(year) {
-    return JALALI_LEAP_YEARS.includes(year);
-}
-
-function getJalaliDaysInMonth(year, month) {
-    if (month <= 6) return 31;
-    if (month <= 11) return 30;
-    return isJalaliLeapYear(year) ? 30 : 29;
-}
-
-function getJalaliFirstDayOfWeek(year, month) {
-    let daysPassed = 0;
-    for (let y = 1405; y < year; y++) {
-        daysPassed += isJalaliLeapYear(y) ? 366 : 365;
-    }
-    for (let m = 1; m < month; m++) {
-        daysPassed += getJalaliDaysInMonth(year, m);
-    }
-    return daysPassed % 7;
-}
 
 // ==========================================
 // 2. توابع کمکی
