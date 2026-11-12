@@ -9,7 +9,7 @@ window.allSessionsData = [];
 window.allAttendanceData = [];
 window.allWeeklyScheduleData = [];
 let assessmentItems = [];
-window.activeAcademicYear = localStorage.getItem('kosha-active-academic-year') || '1405-1406'; 
+window.activeAcademicYear = '1405-1406'; 
 
 window.scheduleActiveDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه'];
 window.schedulePeriodsCount = 5;
@@ -585,50 +585,15 @@ async function initApp() {
 }
 
 // ==========================================
-// بارگذاری داده‌ها — نسخه اصلاح‌شده v2
-// ==========================================
-// ✅ تغییرات:
-// - خواندن academicYear از classProfile و اولویت دادن به آن (منبع حقیقت = DB)
-// - همگام‌سازی localStorage با مقدار DB
-// - ایمن‌سازی در برابر ناسازگاری سال تحصیلی
+// بارگذاری داده‌ها (بدون ریستارت!)
 // ==========================================
 async function loadAllData() {
     try {
         const classData = await getDataById('classProfile', 1);
-        
         if (classData) {
-            // ✅ منبع حقیقت = DB. اول academicYear رو از DB بخون
-            if (classData.academicYear) {
-                const dbYear = classData.academicYear;
-                const storedYear = localStorage.getItem('kosha-active-academic-year');
-                
-                // اگر DB و localStorage ناسازگارن، DB رو ترجیح بده
-                if (dbYear !== storedYear) {
-                    console.warn('⚠️ ناسازگاری سال تحصیلی:', { dbYear, storedYear });
-                    localStorage.setItem('kosha-active-academic-year', dbYear);
-                }
-                window.activeAcademicYear = dbYear;
-            } else {
-                // اگر DB سال تحصیلی نداره، از localStorage یا پیش‌فرض استفاده کن
-                window.activeAcademicYear = localStorage.getItem('kosha-active-academic-year') || '1405-1406';
-            }
-            
-            // بقیه تنظیمات
-            if (classData.scheduleActiveDays) {
-                window.scheduleActiveDays = classData.scheduleActiveDays;
-            }
-            if (classData.schedulePeriodsCount) {
-                window.schedulePeriodsCount = parseInt(classData.schedulePeriodsCount);
-            }
-            
-            // ✅ به‌روزرسانی subtitle هدر
-            const headerSubtitle = document.getElementById('header-subtitle');
-            if (headerSubtitle && classData.name) {
-                headerSubtitle.textContent = classData.name;
-            }
-        } else {
-            // اگر کلاس تعریف نشده، از localStorage یا پیش‌فرض
-            window.activeAcademicYear = localStorage.getItem('kosha-active-academic-year') || '1405-1406';
+            if (classData.academicYear) window.activeAcademicYear = classData.academicYear;
+            if (classData.scheduleActiveDays) window.scheduleActiveDays = classData.scheduleActiveDays;
+            if (classData.schedulePeriodsCount) window.schedulePeriodsCount = parseInt(classData.schedulePeriodsCount);
         }
 
         window.allStudentsData = await getAllData('students');
@@ -647,9 +612,7 @@ async function loadAllData() {
         currentBackupSettings = await getBackupSettings();
 
         renderUI();
-    } catch (e) { 
-        console.error('خطا در بارگذاری داده‌ها:', e); 
-    }
+    } catch (e) { console.error('خطا در بارگذاری داده‌ها:', e); }
 }
 
 function renderUI() {
