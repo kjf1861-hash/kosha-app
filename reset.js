@@ -1,12 +1,5 @@
 // ==========================================
 // فایل reset.js — منطق بازنشانی و پاکسازی داده‌ها
-// نسخه v2 (اصلاح‌شده)
-// ==========================================
-//
-// تغییرات نسخه v2:
-// - resetYearlyRecords: بعد از پاک کردن، تقویم جلسات و امتیازها هم ریست می‌شوند
-// - resetFactoryAll: فقط کلیدهای لازم پاک می‌شوند (kosha-theme و kosha-version حفظ)
-// - پاک کردن شمارنده examResultCounter برای جلوگیری از ناسازگاری
 // ==========================================
 
 async function resetYearlyRecords() {
@@ -37,6 +30,11 @@ async function resetYearlyRecords() {
     if (!doubleConfirm) return;
 
     try {
+        // ==========================================
+        // ✅ تغییر اصلی: پاک کردن فقط رکوردهای مربوط به سال تحصیلی جاری
+        // (نه کل جدول، تا در آینده که چند ساله شد، به سال‌های دیگر آسیب نزند)
+        // ==========================================
+        
         // ۱. حذف سوابق ارزشیابی سال تحصیلی جاری
         const allRecords = await getAllData('records');
         const currentYearRecords = allRecords.filter(r => r.academicYear === currentYear);
@@ -66,24 +64,12 @@ async function resetYearlyRecords() {
             await deleteData('badgesSettings', badge.id);
         }
         
-        // ۵. پاک کردن وضعیت تقویم‌ها تا به حالت اولیه برگردند
+        // پاک کردن وضعیت تقویم‌ها تا به حالت اولیه برگردند
         localStorage.removeItem('kosha-session-cal');
         localStorage.removeItem('kosha-score-cal-record');
         localStorage.removeItem('kosha-score-cal-quran');
         localStorage.removeItem('kosha-score-cal-special');
         localStorage.removeItem('kosha-score-cal-handwriting');
-        
-        // ✅ ریست متغیرهای درون‌حافظه‌ای جلسات
-        if (typeof selectedSessionDate !== 'undefined') {
-            try { selectedSessionDate = ""; selectedSessionDayOfWeek = ""; } catch (e) {}
-        }
-        if (typeof currentCalendarYear !== 'undefined' && typeof window.activeAcademicYear !== 'undefined') {
-            try {
-                const [startYearStr] = (window.activeAcademicYear || '1405-1406').split('-');
-                currentCalendarYear = parseInt(startYearStr);
-                currentCalendarMonth = 7;
-            } catch (e) {}
-        }
         
         showToast(
             `سوابق سال تحصیلی ${toPersianNumber(currentYear)} پاک شد. ` +
@@ -91,16 +77,7 @@ async function resetYearlyRecords() {
             'success'
         );
         
-        // ۶. رفرش کامل داده‌ها
-        await loadAllData();
-        
-        // ۷. اطمینان از رفرش تقویم جلسات و امتیازها
-        if (typeof renderSessionData === 'function') {
-            try { renderSessionData(); } catch (e) { console.warn(e); }
-        }
-        if (typeof renderScoreData === 'function') {
-            try { renderScoreData(); } catch (e) { console.warn(e); }
-        }
+        loadAllData();
     } catch (e) {
         console.error(e);
         showToast('خطا در پاک کردن سوابق! لطفاً از پشتیبان خود بازیابی کنید.', 'error');
@@ -135,9 +112,7 @@ async function resetGroupAssignments() {
 }
 
 async function resetSpecificRecords() {
-    const select = document.getElementById('resetRecordSelect');
-    if (!select) return;
-    const selectedValue = select.value;
+    const selectedValue = document.getElementById('resetRecordSelect').value;
     if (!selectedValue) {
         showToast('لطفاً یک مورد را از لیست انتخاب کنید.', 'error');
         return;
@@ -175,13 +150,6 @@ async function resetSpecificRecords() {
     }
 }
 
-// ==========================================
-// ✅ resetFactoryAll — اصلاح‌شده
-// ==========================================
-// باگ قبلی: localStorage.clear() باعث پاک شدن kosha-version می‌شد و
-// بعد از factory reset، Kill Switch دوباره اجرا می‌شد و یک رفرش اضافه می‌خورد.
-// راه‌حل: فقط کلیدهای داده‌ای پاک می‌شوند، kosha-theme و kosha-version حفظ می‌شوند.
-// ==========================================
 async function resetFactoryAll() {
     const confirm1 = confirm('⚠️ خطر! آیا می‌خواهید کل اطلاعات برنامه (کلاس، دانش‌آموزان، دروس، سوابق و...) را برای همیشه پاک کنید؟');
     if (!confirm1) return;
@@ -190,35 +158,13 @@ async function resetFactoryAll() {
     if (!confirm2) return;
 
     try {
-        const stores = [
-            'classProfile', 'students', 'groups', 'subjects', 'records', 
-            'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 
-            'weeklySchedule', 'exams', 'examResults', 'backupSettings'
-        ];
+        const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
         for (const store of stores) {
             await clearStore(store);
         }
         
-        // ✅ پاک کردن فقط کلیدهای داده‌ای، نه تنظیمات ظاهری و نسخه
-        const keepKeys = ['kosha-theme', 'kosha-version'];
-        const allKeysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && !keepKeys.includes(key)) {
-                allKeysToRemove.push(key);
-            }
-        }
-        allKeysToRemove.forEach(k => localStorage.removeItem(k));
-        
-        // ✅ حذف کش‌ها (تا داده‌های stale بارگذاری نشوند)
-        try {
-            if ('caches' in window) {
-                const cacheNames = await caches.keys();
-                for (const name of cacheNames) {
-                    await caches.delete(name);
-                }
-            }
-        } catch (e) { console.warn('خطا در پاک کردن کش:', e); }
+        // پاک کردن تمام حافظه محلی
+        localStorage.clear();
         
         showToast('برنامه با موفقیت بازنشانی شد. در حال راه‌اندازی مجدد...', 'info');
         setTimeout(() => window.location.reload(), 2000);
