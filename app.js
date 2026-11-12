@@ -68,7 +68,9 @@ async function loadAllData() {
     try {
         const classData = await getDataById('classProfile', 1);
         if (classData) {
-            if (classData.academicYear) window.activeAcademicYear = classData.academicYear;
+            // ⚠️ خط مربوط به تغییر activeAcademicYear را حذف کردیم تا برنامه ریستارت نشود
+            // if (classData.academicYear) window.activeAcademicYear = classData.academicYear; 
+            
             if (classData.scheduleActiveDays) window.scheduleActiveDays = classData.scheduleActiveDays;
             if (classData.schedulePeriodsCount) window.schedulePeriodsCount = parseInt(classData.schedulePeriodsCount);
         }
@@ -83,6 +85,8 @@ async function loadAllData() {
         window.allStudentsData = rawStudents;
         window.allGroupsData = rawGroups;
         window.allSubjectsData = rawSubjects;
+        
+        // فیلتر کردن سوابق بر اساس سال تحصیلی فعلی
         window.allRecordsData = rawRecords.filter(r => !r.academicYear || r.academicYear === window.activeAcademicYear);
         window.allSessionsData = rawSessions.filter(s => !s.academicYear || s.academicYear === window.activeAcademicYear);
         
