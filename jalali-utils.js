@@ -1,7 +1,6 @@
 // ==========================================
 // فایل jalali-utils.js — توابع مشترک تقویم شمسی
 // این فایل باید قبل از سایر فایل‌های تقویم لود شود
-// (calendar.js, session.js, score.js, exam.js)
 // ==========================================
 
 (function() {
@@ -21,9 +20,6 @@
 
     // ==========================================
     // دریافت تعداد روزهای یک ماه شمسی
-    // ۶ ماه اول: ۳۱ روز
-    // ۶ ماه دوم: ۳۰ روز
-    // اسفند: ۲۹ روز (کبیسه: ۳۰ روز)
     // ==========================================
     window.getJalaliDaysInMonth = function(year, month) {
         if (month <= 6) return 31;
@@ -33,8 +29,6 @@
 
     // ==========================================
     // دریافت روز اول هفته برای یک ماه شمسی
-    // خروجی: عددی بین ۰ (شنبه) تا ۶ (جمعه)
-    // مبدأ محاسبه: ۱ فروردین ۱۴۰۵
     // ==========================================
     window.getJalaliFirstDayOfWeek = function(year, month) {
         let daysPassed = 0;
@@ -45,6 +39,29 @@
             daysPassed += window.getJalaliDaysInMonth(year, m);
         }
         return daysPassed % 7;
+    };
+
+    // ==========================================
+    // بررسی معتبر بودن یک تاریخ شمسی (سال، ماه، روز)
+    // ==========================================
+    window.isValidJalaliDate = function(year, month, day) {
+        if (isNaN(year) || isNaN(month) || isNaN(day)) return false;
+        if (year < 1300 || year > 1500) return false;
+        if (month < 1 || month > 12) return false;
+        if (day < 1) return false;
+        const maxDays = window.getJalaliDaysInMonth(year, month);
+        if (day > maxDays) return false;
+        return true;
+    };
+
+    // ==========================================
+    // بررسی معتبر بودن یک رشته تاریخ (مثلاً "1405/08/15")
+    // ==========================================
+    window.isValidJalaliDateString = function(dateStr) {
+        if (!dateStr || typeof dateStr !== 'string') return false;
+        const match = dateStr.match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
+        if (!match) return false;
+        return window.isValidJalaliDate(parseInt(match[1]), parseInt(match[2]), parseInt(match[3]));
     };
 
 })();
