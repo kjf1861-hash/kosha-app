@@ -1,6 +1,6 @@
 // ==========================================
 // فایل back-button.js — مدیریت دکمه بازگشت (Back) در PWA
-// نسخه v5 — اصلاح منطق هشدار و خروج
+// نسخه v6 — ایمن‌سازی کامل
 // ==========================================
 
 (function() {
@@ -122,16 +122,12 @@
         
         pushGuard();
         
-        console.log('✅ Back handler initialized.');
-        
         window.addEventListener('popstate', function(event) {
-            console.log('🔙 popstate fired.');
             handleBackAction();
         });
     }
     
     function handleBackAction() {
-        // ۱. بررسی مودال باز
         const openModal = getOpenModal();
         if (openModal) {
             closeModal(openModal);
@@ -141,7 +137,6 @@
             return;
         }
         
-        // ۲. بررسی تب فعال
         const activePage = getActivePageId();
         if (activePage && activePage !== 'page-class') {
             goToPage('page-class');
@@ -151,15 +146,12 @@
             return;
         }
         
-        // ۳. در تب کلاس هستیم (مدیریت خروج)
         backPressCount++;
         
         if (backPressCount === 1) {
-            // نمایش پیام هشدار
             if (typeof showToast === 'function') {
                 showToast('برای خروج از برنامه، دوباره دکمه بازگشت را بزنید.', 'info');
             }
-            // ثبت گام جدید تا کاربر در اپ بماند
             pushGuard();
             
             if (backPressTimer) clearTimeout(backPressTimer);
@@ -168,11 +160,9 @@
                 backPressTimer = null;
             }, 3000);
         } else {
-            // خروج واقعی
             backPressCount = 0;
             if (backPressTimer) { clearTimeout(backPressTimer); backPressTimer = null; }
             
-            // چون دو بار pushState زدیم، باید دو گام به عقب برویم
             try {
                 window.history.go(-2);
             } catch (e) {
