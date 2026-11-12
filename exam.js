@@ -582,6 +582,10 @@ async function saveExam(event) {
     try {
         await saveData('exams', examData);
         showToast('آزمون با موفقیت ذخیره شد!', 'success');
+        
+        // *** پاک کردن وضعیت Dirty بعد از ذخیره آزمون ***
+        if (typeof clearFormDirty === 'function') clearFormDirty();
+        
         closeExamEditorModal();
         await loadExamsData();
         renderExamsData();
@@ -678,6 +682,9 @@ function closeExamGradingModal() {
     const modal = document.getElementById('exam-grading-modal');
     if (modal) modal.classList.remove('show');
     currentGradingExamId = null;
+    
+    // *** پاک کردن وضعیت Dirty بعد از بستن مودال ***
+    if (typeof clearFormDirty === 'function') clearFormDirty();
 }
 
 function updateGradingStats() {
@@ -775,12 +782,23 @@ async function saveExamGrades() {
             await deleteData('examResults', r.id);
         }
         
-        for (const r of newResults) {
-            r.id = Date.now() + Math.random();
-            await saveData('examResults', r);
+        // ==========================================
+        // ✅ تغییر اصلی: تولید id امن و یکتا
+        // به جای Date.now() + Math.random() که ممکن بود تداخل کند،
+        // از یک baseId (زمان فعلی) + شمارنده افزایشی استفاده می‌کنیم.
+        // این تضمین می‌کند که همه idها عدد صحیح و کاملاً یکتا باشند.
+        // ==========================================
+        const baseId = Date.now();
+        for (let i = 0; i < newResults.length; i++) {
+            newResults[i].id = baseId + i;
+            await saveData('examResults', newResults[i]);
         }
         
         showToast(`نمرات ${toPersianNumber(newResults.length)} دانش‌آموز ذخیره شد!`, 'success');
+        
+        // *** پاک کردن وضعیت Dirty بعد از ذخیره موفق نمرات ***
+        if (typeof clearFormDirty === 'function') clearFormDirty();
+        
         closeExamGradingModal();
         
         await loadExamsData();
