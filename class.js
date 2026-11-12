@@ -38,14 +38,10 @@ async function saveClassProfile(e) {
 
     if (!classNameEl) return;
 
-    // ==========================================
-    // ✅ تغییر اصلی: تعیین سال تحصیلی جدید فقط به‌عنوان متغیر محلی
-    // (تا در صورت خطا، localStorage و window تغییر نکنند)
-    // ==========================================
-    let selectedYear = window.activeAcademicYear;
-    if (academicYearEl && academicYearEl.value) {
-        selectedYear = academicYearEl.value;
-    }
+    // ✅ تعیین سال تحصیلی از فرم، و اگر خالی بود از window
+    let selectedYear = (academicYearEl && academicYearEl.value) 
+        ? academicYearEl.value 
+        : window.activeAcademicYear;
 
     const data = {
         id: 1,
@@ -61,33 +57,37 @@ async function saveClassProfile(e) {
     };
     
     try {
-        // ۱. اول ذخیره در DB
+        // ۱. اول در DB ذخیره کن
         await saveData('classProfile', data);
         
-        // ۲. فقط بعد از موفقیت، حافظه سراسری و localStorage را به‌روز کن
+        // ۲. فقط بعد از موفقیت، حافظه رو به‌روز کن
+        window.activeAcademicYear = selectedYear;
+        try {
+            localStorage.setItem('kosha-active-academic-year', selectedYear);
+        } catch (e) { console.warn('خطا در localStorage:', e); }
+        
         window.scheduleActiveDays = selectedDays;
         window.schedulePeriodsCount = periodsCount;
-        
-        if (window.activeAcademicYear !== selectedYear) {
-            window.activeAcademicYear = selectedYear;
-            try {
-                localStorage.setItem('kosha-active-academic-year', selectedYear);
-            } catch (e) { console.warn('خطا در ذخیره سال تحصیلی در localStorage:', e); }
-        }
 
         showToast('مشخصات کلاس ذخیره شد!', 'success');
         const headerSubtitle = document.getElementById('header-subtitle');
         if (headerSubtitle) headerSubtitle.textContent = data.name;
         
-        // پاک کردن وضعیت ذخیره‌نشده
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
         if (typeof closeSettingsModal === 'function') closeSettingsModal();
         
-        // دوباره پر کردن فرم با داده‌های ذخیره شده
-        populateCurrentClassProfile(data);
-        
+        // ۳. بعد از ذخیره، دوباره بارگذاری کن
         await loadAllData();
+        
+        // ۴. فرم رو با داده‌های جدید پر کن (شامل academicYear)
+        await populateCurrentClassProfile(data);
+        
+        // ۵. اگر تغییر سال تحصیلی بوده، به کاربر هشدار بده
+        if (selectedYear !== (localStorage.getItem('kosha-active-academic-year') || selectedYear)) {
+            // (این بلاک عملاً هیچوقت اجرا نمی‌شه، ولی برای اطمینان)
+        }
+        
     } catch (err) {
         console.error(err);
         showToast('خطا در ذخیره مشخصات کلاس. تغییرات ذخیره نشد.', 'error');
