@@ -3,7 +3,7 @@
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 12; // ارتقا به 12 برای اضافه شدن جداول آزمون‌ها
+const DB_VERSION = 12; // نسخه 12 برای جداول آزمون‌ها
 
 let db;
 
@@ -80,7 +80,6 @@ function initDB() {
                 db.createObjectStore('weeklySchedule', { keyPath: 'day' });
             }
             
-            // *** جداول جدید برای تب آزمون‌ها ***
             if (!db.objectStoreNames.contains('exams')) {
                 const examStore = db.createObjectStore('exams', { keyPath: 'id' });
                 examStore.createIndex('subjectId', 'subjectId', { unique: false });
@@ -100,7 +99,19 @@ function saveData(storeName, data) {
         const transaction = db.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
         const request = store.put(data);
-        request.onsuccess = () => resolve(request.result);
+        
+        request.onsuccess = () => {
+            resolve(request.result);
+            
+            // ==========================================
+            // ✅ تغییر اصلی: فراخوانی پشتیبان‌گیری خودکار
+            // پس از هر ذخیره موفق، پشتیبان خودکار در پس‌زمینه اجرا می‌شود.
+            // ==========================================
+            if (typeof window.triggerAutoBackup === 'function') {
+                window.triggerAutoBackup();
+            }
+        };
+        
         request.onerror = (event) => reject(event.target.error);
     });
 }
@@ -115,7 +126,16 @@ function saveBulkData(storeName, dataArray) {
             const request = store.put(data);
             request.onsuccess = () => {
                 completed++;
-                if (completed === dataArray.length) resolve();
+                if (completed === dataArray.length) {
+                    resolve();
+                    
+                    // ==========================================
+                    // ✅ پشتیبان‌گیری خودکار پس از ذخیره گروهی
+                    // ==========================================
+                    if (typeof window.triggerAutoBackup === 'function') {
+                        window.triggerAutoBackup();
+                    }
+                }
             };
             request.onerror = (event) => reject(event.target.error);
         });
@@ -147,7 +167,18 @@ function deleteData(storeName, id) {
         const transaction = db.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
         const request = store.delete(id);
-        request.onsuccess = () => resolve();
+        
+        request.onsuccess = () => {
+            resolve();
+            
+            // ==========================================
+            // ✅ پشتیبان‌گیری خودکار پس از حذف
+            // ==========================================
+            if (typeof window.triggerAutoBackup === 'function') {
+                window.triggerAutoBackup();
+            }
+        };
+        
         request.onerror = (event) => reject(event.target.error);
     });
 }
@@ -157,7 +188,18 @@ function clearStore(storeName) {
         const transaction = db.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
         const request = store.clear();
-        request.onsuccess = () => resolve();
+        
+        request.onsuccess = () => {
+            resolve();
+            
+            // ==========================================
+            // ✅ پشتیبان‌گیری خودکار پس از پاکسازی جدول
+            // ==========================================
+            if (typeof window.triggerAutoBackup === 'function') {
+                window.triggerAutoBackup();
+            }
+        };
+        
         request.onerror = (event) => reject(event.target.error);
     });
 }
