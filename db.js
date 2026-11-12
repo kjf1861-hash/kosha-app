@@ -1,15 +1,10 @@
 /**
  * فایل db.js — لایه ارتباط با IndexedDB
- * نسخه سالم ۱۴ (اصلاح‌شده)
- *
- * تغییرات نسخه ۱۴:
- * - اصلاح importAllData: پاک کردن همه storeها قبل از import (رفع ناسازگاری)
- * - پشتیبانی از آبجکت تکی در فایل پشتیبان (نه فقط آرایه)
- * - حذف rollback ناقص و جایگزینی با منطق ساده‌تر و امن‌تر
+ * نسخه سالم ۱۳
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 13; // نسخه DB تغییر نکرده — فقط منطق import اصلاح شد
+const DB_VERSION = 13;
 
 let db;
 
@@ -179,79 +174,32 @@ function clearStore(storeName) {
     });
 }
 
-const ALL_STORES = ['classProfile', 'students', 'groups', 'subjects', 'records',
-                    'badgesSettings', 'sessions', 'attendance', 'assessmentItems',
-                    'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
-
 async function exportAllData() {
     const data = {};
-    for (const store of ALL_STORES) {
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
+    for (const store of stores) {
         try { data[store] = await getAllData(store); } catch (e) { data[store] = []; }
     }
     return data;
 }
 
-// ==========================================
-// ✅ importAllData — اصلاح‌شده
-// - همه storeها ابتدا خالی می‌شوند (نه فقط آن‌هایی که در فایل هستند)
-// - پشتیبانی از آبجکت تکی (در فایل‌های پشتیبان قدیمی که کلاس یک آبجکت بود)
-// - بازگردانی خودکار در صورت خطای غیرمنتظره
-// ==========================================
 async function importAllData(data) {
-    if (!data || typeof data !== 'object') {
-        throw new Error('داده‌های نامعتبر برای بازیابی');
-    }
-
-    // ۱. تهیه پشتیبان از وضعیت فعلی (برای rollback در صورت خطا)
+    if (!data || typeof data !== 'object') throw new Error('داده‌های نامعتبر');
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
     const backup = {};
-    for (const store of ALL_STORES) {
-        try { backup[store] = await getAllData(store); } catch (e) { backup[store] = []; }
-    }
-
-    // ۲. نرمال‌سازی داده‌های ورودی: هر store باید آرایه باشد
-    const normalized = {};
-    for (const store of ALL_STORES) {
-        let arr = data[store];
-        if (Array.isArray(arr)) {
-            normalized[store] = arr;
-        } else if (arr && typeof arr === 'object') {
-            // آبجکت تکی (مثلاً classProfile در نسخه‌های قدیمی) → آرایه یک‌عضوی
-            normalized[store] = [arr];
-        } else {
-            normalized[store] = []; // نبود در فایل → آرایه خالی (پاک می‌شود)
-        }
-    }
-
-    // ۳. اعتبارسنجی اولیه (وجود id در رکوردهای دارای keyPath)
-    const storesRequiringId = ['classProfile', 'badgesSettings', 'assessmentItems'];
-    for (const store of storesRequiringId) {
-        for (const rec of normalized[store]) {
-            if (rec && typeof rec === 'object' && (rec.id === undefined || rec.id === null)) {
-                throw new Error(`رکورد بدون id در جدول ${store} — فایل پشتیبان معتبر نیست.`);
-            }
-        }
-    }
-
-    // ۴. اجرای import
+    for (const store of stores) { backup[store] = await getAllData(store); }
+    
     try {
-        for (const store of ALL_STORES) {
-            await clearStore(store);
-            if (normalized[store].length > 0) {
-                await saveBulkData(store, normalized[store]);
+        for (const store of stores) {
+            if (data[store] && Array.isArray(data[store])) {
+                await clearStore(store);
+                if (data[store].length > 0) await saveBulkData(store, data[store]);
             }
         }
     } catch (e) {
-        // ۵. rollback
-        console.error('خطا در import — در حال بازگردانی...', e);
-        try {
-            for (const store of ALL_STORES) {
-                await clearStore(store);
-                if (backup[store].length > 0) {
-                    await saveBulkData(store, backup[store]);
-                }
-            }
-        } catch (rollbackErr) {
-            console.error('خطا در rollback:', rollbackErr);
+        for (const store of stores) {
+            await clearStore(store);
+            if (backup[store].length > 0) await saveBulkData(store, backup[store]);
         }
         throw new Error('خطا در بازیابی داده‌ها، تغییرات لغو شد.');
     }
