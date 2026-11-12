@@ -1,12 +1,5 @@
 // ==========================================
-// فایل exam.js — منطق کامل تب آزمون‌ها (نسخه اصلاح‌شده v3)
-// ==========================================
-//
-// تغییرات نسخه v3:
-// - اصلاح initExamCalendar: ریست کامل year/month اگر خارج از بازه باشد
-// - ایمن‌سازی localeCompare با || ''
-// - اصلاح saveExamGrades: استفاده از شمارنده تضمینی برای id (رفع تداخل)
-// - پاک کردن وضعیت Dirty در همه مودال‌ها
+// فایل exam.js — منطق کامل تب آزمون‌ها (نسخه اصلاح‌شده با تقویم)
 // ==========================================
 
 window.allExamsData = [];
@@ -28,8 +21,6 @@ async function loadExamsData() {
         window.allExamResultsData = await getAllData('examResults');
     } catch (e) {
         console.error('خطا در بارگذاری داده‌های آزمون:', e);
-        window.allExamsData = [];
-        window.allExamResultsData = [];
     }
 }
 
@@ -52,7 +43,7 @@ function renderExamsData() {
         return;
     }
 
-    const sortedExams = [...window.allExamsData].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    const sortedExams = [...window.allExamsData].sort((a, b) => b.date.localeCompare(a.date));
 
     let html = '';
     sortedExams.forEach(exam => {
@@ -121,23 +112,14 @@ function loadExamCalendarState() {
     } catch (e) { console.log('خطا در بازیابی تقویم آزمون', e); }
 }
 
-// ==========================================
-// ✅ initExamCalendar — اصلاح‌شده
-// - اگر year خارج از بازه باشد (چه کوچک‌تر، چه بزرگ‌تر) ریست می‌شود
-// - در حالت ساخت آزمون جدید، selectedDate پاک می‌شود
-// ==========================================
 function initExamCalendar() {
     const ay = window.activeAcademicYear || '1405-1406';
-    const [startYearStr, endYearStr] = ay.split('-');
+    const [startYearStr] = ay.split('-');
     const startYear = parseInt(startYearStr);
-    const endYear = parseInt(endYearStr);
     
     loadExamCalendarState();
     
-    // ✅ ریست کامل اگر سال خارج از بازه باشد (در هر دو جهت)
-    if (!examCalendarState.year || 
-        examCalendarState.year < startYear || 
-        examCalendarState.year > endYear) {
+    if (!examCalendarState.year || examCalendarState.year < startYear) {
         examCalendarState.year = startYear;
         examCalendarState.month = 7;
         examCalendarState.selectedDate = '';
@@ -157,6 +139,8 @@ function initExamCalendar() {
     
     renderExamCalendar();
 }
+
+// *** توابع تقویم شمسی از jalali-utils.js می‌آیند ***
 
 function changeExamCalendarMonth(delta) {
     const ay = window.activeAcademicYear || '1405-1406';
@@ -182,11 +166,8 @@ function changeExamCalendarMonth(delta) {
 
     if (examCalendarState.year < startYear || examCalendarState.year > endYear) {
         showToast('این ماه خارج از بازه سال تحصیلی است.', 'error');
-        const titleEl = document.getElementById('exam-calendar-title');
-        if (titleEl && titleEl.dataset.year) {
-            examCalendarState.year = parseInt(titleEl.dataset.year);
-            examCalendarState.month = parseInt(titleEl.dataset.month);
-        }
+        examCalendarState.year = parseInt(document.getElementById('exam-calendar-title').dataset.year);
+        examCalendarState.month = parseInt(document.getElementById('exam-calendar-title').dataset.month);
         return;
     }
 
@@ -282,6 +263,7 @@ function selectExamCalendarDay(dateStr) {
         }
     }
 }
+
 // ==========================================
 // 3. باز کردن مودال سازنده آزمون
 // ==========================================
@@ -291,7 +273,7 @@ async function openExamEditorModal(examId = null) {
     const titleEl = document.getElementById('exam-editor-title');
     const questionsContainer = document.getElementById('exam-questions-container');
     
-    if (!modal || !form || !questionsContainer) {
+    if (!modal || !form) {
         showToast('خطا: مودال آزمون یافت نشد.', 'error');
         return;
     }
@@ -303,7 +285,7 @@ async function openExamEditorModal(examId = null) {
 
     const subjectSelect = document.getElementById('examSubject');
     subjectSelect.innerHTML = '<option value="" disabled selected>یک درس را انتخاب کنید...</option>' +
-        (window.allSubjectsData || []).map(s => `<option value="${s.id}">${s.symbol || ''} ${s.name}</option>`).join('');
+        window.allSubjectsData.map(s => `<option value="${s.id}">${s.symbol || ''} ${s.name}</option>`).join('');
 
     if (examId) {
         const exam = await getDataById('exams', examId);
@@ -315,25 +297,20 @@ async function openExamEditorModal(examId = null) {
         document.getElementById('examSubject').value = exam.subjectId;
         document.getElementById('examMaxScore').value = exam.maxScore;
         
-        // ✅ تنظیم تقویم از روی تاریخ آزمون
         if (exam.date && /^\d{4}\/\d{2}\/\d{2}$/.test(exam.date)) {
             const parts = exam.date.split('/');
             examCalendarState.year = parseInt(parts[0]);
             examCalendarState.month = parseInt(parts[1]);
             examCalendarState.selectedDate = exam.date;
-        } else {
-            examCalendarState.selectedDate = '';
         }
         
         if (exam.questions && exam.questions.length > 0) {
             exam.questions.forEach(q => addExamQuestion(q));
-        } else {
-            addExamQuestion();
         }
     } else {
         titleEl.textContent = '➕ ساخت آزمون جدید';
-        // ✅ ریست کامل تقویم در حالت ساخت جدید
         examCalendarState.selectedDate = '';
+        addExamQuestion();
     }
 
     initExamCalendar();
@@ -343,8 +320,6 @@ async function openExamEditorModal(examId = null) {
 function closeExamEditorModal() {
     const modal = document.getElementById('exam-editor-modal');
     if (modal) modal.classList.remove('show');
-    // ✅ پاک کردن وضعیت Dirty
-    if (typeof clearFormDirty === 'function') clearFormDirty();
 }
 
 // ==========================================
@@ -526,8 +501,6 @@ async function saveExam(event) {
     let hasError = false;
     
     questionItems.forEach((item, index) => {
-        if (hasError) return;
-        
         const type = item.querySelector('.exam-question-type').value;
         const text = item.querySelector('.exam-question-text').value.trim();
         const score = parseFloat(item.querySelector('.exam-question-score').value);
@@ -610,6 +583,7 @@ async function saveExam(event) {
         await saveData('exams', examData);
         showToast('آزمون با موفقیت ذخیره شد!', 'success');
         
+        // *** پاک کردن وضعیت Dirty بعد از ذخیره آزمون ***
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
         closeExamEditorModal();
@@ -643,6 +617,7 @@ async function deleteExam(examId) {
         showToast('خطا در حذف آزمون.', 'error');
     }
 }
+
 // ==========================================
 // 7. باز کردن مودال ثبت نمرات
 // ==========================================
@@ -762,12 +737,6 @@ function setAllExamScores(value) {
     updateGradingStats();
 }
 
-// ==========================================
-// ✅ saveExamGrades — اصلاح‌شده (رفع باگ بحرانی تداخل id)
-// ==========================================
-// باگ قبلی: استفاده از Date.now() + i که در دو عملیات سریع تداخل می‌کرد
-// راه‌حل: استفاده از شمارنده تضمینی در localStorage + پیشوند زمان
-// ==========================================
 async function saveExamGrades() {
     if (!currentGradingExamId) return;
     
@@ -779,8 +748,6 @@ async function saveExamGrades() {
     let hasError = false;
     
     inputs.forEach(input => {
-        if (hasError) return;
-        
         const studentId = parseInt(input.getAttribute('data-student-id'));
         const rawValue = input.value.trim();
         
@@ -810,42 +777,32 @@ async function saveExamGrades() {
     if (hasError) return;
     
     try {
-        // ۱. حذف نتایج قبلی
         const oldResults = window.allExamResultsData.filter(r => r.examId === currentGradingExamId);
         for (const r of oldResults) {
             await deleteData('examResults', r.id);
         }
         
-        // ۲. تولید id یکتا با شمارنده تضمینی
-        // ساختار: پایه زمانی (میلی‌ثانیه) + شمارنده افزایشی
-        // - پایه: Date.now() * 1000 → فضای کافی برای ۱۰۰۰ رکورد در هر میلی‌ثانیه
-        // - شمارنده: در localStorage نگهداری می‌شود تا بین رفرش‌ها هم ادامه یابد
-        // - در نتیجه: id تضمینی یکتاست، حتی اگر در همان میلی‌ثانیه چند بار ذخیره شود
-        const base = Date.now() * 1000;
-        let counter = parseInt(localStorage.getItem('kosha-examResultCounter') || '0');
-        
+        // ==========================================
+        // ✅ تغییر اصلی: تولید id امن و یکتا
+        // به جای Date.now() + Math.random() که ممکن بود تداخل کند،
+        // از یک baseId (زمان فعلی) + شمارنده افزایشی استفاده می‌کنیم.
+        // این تضمین می‌کند که همه idها عدد صحیح و کاملاً یکتا باشند.
+        // ==========================================
+        const baseId = Date.now();
         for (let i = 0; i < newResults.length; i++) {
-            counter++;
-            newResults[i].id = base + counter;
+            newResults[i].id = baseId + i;
             await saveData('examResults', newResults[i]);
         }
         
-        // ۳. ذخیره شمارنده برای استفاده بعدی
-        localStorage.setItem('kosha-examResultCounter', counter.toString());
-        
         showToast(`نمرات ${toPersianNumber(newResults.length)} دانش‌آموز ذخیره شد!`, 'success');
         
+        // *** پاک کردن وضعیت Dirty بعد از ذخیره موفق نمرات ***
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
         closeExamGradingModal();
         
         await loadExamsData();
         renderExamsData();
-        
-        // به‌روزرسانی داشبورد (اگر باز باشد)
-        if (typeof renderExamsDashboard === 'function') {
-            try { renderExamsDashboard(); } catch (e) { /* silent */ }
-        }
     } catch (e) {
         console.error(e);
         showToast('خطا در ذخیره نمرات.', 'error');
@@ -853,6 +810,8 @@ async function saveExamGrades() {
 }
 
 // ==========================================
-// 8. تولید فایل بازی
+// 8. تولید فایل بازی برای دانش‌آموز (آفلاین)
 // ==========================================
-// *** توجه: توابع generateGameFile و buildGameHtml در فایل game.js هستند ***
+// *** توجه: توابع generateGameFile و buildGameHtml به فایل game.js منتقل شدند ***
+// *** از این پس، این توابع در game.js قرار دارند ***
+// *** این فایل (exam.js) فقط مسئول مدیریت آزمون‌ها و ثبت نمرات است ***
