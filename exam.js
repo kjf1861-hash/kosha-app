@@ -140,24 +140,7 @@ function initExamCalendar() {
     renderExamCalendar();
 }
 
-function isExamLeapYear(year) { return [1408, 1412, 1416].includes(year); }
-
-function getExamDaysInMonth(year, month) {
-    if (month <= 6) return 31;
-    if (month <= 11) return 30;
-    return isExamLeapYear(year) ? 30 : 29;
-}
-
-function getExamFirstDayOfWeek(year, month) {
-    let daysPassed = 0;
-    for (let y = 1405; y < year; y++) {
-        daysPassed += isExamLeapYear(y) ? 366 : 365;
-    }
-    for (let m = 1; m < month; m++) {
-        daysPassed += getExamDaysInMonth(year, m);
-    }
-    return daysPassed % 7;
-}
+// *** توابع تقویم شمسی از jalali-utils.js می‌آیند ***
 
 function changeExamCalendarMonth(delta) {
     const ay = window.activeAcademicYear || '1405-1406';
@@ -222,8 +205,8 @@ function renderExamCalendar() {
     if (!grid) return;
     grid.innerHTML = '';
 
-    const firstDay = getExamFirstDayOfWeek(examCalendarState.year, examCalendarState.month);
-    const daysInMonth = getExamDaysInMonth(examCalendarState.year, examCalendarState.month);
+    const firstDay = getJalaliFirstDayOfWeek(examCalendarState.year, examCalendarState.month);
+    const daysInMonth = getJalaliDaysInMonth(examCalendarState.year, examCalendarState.month);
     
     const startBound = `${startY}/07/01`;
     const endBound = `${endY}/06/31`;
