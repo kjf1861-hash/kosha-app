@@ -1037,10 +1037,3 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
     background: var(--card-bg) !important;
     border-color: var(--border-color) !important;
 }
-.dc-value {
-    font-family: 'Vazirmatn', Tahoma, sans-serif;
-    font-variant-numeric: normal;
-    -moz-font-feature-settings: "ss02";
-    -webkit-font-feature-settings: "ss02";
-    font-feature-settings: "ss02";
-}
