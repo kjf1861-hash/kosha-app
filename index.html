@@ -119,15 +119,15 @@
                     </div>
                 </div>
                 <!-- ===== کارت گزارش جامع آزمون‌ها ===== -->
-                <div class="card" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border: 2px solid #a5b4fc;">
-                    <h2 class="card-title" style="color: #4f46e5; border-bottom-color: #c7d2fe;">🎓 گزارش جامع آزمون‌ها</h2>
-                    <div id="dashboard-exams-report">
-                        <!-- توسط JS پر می‌شود -->
-                    </div>
-                    <button type="button" class="btn btn-secondary btn-block mt-4" onclick="switchPage('page-exams', document.querySelectorAll('.nav-item')[7])">
-                        🎓 رفتن به تب آزمون‌ها
-                    </button>
-                </div>
+<div class="card" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border: 2px solid #a5b4fc;">
+    <h2 class="card-title" style="color: #4f46e5; border-bottom-color: #c7d2fe;">🎓 گزارش جامع آزمون‌ها</h2>
+    <div id="dashboard-exams-report">
+        <!-- توسط JS پر می‌شود -->
+    </div>
+    <button type="button" class="btn btn-secondary btn-block mt-4" onclick="switchPage('page-exams', document.querySelectorAll('.nav-item')[7])">
+        🎓 رفتن به تب آزمون‌ها
+    </button>
+</div>
             </div>
 
             <!-- تب ۲: دانش‌آموزان -->
@@ -155,195 +155,196 @@
                     </div>
                 </div>
             </div>
-                    <!-- تب ۳: دروس -->
-        <div id="page-lesson" class="page-section">
-            <div class="page-header-title">📚 دروس</div>
-            <div class="card">
-                <h2 class="card-title">➕ افزودن مادهٔ درسی</h2>
-                <form id="lesson-form">
-                    <div class="form-group"><label class="form-label" for="lessonName">عنوان</label><input type="text" id="lessonName" class="form-control" placeholder="مثلاً: ریاضی" autocomplete="on" required></div>
-                    <div class="form-group"><label class="form-label" for="lessonSymbol">نماد (ایموجی)</label><input type="text" id="lessonSymbol" class="form-control" placeholder="📐" autocomplete="off"></div>
-                    <div class="form-group"><label class="form-label" for="lessonMotto">شعار (اختیاری)</label><input type="text" id="lessonMotto" class="form-control" placeholder="مثلاً: ریاضیات، زبان جهان" autocomplete="on"></div>
-                    <button type="submit" class="btn btn-primary mt-4">➕ ثبت درس</button>
-                </form>
-            </div>
-            <div class="card">
-                <h2 class="card-title" style="justify-content: space-between;">
-                    <span style="display: flex; align-items: center; gap: 8px;">📋 فهرست مواد درسی</span>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="resetAllLessons()" title="حذف همه دروس" style="padding: 4px 8px; border-radius: 8px;">🗑️</button>
-                </h2>
-                <div id="lessons-list" class="list-group"></div>
-            </div>
-        </div>
-
-        <!-- تب ۵: تقویم -->
-        <div id="page-calendar" class="page-section">
-            <div class="page-header-title">📅 تقویم</div>
             
-            <!-- تقویم جامع -->
-            <div class="card">
-                <h2 class="card-title" style="justify-content: space-between;">
-                    <span style="display: flex; align-items: center; gap: 8px;">📅 تقویم جامع</span>
-                    <div style="display:flex; gap:5px;">
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="fullCalendarPrevMonth()" title="ماه قبل">◀</button>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="fullCalendarNextMonth()" title="ماه بعد">▶</button>
-                    </div>
-                </h2>
-                
-                <div class="calendar-title" id="full-calendar-title" style="margin-bottom: 15px;"></div>
-                
-                <div class="calendar-weekdays">
-                    <span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span>
+            <!-- تب ۳: دروس -->
+            <div id="page-lesson" class="page-section">
+                <div class="page-header-title">📚 دروس</div>
+                <div class="card">
+                    <h2 class="card-title">➕ افزودن مادهٔ درسی</h2>
+                    <form id="lesson-form">
+                        <div class="form-group"><label class="form-label" for="lessonName">عنوان</label><input type="text" id="lessonName" class="form-control" placeholder="مثلاً: ریاضی" autocomplete="on" required></div>
+                        <div class="form-group"><label class="form-label" for="lessonSymbol">نماد (ایموجی)</label><input type="text" id="lessonSymbol" class="form-control" placeholder="📐" autocomplete="off"></div>
+                        <div class="form-group"><label class="form-label" for="lessonMotto">شعار (اختیاری)</label><input type="text" id="lessonMotto" class="form-control" placeholder="مثلاً: ریاضیات، زبان جهان" autocomplete="on"></div>
+                        <button type="submit" class="btn btn-primary mt-4">➕ ثبت درس</button>
+                    </form>
                 </div>
-                
-                <div class="full-calendar-grid" id="full-calendar-grid"></div>
+                <div class="card">
+                    <h2 class="card-title" style="justify-content: space-between;">
+                        <span style="display: flex; align-items: center; gap: 8px;">📋 فهرست مواد درسی</span>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="resetAllLessons()" title="حذف همه دروس" style="padding: 4px 8px; border-radius: 8px;">🗑️</button>
+                    </h2>
+                    <div id="lessons-list" class="list-group"></div>
+                </div>
             </div>
-            
-            <!-- لیست مناسبت‌ها -->
-            <div class="card" style="margin-top: 15px;">
-                <div id="full-calendar-events"></div>
-            </div>
-        </div>
 
-        <!-- تب ۴: گروه‌ها -->
-        <div id="page-group" class="page-section">
-            <div class="page-header-title">👥 گروه‌ها</div>
-            <div class="card">
-                <h2 class="card-title">➕ ایجاد گروه</h2>
-                <form id="group-form">
-                    <div class="form-group"><label class="form-label" for="groupName">نام گروه</label><input type="text" id="groupName" class="form-control" placeholder="شهباز بصیر" autocomplete="on" required></div>
-                    <div class="form-group"><label class="form-label" for="groupSymbol">نماد (ایموجی)</label><input type="text" id="groupSymbol" class="form-control" placeholder="🦅" autocomplete="off" required></div>
-                    <div class="form-group">
-                        <label class="form-label" for="groupMotto">شعار گروه (اختیاری)</label>
-                        <textarea id="groupMotto" class="form-control" placeholder="تیزبین باشیم..." autocomplete="on" rows="5"></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary mt-4">➕ ثبت گروه</button>
-                </form>
+<!-- تب ۵: تقویم -->
+<div id="page-calendar" class="page-section">
+    <div class="page-header-title">📅 تقویم</div>
+    
+    <!-- تقویم جامع -->
+    <div class="card">
+        <h2 class="card-title" style="justify-content: space-between;">
+            <span style="display: flex; align-items: center; gap: 8px;">📅 تقویم جامع</span>
+            <div style="display:flex; gap:5px;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="fullCalendarPrevMonth()" title="ماه قبل">◀</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="fullCalendarNextMonth()" title="ماه بعد">▶</button>
             </div>
-            <div class="card">
-                <h2 class="card-title" style="justify-content: space-between;">
-                    <span style="display: flex; align-items: center; gap: 8px;">📋 فهرست گروه‌ها</span>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="resetGroupAssignments()" title="پاک کردن گروه‌بندی‌ها" style="padding: 4px 8px; border-radius: 8px;">🗑️</button>
-                </h2>
-                <div id="groups-list" class="list-group"></div>
-            </div>
-        </div>
-
-        <!-- تب ۵: جلسات -->
-        <div id="page-session" class="page-section">
-            <div class="page-header-title">📅 جلسات</div>
-            <div class="card">
-                <h2 class="card-title" style="justify-content: space-between;">
-                    <span style="display: flex; align-items: center; gap: 8px;">📅 برنامهٔ هفتگی</span>
-                    <div style="display:flex; gap:5px;">
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="exportScheduleCSV()" title="خروجی اکسل">📗</button>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="exportScheduleHTML()" title="خروجی HTML">🌐</button>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="printSchedule()" title="چاپ / PDF">🖨️</button>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="resetAllWeeklySchedules()" title="حذف کل برنامه">🗑️</button>
-                    </div>
-                </h2>
-                <div class="view-toggle-group" style="margin-bottom: 15px;">
-                    <button type="button" id="btnScheduleViewMode" class="view-toggle-btn active" onclick="toggleScheduleMode('view')">👁️ نمای کلی</button>
-                    <button type="button" id="btnScheduleEditMode" class="view-toggle-btn" onclick="toggleScheduleMode('edit')">✏️ نمای ویرایش</button>
-                </div>
-                <div id="schedule-view-mode">
-                    <div class="schedule-table-wrapper">
-                        <table class="schedule-table" id="schedule-display-table"></table>
-                    </div>
-                </div>
-                <div id="schedule-edit-mode" style="display: none;">
-                    <div id="schedule-edit-container"></div>
-                    <button type="button" class="btn btn-primary btn-block mt-4" onclick="saveAllWeeklySchedules()">💾 ذخیره کل برنامه هفتگی</button>
-                </div>
-            </div>
-            <div class="card">
-                <h2 class="card-title">📝 ایجاد جلسهٔ آموزشی</h2>
-                <div class="form-group">
-                    <label class="form-label">تاریخ (تقویم شمسی)</label>
-                    <div class="jalali-calendar-wrapper" id="jalali-calendar">
-                        <div class="calendar-header">
-                            <button type="button" onclick="changeCalendarMonth(-1)">◀ ماه قبل</button>
-                            <div class="calendar-title">
-                                <select id="calendarMonthSelect" onchange="changeCalendarMonth(0)"></select>
-                                <select id="calendarYearSelect" onchange="changeCalendarYear()"></select>
-                            </div>
-                            <button type="button" onclick="changeCalendarMonth(1)">ماه بعد ▶</button>
-                        </div>
-                        <div class="calendar-weekdays">
-                            <span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span>
-                        </div>
-                        <div class="calendar-grid" id="calendarDaysGrid"></div>
-                        <div class="selected-date-display" id="selectedDateDisplay">تاریخ انتخاب نشده است</div>
-                        <input type="hidden" id="sessionDateHidden" value="">
-                    </div>
-                </div>
-                <div id="detectedDayDisplay" style="text-align:center; font-weight:bold; color:var(--primary); margin:15px 0; padding:10px; background:var(--input-bg); border-radius:8px; display:none;"></div>
-                <div id="sessionActionArea" style="margin-top: 15px;"></div>
-            </div>
-            <div class="card">
-                <h2 class="card-title">📅 گزارش حضور و غیاب</h2>
-                <div class="filter-btn-group">
-                    <button type="button" class="filter-btn active" onclick="changeAttReportFilter('class', this)">🏫 کلاسی</button>
-                    <button type="button" class="filter-btn" onclick="changeAttReportFilter('group', this)">👥 گروهی</button>
-                </div>
-                <div class="card" style="background: var(--primary-light); margin-bottom: 15px; border: none;">
-                    <h3 style="margin: 0; text-align: center; color: var(--primary-dark);">تعداد کل روزهای آموزشی: <span id="total-sessions-count">0</span></h3>
-                </div>
-                <div id="attendance-reports-list" class="list-group"></div>
-                <div style="margin-top: 15px; display: flex; gap: 10px;">
-                    <button type="button" class="btn btn-secondary btn-block" onclick="exportSessionCSV()">📗 خروجی اکسل</button>
-                    <button type="button" class="btn btn-secondary btn-block" onclick="window.print()">🖨️ چاپ</button>
-                </div>
-            </div>
+        </h2>
+        
+        <div class="calendar-title" id="full-calendar-title" style="margin-bottom: 15px;"></div>
+        
+        <div class="calendar-weekdays">
+            <span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span>
         </div>
         
-        <!-- تب ۶: امتیازات -->
-        <div id="page-score" class="page-section">
-            <div class="page-header-title">📝 امتیازات</div>
-            <div class="card">
-                <h2 class="card-title">📝 ارزشیابی</h2>
-                <button type="button" class="btn btn-secondary btn-block mb-4" onclick="openItemManagementModal()">⚙️ مدیریت آیتم‌های ارزشیابی</button>
-                <form id="record-form">
-                    <div class="form-group"><label class="form-label" for="recordSubject">درس (الزامی)</label><select id="recordSubject" class="form-control" required></select></div>
-                    <div class="form-group"><label class="form-label" for="recordTitle">عنوان (الزامی)</label><input type="text" id="recordTitle" class="form-control" placeholder="امتحان فصل اول: آفرینش" autocomplete="on" required></div>
-                    <div class="form-group"><label class="form-label" for="recordItem">آیتم ارزشیابی (الزامی)</label><select id="recordItem" class="form-control" required></select></div>
-                    <div class="form-group">
-                        <label class="form-label">انتخاب دانش‌آموزان (الزامی)</label>
-                        <div class="view-toggle-group">
-                            <button type="button" id="btnFlatView" class="view-toggle-btn active" onclick="switchStudentView('flat')">👦 نمای کلاسی</button>
-                            <button type="button" id="btnGroupView" class="view-toggle-btn" onclick="switchStudentView('grouped')">👥 نمای گروهی</button>
+        <div class="full-calendar-grid" id="full-calendar-grid"></div>
+    </div>
+    
+    <!-- لیست مناسبت‌ها -->
+    <div class="card" style="margin-top: 15px;">
+        <div id="full-calendar-events"></div>
+    </div>
+</div>
+
+            <!-- تب ۴: گروه‌ها -->
+            <div id="page-group" class="page-section">
+                <div class="page-header-title">👥 گروه‌ها</div>
+                <div class="card">
+                    <h2 class="card-title">➕ ایجاد گروه</h2>
+                    <form id="group-form">
+                        <div class="form-group"><label class="form-label" for="groupName">نام گروه</label><input type="text" id="groupName" class="form-control" placeholder="شهباز بصیر" autocomplete="on" required></div>
+                        <div class="form-group"><label class="form-label" for="groupSymbol">نماد (ایموجی)</label><input type="text" id="groupSymbol" class="form-control" placeholder="🦅" autocomplete="off" required></div>
+                        <div class="form-group">
+                            <label class="form-label" for="groupMotto">شعار گروه (اختیاری)</label>
+                            <textarea id="groupMotto" class="form-control" placeholder="تیزبین باشیم..." autocomplete="on" rows="5"></textarea>
                         </div>
-                        <div style="margin-bottom: 8px; display: flex; gap: 5px; flex-wrap: wrap;">
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllStudents(true)">انتخاب همه</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllStudents(false)">لغو همه</button>
-                        </div>
-                        <div id="students-checkbox-container" class="student-checkbox-list"></div>
-                    </div>
-                    <div id="dynamic-score-section" class="form-group" style="display: none; background: #eef2ff; padding: 15px; border-radius: 8px;">
-                        <label class="form-label" id="score-label">تعیین امتیاز</label>
-                        <div id="score-input-container"></div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">تاریخ (الزامی)</label>
-                        <details class="score-calendar-accordion" id="record-date-accordion">
-                            <summary><span>📅 انتخاب تاریخ از تقویم</span><span id="recordDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span></summary>
-                            <div class="score-calendar-body" id="record-calendar-body">
-                                <div class="calendar-header"><button type="button" onclick="changeScoreCalendarMonth('record', -1)">◀</button><div class="calendar-title" id="record-calendar-title"></div><button type="button" onclick="changeScoreCalendarMonth('record', 1)">▶</button></div>
-                                <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
-                                <div class="calendar-grid" id="record-calendar-grid"></div>
-                            </div>
-                            <div class="score-day-archive" id="record-day-archive" style="display:none;"><div id="record-day-archive-list"></div></div>
-                        </details>
-                        <input type="hidden" id="recordDate" value="">
-                    </div>
-                    <div class="form-group checkbox-group"><input type="checkbox" id="recordArf"><label for="recordArf">🎁 ارفاق آموزشی</label></div>
-                    <div style="display: flex; gap: 10px; margin-top: 20px;">
-                        <button type="button" class="btn btn-secondary" style="flex: 1; font-size: 0.9rem;" onclick="showPreview(false)">⏭️ ثبت و نفر بعدی</button>
-                        <button type="button" class="btn btn-primary" style="flex: 1; font-size: 0.9rem;" onclick="showPreview(true)">✅ ثبت نهایی</button>
-                    </div>
-                </form>
+                        <button type="submit" class="btn btn-primary mt-4">➕ ثبت گروه</button>
+                    </form>
+                </div>
+                <div class="card">
+                    <h2 class="card-title" style="justify-content: space-between;">
+                        <span style="display: flex; align-items: center; gap: 8px;">📋 فهرست گروه‌ها</span>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="resetGroupAssignments()" title="پاک کردن گروه‌بندی‌ها" style="padding: 4px 8px; border-radius: 8px;">🗑️</button>
+                    </h2>
+                    <div id="groups-list" class="list-group"></div>
+                </div>
             </div>
-            <div class="card" style="margin-top: 20px;">
+
+            <!-- تب ۵: جلسات -->
+            <div id="page-session" class="page-section">
+                <div class="page-header-title">📅 جلسات</div>
+                <div class="card">
+                    <h2 class="card-title" style="justify-content: space-between;">
+                        <span style="display: flex; align-items: center; gap: 8px;">📅 برنامهٔ هفتگی</span>
+                        <div style="display:flex; gap:5px;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="exportScheduleCSV()" title="خروجی اکسل">📗</button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="exportScheduleHTML()" title="خروجی HTML">🌐</button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="printSchedule()" title="چاپ / PDF">🖨️</button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="resetAllWeeklySchedules()" title="حذف کل برنامه">🗑️</button>
+                        </div>
+                    </h2>
+                    <div class="view-toggle-group" style="margin-bottom: 15px;">
+                        <button type="button" id="btnScheduleViewMode" class="view-toggle-btn active" onclick="toggleScheduleMode('view')">👁️ نمای کلی</button>
+                        <button type="button" id="btnScheduleEditMode" class="view-toggle-btn" onclick="toggleScheduleMode('edit')">✏️ نمای ویرایش</button>
+                    </div>
+                    <div id="schedule-view-mode">
+                        <div class="schedule-table-wrapper">
+                            <table class="schedule-table" id="schedule-display-table"></table>
+                        </div>
+                    </div>
+                    <div id="schedule-edit-mode" style="display: none;">
+                        <div id="schedule-edit-container"></div>
+                        <button type="button" class="btn btn-primary btn-block mt-4" onclick="saveAllWeeklySchedules()">💾 ذخیره کل برنامه هفتگی</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2 class="card-title">📝 ایجاد جلسهٔ آموزشی</h2>
+                    <div class="form-group">
+                        <label class="form-label">تاریخ (تقویم شمسی)</label>
+                        <div class="jalali-calendar-wrapper" id="jalali-calendar">
+                            <div class="calendar-header">
+                                <button type="button" onclick="changeCalendarMonth(-1)">◀ ماه قبل</button>
+                                <div class="calendar-title">
+                                    <select id="calendarMonthSelect" onchange="changeCalendarMonth(0)"></select>
+                                    <select id="calendarYearSelect" onchange="changeCalendarYear()"></select>
+                                </div>
+                                <button type="button" onclick="changeCalendarMonth(1)">ماه بعد ▶</button>
+                            </div>
+                            <div class="calendar-weekdays">
+                                <span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span>
+                            </div>
+                            <div class="calendar-grid" id="calendarDaysGrid"></div>
+                            <div class="selected-date-display" id="selectedDateDisplay">تاریخ انتخاب نشده است</div>
+                            <input type="hidden" id="sessionDateHidden" value="">
+                        </div>
+                    </div>
+                    <div id="detectedDayDisplay" style="text-align:center; font-weight:bold; color:var(--primary); margin:15px 0; padding:10px; background:var(--input-bg); border-radius:8px; display:none;"></div>
+                    <div id="sessionActionArea" style="margin-top: 15px;"></div>
+                </div>
+                <div class="card">
+                    <h2 class="card-title">📅 گزارش حضور و غیاب</h2>
+                    <div class="filter-btn-group">
+                        <button type="button" class="filter-btn active" onclick="changeAttReportFilter('class', this)">🏫 کلاسی</button>
+                        <button type="button" class="filter-btn" onclick="changeAttReportFilter('group', this)">👥 گروهی</button>
+                    </div>
+                    <div class="card" style="background: var(--primary-light); margin-bottom: 15px; border: none;">
+                        <h3 style="margin: 0; text-align: center; color: var(--primary-dark);">تعداد کل روزهای آموزشی: <span id="total-sessions-count">0</span></h3>
+                    </div>
+                    <div id="attendance-reports-list" class="list-group"></div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button type="button" class="btn btn-secondary btn-block" onclick="exportSessionCSV()">📗 خروجی اکسل</button>
+                        <button type="button" class="btn btn-secondary btn-block" onclick="window.print()">🖨️ چاپ</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- تب ۶: امتیازات -->
+            <div id="page-score" class="page-section">
+                <div class="page-header-title">📝 امتیازات</div>
+                <div class="card">
+                    <h2 class="card-title">📝 ارزشیابی</h2>
+                    <button type="button" class="btn btn-secondary btn-block mb-4" onclick="openItemManagementModal()">⚙️ مدیریت آیتم‌های ارزشیابی</button>
+                    <form id="record-form">
+                        <div class="form-group"><label class="form-label" for="recordSubject">درس (الزامی)</label><select id="recordSubject" class="form-control" required></select></div>
+                        <div class="form-group"><label class="form-label" for="recordTitle">عنوان (الزامی)</label><input type="text" id="recordTitle" class="form-control" placeholder="امتحان فصل اول: آفرینش" autocomplete="on" required></div>
+                        <div class="form-group"><label class="form-label" for="recordItem">آیتم ارزشیابی (الزامی)</label><select id="recordItem" class="form-control" required></select></div>
+                        <div class="form-group">
+                            <label class="form-label">انتخاب دانش‌آموزان (الزامی)</label>
+                            <div class="view-toggle-group">
+                                <button type="button" id="btnFlatView" class="view-toggle-btn active" onclick="switchStudentView('flat')">👦 نمای کلاسی</button>
+                                <button type="button" id="btnGroupView" class="view-toggle-btn" onclick="switchStudentView('grouped')">👥 نمای گروهی</button>
+                            </div>
+                            <div style="margin-bottom: 8px; display: flex; gap: 5px; flex-wrap: wrap;">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllStudents(true)">انتخاب همه</button>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllStudents(false)">لغو همه</button>
+                            </div>
+                            <div id="students-checkbox-container" class="student-checkbox-list"></div>
+                        </div>
+                        <div id="dynamic-score-section" class="form-group" style="display: none; background: #eef2ff; padding: 15px; border-radius: 8px;">
+                            <label class="form-label" id="score-label">تعیین امتیاز</label>
+                            <div id="score-input-container"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">تاریخ (الزامی)</label>
+                            <details class="score-calendar-accordion" id="record-date-accordion">
+                                <summary><span>📅 انتخاب تاریخ از تقویم</span><span id="recordDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span></summary>
+                                <div class="score-calendar-body" id="record-calendar-body">
+                                    <div class="calendar-header"><button type="button" onclick="changeScoreCalendarMonth('record', -1)">◀</button><div class="calendar-title" id="record-calendar-title"></div><button type="button" onclick="changeScoreCalendarMonth('record', 1)">▶</button></div>
+                                    <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
+                                    <div class="calendar-grid" id="record-calendar-grid"></div>
+                                </div>
+                                <div class="score-day-archive" id="record-day-archive" style="display:none;"><div id="record-day-archive-list"></div></div>
+                            </details>
+                            <input type="hidden" id="recordDate" value="">
+                        </div>
+                        <div class="form-group checkbox-group"><input type="checkbox" id="recordArf"><label for="recordArf">🎁 ارفاق آموزشی</label></div>
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button type="button" class="btn btn-secondary" style="flex: 1; font-size: 0.9rem;" onclick="showPreview(false)">⏭️ ثبت و نفر بعدی</button>
+                            <button type="button" class="btn btn-primary" style="flex: 1; font-size: 0.9rem;" onclick="showPreview(true)">✅ ثبت نهایی</button>
+                        </div>
+                    </form>
+                </div>
+                            <div class="card" style="margin-top: 20px;">
                 <h2 class="card-title">📝 سوابق ارزشیابی</h2>
                 <div class="form-group" style="margin-bottom: 10px;"><label class="form-label">فیلتر بر اساس درس</label><select id="recordsFilterSubject" class="form-control" onchange="loadAssessmentRecords()"><option value="">همه دروس</option></select></div>
                 <div class="form-group" style="margin-bottom: 10px;"><label class="form-label">فیلتر بر اساس دانش‌آموز</label><select id="recordsFilterStudent" class="form-control" onchange="loadAssessmentRecords()"><option value="">همه دانش‌آموزان</option></select></div>
@@ -474,6 +475,7 @@
         </div>
     </div> 
 </div> 
+
 <!-- منوی پایین با آیکون‌های SVG -->
 <nav class="bottom-nav" style="display: none;">
     <a href="javascript:void(0)" class="nav-item active" onclick="switchPage('page-class', this)" title="کلاس">
@@ -507,6 +509,7 @@
     <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header">⚙️ تنظیمات</div>
         
+        <!-- نمایش سال تحصیلی جاری + دکمه تغییر -->
         <div class="card" style="border: 2px solid var(--primary); background: var(--primary-light); margin-bottom: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
@@ -526,7 +529,6 @@
                 <div class="form-group"><label class="form-label" for="classGrade">پایه</label><input type="text" id="classGrade" class="form-control" placeholder="پنجم" autocomplete="on" required></div>
                 <div class="form-group"><label class="form-label" for="teacherName">نام آموزگار</label><input type="text" id="teacherName" class="form-control" placeholder="کریم جهانی فانی" autocomplete="on" required></div>
                 <div class="form-group"><label class="form-label" for="schoolName">مدرسه</label><input type="text" id="schoolName" class="form-control" placeholder="مثلاً: دبستان شهید بهشتی" autocomplete="on" required></div>
-                </div>
                 
                 <hr style="border-top: 1px dashed var(--border-color); margin: 15px 0;">
                 
@@ -548,6 +550,7 @@
 
         <hr style="border-top: 1px dashed var(--border-color); margin: 20px 0;">
 
+        <!-- ===== بخش پشتیبان‌گیری ===== -->
         <div class="card" style="border: none; box-shadow: none; padding: 0; margin-bottom: 20px;">
             <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">📤 پشتیبان‌گیری و بازیابی</h3>
             
@@ -563,6 +566,7 @@
             
             <button type="button" class="btn btn-block" onclick="restoreFromEmergencyBackup()" style="background: #f59e0b; color: white; margin-bottom: 15px;">♻️ بازیابی از آخرین نسخه خودکار</button>
 
+            <!-- تنظیمات یادآور پشتیبان‌گیری -->
             <div style="border-top: 1px dashed var(--border-color); padding-top: 15px; margin-bottom: 15px;">
                 <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 0.95rem;">🔔 یادآور پشتیبان‌گیری خودکار</h4>
                 <div class="form-group">
@@ -577,12 +581,15 @@
                 </div>
             </div>
 
+            <!-- مدیریت بازه‌ها -->
             <div style="border-top: 1px dashed var(--border-color); padding-top: 15px;">
                 <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center;">
                     <span>📅 بازه‌های بایگانی (مثل نوبت اول)</span>
                     <button type="button" class="btn btn-primary btn-sm" onclick="openPeriodEditor()" style="padding: 4px 10px; font-size: 0.8rem;">➕ بازه جدید</button>
                 </h4>
-                <div id="periods-list-container" style="margin-bottom: 15px;"></div>
+                <div id="periods-list-container" style="margin-bottom: 15px;">
+                    <!-- لیست بازه‌ها توسط JS پر می‌شود -->
+                </div>
             </div>
 
             <div style="border-top: 1px dashed var(--border-color); padding-top: 15px;">
@@ -611,7 +618,7 @@
                 </div>
 
                 <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
-                    <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">🧹 پاکسازی فنی (کش)</strong>
+                    <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">?? پاکسازی فنی (کش)</strong>
                     <p style="font-size: 0.8rem; color: #64748b; margin: 0 0 10px 0;">اگر برنامه باگ زد یا آپدیت نشد، کش مرورگر را پاک کنید.</p>
                     <button type="button" class="btn btn-secondary btn-block" onclick="resetTechnicalCache()" style="background: #fca5a5; color: #7f1d1d;">پاکسازی کش</button>
                 </div>
@@ -643,74 +650,74 @@
 <div id="attendance-details-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header" id="attendance-details-title">📋 جزئیات حضور</div><div id="attendance-details-content"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeAttendanceDetails()">بستن</button></div></div></div>
 
 <div id="lesson-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="lesson-details-title">📊 جزئیات درس</div><div class="view-toggle-group"><button type="button" id="btnLessonClassView" class="view-toggle-btn active" onclick="switchLessonDetailView('class')">👦 نمای کلاسی</button><button type="button" id="btnLessonGroupView" class="view-toggle-btn" onclick="switchLessonDetailView('group')">👥 نمای گروهی</button></div><div id="lesson-details-content" class="list-group"></div><div class="modal-footer"><button type="button" class="btn btn-secondary btn-block" onclick="closeLessonDetails()">بستن</button></div></div></div>
-
-<div id="group-details-modal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 600px;">
-        <div class="modal-header" id="group-details-title">📊 جزئیات گروه</div>
-        <div style="background: var(--input-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--border-color);">
-            <label class="form-label" style="font-size: 0.9rem; margin-bottom: 5px;">➕ افزودن دانش‌آموز به این گروه</label>
-            <div style="display: flex; gap: 8px;">
-                <select id="assignStudentSelectModal" class="form-control" style="flex: 1;"></select>
-                <button type="button" class="btn btn-primary" onclick="assignStudentFromModal()">افزودن</button>
+    <div id="group-details-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header" id="group-details-title">📊 جزئیات گروه</div>
+            <div style="background: var(--input-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--border-color);">
+                <label class="form-label" style="font-size: 0.9rem; margin-bottom: 5px;">➕ افزودن دانش‌آموز به این گروه</label>
+                <div style="display: flex; gap: 8px;">
+                    <select id="assignStudentSelectModal" class="form-control" style="flex: 1;"></select>
+                    <button type="button" class="btn btn-primary" onclick="assignStudentFromModal()">افزودن</button>
+                </div>
+            </div>
+            <div id="group-details-content" class="list-group" style="max-height: 40vh; overflow-y: auto;"></div>
+            <div class="modal-footer" style="flex-direction: column; gap: 10px; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary btn-block" onclick="closeGroupDetails()">بستن</button>
             </div>
         </div>
-        <div id="group-details-content" class="list-group" style="max-height: 40vh; overflow-y: auto;"></div>
-        <div class="modal-footer" style="flex-direction: column; gap: 10px; margin-top: 20px;">
-            <button type="button" class="btn btn-secondary btn-block" onclick="closeGroupDetails()">بستن</button>
+    </div>
+
+    <div id="edit-group-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">✏️ ویرایش گروه</div>
+            <form id="edit-group-form">
+                <input type="hidden" id="editGroupIdModal">
+                <div class="form-group"><label class="form-label">نام گروه</label><input type="text" id="editGroupNameModal" class="form-control" required></div>
+                <div class="form-group"><label class="form-label">نماد (ایموجی)</label><input type="text" id="editGroupSymbolModal" class="form-control" required></div>
+                <div class="form-group"><label class="form-label">شعار گروه (اختیاری)</label><textarea id="editGroupMottoModal" class="form-control" rows="4"></textarea></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditGroupModal()">انصراف</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEditedGroup(event)">💾 ذخیره تغییرات</button>
+                </div>
+            </form>
         </div>
     </div>
-</div>
 
-<div id="edit-group-modal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 500px;">
-        <div class="modal-header">✏️ ویرایش گروه</div>
-        <form id="edit-group-form">
-            <input type="hidden" id="editGroupIdModal">
-            <div class="form-group"><label class="form-label">نام گروه</label><input type="text" id="editGroupNameModal" class="form-control" required></div>
-            <div class="form-group"><label class="form-label">نماد (ایموجی)</label><input type="text" id="editGroupSymbolModal" class="form-control" required></div>
-            <div class="form-group"><label class="form-label">شعار گروه (اختیاری)</label><textarea id="editGroupMottoModal" class="form-control" rows="4"></textarea></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeEditGroupModal()">انصراف</button>
-                <button type="button" class="btn btn-primary" onclick="saveEditedGroup(event)">💾 ذخیره تغییرات</button>
-            </div>
-        </form>
+    <div id="edit-student-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">✏️ ویرایش دانش‌آموز</div>
+            <form id="edit-student-form">
+                <input type="hidden" id="editStudentIdModal">
+                <div class="form-group"><label class="form-label">نام</label><input type="text" id="editStudentFirstNameModal" class="form-control" required></div>
+                <div class="form-group"><label class="form-label">نام خانوادگی</label><input type="text" id="editStudentLastNameModal" class="form-control" required></div>
+                <div class="form-group"><label class="form-label">کد ملی (الزامی)</label><input type="tel" id="editStudentNationalIdModal" class="form-control" maxlength="10" required></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditStudentModal()">انصراف</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEditedStudent(event)">💾 ذخیره تغییرات</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
-<div id="edit-student-modal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 500px;">
-        <div class="modal-header">✏️ ویرایش دانش‌آموز</div>
-        <form id="edit-student-form">
-            <input type="hidden" id="editStudentIdModal">
-            <div class="form-group"><label class="form-label">نام</label><input type="text" id="editStudentFirstNameModal" class="form-control" required></div>
-            <div class="form-group"><label class="form-label">نام خانوادگی</label><input type="text" id="editStudentLastNameModal" class="form-control" required></div>
-            <div class="form-group"><label class="form-label">کد ملی (الزامی)</label><input type="tel" id="editStudentNationalIdModal" class="form-control" maxlength="10" required></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeEditStudentModal()">انصراف</button>
-                <button type="button" class="btn btn-primary" onclick="saveEditedStudent(event)">💾 ذخیره تغییرات</button>
-            </div>
-        </form>
+    <div id="edit-lesson-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">✏️ ویرایش درس</div>
+            <form id="edit-lesson-form">
+                <input type="hidden" id="editLessonIdModal">
+                <div class="form-group"><label class="form-label">عنوان</label><input type="text" id="editLessonNameModal" class="form-control" required></div>
+                <div class="form-group"><label class="form-label">نماد (ایموجی)</label><input type="text" id="editLessonSymbolModal" class="form-control"></div>
+                <div class="form-group"><label class="form-label">شعار (اختیاری)</label><input type="text" id="editLessonMottoModal" class="form-control"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditLessonModal()">انصراف</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEditedLesson(event)">💾 ذخیره تغییرات</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
-<div id="edit-lesson-modal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 500px;">
-        <div class="modal-header">✏️ ویرایش درس</div>
-        <form id="edit-lesson-form">
-            <input type="hidden" id="editLessonIdModal">
-            <div class="form-group"><label class="form-label">عنوان</label><input type="text" id="editLessonNameModal" class="form-control" required></div>
-            <div class="form-group"><label class="form-label">نماد (ایموجی)</label><input type="text" id="editLessonSymbolModal" class="form-control"></div>
-            <div class="form-group"><label class="form-label">شعار (اختیاری)</label><input type="text" id="editLessonMottoModal" class="form-control"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeEditLessonModal()">انصراف</button>
-                <button type="button" class="btn btn-primary" onclick="saveEditedLesson(event)">💾 ذخیره تغییرات</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div id="session-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="session-details-title">📅 جزئیات جلسه</div><div id="session-details-content"></div><div class="modal-footer" style="flex-direction: column; gap: 10px;"><button type="button" class="btn btn-primary btn-block" onclick="saveAllSessionAttendance()">💾 ذخیره کل حضور و غیاب</button><button type="button" class="btn btn-secondary btn-block" onclick="closeSessionDetails()">بستن</button></div></div></div>
-
+    <div id="session-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="session-details-title">📅 جزئیات جلسه</div><div id="session-details-content"></div><div class="modal-footer" style="flex-direction: column; gap: 10px;"><button type="button" class="btn btn-primary btn-block" onclick="saveAllSessionAttendance()">💾 ذخیره کل حضور و غیاب</button><button type="button" class="btn btn-secondary btn-block" onclick="closeSessionDetails()">بستن</button></div></div></div>
+    
+    <!-- ===== مودال جزئیات دانش‌آموز ===== -->
 <div id="student-details-modal" class="modal-overlay">
     <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header" id="student-details-title">👤 جزئیات دانش‌آموز</div>
@@ -734,62 +741,64 @@
     </div>
 </div>
 
-<div id="exam-editor-modal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 700px;">
-        <div class="modal-header" id="exam-editor-title">➕ ساخت آزمون جدید</div>
-        <form id="exam-editor-form">
-            <input type="hidden" id="examEditId" value="">
+    <!-- ===== مودال جدید: سازنده آزمون (Exam Editor) ===== -->
+    <div id="exam-editor-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header" id="exam-editor-title">➕ ساخت آزمون جدید</div>
+            <form id="exam-editor-form">
+                <input type="hidden" id="examEditId" value="">
 
-            <fieldset style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 15px; margin-bottom: 20px;">
-                <legend style="font-weight: bold; color: var(--primary); padding: 0 10px;">📋 اطلاعات کلی</legend>
-                <div class="form-group">
-                    <label class="form-label" for="examTitle">عنوان آزمون</label>
-                    <input type="text" id="examTitle" class="form-control" placeholder="مثلاً: آزمون ریاضی فصل اول" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="examSubject">درس</label>
-                    <select id="examSubject" class="form-control" required>
-                        <option value="" disabled selected>یک درس را انتخاب کنید...</option>
-                    </select>
-                </div>
-                <div style="display: flex; gap: 15px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label class="form-label" for="examDate">تاریخ آزمون</label>
-                        <details class="score-calendar-accordion" id="exam-date-accordion">
-                            <summary><span>📅 انتخاب تاریخ از تقویم</span><span id="examDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span></summary>
-                            <div class="score-calendar-body" id="exam-calendar-body">
-                                <div class="calendar-header">
-                                    <button type="button" onclick="changeExamCalendarMonth(-1)">◀</button>
-                                    <div class="calendar-title" id="exam-calendar-title"></div>
-                                    <button type="button" onclick="changeExamCalendarMonth(1)">▶</button>
-                                </div>
-                                <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
-                                <div class="calendar-grid" id="exam-calendar-grid"></div>
-                            </div>
-                        </details>
-                        <input type="hidden" id="examDate" value="">
+                <fieldset style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 15px; margin-bottom: 20px;">
+                    <legend style="font-weight: bold; color: var(--primary); padding: 0 10px;">📋 اطلاعات کلی</legend>
+                    <div class="form-group">
+                        <label class="form-label" for="examTitle">عنوان آزمون</label>
+                        <input type="text" id="examTitle" class="form-control" placeholder="مثلاً: آزمون ریاضی فصل اول" required>
                     </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label class="form-label" for="examMaxScore">نمره کل</label>
-                        <input type="number" id="examMaxScore" class="form-control" value="20" min="1" required>
+                    <div class="form-group">
+                        <label class="form-label" for="examSubject">درس</label>
+                        <select id="examSubject" class="form-control" required>
+                            <option value="" disabled selected>یک درس را انتخاب کنید...</option>
+                        </select>
                     </div>
-                </div>
-            </fieldset>
-
-            <fieldset style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 15px;">
-                <legend style="font-weight: bold; color: var(--primary); padding: 0 10px;">❓ سوالات آزمون</legend>
-                <div id="exam-questions-container"></div>
-                <button type="button" class="btn btn-secondary btn-block mt-4" onclick="addExamQuestion()">➕ افزودن سوال</button>
-            </fieldset>
-
-            <div class="modal-footer" style="margin-top: 25px;">
-                <button type="button" class="btn btn-secondary" onclick="closeExamEditorModal()">انصراف</button>
-                <button type="button" class="btn btn-primary" onclick="saveExam(event)">💾 ذخیره آزمون</button>
+                    <div style="display: flex; gap: 15px;">
+                        <div class="form-group" style="flex: 1;">
+    <label class="form-label" for="examDate">تاریخ آزمون</label>
+    <details class="score-calendar-accordion" id="exam-date-accordion">
+        <summary><span>📅 انتخاب تاریخ از تقویم</span><span id="examDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span></summary>
+        <div class="score-calendar-body" id="exam-calendar-body">
+            <div class="calendar-header">
+                <button type="button" onclick="changeExamCalendarMonth(-1)">◀</button>
+                <div class="calendar-title" id="exam-calendar-title"></div>
+                <button type="button" onclick="changeExamCalendarMonth(1)">▶</button>
             </div>
-        </form>
-    </div>
+            <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
+            <div class="calendar-grid" id="exam-calendar-grid"></div>
+        </div>
+    </details>
+    <input type="hidden" id="examDate" value="">
 </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label" for="examMaxScore">نمره کل</label>
+                            <input type="number" id="examMaxScore" class="form-control" value="20" min="1" required>
+                        </div>
+                    </div>
+                </fieldset>
 
+                <fieldset style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 15px;">
+                    <legend style="font-weight: bold; color: var(--primary); padding: 0 10px;">❓ سوالات آزمون</legend>
+                    <div id="exam-questions-container"></div>
+                    <button type="button" class="btn btn-secondary btn-block mt-4" onclick="addExamQuestion()">➕ افزودن سوال</button>
+                </fieldset>
+
+                <div class="modal-footer" style="margin-top: 25px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeExamEditorModal()">انصراف</button>
+                    <button type="button" class="btn btn-primary" onclick="saveExam(event)">💾 ذخیره آزمون</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<!-- ===== مودال جدید: ثبت نمرات آزمون ===== -->
 <div id="exam-grading-modal" class="modal-overlay">
     <div class="modal-content" style="max-width: 700px;">
         <div class="modal-header" id="exam-grading-title">📝 ثبت نمرات آزمون</div>
@@ -826,255 +835,255 @@
     </div>
 </div>
 
-<div id="exit-confirm-modal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 400px; text-align: center;">
-        <div class="modal-header" style="color: #b45309;">⚠️ خروج از صفحه</div>
-        <div style="padding: 15px 0 25px;">
-            <p id="exit-confirm-message" style="font-size: 1rem; line-height: 1.8; margin-bottom: 15px;">
-                شما تغییرات ذخیره‌نشده دارید. اگر خارج شوید، این تغییرات از بین می‌رود.
-            </p>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">آیا مطمئن هستید؟</p>
-        </div>
-        <div class="modal-footer" style="gap: 10px;">
-            <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="cancelExit()">انصراف</button>
-            <button type="button" class="btn btn-primary" style="flex: 1; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);" onclick="confirmExit()">خروج</button>
-        </div>
-    </div>
-</div>
-
-<div id="backup-reminder-modal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 450px; text-align: center;">
-        <div class="modal-header" style="color: #4f46e5;">📤 یادآور پشتیبان‌گیری</div>
-        <div style="padding: 15px 0 25px;">
-            <div style="font-size: 3rem; margin-bottom: 10px;">💾</div>
-            <p id="backup-reminder-message" style="font-size: 1rem; line-height: 1.8; margin-bottom: 15px;">
-                موعد پشتیبان‌گیری فرا رسیده است.
-            </p>
-            <p style="font-size: 0.85rem; color: var(--text-muted);">پیشنهاد می‌شود از داده‌های خود نسخه پشتیبان تهیه کنید تا در صورت بروز مشکل، اطلاعاتتان از بین نرود.</p>
-        </div>
-        <div class="modal-footer" style="flex-direction: column; gap: 10px;">
-            <button type="button" class="btn btn-primary" style="width: 100%; background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);" onclick="handleReminderDownload()">📥 دانلود پشتیبان</button>
-            <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="snoozeReminder()">⏰ بعداً یادآوری کن</button>
-        </div>
-    </div>
-</div>
-
-<div id="period-editor-modal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 500px;">
-        <div class="modal-header" id="period-editor-title">➕ تعریف بازه جدید</div>
-        
-        <div class="form-group">
-            <label class="form-label">عنوان بازه</label>
-            <input type="text" id="periodTitle" class="form-control" placeholder="مثلاً: نوبت اول، نوبت دوم..." required>
-        </div>
-        
-        <div style="display: flex; gap: 10px;">
-            <div class="form-group" style="flex: 1;">
-                <label class="form-label">تاریخ شروع</label>
-                <div style="background: var(--input-bg); padding: 10px; border-radius: var(--radius-sm); text-align: center; cursor: pointer; border: 1px solid var(--border-color);" onclick="setCalendarTarget('start')">
-                    <span id="periodStartDisplay" style="font-size: 0.9rem; font-weight: bold; color: var(--primary);">انتخاب نشده</span>
-                </div>
-                <input type="hidden" id="periodStartDate" value="">
+    <!-- ===== مودال هشدار سفارشی خروج ===== -->
+    <div id="exit-confirm-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header" style="color: #b45309;">⚠️ خروج از صفحه</div>
+            <div style="padding: 15px 0 25px;">
+                <p id="exit-confirm-message" style="font-size: 1rem; line-height: 1.8; margin-bottom: 15px;">
+                    شما تغییرات ذخیره‌نشده دارید. اگر خارج شوید، این تغییرات از بین می‌رود.
+                </p>
+                <p style="font-size: 0.9rem; color: var(--text-muted);">آیا مطمئن هستید؟</p>
             </div>
-            <div class="form-group" style="flex: 1;">
-                <label class="form-label">تاریخ پایان</label>
-                <div style="background: var(--input-bg); padding: 10px; border-radius: var(--radius-sm); text-align: center; cursor: pointer; border: 1px solid var(--border-color);" onclick="setCalendarTarget('end')">
-                    <span id="periodEndDisplay" style="font-size: 0.9rem; font-weight: bold; color: var(--primary);">انتخاب نشده</span>
-                </div>
-                <input type="hidden" id="periodEndDate" value="">
+            <div class="modal-footer" style="gap: 10px;">
+                <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="cancelExit()">انصراف</button>
+                <button type="button" class="btn btn-primary" style="flex: 1; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);" onclick="confirmExit()">خروج</button>
             </div>
         </div>
-        
-        <div class="form-group">
-            <label class="form-label">📅 تقویم (ابتدا دکمه شروع یا پایان را بزنید)</label>
-            <div class="score-calendar-body" style="background: var(--card-bg); border: 1px solid var(--border-color); padding: 10px; border-radius: var(--radius-sm);">
-                <div class="calendar-header">
-                    <button type="button" onclick="updatePeriodCalendarSelect('month', Math.max(1, periodCalendarState.month - 1))">◀</button>
-                    <div class="calendar-title" id="period-calendar-title"></div>
-                    <button type="button" onclick="updatePeriodCalendarSelect('month', Math.min(12, periodCalendarState.month + 1))">▶</button>
-                </div>
-                <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
-                <div class="calendar-grid" id="period-calendar-grid"></div>
+    </div>
+
+    <!-- ===== مودال یادآور پشتیبان‌گیری ===== -->
+    <div id="backup-reminder-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 450px; text-align: center;">
+            <div class="modal-header" style="color: #4f46e5;">📤 یادآور پشتیبان‌گیری</div>
+            <div style="padding: 15px 0 25px;">
+                <div style="font-size: 3rem; margin-bottom: 10px;">💾</div>
+                <p id="backup-reminder-message" style="font-size: 1rem; line-height: 1.8; margin-bottom: 15px;">
+                    موعد پشتیبان‌گیری فرا رسیده است.
+                </p>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">پیشنهاد می‌شود از داده‌های خود نسخه پشتیبان تهیه کنید تا در صورت بروز مشکل، اطلاعاتتان از بین نرود.</p>
+            </div>
+            <div class="modal-footer" style="flex-direction: column; gap: 10px;">
+                <button type="button" class="btn btn-primary" style="width: 100%; background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);" onclick="handleReminderDownload()">📥 دانلود پشتیبان</button>
+                <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="snoozeReminder()">⏰ بعداً یادآوری کن</button>
             </div>
         </div>
+    </div>
 
-        <div class="modal-footer" style="margin-top: 20px; display: flex; gap: 10px;">
-            <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closePeriodEditor()">انصراف</button>
-            <button type="button" class="btn btn-primary" style="flex: 2;" onclick="savePeriod()">💾 ذخیره بازه</button>
+    <!-- ===== مودال تعریف بازه ===== -->
+    <div id="period-editor-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header" id="period-editor-title">➕ تعریف بازه جدید</div>
+            
+            <div class="form-group">
+                <label class="form-label">عنوان بازه</label>
+                <input type="text" id="periodTitle" class="form-control" placeholder="مثلاً: نوبت اول، نوبت دوم..." required>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">تاریخ شروع</label>
+                    <div style="background: var(--input-bg); padding: 10px; border-radius: var(--radius-sm); text-align: center; cursor: pointer; border: 1px solid var(--border-color);" onclick="setCalendarTarget('start')">
+                        <span id="periodStartDisplay" style="font-size: 0.9rem; font-weight: bold; color: var(--primary);">انتخاب نشده</span>
+                    </div>
+                    <input type="hidden" id="periodStartDate" value="">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">تاریخ پایان</label>
+                    <div style="background: var(--input-bg); padding: 10px; border-radius: var(--radius-sm); text-align: center; cursor: pointer; border: 1px solid var(--border-color);" onclick="setCalendarTarget('end')">
+                        <span id="periodEndDisplay" style="font-size: 0.9rem; font-weight: bold; color: var(--primary);">انتخاب نشده</span>
+                    </div>
+                    <input type="hidden" id="periodEndDate" value="">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">📅 تقویم (ابتدا دکمه شروع یا پایان را بزنید)</label>
+                <div class="score-calendar-body" style="background: var(--card-bg); border: 1px solid var(--border-color); padding: 10px; border-radius: var(--radius-sm);">
+                    <div class="calendar-header">
+                        <button type="button" onclick="updatePeriodCalendarSelect('month', Math.max(1, periodCalendarState.month - 1))">◀</button>
+                        <div class="calendar-title" id="period-calendar-title"></div>
+                        <button type="button" onclick="updatePeriodCalendarSelect('month', Math.min(12, periodCalendarState.month + 1))">▶</button>
+                    </div>
+                    <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
+                    <div class="calendar-grid" id="period-calendar-grid"></div>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="margin-top: 20px; display: flex; gap: 10px;">
+                <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closePeriodEditor()">انصراف</button>
+                <button type="button" class="btn btn-primary" style="flex: 2;" onclick="savePeriod()">💾 ذخیره بازه</button>
+            </div>
         </div>
     </div>
+
+<div class="form-group">
+    <label class="form-label" for="academicYear">سال تحصیلی</label>
+    <select id="academicYear" class="form-control" required>
+        <option value="" disabled selected>سال تحصیلی را انتخاب کنید...</option>
+        <option value="1405-1406">۱۴۰۶-۱۴۰۵</option>
+        <option value="1406-1407">۱۴۰۷-۱۴۰۶</option>
+        <option value="1407-1408">۱۴۰۸-۱۴۰۷</option>
+        <option value="1408-1409">۱۴۰۹-۱۴۰۸</option>
+        <option value="1409-1410">۱۴۱۰-۱۴۰۹</option>
+    </select>
 </div>
 
-<!-- ===== اسکریپت‌ها ===== -->
-<script src="jalali-utils.js?v=1"></script>
-<script src="calendar-data.js?v=4"></script>
-<script src="calendar.js?v=5"></script>
-<script src="db.js?v=14"></script>
-<script src="app.js?v=16"></script>
-<script src="back-button.js?v=7" defer></script>
-<script src="class.js?v=2"></script>
-<script src="students.js"></script>
-<script src="lesson.js"></script>
-<script src="group.js"></script>
-<script src="session.js?v=5"></script>
-<script src="score.js?v=7"></script>
-<script src="reset.js?v=2"></script>
-<script src="game.js?v=1"></script>
-<script src="exam.js?v=7"></script>
+    <!-- ===== اسکریپت‌ها ===== -->
+    <script src="jalali-utils.js?v=1"></script>
+    <script src="calendar-data.js?v=4"></script>
+    <script src="calendar.js?v=5"></script>
+    <script src="db.js?v=6"></script>
+    <script src="app.js?v=14"></script>
+    <script src="back-button.js?v=6" defer></script>
+    <script src="class.js"></script>
+    <script src="students.js"></script>
+    <script src="lesson.js"></script>
+    <script src="group.js"></script>
+    <script src="session.js?v=5"></script>
+    <script src="score.js?v=6"></script>
+    <script src="reset.js"></script>
+    <script src="game.js?v=1"></script>
+    <script src="exam.js?v=6"></script>
+    
+    <script>
+        // *** بخش آیکون‌های SVG برای تم ***
+        const SVG_MOON = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
+        const SVG_SUN = '<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/>';
 
-<script>
-    // *** بخش آیکون‌های SVG برای تم ***
-    const SVG_MOON = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
-    const SVG_SUN = '<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/>';
-
-    function initTheme() {
-        let savedTheme = null;
-        try { savedTheme = localStorage.getItem('kosha-theme'); } catch (e) {}
-        if (!savedTheme) {
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) savedTheme = 'dark';
-            else savedTheme = 'light';
+        function initTheme() {
+            let savedTheme = null;
+            try { savedTheme = localStorage.getItem('kosha-theme'); } catch (e) {}
+            if (!savedTheme) {
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) savedTheme = 'dark';
+                else savedTheme = 'light';
+            }
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
         }
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        updateThemeIcon(savedTheme);
-    }
-    
-    function toggleTheme() {
-        const current = document.documentElement.getAttribute('data-theme') || 'light';
-        const newTheme = current === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', newTheme);
-        try { localStorage.setItem('kosha-theme', newTheme); } catch (e) {}
-        updateThemeIcon(newTheme);
-    }
-    
-    function updateThemeIcon(theme) {
-        const iconSvg = document.getElementById('themeIconSvg');
-        if (iconSvg) {
-            iconSvg.innerHTML = theme === 'dark' ? SVG_SUN : SVG_MOON;
-            iconSvg.setAttribute('fill', 'none');
-            iconSvg.setAttribute('stroke', 'currentColor');
-            iconSvg.setAttribute('stroke-width', '1.9');
-            iconSvg.setAttribute('stroke-linecap', 'round');
-            iconSvg.setAttribute('stroke-linejoin', 'round');
-        }
-    }
-    
-    initTheme();
-
-    // ✅ openSettingsModal — اصلاح‌شده (async + بارگذاری classProfile)
-    async function openSettingsModal() {
-        document.getElementById('settings-modal').classList.add('show');
-        if (typeof populateResetSelect === 'function') populateResetSelect();
-        if (typeof populateScheduleDaysCheckboxes === 'function') populateScheduleDaysCheckboxes();
-        if (typeof checkBackupReminder === 'function') checkBackupReminder();
-        if (typeof initBackupSettingsForm === 'function') initBackupSettingsForm();
         
-        // ✅ بارگذاری داده‌های کلاس از DB (به‌جای صدا زدن بدون آرگومان)
-        if (typeof populateCurrentClassProfile === 'function') {
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            try { localStorage.setItem('kosha-theme', newTheme); } catch (e) {}
+            updateThemeIcon(newTheme);
+        }
+        
+        function updateThemeIcon(theme) {
+            const iconSvg = document.getElementById('themeIconSvg');
+            if (iconSvg) {
+                iconSvg.innerHTML = theme === 'dark' ? SVG_SUN : SVG_MOON;
+                iconSvg.setAttribute('fill', 'none');
+                iconSvg.setAttribute('stroke', 'currentColor');
+                iconSvg.setAttribute('stroke-width', '1.9');
+                iconSvg.setAttribute('stroke-linecap', 'round');
+                iconSvg.setAttribute('stroke-linejoin', 'round');
+            }
+        }
+        
+        initTheme();
+
+        function openSettingsModal() {
+            document.getElementById('settings-modal').classList.add('show');
+            if (typeof populateResetSelect === 'function') populateResetSelect();
+            if (typeof populateScheduleDaysCheckboxes === 'function') populateScheduleDaysCheckboxes();
+            if (typeof checkBackupReminder === 'function') checkBackupReminder();
+            if (typeof initBackupSettingsForm === 'function') initBackupSettingsForm();
+            if (typeof populateCurrentClassProfile === 'function') populateCurrentClassProfile();
+            
+            // نمایش سال تحصیلی جاری
+            const yearDisplay = document.getElementById('current-academic-year-display');
+            if (yearDisplay && window.activeAcademicYear) {
+                yearDisplay.textContent = toPersianNumber(window.activeAcademicYear);
+            }
+        }
+        function closeSettingsModal() {
+            document.getElementById('settings-modal').classList.remove('show');
+        }
+
+        window.addEventListener('load', async () => {
+            try { await initDB(); } catch (error) { console.warn('دیتابیس محلی غیرفعال است.'); }
             try {
-                const classData = await getDataById('classProfile', 1);
-                await populateCurrentClassProfile(classData);
-            } catch (e) {
-                console.warn('خطا در بارگذاری مشخصات کلاس:', e);
+                if (typeof initApp === 'function') await initApp();
+            } catch (error) {
+                console.error("Init Error:", error);
             }
-        }
-        
-        // نمایش سال تحصیلی جاری
-        const yearDisplay = document.getElementById('current-academic-year-display');
-        if (yearDisplay && window.activeAcademicYear) {
-            yearDisplay.textContent = toPersianNumber(window.activeAcademicYear);
-        }
-    }
-    function closeSettingsModal() {
-        document.getElementById('settings-modal').classList.remove('show');
-        if (typeof clearFormDirty === 'function') clearFormDirty();
-    }
+        });
 
-    window.addEventListener('load', async () => {
-        try { await initDB(); } catch (error) { console.warn('دیتابیس محلی غیرفعال است.'); }
-        try {
-            if (typeof initApp === 'function') await initApp();
-        } catch (error) {
-            console.error("Init Error:", error);
-        }
-    });
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                const app = document.getElementById('app-container');
+                const nav = document.querySelector('.bottom-nav');
+                if(splash) splash.classList.add('splash-hidden');
+                if(app) app.style.display = 'block';
+                if(nav) nav.style.display = 'flex';
+                setTimeout(() => { if(splash) splash.remove(); }, 800);
+            }, 2000); 
+        });
 
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            const splash = document.getElementById('splash-screen');
-            const app = document.getElementById('app-container');
-            const nav = document.querySelector('.bottom-nav');
-            if(splash) splash.classList.add('splash-hidden');
-            if(app) app.style.display = 'block';
-            if(nav) nav.style.display = 'flex';
-            setTimeout(() => { if(splash) splash.remove(); }, 800);
-        }, 2000); 
-    });
-
-    // ✅ switchPage — اصلاح‌شده (null-check برای navElement)
-    function switchPage(pageId, navElement) {
-        document.querySelectorAll('.page-section').forEach(page => page.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-        
-        if (navElement && navElement.classList) {
+        function switchPage(pageId, navElement) {
+            document.querySelectorAll('.page-section').forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
             navElement.classList.add('active');
+            
+            if (pageId === 'page-class' && typeof renderDashboardData === 'function') renderDashboardData();
+            if (pageId === 'page-students' && typeof renderStudentsList === 'function') renderStudentsList();
+            if (pageId === 'page-lesson' && typeof renderLessonData === 'function') renderLessonData();
+            if (pageId === 'page-calendar' && typeof initFullCalendar === 'function') initFullCalendar();
+            if (pageId === 'page-group' && typeof renderGroupData === 'function') renderGroupData();
+            if (pageId === 'page-session' && typeof renderSessionData === 'function') renderSessionData();
+            if (pageId === 'page-score' && typeof renderScoreData === 'function') renderScoreData();
+            if (pageId === 'page-exams' && typeof renderExamsData === 'function') renderExamsData();
         }
-        
-        if (pageId === 'page-class' && typeof renderDashboardData === 'function') renderDashboardData();
-        if (pageId === 'page-students' && typeof renderStudentsList === 'function') renderStudentsList();
-        if (pageId === 'page-lesson' && typeof renderLessonData === 'function') renderLessonData();
-        if (pageId === 'page-calendar' && typeof initFullCalendar === 'function') initFullCalendar();
-        if (pageId === 'page-group' && typeof renderGroupData === 'function') renderGroupData();
-        if (pageId === 'page-session' && typeof renderSessionData === 'function') renderSessionData();
-        if (pageId === 'page-score' && typeof renderScoreData === 'function') renderScoreData();
-        if (pageId === 'page-exams' && typeof renderExamsData === 'function') renderExamsData();
-    }
-</script>
+    </script>
 
-<!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) -->
-<script>
-    (function() {
-        const APP_VERSION = 'v117';
-        const storedVersion = localStorage.getItem('kosha-version');
-        
-        if (storedVersion !== APP_VERSION) {
-            console.log('🔄 در حال به‌روزرسانی کش و سرویس‌ورکر...');
+    <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) -->
+    <script>
+        (function() {
+            const APP_VERSION = 'v114';
+            const storedVersion = localStorage.getItem('kosha-version');
             
-            localStorage.setItem('kosha-version', APP_VERSION);
-            
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for(let registration of registrations) {
-                        registration.unregister();
-                    }
-                    caches.keys().then(function(names) {
-                        for (let name of names) caches.delete(name);
-                        
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 500);
+            if (storedVersion !== APP_VERSION) {
+                console.log('🔄 در حال به‌روزرسانی کش و سرویس‌ورکر...');
+                
+                localStorage.setItem('kosha-version', APP_VERSION);
+                
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) {
+                            registration.unregister();
+                        }
+                        caches.keys().then(function(names) {
+                            for (let name of names) caches.delete(name);
+                            
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 500);
+                        });
                     });
-                });
-            } else {
-                setTimeout(() => {
-                    window.location.reload();
-                }, 500);
+                } else {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                }
             }
-        }
-    })();
-</script>
-
-<!-- SVG Sprite -->
-<svg style="display: none;" aria-hidden="true">
-    <symbol id="ico-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"/></symbol>
-    <symbol id="ico-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"/></symbol>
-    <symbol id="ico-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2" fill="none" stroke="currentColor"/><path d="M12 16v-4M12 8h.01" stroke-width="2.5" stroke-linecap="round" fill="none" stroke="currentColor"/></symbol>
+        })();
+    </script>
     
-    <symbol id="empty-students" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/><circle cx="12" cy="7" r="4" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
-    <symbol id="empty-lessons" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
-    <symbol id="empty-groups" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/><circle cx="9.5" cy="7" r="4" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
-    <symbol id="empty-exams" viewBox="0 0 24 24"><path d="M22 9 12 4.5 2 9l10 4.5L22 9z" stroke-width="1.5" stroke-linejoin="round" fill="none" stroke="currentColor"/><path d="M6 11.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
-    <symbol id="empty-records" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/></symbol>
-</svg>
+    <!-- 🔥 SVG Sprite: آیکون‌های Toast و Empty State -->
+    <svg style="display: none;" aria-hidden="true">
+        <symbol id="ico-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"/></symbol>
+        <symbol id="ico-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"/></symbol>
+        <symbol id="ico-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2" fill="none" stroke="currentColor"/><path d="M12 16v-4M12 8h.01" stroke-width="2.5" stroke-linecap="round" fill="none" stroke="currentColor"/></symbol>
+        
+        <symbol id="empty-students" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/><circle cx="12" cy="7" r="4" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
+        <symbol id="empty-lessons" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
+        <symbol id="empty-groups" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/><circle cx="9.5" cy="7" r="4" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
+        <symbol id="empty-exams" viewBox="0 0 24 24"><path d="M22 9 12 4.5 2 9l10 4.5L22 9z" stroke-width="1.5" stroke-linejoin="round" fill="none" stroke="currentColor"/><path d="M6 11.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
+        <symbol id="empty-records" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/></symbol>
+    </svg>
 </body>
 </html>
