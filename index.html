@@ -509,20 +509,20 @@
     <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header">⚙️ تنظیمات</div>
         
-        <!-- نمایش سال تحصیلی جاری + دکمه تغییر -->
-        <div class="card" style="border: 2px solid var(--primary); background: var(--primary-light); margin-bottom: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">سال تحصیلی جاری</div>
-                    <strong id="current-academic-year-display" style="font-size: 1.1rem; color: var(--primary);">-</strong>
-                </div>
-                <button type="button" class="btn btn-primary btn-sm" onclick="openAcademicYearModal()" style="font-size: 0.85rem;">🔄 تغییر</button>
-            </div>
-        </div>
-        
         <div class="card" style="border: none; box-shadow: none; padding: 0; margin-bottom: 20px;">
             <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">🏫 مشخصات کلاس</h3>
             <form id="class-form">
+                <div class="form-group">
+                    <label class="form-label" for="academicYear">سال تحصیلی</label>
+                    <select id="academicYear" class="form-control" required>
+                        <option value="" disabled selected>سال تحصیلی را انتخاب کنید...</option>
+                        <option value="1405-1406">۱۴۰۶-۱۴۰۵</option>
+                        <option value="1406-1407">۱۴۰۷-۱۴۰۶</option>
+                        <option value="1407-1408">۱۴۰۸-۱۴۰۷</option>
+                        <option value="1408-1409">۱۴۰۹-۱۴۰۸</option>
+                        <option value="1409-1410">۱۴۱۰-۱۴۰۹</option>
+                    </select>
+                </div>
                 <div class="form-group"><label class="form-label" for="className">نام کلاس</label><input type="text" id="className" class="form-control" placeholder="شهید مهدی باکری" autocomplete="on" required></div>
                 <div class="form-group"><label class="form-label" for="classSymbol">نماد (ایموجی)</label><input type="text" id="classSymbol" class="form-control" placeholder="🏫" autocomplete="off"></div>
                 <div class="form-group"><label class="form-label" for="classMotto">شعار کلاس</label><input type="text" id="classMotto" class="form-control" placeholder="تحصیل، تهذیب، ورزش" autocomplete="on" required></div>
@@ -550,7 +550,7 @@
 
         <hr style="border-top: 1px dashed var(--border-color); margin: 20px 0;">
 
-        <!-- ===== بخش پشتیبان‌گیری ===== -->
+        <!-- ===== بخش پشتیبان‌گیری بازطراحی شده ===== -->
         <div class="card" style="border: none; box-shadow: none; padding: 0; margin-bottom: 20px;">
             <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">📤 پشتیبان‌گیری و بازیابی</h3>
             
@@ -852,7 +852,7 @@
         </div>
     </div>
 
-    <!-- ===== مودال یادآور پشتیبان‌گیری ===== -->
+    <!-- ===== مودال جدید: یادآور پشتیبان‌گیری ===== -->
     <div id="backup-reminder-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 450px; text-align: center;">
             <div class="modal-header" style="color: #4f46e5;">📤 یادآور پشتیبان‌گیری</div>
@@ -870,7 +870,7 @@
         </div>
     </div>
 
-    <!-- ===== مودال تعریف بازه ===== -->
+    <!-- ===== مودال جدید: تعریف بازه ===== -->
     <div id="period-editor-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header" id="period-editor-title">➕ تعریف بازه جدید</div>
@@ -917,24 +917,12 @@
         </div>
     </div>
 
-<div class="form-group">
-    <label class="form-label" for="academicYear">سال تحصیلی</label>
-    <select id="academicYear" class="form-control" required>
-        <option value="" disabled selected>سال تحصیلی را انتخاب کنید...</option>
-        <option value="1405-1406">۱۴۰۶-۱۴۰۵</option>
-        <option value="1406-1407">۱۴۰۷-۱۴۰۶</option>
-        <option value="1407-1408">۱۴۰۸-۱۴۰۷</option>
-        <option value="1408-1409">۱۴۰۹-۱۴۰۸</option>
-        <option value="1409-1410">۱۴۱۰-۱۴۰۹</option>
-    </select>
-</div>
-
     <!-- ===== اسکریپت‌ها ===== -->
     <script src="jalali-utils.js?v=1"></script>
     <script src="calendar-data.js?v=4"></script>
     <script src="calendar.js?v=5"></script>
-    <script src="db.js?v=6"></script>
-    <script src="app.js?v=14"></script>
+    <script src="db.js?v=2"></script>
+    <script src="app.js?v=9"></script>
     <script src="back-button.js?v=6" defer></script>
     <script src="class.js"></script>
     <script src="students.js"></script>
@@ -990,13 +978,6 @@
             if (typeof populateScheduleDaysCheckboxes === 'function') populateScheduleDaysCheckboxes();
             if (typeof checkBackupReminder === 'function') checkBackupReminder();
             if (typeof initBackupSettingsForm === 'function') initBackupSettingsForm();
-            if (typeof populateCurrentClassProfile === 'function') populateCurrentClassProfile();
-            
-            // نمایش سال تحصیلی جاری
-            const yearDisplay = document.getElementById('current-academic-year-display');
-            if (yearDisplay && window.activeAcademicYear) {
-                yearDisplay.textContent = toPersianNumber(window.activeAcademicYear);
-            }
         }
         function closeSettingsModal() {
             document.getElementById('settings-modal').classList.remove('show');
@@ -1043,7 +1024,7 @@
     <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) -->
     <script>
         (function() {
-            const APP_VERSION = 'v114';
+            const APP_VERSION = 'v108';
             const storedVersion = localStorage.getItem('kosha-version');
             
             if (storedVersion !== APP_VERSION) {
