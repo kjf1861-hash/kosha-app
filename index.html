@@ -552,12 +552,18 @@
 
         <div class="card" style="border: none; box-shadow: none; padding: 0; margin-bottom: 20px;">
             <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">📤 پشتیبان‌گیری و بازیابی</h3>
-            <div id="backup-status" style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 10px; padding: 8px; background: var(--input-bg); border-radius: 8px;">
-                آخرین پشتیبان‌گیری: <strong>نامشخص</strong>
+            <div id="backup-status" style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 5px; padding: 8px; background: var(--input-bg); border-radius: 8px;">
+                آخرین پشتیبان‌گیری دستی: <strong>نامشخص</strong>
             </div>
-            <button type="button" class="btn btn-primary btn-block" onclick="exportData()">📤 خروجی JSON (کل داده‌ها)</button>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; text-align: center;">این فایل را در جای امنی ذخیره کنید.</p>
-            <div style="margin-top: 15px; border-top: 1px dashed var(--border-color); padding-top: 15px;">
+            <div id="emergency-backup-status" style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 15px; padding: 8px; background: var(--input-bg); border-radius: 8px;">
+                ♻️ آخرین نسخه خودکار: <strong>در حال محاسبه...</strong>
+            </div>
+            <button type="button" class="btn btn-primary btn-block" onclick="exportData()">📤 خروجی JSON (پشتیبان دستی)</button>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; text-align: center; margin-bottom: 15px;">این فایل را در جای امنی ذخیره کنید.</p>
+            
+            <button type="button" class="btn btn-block" onclick="restoreFromEmergencyBackup()" style="background: #f59e0b; color: white; margin-bottom: 15px;">♻️ بازیابی از آخرین نسخه خودکار</button>
+            
+            <div style="border-top: 1px dashed var(--border-color); padding-top: 15px;">
                 <label class="form-label">بازیابی از فایل:</label>
                 <input type="file" id="importFile" accept=".json" class="form-control" onchange="importData(event)">
             </div>
@@ -682,23 +688,20 @@
 
     <div id="session-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="session-details-title">📅 جزئیات جلسه</div><div id="session-details-content"></div><div class="modal-footer" style="flex-direction: column; gap: 10px;"><button type="button" class="btn btn-primary btn-block" onclick="saveAllSessionAttendance()">💾 ذخیره کل حضور و غیاب</button><button type="button" class="btn btn-secondary btn-block" onclick="closeSessionDetails()">بستن</button></div></div></div>
     
-    <!-- ===== مودال جزئیات دانش‌آموز (با تب جدید آزمون‌ها) ===== -->
+    <!-- ===== مودال جزئیات دانش‌آموز ===== -->
 <div id="student-details-modal" class="modal-overlay">
     <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header" id="student-details-title">👤 جزئیات دانش‌آموز</div>
         
-        <!-- تب‌های داخل مودال -->
         <div class="view-toggle-group" style="margin-bottom: 15px;">
             <button type="button" id="btnStudentTabSummary" class="view-toggle-btn active" onclick="switchStudentDetailsTab('summary')">📋 خلاصه</button>
             <button type="button" id="btnStudentTabExams" class="view-toggle-btn" onclick="switchStudentDetailsTab('exams')">🎓 آزمون‌ها</button>
         </div>
         
-        <!-- تب ۱: خلاصه (همان اطلاعات قبلی) -->
         <div id="student-details-summary" style="max-height: 60vh; overflow-y: auto;">
             <div id="student-details-content"></div>
         </div>
         
-        <!-- تب ۲: نتایج آزمون‌ها -->
         <div id="student-details-exams" style="max-height: 60vh; overflow-y: auto; display: none;">
             <div id="student-exams-content"></div>
         </div>
@@ -716,7 +719,6 @@
             <form id="exam-editor-form">
                 <input type="hidden" id="examEditId" value="">
 
-                <!-- اطلاعات کلی آزمون -->
                 <fieldset style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 15px; margin-bottom: 20px;">
                     <legend style="font-weight: bold; color: var(--primary); padding: 0 10px;">📋 اطلاعات کلی</legend>
                     <div class="form-group">
@@ -753,12 +755,9 @@
                     </div>
                 </fieldset>
 
-                <!-- مدیریت سوالات -->
                 <fieldset style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 15px;">
                     <legend style="font-weight: bold; color: var(--primary); padding: 0 10px;">❓ سوالات آزمون</legend>
-                    <div id="exam-questions-container">
-                        <!-- سوالات به صورت پویا اینجا اضافه می‌شوند -->
-                    </div>
+                    <div id="exam-questions-container"></div>
                     <button type="button" class="btn btn-secondary btn-block mt-4" onclick="addExamQuestion()">➕ افزودن سوال</button>
                 </fieldset>
 
@@ -775,7 +774,6 @@
     <div class="modal-content" style="max-width: 700px;">
         <div class="modal-header" id="exam-grading-title">📝 ثبت نمرات آزمون</div>
         
-        <!-- اطلاعات آزمون -->
         <div id="exam-grading-info" style="background: var(--input-bg); padding: 12px 15px; border-radius: var(--radius-sm); margin-bottom: 15px; border: 1px dashed var(--border-color);">
             <div style="display:flex; justify-content:space-between; font-size: 0.9rem; margin-bottom: 4px;">
                 <span><strong>آزمون:</strong> <span id="grading-exam-title">-</span></span>
@@ -787,19 +785,14 @@
             </div>
         </div>
 
-        <!-- دکمه‌های عملیات سریع -->
         <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
             <button type="button" class="btn btn-secondary btn-sm" onclick="setAllExamScores(0)">همه صفر</button>
             <button type="button" class="btn btn-secondary btn-sm" onclick="setAllExamScores('max')">همه نمره کل</button>
             <button type="button" class="btn btn-secondary btn-sm" onclick="setAllExamScores('clear')">پاک کردن همه</button>
         </div>
 
-        <!-- لیست دانش‌آموزان با فیلد نمره -->
-        <div id="exam-grading-students-list" class="student-checkbox-list" style="max-height: 50vh; overflow-y: auto;">
-            <!-- توسط JS پر می‌شود -->
-        </div>
+        <div id="exam-grading-students-list" class="student-checkbox-list" style="max-height: 50vh; overflow-y: auto;"></div>
 
-        <!-- آمار سریع -->
         <div id="exam-grading-stats" style="margin-top: 12px; padding: 10px 15px; background: var(--primary-light); border-radius: var(--radius-sm); font-size: 0.85rem; display: flex; justify-content: space-around;">
             <span>📊 میانگین: <strong id="grading-stat-avg">-</strong></span>
             <span>🔺 بالاترین: <strong id="grading-stat-max">-</strong></span>
@@ -813,7 +806,7 @@
     </div>
 </div>
 
-    <!-- ===== مودال جدید: هشدار سفارشی خروج ===== -->
+    <!-- ===== مودال هشدار سفارشی خروج ===== -->
     <div id="exit-confirm-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 400px; text-align: center;">
             <div class="modal-header" style="color: #b45309;">⚠️ خروج از صفحه</div>
@@ -834,8 +827,8 @@
     <script src="jalali-utils.js?v=1"></script>
     <script src="calendar-data.js?v=4"></script>
     <script src="calendar.js?v=5"></script>
-    <script src="db.js"></script>
-    <script src="app.js?v=7"></script>
+    <script src="db.js?v=1"></script>
+    <script src="app.js?v=8"></script>
     <script src="back-button.js?v=6" defer></script>
     <script src="class.js"></script>
     <script src="students.js"></script>
@@ -889,6 +882,7 @@
             document.getElementById('settings-modal').classList.add('show');
             if (typeof populateResetSelect === 'function') populateResetSelect();
             if (typeof populateScheduleDaysCheckboxes === 'function') populateScheduleDaysCheckboxes();
+            if (typeof checkBackupReminder === 'function') checkBackupReminder();
         }
         function closeSettingsModal() {
             document.getElementById('settings-modal').classList.remove('show');
@@ -935,7 +929,7 @@
     <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) -->
     <script>
         (function() {
-            const APP_VERSION = 'v106';
+            const APP_VERSION = 'v107';
             const storedVersion = localStorage.getItem('kosha-version');
             
             if (storedVersion !== APP_VERSION) {
@@ -967,12 +961,10 @@
     
     <!-- 🔥 SVG Sprite: آیکون‌های Toast و Empty State -->
     <svg style="display: none;" aria-hidden="true">
-        <!-- آیکون‌های Toast -->
         <symbol id="ico-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"/></symbol>
         <symbol id="ico-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"/></symbol>
         <symbol id="ico-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2" fill="none" stroke="currentColor"/><path d="M12 16v-4M12 8h.01" stroke-width="2.5" stroke-linecap="round" fill="none" stroke="currentColor"/></symbol>
         
-        <!-- آیکون‌های Empty State -->
         <symbol id="empty-students" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/><circle cx="12" cy="7" r="4" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
         <symbol id="empty-lessons" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
         <symbol id="empty-groups" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/><circle cx="9.5" cy="7" r="4" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
