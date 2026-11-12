@@ -1,38 +1,23 @@
 // ==========================================
 // فایل back-button.js — مدیریت دکمه بازگشت و هشدار خروج در PWA
-// نسخه v7 — هماهنگ با سیستم هشدار تغییرات ذخیره‌نشده (app.js)
-// ==========================================
-//
-// تغییرات نسخه v7:
-// - اضافه شدن مودال‌های جاافتاده: exit-confirm-modal، backup-reminder-modal، period-editor-modal
-// - اضافه شدن توابع بستن مربوطه به closeFnMap
-// - اضافه شدن pre-check برای مودال‌های نیازمند هشدار تغییرات ذخیره‌نشده
+// نسخه v6 — هماهنگ با سیستم هشدار تغییرات ذخیره‌نشده (app.js)
 // ==========================================
 
 (function() {
     'use strict';
     
-    // ✅ مودال‌های کامل (شامل موارد قبلاً جاافتاده)
     const MODAL_IDS = [
         'settings-modal', 'preview-modal', 'edit-record-modal', 'item-management-modal',
         'report-card-modal', 'attendance-details-modal', 'lesson-details-modal',
         'group-details-modal', 'edit-group-modal', 'edit-student-modal',
         'edit-lesson-modal', 'session-details-modal', 'student-details-modal',
-        'exam-editor-modal', 'exam-grading-modal',
-        // ✅ اضافه شده:
-        'exit-confirm-modal', 'backup-reminder-modal', 'period-editor-modal'
+        'exam-editor-modal', 'exam-grading-modal'
     ];
     
     let backPressCount = 0;
     let backPressTimer = null;
     let isInitialized = false;
     let hasGuardState = false;
-    
-    // مودال‌هایی که بستن‌شون نیاز به تأیید ندارد (فقط بسته می‌شوند)
-    // مودال‌های exit-confirm و backup-reminder هنگام back نباید دوباره به exit-confirm برن
-    const MODALS_WITHOUT_DIRTY_CHECK = [
-        'exit-confirm-modal', 'backup-reminder-modal', 'period-editor-modal'
-    ];
     
     function getOpenModal() {
         for (let i = 0; i < MODAL_IDS.length; i++) {
@@ -63,19 +48,14 @@
             'exam-grading-modal': 'closeExamGradingModal',
             'preview-modal': 'closePreviewModal',
             'report-card-modal': 'closeReportCard',
-            'attendance-details-modal': 'closeAttendanceDetails',
-            // ✅ اضافه شده:
-            'exit-confirm-modal': 'cancelExit',
-            'backup-reminder-modal': 'closeReminderModal',
-            'period-editor-modal': 'closePeriodEditor'
+            'attendance-details-modal': 'closeAttendanceDetails'
         };
         
         const fnName = closeFnMap[modalId];
         if (fnName && typeof window[fnName] === 'function') {
-            try { window[fnName](); return true; } catch (e) { console.warn('closeModal error:', e); }
+            try { window[fnName](); return true; } catch (e) { }
         }
         
-        // fallback: فقط کلاس show را بردار
         modal.classList.remove('show');
         return true;
     }
@@ -164,16 +144,6 @@
         // مرحله ۱: اگر مودال باز است، ببند
         const openModal = getOpenModal();
         if (openModal) {
-            // ✅ مودال‌های بدون هشدار Dirty: فقط ببند
-            if (MODALS_WITHOUT_DIRTY_CHECK.includes(openModal)) {
-                closeModal(openModal);
-                ensureGuardState();
-                backPressCount = 0;
-                if (backPressTimer) { clearTimeout(backPressTimer); backPressTimer = null; }
-                return;
-            }
-            
-            // مودال‌های دیگر: ببند (اگر Dirty دارند، خود مودال مسئول است)
             closeModal(openModal);
             ensureGuardState();
             backPressCount = 0;
@@ -183,14 +153,17 @@
         
         // مرحله ۲: اگر فرم دارای تغییرات ذخیره‌نشده است
         if (window.isFormDirty) {
+            // از تابع هشدار در app.js استفاده می‌کنیم
             if (typeof window.requestExit === 'function') {
                 window.requestExit(function() {
+                    // کاربر «خروج» را زد، به تب کلاس برو
                     if (getActivePageId() !== 'page-class') {
                         goToPage('page-class');
                     }
                     ensureGuardState();
                 });
             } else {
+                // در صورت خطا، مستقیم برو
                 if (getActivePageId() !== 'page-class') {
                     goToPage('page-class');
                 }
@@ -215,6 +188,7 @@
         backPressCount++;
         
         if (backPressCount === 1) {
+            // نمایش پیام هشدار
             if (typeof showToast === 'function') {
                 showToast('برای خروج از برنامه، دوباره دکمه بازگشت را بزنید.', 'info');
             }
@@ -226,19 +200,23 @@
                 backPressTimer = null;
             }, 3000);
         } else {
+            // خروج واقعی
             backPressCount = 0;
             if (backPressTimer) { clearTimeout(backPressTimer); backPressTimer = null; }
             
             // تلاش برای خروج در PWA
             if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+                // در حالت PWA نصب‌شده
                 try {
                     window.close();
                 } catch (e) {
+                    // اگر مرورگر اجازه نداد
                     if (typeof showToast === 'function') {
                         showToast('برای خروج، برنامه را از گوشی ببندید.', 'info');
                     }
                 }
             } else {
+                // در حالت مرورگر معمولی
                 try {
                     window.history.go(-2);
                 } catch (e) {
