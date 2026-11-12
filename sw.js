@@ -1,14 +1,14 @@
 // ==========================================
-// فایل sw.js — سرویس‌ورکر بهینه‌شده (نسخه v106)
+// فایل sw.js — نسخه v112 (رفع کامل مشکل کش)
 // ==========================================
 
-const CACHE_NAME = 'kosha-cache-v106';
+const CACHE_NAME = 'kosha-cache-v112';
+
+// فایل‌هایی که باید در نصب اولیه کش شوند
 const ASSETS_TO_CACHE = [
     './', 
     './index.html', 
     './styles.css', 
-    './app.js', 
-    './db.js', 
     './manifest.json', 
     './icon.svg', 
     './class.js', 
@@ -26,34 +26,28 @@ const ASSETS_TO_CACHE = [
     './back-button.js'
 ];
 
-// فایل‌هایی که همیشه باید از شبکه به‌روز شوند (حساس به تغییر)
-const NETWORK_FIRST_ASSETS = [
+// ⚠️ فایل‌های حساس که در زمان توسعه باید همیشه از شبکه لود شوند (بدون کش)
+// این کار باعث می‌شود هر بار تغییرات جدید را ببینید و کش قدیمی آزارتان ندهد
+const NETWORK_ONLY_ASSETS = [
     './index.html',
     './app.js',
-    './exam.js',
-    './game.js',
-    './score.js',
-    './session.js',
-    './calendar.js',
-    './jalali-utils.js',
-    './back-button.js',
-    './styles.css'
+    './db.js',
+    './sw.js'
 ];
 
-// ==========================================
 // نصب: کش کردن فایل‌های اصلی
-// ==========================================
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(ASSETS_TO_CACHE);
-        }).then(() => self.skipWaiting())
+        }).then(() => {
+            console.log('✅ سرویس‌ورکر جدید نصب شد.');
+            return self.skipWaiting();
+        })
     );
 });
 
-// ==========================================
 // فعال‌سازی: پاک کردن کش‌های قدیمی
-// ==========================================
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
@@ -65,63 +59,55 @@ self.addEventListener('activate', (event) => {
                     }
                 })
             );
-        }).then(() => self.clients.claim())
+        }).then(() => {
+            console.log('✅ سرویس‌ورکر فعال شد.');
+            return self.clients.claim();
+        })
     );
 });
 
-// ==========================================
 // استراتژی هوشمند Fetch
-// ==========================================
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
     
+    // فقط درخواست‌های GET را مدیریت کن
     if (event.request.method !== 'GET') return;
+    // درخواست‌های خارجی (مثل گوگل فونت) را مدیریت نکن
+    if (url.origin !== self.location.origin) return;
     
-    if (url.origin !== self.location.origin) {
+    // اگر فایل در لیست Network-Only است، همیشه از شبکه بگیر (حتی اگر کش وجود داشت)
+    const isNetworkOnly = NETWORK_ONLY_ASSETS.some(asset => url.pathname.endsWith(asset.replace('./', '')));
+    
+    if (isNetworkOnly) {
+        event.respondWith(
+            fetch(event.request).catch(() => {
+                // اگر شبکه قطع بود، از کش استفاده کن (برای اطمینان)
+                return caches.match(event.request);
+            })
+        );
         return;
     }
     
-    const isNetworkFirst = NETWORK_FIRST_ASSETS.some(asset => url.pathname.endsWith(asset.replace('./', '')));
-    
-    if (isNetworkFirst) {
-        event.respondWith(
-            fetch(event.request)
-                .then((response) => {
-                    if (response && response.status === 200) {
-                        const responseClone = response.clone();
-                        caches.open(CACHE_NAME).then((cache) => {
-                            cache.put(event.request, responseClone);
-                        });
-                    }
-                    return response;
-                })
-                .catch(() => {
-                    return caches.match(event.request);
-                })
-        );
-    } else {
-        event.respondWith(
-            caches.match(event.request).then((cachedResponse) => {
-                if (cachedResponse) {
-                    return cachedResponse;
+    // برای بقیه فایل‌ها: اول از کش بگیر، اگر نبود از شبکه
+    event.respondWith(
+        caches.match(event.request).then((cachedResponse) => {
+            if (cachedResponse) {
+                return cachedResponse;
+            }
+            return fetch(event.request).then((response) => {
+                if (response && response.status === 200) {
+                    const responseClone = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseClone);
+                    });
                 }
-                return fetch(event.request).then((response) => {
-                    if (response && response.status === 200) {
-                        const responseClone = response.clone();
-                        caches.open(CACHE_NAME).then((cache) => {
-                            cache.put(event.request, responseClone);
-                        });
-                    }
-                    return response;
-                });
-            })
-        );
-    }
+                return response;
+            });
+        })
+    );
 });
 
-// ==========================================
-// پیام‌ها (برای به‌روزرسانی خودکار)
-// ==========================================
+// پیام‌ها
 self.addEventListener('message', (event) => {
     if (event.data && event.data.action === 'skipWaiting') {
         self.skipWaiting();
