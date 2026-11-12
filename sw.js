@@ -1,8 +1,8 @@
 // ==========================================
-// فایل sw.js — سرویس‌ورکر بهینه‌شده (نسخه v104)
+// فایل sw.js — سرویس‌ورکر بهینه‌شده (نسخه v105)
 // ==========================================
 
-const CACHE_NAME = 'kosha-cache-v104';
+const CACHE_NAME = 'kosha-cache-v105';
 const ASSETS_TO_CACHE = [
     './', 
     './index.html', 
@@ -22,6 +22,7 @@ const ASSETS_TO_CACHE = [
     './game.js',
     './calendar-data.js',
     './calendar.js',
+    './jalali-utils.js',
     './back-button.js'
 ];
 
@@ -33,6 +34,8 @@ const NETWORK_FIRST_ASSETS = [
     './game.js',
     './score.js',
     './session.js',
+    './calendar.js',
+    './jalali-utils.js',
     './back-button.js',
     './styles.css'
 ];
