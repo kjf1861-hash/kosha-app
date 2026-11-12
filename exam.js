@@ -32,7 +32,14 @@ function renderExamsData() {
     if (!container) return;
 
     if (!window.allExamsData || window.allExamsData.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:#64748b; padding: 20px;">هنوز آزمونی ثبت نشده است. با دکمه بالا اولین آزمون خود را بسازید.</p>';
+        container.innerHTML = `
+            <div class="empty-state">
+                <svg><use href="#empty-exams"/></svg>
+                <div class="empty-title">هنوز آزمونی نساختی!</div>
+                <div class="empty-desc">اولین آزمونت رو بساز تا نمرات رو ثبت کنی و گزارش‌ها رو ببینی.</div>
+                <button class="empty-action" onclick="openExamEditorModal()">➕ ساخت اولین آزمون</button>
+            </div>
+        `;
         return;
     }
 
@@ -255,7 +262,6 @@ function selectExamCalendarDay(dateStr) {
 
     renderExamCalendar();
     
-    // نمایش مناسبت زیر تقویم (اختیاری)
     const calendarBody = document.getElementById('exam-calendar-body');
     if (calendarBody) {
         const existingEventBox = calendarBody.querySelector('.exam-event-display');
@@ -308,7 +314,6 @@ async function openExamEditorModal(examId = null) {
         document.getElementById('examSubject').value = exam.subjectId;
         document.getElementById('examMaxScore').value = exam.maxScore;
         
-        // *** تنظیم تقویم بر اساس تاریخ آزمون ***
         if (exam.date && /^\d{4}\/\d{2}\/\d{2}$/.test(exam.date)) {
             const parts = exam.date.split('/');
             examCalendarState.year = parseInt(parts[0]);
@@ -802,6 +807,7 @@ async function saveExamGrades() {
         showToast('خطا در ذخیره نمرات.', 'error');
     }
 }
+
 // ==========================================
 // 8. تولید فایل بازی برای دانش‌آموز (آفلاین)
 // ==========================================
