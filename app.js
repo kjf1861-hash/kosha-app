@@ -25,7 +25,17 @@ window.currentFormName = '';
 
 // *** متغیرهای جدید برای پشتیبان‌گیری خودکار ***
 let autoBackupTimer = null;
-const AUTO_BACKUP_DELAY = 2000; // ۲ ثانیه تاخیر برای جلوگیری از کندی
+const AUTO_BACKUP_DELAY = 2000; // ۲ ثانیه تاخیر
+
+// *** متغیرهای مربوط به تنظیمات پشتیبان‌گیری دوره‌ای و بازه‌ها ***
+let currentBackupSettings = null;
+let periodCalendarState = {
+    year: 1405,
+    month: 7,
+    selectedDate: ''
+};
+let currentEditingPeriodIndex = -1; // -1 برای بازه جدید
+let currentCalendarTarget = 'start'; // 'start' یا 'end' — برای اینکه بدانیم تاریخ برای شروع است یا پایان
 
 // *** مدیریت خطای سراسری ***
 window.onerror = function(msg, url, line, col, error) {
@@ -110,14 +120,10 @@ function showToast(message, type = 'success') {
 // ✅ توابع جدید: پشتیبان‌گیری خودکار در پس‌زمینه
 // ==========================================
 
-// محافظت از داده‌ها با ذخیره در localStorage (با تاخیر برای جلوگیری از کندی)
 window.triggerAutoBackup = function() {
-    // لغو تایمر قبلی (Debounce)
     if (autoBackupTimer) {
         clearTimeout(autoBackupTimer);
     }
-    
-    // تنظیم تایمر جدید
     autoBackupTimer = setTimeout(async () => {
         try {
             const allData = await exportAllData();
@@ -130,28 +136,22 @@ window.triggerAutoBackup = function() {
     }, AUTO_BACKUP_DELAY);
 };
 
-// بررسی وجود نسخه اضطراری در هنگام بارگذاری
 function checkEmergencyBackup() {
     try {
         const backupStr = localStorage.getItem('kosha-emergency-backup');
         const backupTimeStr = localStorage.getItem('kosha-emergency-backup-time');
         
-        if (!backupStr || !backupTimeStr) return; // نسخه اضطراری وجود ندارد
+        if (!backupStr || !backupTimeStr) return;
         
         const backupTime = parseInt(backupTimeStr);
         const diffHours = (Date.now() - backupTime) / (1000 * 60 * 60);
         
-        // اگر نسخه اضطراری جدیدتر از ۱ ساعت پیش باشد، لازم نیست هشدار بدهیم
-        // (چون یعنی کاربر تازه از برنامه استفاده کرده)
         if (diffHours < 1) return;
         
-        // نمایش پیام به کاربر
         console.log('💡 نسخه اضطراری موجود است، از ' + Math.floor(diffHours) + ' ساعت پیش.');
-        
     } catch (e) { console.warn('خطا در بررسی نسخه اضطراری:', e); }
 }
 
-// بازیابی از نسخه اضطراری
 async function restoreFromEmergencyBackup() {
     if (!confirm('⚠️ هشدار مهم:\n\nبا بازیابی این نسخه، تمام اطلاعات فعلی شما پاک شده و با نسخه خودکار جایگزین می‌شود.\n\nآیا مطمئن هستید؟')) {
         return;
@@ -180,7 +180,6 @@ function checkBackupReminder() {
         const lastBackup = localStorage.getItem('kosha-last-backup');
         const statusEl = document.getElementById('backup-status');
         
-        // نمایش وضعیت آخرین پشتیبان دستی
         if (!lastBackup) {
             if (statusEl) statusEl.innerHTML = 'آخرین پشتیبان‌گیری دستی: <strong style="color:red;">هرگز!</strong>';
             setTimeout(() => showToast('لطفاً از داده‌های خود نسخه پشتیبان تهیه کنید.', 'info'), 4000);
@@ -190,7 +189,6 @@ function checkBackupReminder() {
             if (daysDiff >= 7) setTimeout(() => showToast('یک هفته از آخرین پشتیبان‌گیری گذشته است. لطفاً نسخه پشتیبان بگیرید.', 'info'), 4000);
         }
         
-        // نمایش اطلاعات نسخه اضطراری (خودکار)
         const emergencyBackupTime = localStorage.getItem('kosha-emergency-backup-time');
         const emergencyStatusEl = document.getElementById('emergency-backup-status');
         if (emergencyStatusEl && emergencyBackupTime) {
@@ -204,6 +202,449 @@ function checkBackupReminder() {
             }
         }
     } catch (e) { console.log(e); }
+}
+
+// ==========================================
+// ✅ توابع جدید: تنظیمات پشتیبان‌گیری دوره‌ای و بازه‌ها
+// ==========================================
+
+// پر کردن فرم تنظیمات پشتیبان‌گیری در مودال تنظیمات
+async function initBackupSettingsForm() {
+    currentBackupSettings = await getBackupSettings();
+    
+    const reminderTypeEl = document.getElementById('backupReminderType');
+    if (reminderTypeEl) {
+        reminderTypeEl.value = currentBackupSettings.reminderType || 'off';
+    }
+    
+    renderPeriodsList();
+    
+    // پرش کردن تقویم بازه‌ها برای ماه جاری
+    const now = new Date();
+    const jy = 1405; // سال تحصیلی فرضی
+    periodCalendarState.year = jy;
+    periodCalendarState.month = 7; // مهر
+    periodCalendarState.selectedDate = '';
+}
+
+// ذخیره تنظیمات (نوع یادآور)
+async function saveBackupSettings() {
+    if (!currentBackupSettings) {
+        currentBackupSettings = await getBackupSettings();
+    }
+    
+    const reminderTypeEl = document.getElementById('backupReminderType');
+    if (reminderTypeEl) {
+        currentBackupSettings.reminderType = reminderTypeEl.value;
+    }
+    
+    try {
+        await saveData('backupSettings', currentBackupSettings);
+        showToast('تنظیمات یادآور با موفقیت ذخیره شد.', 'success');
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در ذخیره تنظیمات.', 'error');
+    }
+}
+
+// نمایش لیست بازه‌ها
+function renderPeriodsList() {
+    const container = document.getElementById('periods-list-container');
+    if (!container) return;
+    
+    const periods = (currentBackupSettings && currentBackupSettings.periods) ? currentBackupSettings.periods : [];
+    
+    if (periods.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">هیچ بازه‌ای تعریف نشده است.</p>';
+        return;
+    }
+    
+    let html = '';
+    periods.forEach((period, index) => {
+        html += `
+            <div class="list-item" style="padding: 10px 12px; margin-bottom: 8px; flex-direction: column; align-items: stretch; gap: 5px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <strong style="color: var(--primary); font-size: 0.95rem;">📅 ${period.title}</strong>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="deletePeriod(${index})" title="حذف" style="padding: 2px 8px;">🗑️</button>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                    از <strong>${toPersianNumber(period.startDate)}</strong> تا <strong>${toPersianNumber(period.endDate)}</strong>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+// حذف بازه
+async function deletePeriod(index) {
+    if (!confirm('آیا از حذف این بازه مطمئن هستید؟')) return;
+    
+    if (!currentBackupSettings) {
+        currentBackupSettings = await getBackupSettings();
+    }
+    
+    currentBackupSettings.periods.splice(index, 1);
+    
+    try {
+        await saveData('backupSettings', currentBackupSettings);
+        renderPeriodsList();
+        showToast('بازه حذف شد.', 'success');
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در حذف بازه.', 'error');
+    }
+}
+
+// باز کردن مودال تعریف بازه جدید
+function openPeriodEditor() {
+    const modal = document.getElementById('period-editor-modal');
+    if (!modal) return;
+    
+    currentEditingPeriodIndex = -1;
+    currentCalendarTarget = 'start';
+    
+    document.getElementById('period-editor-title').textContent = '➕ تعریف بازه جدید';
+    document.getElementById('periodTitle').value = '';
+    document.getElementById('periodStartDate').value = '';
+    document.getElementById('periodEndDate').value = '';
+    document.getElementById('periodStartDisplay').textContent = 'انتخاب نشده';
+    document.getElementById('periodEndDisplay').textContent = 'انتخاب نشده';
+    
+    // تعیین سال تحصیلی جاری برای تقویم
+    const ay = window.activeAcademicYear || '1405-1406';
+    const startYear = parseInt(ay.split('-')[0]);
+    periodCalendarState.year = startYear;
+    periodCalendarState.month = 7;
+    periodCalendarState.selectedDate = '';
+    
+    renderPeriodCalendar();
+    modal.classList.add('show');
+}
+
+// بستن مودال تعریف بازه
+function closePeriodEditor() {
+    const modal = document.getElementById('period-editor-modal');
+    if (modal) modal.classList.remove('show');
+}
+
+// تعیین هدف تقویم (شروع یا پایان)
+function setCalendarTarget(target) {
+    currentCalendarTarget = target;
+    showToast(target === 'start' ? 'روی تقویم، تاریخ شروع را انتخاب کنید.' : 'روی تقویم، تاریخ پایان را انتخاب کنید.', 'info');
+}
+
+// رندر تقویم مودال تعریف بازه
+function renderPeriodCalendar() {
+    const titleEl = document.getElementById('period-calendar-title');
+    if (!titleEl) return;
+    
+    const ay = window.activeAcademicYear || '1405-1406';
+    const [startYearStr, endYearStr] = ay.split('-');
+    const startYear = parseInt(startYearStr);
+    const endYear = parseInt(endYearStr);
+    
+    const monthNames = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
+    
+    titleEl.innerHTML = `
+        <select onchange="updatePeriodCalendarSelect('month', this.value)">
+            ${monthNames.map((m, i) => `<option value="${i + 1}" ${periodCalendarState.month === i + 1 ? 'selected' : ''}>${m}</option>`).join('')}
+        </select>
+        <select onchange="updatePeriodCalendarSelect('year', this.value)">
+            ${[startYear, endYear].map(y => `<option value="${y}" ${periodCalendarState.year === y ? 'selected' : ''}>${toPersianNumber(y)}</option>`).join('')}
+        </select>
+    `;
+    
+    const grid = document.getElementById('period-calendar-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    
+    const firstDay = getJalaliFirstDayOfWeek(periodCalendarState.year, periodCalendarState.month);
+    const daysInMonth = getJalaliDaysInMonth(periodCalendarState.year, periodCalendarState.month);
+    
+    const startBound = `${startYear}/07/01`;
+    const endBound = `${endYear}/06/31`;
+    
+    for (let i = 0; i < firstDay; i++) {
+        grid.innerHTML += `<div class="calendar-day empty"></div>`;
+    }
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+        const isFriday = ((firstDay + day - 1) % 7) === 6;
+        const dateStr = `${periodCalendarState.year}/${String(periodCalendarState.month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+        const inAcademicYear = (dateStr >= startBound && dateStr <= endBound);
+        
+        const isStart = document.getElementById('periodStartDate').value === dateStr;
+        const isEnd = document.getElementById('periodEndDate').value === dateStr;
+        
+        let classes = 'calendar-day';
+        if (isFriday) classes += ' holiday';
+        if (isStart) classes += ' selected';
+        if (isEnd) classes += ' selected';
+        if (isStart && isEnd) classes += ' selected';
+        if (!inAcademicYear) classes += ' outside-range';
+        
+        const clickHandler = inAcademicYear 
+            ? `onclick="selectPeriodCalendarDay('${dateStr}')"` 
+            : `onclick="showToast('این تاریخ خارج از بازه سال تحصیلی است.', 'error')"`;
+        
+        let styleExtra = '';
+        if (isStart && !isEnd) styleExtra = 'background: #22c55e; color: white;';
+        else if (isEnd && !isStart) styleExtra = 'background: #ef4444; color: white;';
+        
+        grid.innerHTML += `<div class="${classes}" ${clickHandler} style="${styleExtra}">${toPersianNumber(day)}</div>`;
+    }
+}
+
+function updatePeriodCalendarSelect(field, value) {
+    periodCalendarState[field] = parseInt(value);
+    renderPeriodCalendar();
+}
+
+// انتخاب روز در تقویم بازه
+function selectPeriodCalendarDay(dateStr) {
+    if (currentCalendarTarget === 'start') {
+        document.getElementById('periodStartDate').value = dateStr;
+        document.getElementById('periodStartDisplay').textContent = toPersianNumber(dateStr);
+        // اگر تاریخ پایان قبل از شروع است، پاک کن
+        const endDate = document.getElementById('periodEndDate').value;
+        if (endDate && endDate < dateStr) {
+            document.getElementById('periodEndDate').value = '';
+            document.getElementById('periodEndDisplay').textContent = 'انتخاب نشده';
+        }
+    } else {
+        document.getElementById('periodEndDate').value = dateStr;
+        document.getElementById('periodEndDisplay').textContent = toPersianNumber(dateStr);
+        
+        const startDate = document.getElementById('periodStartDate').value;
+        if (!startDate || dateStr < startDate) {
+            showToast('تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.', 'error');
+            document.getElementById('periodEndDate').value = '';
+            document.getElementById('periodEndDisplay').textContent = 'انتخاب نشده';
+            return;
+        }
+    }
+    renderPeriodCalendar();
+}
+
+// ذخیره بازه جدید
+async function savePeriod() {
+    const title = document.getElementById('periodTitle').value.trim();
+    const startDate = document.getElementById('periodStartDate').value;
+    const endDate = document.getElementById('periodEndDate').value;
+    
+    if (!title) {
+        showToast('عنوان بازه را وارد کنید.', 'error');
+        return;
+    }
+    
+    if (!startDate || !endDate) {
+        showToast('تاریخ شروع و پایان را انتخاب کنید.', 'error');
+        return;
+    }
+    
+    // اعتبارسنجی بازه
+    if (!window.isValidJalaliDateString(startDate) || !window.isValidJalaliDateString(endDate)) {
+        showToast('تاریخ وارد شده معتبر نیست.', 'error');
+        return;
+    }
+    
+    if (startDate >= endDate) {
+        showToast('تاریخ شروع باید قبل از تاریخ پایان باشد.', 'error');
+        return;
+    }
+    
+    // بررسی محدوده سال تحصیلی
+    const ay = window.activeAcademicYear || '1405-1406';
+    const [startYear, endYear] = ay.split('-');
+    const startBound = `${startYear}/07/01`;
+    const endBound = `${endYear}/06/31`;
+    
+    if (startDate < startBound || endDate > endBound) {
+        showToast(`تاریخ‌ها باید در بازه سال تحصیلی (${toPersianNumber(startBound)} تا ${toPersianNumber(endBound)}) باشند.`, 'error');
+        return;
+    }
+    
+    if (!currentBackupSettings) {
+        currentBackupSettings = await getBackupSettings();
+    }
+    
+    // بررسی همپوشانی با بازه‌های قبلی
+    const periods = currentBackupSettings.periods || [];
+    for (let i = 0; i < periods.length; i++) {
+        if (currentEditingPeriodIndex === i) continue; // اگر در حال ویرایش همان بازه هستیم، از همپوشانی صرف‌نظر کن
+        const existing = periods[i];
+        if (!(endDate < existing.startDate || startDate > existing.endDate)) {
+            showToast(`این بازه با بازه «${existing.title}» همپوشانی دارد.`, 'error');
+            return;
+        }
+    }
+    
+    const newPeriod = {
+        title: title,
+        startDate: startDate,
+        endDate: endDate,
+        lastReminded: null
+    };
+    
+    if (currentEditingPeriodIndex >= 0) {
+        currentBackupSettings.periods[currentEditingPeriodIndex] = newPeriod;
+    } else {
+        if (!currentBackupSettings.periods) currentBackupSettings.periods = [];
+        currentBackupSettings.periods.push(newPeriod);
+    }
+    
+    try {
+        await saveData('backupSettings', currentBackupSettings);
+        showToast('بازه با موفقیت ذخیره شد.', 'success');
+        closePeriodEditor();
+        renderPeriodsList();
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در ذخیره بازه.', 'error');
+    }
+}
+
+// بررسی یادآورها در هنگام ورود به برنامه
+async function checkPeriodReminders() {
+    try {
+        currentBackupSettings = await getBackupSettings();
+        const now = Date.now();
+        
+        // ۱. بررسی یادآور دوره‌ای (روزانه/هفتگی/ماهانه)
+        const reminderType = currentBackupSettings.reminderType;
+        if (reminderType && reminderType !== 'off') {
+            const lastReminder = currentBackupSettings.lastReminderDate || 0;
+            const daysSinceLast = (now - lastReminder) / (1000 * 60 * 60 * 24);
+            
+            let shouldRemind = false;
+            let reminderText = '';
+            
+            if (reminderType === 'daily' && daysSinceLast >= 1) {
+                shouldRemind = true;
+                reminderText = 'روزانه';
+            } else if (reminderType === 'weekly' && daysSinceLast >= 7) {
+                shouldRemind = true;
+                reminderText = 'هفتگی';
+            } else if (reminderType === 'monthly' && daysSinceLast >= 30) {
+                shouldRemind = true;
+                reminderText = 'ماهانه';
+            }
+            
+            if (shouldRemind) {
+                showReminderModal(`موعد پشتیبان‌گیری ${reminderText} فرا رسیده است. آیا می‌خواهید از داده‌های خود نسخه پشتیبان تهیه کنید؟`, 'general');
+                return;
+            }
+        }
+        
+        // ۲. بررسی بازه‌های سفارشی
+        const todayDate = getTodayJalali();
+        const periods = currentBackupSettings.periods || [];
+        
+        for (let i = 0; i < periods.length; i++) {
+            const period = periods[i];
+            // اگر امروز بعد از پایان بازه است و هنوز یادآوری نشده
+            if (todayDate >= period.endDate && (!period.lastReminded || period.lastReminded < period.endDate)) {
+                showReminderModal(`بازه «${period.title}» به پایان رسید. آیا می‌خواهید از داده‌های این بازه پشتیبان تهیه کنید؟`, 'period', i);
+                return;
+            }
+        }
+    } catch (e) {
+        console.error('خطا در بررسی یادآورها:', e);
+    }
+}
+
+// دریافت تاریخ شمسی امروز به صورت رشته
+function getTodayJalali() {
+    // استفاده از Intl برای دریافت تاریخ شمسی
+    try {
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+            year: 'numeric', month: '2-digit', day: '2-digit'
+        });
+        const parts = formatter.formatToParts(now);
+        let year, month, day;
+        parts.forEach(p => {
+            if (p.type === 'year') year = p.value.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).padStart(4, '0');
+            if (p.type === 'month') month = p.value.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).padStart(2, '0');
+            if (p.type === 'day') day = p.value.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).padStart(2, '0');
+        });
+        // تبدیل ارقام فارسی به انگلیسی
+        year = year.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+        month = month.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+        day = day.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+        return `${year}/${month}/${day}`;
+    } catch (e) {
+        return '1405/01/01';
+    }
+}
+
+// متغیر برای نگهداری حالت مودال یادآور
+let reminderModalContext = { type: 'general', periodIndex: -1 };
+
+// نمایش مودال یادآور
+function showReminderModal(message, type = 'general', periodIndex = -1) {
+    reminderModalContext = { type, periodIndex };
+    const modal = document.getElementById('backup-reminder-modal');
+    const messageEl = document.getElementById('backup-reminder-message');
+    if (messageEl) messageEl.textContent = message;
+    if (modal) modal.classList.add('show');
+}
+
+// بستن مودال یادآور
+function closeReminderModal() {
+    const modal = document.getElementById('backup-reminder-modal');
+    if (modal) modal.classList.remove('show');
+    reminderModalContext = { type: 'general', periodIndex: -1 };
+}
+
+// دانلود پشتیبان از مودال یادآور
+async function handleReminderDownload() {
+    try {
+        const data = await exportAllData();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        let filename = `kosha_backup_${new Date().toISOString().slice(0,10)}`;
+        if (reminderModalContext.type === 'period' && currentBackupSettings && currentBackupSettings.periods[reminderModalContext.periodIndex]) {
+            const period = currentBackupSettings.periods[reminderModalContext.periodIndex];
+            filename = `kosha_backup_${period.title.replace(/\s+/g, '_')}`;
+            // ثبت یادآوری
+            currentBackupSettings.periods[reminderModalContext.periodIndex].lastReminded = getTodayJalali();
+            await saveData('backupSettings', currentBackupSettings);
+        } else {
+            currentBackupSettings.lastReminderDate = Date.now();
+            await saveData('backupSettings', currentBackupSettings);
+        }
+        
+        const a = document.createElement('a'); 
+        a.href = url; 
+        a.download = filename + '.json'; 
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        localStorage.setItem('kosha-last-backup', Date.now());
+        checkBackupReminder();
+        closeReminderModal();
+        showToast('فایل پشتیبان دانلود شد.', 'success');
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در تولید پشتیبان.', 'error');
+    }
+}
+
+// به تعویق انداختن یادآور
+async function snoozeReminder() {
+    try {
+        if (reminderModalContext.type === 'period' && currentBackupSettings && currentBackupSettings.periods[reminderModalContext.periodIndex]) {
+            // فقط برای این جلسه به تعویق بینداز
+        } else {
+            currentBackupSettings.lastReminderDate = Date.now();
+            await saveData('backupSettings', currentBackupSettings);
+        }
+        closeReminderModal();
+        showToast('یادآور بعداً نمایش داده می‌شود.', 'info');
+    } catch (e) { console.error(e); }
 }
 
 function applyEmojiRestriction(inputId) {
@@ -368,404 +809,15 @@ async function initApp() {
     
     checkBackupReminder();
     
-    // *** بررسی وجود نسخه اضطراری در شروع اپلیکیشن ***
     checkEmergencyBackup();
+    
+    // *** بررسی یادآورها بعد از ۲ ثانیه (تا صفحه فرصت بارگذاری داشته باشد) ***
+    setTimeout(() => {
+        checkPeriodReminders();
+    }, 2000);
     
     try {
         if (typeof loadExamsData === 'function') await loadExamsData();
         if (typeof renderExamsData === 'function') renderExamsData();
     } catch (error) { console.error("خطا در بارگذاری آزمون‌ها:", error); }
 }
-
-// *** جدا کردن بارگذاری داده از رندر UI ***
-async function loadAllData() {
-    try {
-        const classData = await getDataById('classProfile', 1);
-        if (classData) {
-            if (classData.academicYear) window.activeAcademicYear = classData.academicYear;
-            if (classData.scheduleActiveDays && Array.isArray(classData.scheduleActiveDays)) {
-                window.scheduleActiveDays = classData.scheduleActiveDays;
-            }
-            if (classData.schedulePeriodsCount) {
-                window.schedulePeriodsCount = parseInt(classData.schedulePeriodsCount);
-            }
-        }
-
-        const rawStudents = await getAllData('students');
-        const rawGroups = await getAllData('groups');
-        const rawSubjects = await getAllData('subjects');
-        const rawRecords = await getAllData('records');
-        const rawSessions = await getAllData('sessions');
-        const rawAttendance = await getAllData('attendance');
-        
-        let migrationNeeded = false;
-        
-        for (let r of rawRecords) {
-            if (!r.academicYear) { r.academicYear = window.activeAcademicYear; await saveData('records', r); migrationNeeded = true; }
-        }
-        for (let s of rawSessions) {
-            if (!s.academicYear) { s.academicYear = window.activeAcademicYear; await saveData('sessions', s); migrationNeeded = true; }
-        }
-
-        window.allStudentsData = rawStudents;
-        window.allGroupsData = rawGroups;
-        window.allSubjectsData = rawSubjects;
-        
-        window.allRecordsData = rawRecords.filter(r => r.academicYear === window.activeAcademicYear);
-        window.allSessionsData = rawSessions.filter(s => s.academicYear === window.activeAcademicYear);
-        
-        const validSessionIds = window.allSessionsData.map(s => s.id);
-        window.allAttendanceData = rawAttendance.filter(a => validSessionIds.includes(a.sessionId));
-        
-        window.allWeeklyScheduleData = await getAllData('weeklySchedule');
-
-        assessmentItems = await getAllData('assessmentItems');
-        window.allAssessmentItems = assessmentItems;
-
-        renderUI();
-
-        if (migrationNeeded) showToast('اطلاعات قبلی به سال تحصیلی جدید منتقل شد.', 'info');
-        
-    } catch (e) { 
-        console.error('خطا در بارگذاری داده‌ها:', e); 
-        showToast('خطا در بارگذاری داده‌ها.', 'error');
-    }
-}
-
-function renderUI() {
-    try {
-        if (typeof renderDashboardData === 'function') renderDashboardData();
-        if (typeof renderStudentsList === 'function') renderStudentsList();
-        if (typeof renderLessonData === 'function') renderLessonData();
-        if (typeof renderGroupData === 'function') renderGroupData();
-        if (typeof renderSessionData === 'function') renderSessionData();
-        if (typeof renderScoreData === 'function') renderScoreData();
-    } catch (e) {
-        console.error('خطا در رندر UI:', e);
-    }
-}
-
-function jalaliToDateString(jy, jm, jd) {
-    return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
-}
-
-// ==========================================
-// توابع مدیریت آیتم‌ها
-// ==========================================
-function openItemManagementModal() {
-    const modal = document.getElementById('item-management-modal');
-    if (modal) modal.classList.add('show');
-    renderItemsList();
-    resetItemForm();
-}
-
-function closeItemManagementModal() {
-    const modal = document.getElementById('item-management-modal');
-    if (modal) modal.classList.remove('show');
-    loadAllData();
-}
-
-function renderItemsList() {
-    const container = document.getElementById('items-list-container');
-    if (!container) return;
-    if (assessmentItems.length === 0) { container.innerHTML = '<p style="text-align:center;">هیچ آیتمی یافت نشد.</p>'; return; }
-    container.innerHTML = '';
-    assessmentItems.forEach(item => {
-        let typeName = item.type === 'level' ? 'سطح محور' : item.type === 'count' ? 'شمارشی' : item.type === 'free' ? 'آزاد' : 'ویژه (قرآن)';
-        container.innerHTML += `
-            <div class="item-management-row">
-                <div><strong>${item.title}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">(${typeName})</span></div>
-                <div style="display:flex; gap:5px;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="editItem(${item.id})" ${item.type === 'quran' ? 'disabled title="سیستمی"' : ''}>✏️</button>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteCustomItem(${item.id})" ${item.type === 'quran' ? 'disabled title="سیستمی"' : ''}>🗑️</button>
-                </div>
-            </div>
-        `;
-    });
-}
-
-function resetItemForm() {
-    const form = document.getElementById('item-manager-form');
-    if (form) form.reset();
-    const editId = document.getElementById('editItemId');
-    if (editId) editId.value = '';
-    const title = document.getElementById('item-form-title');
-    if (title) title.textContent = '➕ افزودن آیتم جدید';
-    const levelsContainer = document.getElementById('levels-container');
-    if (levelsContainer) levelsContainer.innerHTML = '';
-    const placeholder = document.getElementById('itemLevelPlaceholder');
-    if (placeholder) placeholder.value = '';
-    const typeLevel = document.getElementById('item-type-level');
-    if (typeLevel) typeLevel.style.display = 'none';
-    const typeCount = document.getElementById('item-type-count');
-    if (typeCount) typeCount.style.display = 'none';
-    const typeFree = document.getElementById('item-type-free');
-    if (typeFree) typeFree.style.display = 'none';
-    const itemTitle = document.getElementById('itemTitle');
-    if (itemTitle) itemTitle.readOnly = false;
-}
-
-function toggleItemTypeFields() {
-    const typeEl = document.getElementById('itemType');
-    if (!typeEl) return;
-    const type = typeEl.value;
-    const typeLevel = document.getElementById('item-type-level');
-    const typeCount = document.getElementById('item-type-count');
-    const typeFree = document.getElementById('item-type-free');
-    if (typeLevel) typeLevel.style.display = type === 'level' ? 'block' : 'none';
-    if (typeCount) typeCount.style.display = type === 'count' ? 'block' : 'none';
-    if (typeFree) typeFree.style.display = type === 'free' ? 'block' : 'none';
-    const levelsContainer = document.getElementById('levels-container');
-    if (type === 'level' && levelsContainer && levelsContainer.children.length === 0) {
-        addLevelRow(); addLevelRow(); 
-    }
-}
-
-function addLevelRow(name = '', score = '') {
-    const container = document.getElementById('levels-container');
-    if (!container) return;
-    const row = document.createElement('div');
-    row.className = 'level-row-input';
-    row.innerHTML = `
-        <input type="text" class="form-control level-name" placeholder="نام سطح" value="${name}">
-        <input type="number" class="form-control level-score" placeholder="امتیاز" value="${score}">
-        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✖</button>
-    `;
-    container.appendChild(row);
-}
-
-async function editItem(id) {
-    const item = assessmentItems.find(i => i.id === id);
-    if (!item) { showToast('آیتم یافت نشد.', 'error'); return; }
-    const editId = document.getElementById('editItemId');
-    if (editId) editId.value = item.id;
-    const titleEl = document.getElementById('itemTitle');
-    if (titleEl) titleEl.value = item.title;
-    const typeEl = document.getElementById('itemType');
-    if (typeEl) typeEl.value = item.type;
-    const formTitle = document.getElementById('item-form-title');
-    if (formTitle) formTitle.textContent = '✏️ ویرایش آیتم';
-    const typeLevel = document.getElementById('item-type-level');
-    if (typeLevel) typeLevel.style.display = 'none';
-    const typeCount = document.getElementById('item-type-count');
-    if (typeCount) typeCount.style.display = 'none';
-    const typeFree = document.getElementById('item-type-free');
-    if (typeFree) typeFree.style.display = 'none';
-    if (item.type === 'level') {
-        if (typeLevel) typeLevel.style.display = 'block';
-        const placeholder = document.getElementById('itemLevelPlaceholder');
-        if (placeholder) placeholder.value = item.placeholder || 'انتخاب سطح عملکرد:';
-        const container = document.getElementById('levels-container');
-        if (container) {
-            container.innerHTML = '';
-            item.levels.forEach(l => addLevelRow(l.name, l.score));
-        }
-    } else if (item.type === 'count') {
-        if (typeCount) typeCount.style.display = 'block';
-        const unitScore = document.getElementById('itemUnitScore');
-        if (unitScore) unitScore.value = item.unitScore;
-        const placeholder = document.getElementById('itemCountPlaceholder');
-        if (placeholder) placeholder.value = item.placeholder || '';
-    } else if (item.type === 'free') {
-        if (typeFree) typeFree.style.display = 'block';
-        const placeholder = document.getElementById('itemFreePlaceholder');
-        if (placeholder) placeholder.value = item.placeholder || '';
-    }
-}
-
-async function saveItem(e) {
-    if (e) e.preventDefault();
-    
-    const idEl = document.getElementById('editItemId');
-    const titleEl = document.getElementById('itemTitle');
-    const typeEl = document.getElementById('itemType');
-    if (!idEl || !titleEl || !typeEl) return;
-    
-    const id = idEl.value;
-    const title = titleEl.value.trim();
-    const type = typeEl.value;
-    
-    if (!title) { showToast('عنوان آیتم را وارد کنید.', 'error'); return; }
-    if (!type) { showToast('نوع آیتم را انتخاب کنید.', 'error'); return; }
-    
-    if (!id && assessmentItems.length >= 16) {
-        showToast('حداکثر تعداد مجاز آیتم ارزشیابی (۱۶ آیتم) تکمیل شده است.', 'error');
-        return;
-    }
-    
-    const oldItem = id ? assessmentItems.find(i => i.id === parseInt(id)) : null;
-    const oldTitle = oldItem ? oldItem.title : null;
-
-    let itemData = { title, type };
-    if (id) {
-        itemData.id = parseInt(id);
-    } else {
-        itemData.id = Date.now();
-    }
-    
-    if (type === 'level') {
-        const placeholder = document.getElementById('itemLevelPlaceholder');
-        itemData.placeholder = (placeholder && placeholder.value) || 'انتخاب سطح عملکرد:';
-        const levels = [];
-        const rows = document.querySelectorAll('#levels-container .level-row-input');
-        rows.forEach(row => {
-            const name = row.querySelector('.level-name').value.trim();
-            const score = parseInt(row.querySelector('.level-score').value);
-            if (name && !isNaN(score)) levels.push({ name, score });
-        });
-        if (levels.length === 0) { showToast('حداقل یک سطح با نام و امتیاز تعریف کنید.', 'error'); return; }
-        itemData.levels = levels;
-    } else if (type === 'count') {
-        const unitScore = document.getElementById('itemUnitScore');
-        const placeholder = document.getElementById('itemCountPlaceholder');
-        itemData.unitScore = parseInt(unitScore ? unitScore.value : 10);
-        itemData.placeholder = placeholder ? placeholder.value : '';
-    } else if (type === 'free') {
-        const placeholder = document.getElementById('itemFreePlaceholder');
-        itemData.placeholder = placeholder ? placeholder.value : '';
-    }
-    
-    try {
-        await saveData('assessmentItems', itemData);
-        
-        if (oldTitle && oldTitle !== title) {
-            const allRecords = await getAllData('records');
-            let updatedCount = 0;
-            for (let rec of allRecords) {
-                if (rec.itemName === oldTitle) {
-                    rec.itemName = title;
-                    await saveData('records', rec);
-                    updatedCount++;
-                }
-            }
-            if (updatedCount > 0) {
-                showToast(`نام آیتم در ${toPersianNumber(updatedCount)} رکورد قبلی نیز به‌روزرسانی شد.`, 'info');
-            }
-        }
-
-        showToast('آیتم با موفقیت ذخیره شد!', 'success');
-        
-        const freshItems = await getAllData('assessmentItems');
-        window.allAssessmentItems = freshItems;
-        assessmentItems = freshItems;
-        
-        renderItemsList();
-        resetItemForm();
-        
-        const itemSelect = document.getElementById('recordItem');
-        if (itemSelect) {
-            itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
-        }
-        const editItemSelect = document.getElementById('editRecordItem');
-        if (editItemSelect) {
-            editItemSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
-        }
-
-        if (oldTitle && oldTitle !== title) {
-            await loadAllData();
-        }
-        
-        if (typeof clearFormDirty === 'function') clearFormDirty();
-
-    } catch (error) { 
-        console.error(error); 
-        showToast('خطا در ذخیره آیتم!', 'error'); 
-    }
-}
-
-async function deleteCustomItem(id) {
-    if(!confirm('آیا از حذف این آیتم مطمئن هستید؟')) return;
-    try {
-        await deleteData('assessmentItems', id);
-        showToast('آیتم حذف شد.', 'success');
-        const freshItems = await getAllData('assessmentItems');
-        window.allAssessmentItems = freshItems;
-        assessmentItems = freshItems;
-        renderItemsList();
-        const itemSelect = document.getElementById('recordItem');
-        if (itemSelect) itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
-        const editItemSelect = document.getElementById('editRecordItem');
-        if (editItemSelect) editItemSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
-    } catch (e) { console.error(e); showToast('خطا در حذف آیتم!', 'error'); }
-}
-
-async function exportData() {
-    try {
-        const data = await exportAllData();
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = `kosha_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
-        URL.revokeObjectURL(url);
-        localStorage.setItem('kosha-last-backup', Date.now());
-        checkBackupReminder(); 
-        showToast('فایل پشتیبان دانلود شد. آن را در جای امنی نگه دارید.', 'info');
-    } catch (e) { showToast('خطا در تولید فایل پشتیبان!', 'error'); }
-}
-
-async function importData(event) {
-    const file = event.target.files[0]; 
-    if (!file) return;
-    
-    const isConfirmed = confirm('⚠️ هشدار مهم:\n\nبا بازیابی این فایل، تمام اطلاعات فعلی شما (از جمله تغییرات و آیتم‌های جدید) پاک شده و با اطلاعات داخل فایل بکاپ جایگزین می‌شود.\n\nآیا مطمئن هستید؟');
-    
-    if (!isConfirmed) {
-        event.target.value = ''; 
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        try { 
-            const data = JSON.parse(e.target.result); 
-            await importAllData(data); 
-            
-            showToast('اطلاعات با موفقیت بازیابی شد! در حال بارگذاری مجدد...', 'success'); 
-            
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
-
-        }
-        catch (err) { 
-            console.error(err);
-            showToast('فایل نامعتبر! تغییرات لغو شد.', 'error'); 
-        }
-        event.target.value = ''; 
-    };
-    reader.readAsText(file);
-}
-
-function changePage(section, direction) {
-    if (section === 'students') { currentPage.students += direction; if(typeof renderStudentsList === 'function') renderStudentsList(); }
-    else if (section === 'records') { currentPage.records += direction; if(typeof loadAssessmentRecords === 'function') loadAssessmentRecords(); }
-}
-
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').then((reg) => {
-            reg.addEventListener('updatefound', () => {
-                const newWorker = reg.installing;
-                newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) showUpdateToast(newWorker);
-                });
-            });
-        });
-    });
-}
-
-function showUpdateToast(newWorker) {
-    const toast = document.createElement('div');
-    toast.className = 'toast-container';
-    toast.innerHTML = `<span>🚀 نسخه جدید!</span><button class="toast-btn" id="update-btn">به‌روزرسانی</button>`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.classList.add('show'), 100);
-    document.getElementById('update-btn').addEventListener('click', () => {
-        if (newWorker) newWorker.postMessage({ action: 'skipWaiting' });
-        setTimeout(() => window.location.reload(), 500);
-    });
-}
-
-// ==========================================
-// توجه: کدهای مربوط به مدیریت دکمه Back حذف شدند
-// و به فایل جدید back-button.js منتقل شدند.
-// ==========================================
