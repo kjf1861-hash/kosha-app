@@ -67,7 +67,14 @@ function renderLessonData() {
     if (!container) return;
 
     if (window.allSubjectsData.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:#64748b;">لیست خالی است. ابتدا درس اضافه کنید.</p>';
+        container.innerHTML = `
+            <div class="empty-state">
+                <svg><use href="#empty-lessons"/></svg>
+                <div class="empty-title">هنوز درسی اضافه نکردی!</div>
+                <div class="empty-desc">اولین درس رو اضافه کن تا ارزشیابی‌های مربوط به اون درس رو ثبت کنی.</div>
+                <button class="empty-action" onclick="document.getElementById('lessonName').focus()">➕ افزودن اولین درس</button>
+            </div>
+        `;
         return;
     }
 
