@@ -590,10 +590,38 @@ async function initApp() {
 async function loadAllData() {
     try {
         const classData = await getDataById('classProfile', 1);
-if (classData) {
-    // به جای تغییر سال تحصیلی، فقط فیلدهای دیگر را پر کن
-    if (classData.scheduleActiveDays) window.scheduleActiveDays = classData.scheduleActiveDays;
-    if (classData.schedulePeriodsCount) window.schedulePeriodsCount = parseInt(classData.schedulePeriodsCount);
+        if (classData) {
+            // ✅ فقط اگر academicYear وجود نداشت، از حافظه بخوان
+            if (classData.academicYear) {
+                window.activeAcademicYear = classData.academicYear;
+                localStorage.setItem('kosha-active-academic-year', classData.academicYear);
+            }
+            if (classData.scheduleActiveDays) window.scheduleActiveDays = classData.scheduleActiveDays;
+            if (classData.schedulePeriodsCount) window.schedulePeriodsCount = parseInt(classData.schedulePeriodsCount);
+            
+            // ✅ پر کردن فرم تنظیمات با داده‌های ذخیره شده
+            if (typeof populateCurrentClassProfile === 'function') {
+                populateCurrentClassProfile(classData);
+            }
+        }
+
+        window.allStudentsData = await getAllData('students');
+        window.allGroupsData = await getAllData('groups');
+        window.allSubjectsData = await getAllData('subjects');
+        window.allRecordsData = await getAllData('records');
+        window.allSessionsData = await getAllData('sessions');
+        
+        const validSessionIds = window.allSessionsData.map(s => s.id);
+        const allAttendance = await getAllData('attendance');
+        window.allAttendanceData = allAttendance.filter(a => validSessionIds.includes(a.sessionId));
+        
+        window.allWeeklyScheduleData = await getAllData('weeklySchedule');
+        assessmentItems = await getAllData('assessmentItems');
+        window.allAssessmentItems = assessmentItems;
+        currentBackupSettings = await getBackupSettings();
+
+        renderUI();
+    } catch (e) { console.error('خطا در بارگذاری داده‌ها:', e); }
 }
 
         window.allStudentsData = await getAllData('students');
