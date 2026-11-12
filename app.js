@@ -552,8 +552,14 @@ let _pendingWorker = null;
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').then((reg) => {
-            // بررسی آپدیت هنگام لود
-            reg.update().catch(() => {});
+            // بررسی آپدیت هنگام لود (به صورت ایمن)
+            try {
+                if (typeof reg.update === 'function') {
+                    reg.update().catch(() => {});
+                }
+            } catch (e) {
+                console.warn('reg.update not available:', e);
+            }
 
             // اگر از قبل worker در انتظار است
             if (reg.waiting) {
