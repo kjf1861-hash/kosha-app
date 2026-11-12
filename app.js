@@ -21,10 +21,12 @@ const itemsPerPage = 40;
 // *** مدیریت خطای سراسری ***
 window.onerror = function(msg, url, line, col, error) {
     console.error('خطای سراسری:', msg, 'در', url, line);
+    showToast('خطایی رخ داد. لطفاً صفحه را رفرش کنید.', 'error');
     return true;
 };
 window.onunhandledrejection = function(event) {
     console.error('خطای Promise:', event.reason);
+    showToast('خطایی رخ داد. لطفاً صفحه را رفرش کنید.', 'error');
 };
 
 function toPersianNumber(num) {
@@ -540,4 +542,70 @@ async function importData(event) {
 function changePage(section, direction) {
     if (section === 'students') { currentPage.students += direction; if(typeof renderStudentsList === 'function') renderStudentsList(); }
     else if (section === 'records') { currentPage.records += direction; if(typeof loadAssessmentRecords === 'function') loadAssessmentRecords(); }
+}
+
+// ==========================================
+// مدیریت Service Worker و آپدیت
+// ==========================================
+let _pendingWorker = null;
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+            // بررسی آپدیت هنگام لود
+            reg.update().catch(() => {});
+
+            // اگر از قبل worker در انتظار است
+            if (reg.waiting) {
+                _pendingWorker = reg.waiting;
+                showUpdateBanner();
+            }
+
+            // رویداد آپدیت جدید
+            reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                if (!newWorker) return;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        _pendingWorker = newWorker;
+                        showUpdateBanner();
+                    }
+                });
+            });
+        }).catch((e) => {
+            console.warn('Service Worker registration failed:', e);
+        });
+
+        // اگر controller عوض شد (یعنی نسخه جدید فعال شد) → reload
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (refreshing) return;
+            refreshing = true;
+            window.location.reload();
+        });
+    });
+}
+
+// ==========================================
+// توابع مدیریت بنر آپدیت
+// ==========================================
+function showUpdateBanner() {
+    const banner = document.getElementById('update-banner');
+    if (!banner) return;
+    if (banner.classList.contains('show')) return;
+    banner.classList.add('show');
+}
+
+function dismissUpdateBanner() {
+    const banner = document.getElementById('update-banner');
+    if (banner) banner.classList.remove('show');
+}
+
+function applyUpdate() {
+    if (_pendingWorker) {
+        _pendingWorker.postMessage({ action: 'skipWaiting' });
+    } else if (navigator.serviceWorker.controller) {
+        // اگر waiting پیدا نشد، شاید آپدیت بین راه اعمال شده باشد
+        window.location.reload();
+    }
 }
