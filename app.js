@@ -9,7 +9,16 @@ window.allSessionsData = [];
 window.allAttendanceData = [];
 window.allWeeklyScheduleData = [];
 let assessmentItems = [];
-window.activeAcademicYear = '1405-1406'; 
+window.activeAcademicYear = null; // مقدار اولیه: null (باید توسط کاربر انتخاب شود)
+
+// لیست سال‌های تحصیلی مجاز (همان لیست db.js)
+const ALLOWED_ACADEMIC_YEARS = [
+    '1405-1406',
+    '1406-1407',
+    '1407-1408',
+    '1408-1409',
+    '1409-1410'
+];
 
 window.scheduleActiveDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه'];
 window.schedulePeriodsCount = 5;
@@ -34,8 +43,8 @@ let periodCalendarState = {
     month: 7,
     selectedDate: ''
 };
-let currentEditingPeriodIndex = -1; // -1 برای بازه جدید
-let currentCalendarTarget = 'start'; // 'start' یا 'end' — برای اینکه بدانیم تاریخ برای شروع است یا پایان
+let currentEditingPeriodIndex = -1;
+let currentCalendarTarget = 'start';
 
 // *** مدیریت خطای سراسری ***
 window.onerror = function(msg, url, line, col, error) {
@@ -96,7 +105,7 @@ const quranSurahs = {
     "مطففین": 36, "انفطار": 19, "تکویر": 29, "عبس": 42, "نازعات": 46, "نبأ": 40
 };
 
-// *** تابع بهبودیافته Toast با آیکون‌های SVG ***
+// *** تابع بهبودیافته Toast ***
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast-container');
     if (existingToast) existingToast.remove();
@@ -117,7 +126,61 @@ function showToast(message, type = 'success') {
 }
 
 // ==========================================
-// ✅ توابع جدید: پشتیبان‌گیری خودکار در پس‌زمینه
+// ✅ توابع جدید: انتخاب سال تحصیلی
+// ==========================================
+
+function openAcademicYearModal() {
+    const modal = document.getElementById('academic-year-modal');
+    if (!modal) return;
+    
+    // پیش‌انتخاب سال جاری
+    const selectEl = document.getElementById('academicYearSelect');
+    if (selectEl && window.activeAcademicYear) {
+        selectEl.value = window.activeAcademicYear;
+    }
+    
+    modal.classList.add('show');
+}
+
+function confirmAcademicYearSelection() {
+    const selectEl = document.getElementById('academicYearSelect');
+    if (!selectEl || !selectEl.value) {
+        showToast('لطفاً یک سال تحصیلی انتخاب کنید.', 'error');
+        return;
+    }
+    
+    const selectedYear = selectEl.value;
+    
+    // بررسی اینکه آیا سال در لیست مجاز است
+    if (!ALLOWED_ACADEMIC_YEARS.includes(selectedYear)) {
+        showToast('سال تحصیلی انتخاب‌شده معتبر نیست.', 'error');
+        return;
+    }
+    
+    // اگر همان سال قبلی است، فقط مودال را ببند
+    if (window.activeAcademicYear === selectedYear) {
+        document.getElementById('academic-year-modal').classList.remove('show');
+        return;
+    }
+    
+    // در غیر این صورت، تأیید بگیر
+    const isChange = window.activeAcademicYear !== null;
+    if (isChange) {
+        const confirmMsg = 'آیا از تغییر سال تحصیلی به «' + toPersianNumber(selectedYear) + '» مطمئن هستید؟\n\nتمام داده‌ها به این سال تحصیلی منتقل می‌شوند.';
+        if (!confirm(confirmMsg)) return;
+    }
+    
+    // ذخیره در localStorage
+    localStorage.setItem('kosha-active-academic-year', selectedYear);
+    
+    showToast('سال تحصیلی ' + toPersianNumber(selectedYear) + ' انتخاب شد. در حال بارگذاری...', 'success');
+    
+    // رفرش صفحه برای بارگذاری داده‌های سال جدید
+    setTimeout(() => window.location.reload(), 800);
+}
+
+// ==========================================
+// ✅ توابع پشتیبان‌گیری خودکار در پس‌زمینه
 // ==========================================
 
 window.triggerAutoBackup = function() {
@@ -140,14 +203,10 @@ function checkEmergencyBackup() {
     try {
         const backupStr = localStorage.getItem('kosha-emergency-backup');
         const backupTimeStr = localStorage.getItem('kosha-emergency-backup-time');
-        
         if (!backupStr || !backupTimeStr) return;
-        
         const backupTime = parseInt(backupTimeStr);
         const diffHours = (Date.now() - backupTime) / (1000 * 60 * 60);
-        
         if (diffHours < 1) return;
-        
         console.log('💡 نسخه اضطراری موجود است، از ' + Math.floor(diffHours) + ' ساعت پیش.');
     } catch (e) { console.warn('خطا در بررسی نسخه اضطراری:', e); }
 }
@@ -156,17 +215,14 @@ async function restoreFromEmergencyBackup() {
     if (!confirm('⚠️ هشدار مهم:\n\nبا بازیابی این نسخه، تمام اطلاعات فعلی شما پاک شده و با نسخه خودکار جایگزین می‌شود.\n\nآیا مطمئن هستید؟')) {
         return;
     }
-    
     try {
         const backupStr = localStorage.getItem('kosha-emergency-backup');
         if (!backupStr) {
             showToast('هیچ نسخه خودکاری یافت نشد.', 'error');
             return;
         }
-        
         const data = JSON.parse(backupStr);
         await importAllData(data);
-        
         showToast('نسخه خودکار با موفقیت بازیابی شد! در حال بارگذاری مجدد...', 'success');
         setTimeout(() => window.location.reload(), 1500);
     } catch (e) {
@@ -208,9 +264,8 @@ function checkBackupReminder() {
 // ✅ توابع جدید: تنظیمات پشتیبان‌گیری دوره‌ای و بازه‌ها
 // ==========================================
 
-// پر کردن فرم تنظیمات پشتیبان‌گیری در مودال تنظیمات
 async function initBackupSettingsForm() {
-    currentBackupSettings = await getBackupSettings();
+    currentBackupSettings = await getBackupSettings(window.activeAcademicYear);
     
     const reminderTypeEl = document.getElementById('backupReminderType');
     if (reminderTypeEl) {
@@ -219,18 +274,16 @@ async function initBackupSettingsForm() {
     
     renderPeriodsList();
     
-    // پرش کردن تقویم بازه‌ها برای ماه جاری
-    const now = new Date();
-    const jy = 1405; // سال تحصیلی فرضی
-    periodCalendarState.year = jy;
-    periodCalendarState.month = 7; // مهر
+    const ay = window.activeAcademicYear || '1405-1406';
+    const startYear = parseInt(ay.split('-')[0]);
+    periodCalendarState.year = startYear;
+    periodCalendarState.month = 7;
     periodCalendarState.selectedDate = '';
 }
 
-// ذخیره تنظیمات (نوع یادآور)
 async function saveBackupSettings() {
     if (!currentBackupSettings) {
-        currentBackupSettings = await getBackupSettings();
+        currentBackupSettings = await getBackupSettings(window.activeAcademicYear);
     }
     
     const reminderTypeEl = document.getElementById('backupReminderType');
@@ -247,7 +300,6 @@ async function saveBackupSettings() {
     }
 }
 
-// نمایش لیست بازه‌ها
 function renderPeriodsList() {
     const container = document.getElementById('periods-list-container');
     if (!container) return;
@@ -276,12 +328,11 @@ function renderPeriodsList() {
     container.innerHTML = html;
 }
 
-// حذف بازه
 async function deletePeriod(index) {
     if (!confirm('آیا از حذف این بازه مطمئن هستید؟')) return;
     
     if (!currentBackupSettings) {
-        currentBackupSettings = await getBackupSettings();
+        currentBackupSettings = await getBackupSettings(window.activeAcademicYear);
     }
     
     currentBackupSettings.periods.splice(index, 1);
@@ -296,7 +347,6 @@ async function deletePeriod(index) {
     }
 }
 
-// باز کردن مودال تعریف بازه جدید
 function openPeriodEditor() {
     const modal = document.getElementById('period-editor-modal');
     if (!modal) return;
@@ -311,7 +361,6 @@ function openPeriodEditor() {
     document.getElementById('periodStartDisplay').textContent = 'انتخاب نشده';
     document.getElementById('periodEndDisplay').textContent = 'انتخاب نشده';
     
-    // تعیین سال تحصیلی جاری برای تقویم
     const ay = window.activeAcademicYear || '1405-1406';
     const startYear = parseInt(ay.split('-')[0]);
     periodCalendarState.year = startYear;
@@ -322,19 +371,16 @@ function openPeriodEditor() {
     modal.classList.add('show');
 }
 
-// بستن مودال تعریف بازه
 function closePeriodEditor() {
     const modal = document.getElementById('period-editor-modal');
     if (modal) modal.classList.remove('show');
 }
 
-// تعیین هدف تقویم (شروع یا پایان)
 function setCalendarTarget(target) {
     currentCalendarTarget = target;
     showToast(target === 'start' ? 'روی تقویم، تاریخ شروع را انتخاب کنید.' : 'روی تقویم، تاریخ پایان را انتخاب کنید.', 'info');
 }
 
-// رندر تقویم مودال تعریف بازه
 function renderPeriodCalendar() {
     const titleEl = document.getElementById('period-calendar-title');
     if (!titleEl) return;
@@ -401,12 +447,10 @@ function updatePeriodCalendarSelect(field, value) {
     renderPeriodCalendar();
 }
 
-// انتخاب روز در تقویم بازه
 function selectPeriodCalendarDay(dateStr) {
     if (currentCalendarTarget === 'start') {
         document.getElementById('periodStartDate').value = dateStr;
         document.getElementById('periodStartDisplay').textContent = toPersianNumber(dateStr);
-        // اگر تاریخ پایان قبل از شروع است، پاک کن
         const endDate = document.getElementById('periodEndDate').value;
         if (endDate && endDate < dateStr) {
             document.getElementById('periodEndDate').value = '';
@@ -427,7 +471,6 @@ function selectPeriodCalendarDay(dateStr) {
     renderPeriodCalendar();
 }
 
-// ذخیره بازه جدید
 async function savePeriod() {
     const title = document.getElementById('periodTitle').value.trim();
     const startDate = document.getElementById('periodStartDate').value;
@@ -443,7 +486,6 @@ async function savePeriod() {
         return;
     }
     
-    // اعتبارسنجی بازه
     if (!window.isValidJalaliDateString(startDate) || !window.isValidJalaliDateString(endDate)) {
         showToast('تاریخ وارد شده معتبر نیست.', 'error');
         return;
@@ -454,7 +496,6 @@ async function savePeriod() {
         return;
     }
     
-    // بررسی محدوده سال تحصیلی
     const ay = window.activeAcademicYear || '1405-1406';
     const [startYear, endYear] = ay.split('-');
     const startBound = `${startYear}/07/01`;
@@ -466,13 +507,12 @@ async function savePeriod() {
     }
     
     if (!currentBackupSettings) {
-        currentBackupSettings = await getBackupSettings();
+        currentBackupSettings = await getBackupSettings(window.activeAcademicYear);
     }
     
-    // بررسی همپوشانی با بازه‌های قبلی
     const periods = currentBackupSettings.periods || [];
     for (let i = 0; i < periods.length; i++) {
-        if (currentEditingPeriodIndex === i) continue; // اگر در حال ویرایش همان بازه هستیم، از همپوشانی صرف‌نظر کن
+        if (currentEditingPeriodIndex === i) continue;
         const existing = periods[i];
         if (!(endDate < existing.startDate || startDate > existing.endDate)) {
             showToast(`این بازه با بازه «${existing.title}» همپوشانی دارد.`, 'error');
@@ -505,13 +545,11 @@ async function savePeriod() {
     }
 }
 
-// بررسی یادآورها در هنگام ورود به برنامه
 async function checkPeriodReminders() {
     try {
-        currentBackupSettings = await getBackupSettings();
+        currentBackupSettings = await getBackupSettings(window.activeAcademicYear);
         const now = Date.now();
         
-        // ۱. بررسی یادآور دوره‌ای (روزانه/هفتگی/ماهانه)
         const reminderType = currentBackupSettings.reminderType;
         if (reminderType && reminderType !== 'off') {
             const lastReminder = currentBackupSettings.lastReminderDate || 0;
@@ -537,13 +575,11 @@ async function checkPeriodReminders() {
             }
         }
         
-        // ۲. بررسی بازه‌های سفارشی
         const todayDate = getTodayJalali();
         const periods = currentBackupSettings.periods || [];
         
         for (let i = 0; i < periods.length; i++) {
             const period = periods[i];
-            // اگر امروز بعد از پایان بازه است و هنوز یادآوری نشده
             if (todayDate >= period.endDate && (!period.lastReminded || period.lastReminded < period.endDate)) {
                 showReminderModal(`بازه «${period.title}» به پایان رسید. آیا می‌خواهید از داده‌های این بازه پشتیبان تهیه کنید؟`, 'period', i);
                 return;
@@ -554,9 +590,7 @@ async function checkPeriodReminders() {
     }
 }
 
-// دریافت تاریخ شمسی امروز به صورت رشته
 function getTodayJalali() {
-    // استفاده از Intl برای دریافت تاریخ شمسی
     try {
         const now = new Date();
         const formatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
@@ -569,7 +603,6 @@ function getTodayJalali() {
             if (p.type === 'month') month = p.value.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).padStart(2, '0');
             if (p.type === 'day') day = p.value.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).padStart(2, '0');
         });
-        // تبدیل ارقام فارسی به انگلیسی
         year = year.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
         month = month.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
         day = day.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
@@ -579,10 +612,8 @@ function getTodayJalali() {
     }
 }
 
-// متغیر برای نگهداری حالت مودال یادآور
 let reminderModalContext = { type: 'general', periodIndex: -1 };
 
-// نمایش مودال یادآور
 function showReminderModal(message, type = 'general', periodIndex = -1) {
     reminderModalContext = { type, periodIndex };
     const modal = document.getElementById('backup-reminder-modal');
@@ -591,14 +622,12 @@ function showReminderModal(message, type = 'general', periodIndex = -1) {
     if (modal) modal.classList.add('show');
 }
 
-// بستن مودال یادآور
 function closeReminderModal() {
     const modal = document.getElementById('backup-reminder-modal');
     if (modal) modal.classList.remove('show');
     reminderModalContext = { type: 'general', periodIndex: -1 };
 }
 
-// دانلود پشتیبان از مودال یادآور
 async function handleReminderDownload() {
     try {
         const data = await exportAllData();
@@ -609,7 +638,6 @@ async function handleReminderDownload() {
         if (reminderModalContext.type === 'period' && currentBackupSettings && currentBackupSettings.periods[reminderModalContext.periodIndex]) {
             const period = currentBackupSettings.periods[reminderModalContext.periodIndex];
             filename = `kosha_backup_${period.title.replace(/\s+/g, '_')}`;
-            // ثبت یادآوری
             currentBackupSettings.periods[reminderModalContext.periodIndex].lastReminded = getTodayJalali();
             await saveData('backupSettings', currentBackupSettings);
         } else {
@@ -633,7 +661,6 @@ async function handleReminderDownload() {
     }
 }
 
-// به تعویق انداختن یادآور
 async function snoozeReminder() {
     try {
         if (reminderModalContext.type === 'period' && currentBackupSettings && currentBackupSettings.periods[reminderModalContext.periodIndex]) {
@@ -793,6 +820,27 @@ function initAppEvents() {
 }
 
 async function initApp() {
+    // ==========================================
+    // ✅ مرحله ۱: بررسی انتخاب سال تحصیلی
+    // ==========================================
+    const savedYear = localStorage.getItem('kosha-active-academic-year');
+    
+    if (!savedYear || !ALLOWED_ACADEMIC_YEARS.includes(savedYear)) {
+        // اگر سال تحصیلی انتخاب نشده یا معتبر نیست، مودال را نمایش بده
+        console.log('📌 سال تحصیلی انتخاب نشده است. نمایش مودال...');
+        openAcademicYearModal();
+        return; // هیچ داده‌ای لود نمی‌شود
+    }
+    
+    // تنظیم سال تحصیلی جاری
+    window.activeAcademicYear = savedYear;
+    console.log('✅ سال تحصیلی فعال: ' + savedYear);
+    
+    // به‌روزرسانی نمایشگر در تنظیمات
+    const yearDisplay = document.getElementById('current-academic-year-display');
+    if (yearDisplay) yearDisplay.textContent = toPersianNumber(savedYear);
+    
+    // ادامه‌ی راه‌اندازی
     applyEmojiRestriction('classSymbol');
     applyEmojiRestriction('lessonSymbol');
     applyEmojiRestriction('groupSymbol');
@@ -803,15 +851,18 @@ async function initApp() {
         initAppEvents();
     } catch (error) { console.error("خطا در اتصال رویدادها:", error); }
     
+    // ساخت آیتم‌های پیش‌فرض برای این سال (اگر وجود نداشته باشند)
+    try {
+        await initDefaultAssessmentItemsForYear(savedYear);
+    } catch (error) { console.error("خطا در ساخت آیتم‌های پیش‌فرض:", error); }
+    
     try {
         await loadAllData();
     } catch (error) { console.error("خطا در بارگذاری داده‌ها:", error); }
     
     checkBackupReminder();
-    
     checkEmergencyBackup();
     
-    // *** بررسی یادآورها بعد از ۲ ثانیه (تا صفحه فرصت بارگذاری داشته باشد) ***
     setTimeout(() => {
         checkPeriodReminders();
     }, 2000);
@@ -822,57 +873,69 @@ async function initApp() {
     } catch (error) { console.error("خطا در بارگذاری آزمون‌ها:", error); }
 }
 
-// *** جدا کردن بارگذاری داده از رندر UI ***
+// *** جدا کردن بارگذاری داده از رندر UI — با فیلتر سال تحصیلی ***
 async function loadAllData() {
     try {
-        const classData = await getDataById('classProfile', 1);
+        const currentYear = window.activeAcademicYear;
+        if (!currentYear) {
+            console.log('⏸️ بارگذاری متوقف شد: سال تحصیلی انتخاب نشده.');
+            return;
+        }
+        
+        console.log('🔄 در حال بارگذاری داده‌های سال تحصیلی: ' + currentYear);
+
+        // ۱. خواندن مشخصات کلاس برای این سال
+        const classData = await getClassProfile(currentYear);
         if (classData) {
-            if (classData.academicYear) window.activeAcademicYear = classData.academicYear;
             if (classData.scheduleActiveDays && Array.isArray(classData.scheduleActiveDays)) {
                 window.scheduleActiveDays = classData.scheduleActiveDays;
             }
             if (classData.schedulePeriodsCount) {
                 window.schedulePeriodsCount = parseInt(classData.schedulePeriodsCount);
             }
+        } else {
+            // اگر مشخصات کلاس وجود ندارد، مقادیر پیش‌فرض
+            window.scheduleActiveDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه'];
+            window.schedulePeriodsCount = 5;
         }
 
-        const rawStudents = await getAllData('students');
-        const rawGroups = await getAllData('groups');
-        const rawSubjects = await getAllData('subjects');
-        const rawRecords = await getAllData('records');
-        const rawSessions = await getAllData('sessions');
-        const rawAttendance = await getAllData('attendance');
+        // ۲. خواندن داده‌های فیلترشده بر اساس سال تحصیلی
+        window.allStudentsData = await getAllDataByYear('students', currentYear);
+        window.allGroupsData = await getAllDataByYear('groups', currentYear);
+        window.allSubjectsData = await getAllDataByYear('subjects', currentYear);
+        window.allRecordsData = await getAllDataByYear('records', currentYear);
+        window.allSessionsData = await getAllDataByYear('sessions', currentYear);
         
-        let migrationNeeded = false;
-        
-        for (let r of rawRecords) {
-            if (!r.academicYear) { r.academicYear = window.activeAcademicYear; await saveData('records', r); migrationNeeded = true; }
-        }
-        for (let s of rawSessions) {
-            if (!s.academicYear) { s.academicYear = window.activeAcademicYear; await saveData('sessions', s); migrationNeeded = true; }
-        }
-
-        window.allStudentsData = rawStudents;
-        window.allGroupsData = rawGroups;
-        window.allSubjectsData = rawSubjects;
-        
-        window.allRecordsData = rawRecords.filter(r => r.academicYear === window.activeAcademicYear);
-        window.allSessionsData = rawSessions.filter(s => s.academicYear === window.activeAcademicYear);
-        
+        // ۳. حضور و غیاب‌های مربوط به جلسات این سال
+        const allAttendance = await getAllData('attendance');
         const validSessionIds = window.allSessionsData.map(s => s.id);
-        window.allAttendanceData = rawAttendance.filter(a => validSessionIds.includes(a.sessionId));
+        window.allAttendanceData = allAttendance.filter(a => validSessionIds.includes(a.sessionId));
         
-        window.allWeeklyScheduleData = await getAllData('weeklySchedule');
-
-        assessmentItems = await getAllData('assessmentItems');
+        // ۴. برنامه هفتگی این سال
+        window.allWeeklyScheduleData = await getAllDataByYear('weeklySchedule', currentYear);
+        // تبدیل به فرمت قبلی (day, periods) برای سازگاری
+        window.allWeeklyScheduleData = window.allWeeklyScheduleData.map(sched => ({
+            ...sched,
+            day: sched.day || (sched.id ? sched.id.split('_')[1] : null)
+        }));
+        
+        // ۵. آیتم‌های ارزشیابی این سال
+        assessmentItems = await getAllDataByYear('assessmentItems', currentYear);
         window.allAssessmentItems = assessmentItems;
         
-        // *** بارگذاری تنظیمات پشتیبان‌گیری ***
-        currentBackupSettings = await getBackupSettings();
+        // ۶. تنظیمات پشتیبان‌گیری این سال
+        currentBackupSettings = await getBackupSettings(currentYear);
 
+        // ۷. رندر UI
         renderUI();
 
-        if (migrationNeeded) showToast('اطلاعات قبلی به سال تحصیلی جدید منتقل شد.', 'info');
+        console.log('✅ بارگذاری داده‌های سال ' + currentYear + ' تکمیل شد.');
+        console.log('   دانش‌آموزان: ' + window.allStudentsData.length);
+        console.log('   دروس: ' + window.allSubjectsData.length);
+        console.log('   گروه‌ها: ' + window.allGroupsData.length);
+        console.log('   رکوردها: ' + window.allRecordsData.length);
+        console.log('   جلسات: ' + window.allSessionsData.length);
+        console.log('   آیتم‌های ارزشیابی: ' + window.allAssessmentItems.length);
         
     } catch (e) { 
         console.error('خطا در بارگذاری داده‌ها:', e); 
@@ -919,13 +982,14 @@ function renderItemsList() {
     if (assessmentItems.length === 0) { container.innerHTML = '<p style="text-align:center;">هیچ آیتمی یافت نشد.</p>'; return; }
     container.innerHTML = '';
     assessmentItems.forEach(item => {
-        let typeName = item.type === 'level' ? 'سطح محور' : item.type === 'count' ? 'شمارشی' : item.type === 'free' ? 'آزاد' : 'ویژه (قرآن)';
+        let typeName = item.type === 'level' ? 'سطح محور' : item.type === 'count' ? 'شمارشی' : item.type === 'free' ? 'آزاد' : item.type === 'fixed' ? 'ثابت' : 'ویژه (قرآن)';
+        const isSystem = item.type === 'quran';
         container.innerHTML += `
             <div class="item-management-row">
                 <div><strong>${item.title}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">(${typeName})</span></div>
                 <div style="display:flex; gap:5px;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="editItem(${item.id})" ${item.type === 'quran' ? 'disabled title="سیستمی"' : ''}>✏️</button>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteCustomItem(${item.id})" ${item.type === 'quran' ? 'disabled title="سیستمی"' : ''}>🗑️</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="editItem('${item.id}')" ${isSystem ? 'disabled title="سیستمی"' : ''}>✏️</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteCustomItem('${item.id}')" ${isSystem ? 'disabled title="سیستمی"' : ''}>🗑️</button>
                 </div>
             </div>
         `;
@@ -1029,26 +1093,30 @@ async function saveItem(e) {
     const typeEl = document.getElementById('itemType');
     if (!idEl || !titleEl || !typeEl) return;
     
-    const id = idEl.value;
+    const currentYear = window.activeAcademicYear;
+    const editingId = idEl.value;
     const title = titleEl.value.trim();
     const type = typeEl.value;
     
     if (!title) { showToast('عنوان آیتم را وارد کنید.', 'error'); return; }
     if (!type) { showToast('نوع آیتم را انتخاب کنید.', 'error'); return; }
     
-    if (!id && assessmentItems.length >= 16) {
-        showToast('حداکثر تعداد مجاز آیتم ارزشیابی (۱۶ آیتم) تکمیل شده است.', 'error');
+    // بررسی سقف آیتم‌ها (بدون احتساب آیتم‌های سیستمی)
+    const customItems = assessmentItems.filter(i => i.type !== 'quran' && i.type !== 'fixed' && i.type !== 'free');
+    if (!editingId && customItems.length >= 16) {
+        showToast('حداکثر تعداد مجاز آیتم ارزشیابی سفارشی (۱۶ آیتم) تکمیل شده است.', 'error');
         return;
     }
     
-    const oldItem = id ? assessmentItems.find(i => i.id === parseInt(id)) : null;
+    const oldItem = editingId ? assessmentItems.find(i => i.id === editingId) : null;
     const oldTitle = oldItem ? oldItem.title : null;
 
-    let itemData = { title, type };
-    if (id) {
-        itemData.id = parseInt(id);
+    let itemData = { title, type, academicYear: currentYear };
+    
+    if (editingId) {
+        itemData.id = editingId;
     } else {
-        itemData.id = Date.now();
+        itemData.id = currentYear + '_item_' + Date.now();
     }
     
     if (type === 'level') {
@@ -1076,10 +1144,11 @@ async function saveItem(e) {
     try {
         await saveData('assessmentItems', itemData);
         
+        // اگر نام آیتم تغییر کرد، رکوردهای مرتبط را هم آپدیت کن
         if (oldTitle && oldTitle !== title) {
-            const allRecords = await getAllData('records');
+            const yearRecords = await getAllDataByYear('records', currentYear);
             let updatedCount = 0;
-            for (let rec of allRecords) {
+            for (let rec of yearRecords) {
                 if (rec.itemName === oldTitle) {
                     rec.itemName = title;
                     await saveData('records', rec);
@@ -1093,13 +1162,15 @@ async function saveItem(e) {
 
         showToast('آیتم با موفقیت ذخیره شد!', 'success');
         
-        const freshItems = await getAllData('assessmentItems');
+        // بارگذاری مجدد
+        const freshItems = await getAllDataByYear('assessmentItems', currentYear);
         window.allAssessmentItems = freshItems;
         assessmentItems = freshItems;
         
         renderItemsList();
         resetItemForm();
         
+        // آپدیت انتخابگرهای آیتم
         const itemSelect = document.getElementById('recordItem');
         if (itemSelect) {
             itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
@@ -1124,9 +1195,10 @@ async function saveItem(e) {
 async function deleteCustomItem(id) {
     if(!confirm('آیا از حذف این آیتم مطمئن هستید؟')) return;
     try {
+        const currentYear = window.activeAcademicYear;
         await deleteData('assessmentItems', id);
         showToast('آیتم حذف شد.', 'success');
-        const freshItems = await getAllData('assessmentItems');
+        const freshItems = await getAllDataByYear('assessmentItems', currentYear);
         window.allAssessmentItems = freshItems;
         assessmentItems = freshItems;
         renderItemsList();
@@ -1140,9 +1212,13 @@ async function deleteCustomItem(id) {
 async function exportData() {
     try {
         const data = await exportAllData();
+        const currentYear = window.activeAcademicYear || 'unknown';
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = `kosha_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
+        const a = document.createElement('a'); 
+        a.href = url; 
+        a.download = `kosha_backup_${currentYear}_${new Date().toISOString().slice(0,10)}.json`; 
+        a.click();
         URL.revokeObjectURL(url);
         localStorage.setItem('kosha-last-backup', Date.now());
         checkBackupReminder(); 
@@ -1212,8 +1288,3 @@ function showUpdateToast(newWorker) {
         setTimeout(() => window.location.reload(), 500);
     });
 }
-
-// ==========================================
-// توجه: کدهای مربوط به مدیریت دکمه Back حذف شدند
-// و به فایل جدید back-button.js منتقل شدند.
-// ==========================================
