@@ -1,12 +1,5 @@
 // ==========================================
-// فایل class.js — منطق تب کلاس (نسخه اصلاح‌شده نهایی v2)
-// ==========================================
-//
-// تغییرات نسخه v2:
-// - اصلاح saveClassProfile: فقط بعد از موفقیت saveData، سال تحصیلی در localStorage ذخیره می‌شود
-// - جلوگیری از ناسازگاری داده در صورت خطای ذخیره
-// - اصلاح populateCurrentClassProfile: پشتیبانی از حالت بدون داده
-// - جابجایی منطق ذخیره سال تحصیلی به بعد از await
+// فایل class.js — منطق تب کلاس (داشبورد) و تنظیمات
 // ==========================================
 
 async function saveClassProfile(e) {
@@ -38,11 +31,6 @@ async function saveClassProfile(e) {
 
     if (!classNameEl) return;
 
-    // ✅ تعیین سال تحصیلی از فرم، و اگر خالی بود از window
-    let selectedYear = (academicYearEl && academicYearEl.value) 
-        ? academicYearEl.value 
-        : window.activeAcademicYear;
-
     const data = {
         id: 1,
         name: classNameEl.value,
@@ -51,94 +39,23 @@ async function saveClassProfile(e) {
         grade: classGradeEl ? classGradeEl.value : '',
         teacherName: teacherNameEl ? teacherNameEl.value : '',
         schoolName: schoolNameEl ? schoolNameEl.value : '',
-        academicYear: selectedYear,
+        academicYear: academicYearEl ? academicYearEl.value : window.activeAcademicYear,
         scheduleActiveDays: selectedDays,
         schedulePeriodsCount: periodsCount
     };
     
-    try {
-        // ۱. اول در DB ذخیره کن
-        await saveData('classProfile', data);
-        
-        // ۲. فقط بعد از موفقیت، حافظه رو به‌روز کن
-        window.activeAcademicYear = selectedYear;
-        try {
-            localStorage.setItem('kosha-active-academic-year', selectedYear);
-        } catch (e) { console.warn('خطا در localStorage:', e); }
-        
-        window.scheduleActiveDays = selectedDays;
-        window.schedulePeriodsCount = periodsCount;
+    await saveData('classProfile', data);
+    
+    window.scheduleActiveDays = selectedDays;
+    window.schedulePeriodsCount = periodsCount;
 
-        showToast('مشخصات کلاس ذخیره شد!', 'success');
-        const headerSubtitle = document.getElementById('header-subtitle');
-        if (headerSubtitle) headerSubtitle.textContent = data.name;
-        
-        if (typeof clearFormDirty === 'function') clearFormDirty();
-        
-        if (typeof closeSettingsModal === 'function') closeSettingsModal();
-        
-        // ۳. بعد از ذخیره، دوباره بارگذاری کن
-        await loadAllData();
-        
-        // ۴. فرم رو با داده‌های جدید پر کن (شامل academicYear)
-        await populateCurrentClassProfile(data);
-        
-        // ۵. اگر تغییر سال تحصیلی بوده، به کاربر هشدار بده
-        if (selectedYear !== (localStorage.getItem('kosha-active-academic-year') || selectedYear)) {
-            // (این بلاک عملاً هیچوقت اجرا نمی‌شه، ولی برای اطمینان)
-        }
-        
-    } catch (err) {
-        console.error(err);
-        showToast('خطا در ذخیره مشخصات کلاس. تغییرات ذخیره نشد.', 'error');
-    }
-}
-
-// ==========================================
-// پر کردن فرم مشخصات کلاس
-// - اگر classData ارسال نشود، از دیتابیس خوانده می‌شود
-// - در صورت نبود داده، فرم پاک می‌شود (نه اینکه مقادیر قبلی بمانند)
-// ==========================================
-async function populateCurrentClassProfile(classData) {
-    // اگر classData ارسال نشد، خودمان از DB می‌خوانیم
-    if (classData === undefined) {
-        try {
-            classData = await getDataById('classProfile', 1);
-        } catch (e) {
-            console.warn('خطا در خواندن پروفایل کلاس:', e);
-            classData = null;
-        }
-    }
-
-    const classNameEl = document.getElementById('className');
-    const classSymbolEl = document.getElementById('classSymbol');
-    const classMottoEl = document.getElementById('classMotto');
-    const classGradeEl = document.getElementById('classGrade');
-    const teacherNameEl = document.getElementById('teacherName');
-    const schoolNameEl = document.getElementById('schoolName');
-    const academicYearEl = document.getElementById('academicYear');
-    const periodsInput = document.getElementById('schedulePeriodsCount');
-
-    if (classData) {
-        if (classNameEl) classNameEl.value = classData.name || '';
-        if (classSymbolEl) classSymbolEl.value = classData.symbol || '';
-        if (classMottoEl) classMottoEl.value = classData.motto || '';
-        if (classGradeEl) classGradeEl.value = classData.grade || '';
-        if (teacherNameEl) teacherNameEl.value = classData.teacherName || '';
-        if (schoolNameEl) schoolNameEl.value = classData.schoolName || '';
-        if (academicYearEl && classData.academicYear) academicYearEl.value = classData.academicYear;
-        if (periodsInput && classData.schedulePeriodsCount) periodsInput.value = classData.schedulePeriodsCount;
-    } else {
-        // نبود داده → فرم را پاک کن
-        if (classNameEl) classNameEl.value = '';
-        if (classSymbolEl) classSymbolEl.value = '';
-        if (classMottoEl) classMottoEl.value = '';
-        if (classGradeEl) classGradeEl.value = '';
-        if (teacherNameEl) teacherNameEl.value = '';
-        if (schoolNameEl) schoolNameEl.value = '';
-        if (academicYearEl) academicYearEl.value = '';
-        if (periodsInput) periodsInput.value = 5;
-    }
+    showToast('مشخصات کلاس ذخیره شد!', 'success');
+    const headerSubtitle = document.getElementById('header-subtitle');
+    if (headerSubtitle) headerSubtitle.textContent = data.name;
+    
+    if(typeof closeSettingsModal === 'function') closeSettingsModal();
+    
+    await loadAllData();
 }
 
 function populateScheduleDaysCheckboxes() {
@@ -149,7 +66,7 @@ function populateScheduleDaysCheckboxes() {
     
     container.innerHTML = '';
     weekDays.forEach(day => {
-        const isChecked = (window.scheduleActiveDays || []).includes(day) ? 'checked' : '';
+        const isChecked = window.scheduleActiveDays.includes(day) ? 'checked' : '';
         const label = document.createElement('label');
         label.className = 'day-checkbox-label';
         label.innerHTML = `
@@ -188,7 +105,7 @@ function renderDashboardData() {
     renderRecentActivities();
     renderFullClassReport(studentScores);
     
-    // *** کارت گزارش آزمون‌ها ***
+    // *** کارت جدید گزارش آزمون‌ها ***
     renderExamsDashboard();
 }
 
@@ -328,7 +245,7 @@ function renderTopStudents(studentScores) {
 
     const sorted = [...studentScores].sort((a, b) => {
         if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
-        return (a.lastName || '').localeCompare(b.lastName || '', 'fa');
+        return a.lastName.localeCompare(b.lastName, 'fa');
     });
 
     const topStudents = sorted.filter(st => st.totalScore > 0).slice(0, 3);
@@ -478,7 +395,7 @@ function renderFullClassReport(studentScores) {
 
     const sorted = [...studentScores].sort((a, b) => {
         if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
-        return (a.lastName || '').localeCompare(b.lastName || '', 'fa');
+        return a.lastName.localeCompare(b.lastName, 'fa');
     });
 
     reportsList.innerHTML = sorted.map((st, index) => {
@@ -513,6 +430,7 @@ function renderExamsDashboard() {
     const container = document.getElementById('dashboard-exams-report');
     if (!container) return;
     
+    // بارگذاری داده‌های آزمون اگر قبلاً انجام نشده
     if (!window.allExamsData) window.allExamsData = [];
     if (!window.allExamResultsData) window.allExamResultsData = [];
     
@@ -524,9 +442,11 @@ function renderExamsDashboard() {
         return;
     }
     
+    // آمار کلی
     const totalExams = exams.length;
     const totalResults = results.length;
     
+    // میانگین کل
     let totalScorePercent = 0;
     let validResults = 0;
     results.forEach(r => {
@@ -538,6 +458,7 @@ function renderExamsDashboard() {
     });
     const avgPercent = validResults > 0 ? Math.round(totalScorePercent / validResults) : 0;
     
+    // بهترین دانش‌آموز (بیشترین میانگین درصد)
     const studentPercentMap = {};
     results.forEach(r => {
         const exam = exams.find(e => e.id === r.examId);
@@ -552,7 +473,10 @@ function renderExamsDashboard() {
     let bestAvg = -1;
     for (const sid in studentPercentMap) {
         const avg = studentPercentMap[sid].total / studentPercentMap[sid].count;
-        if (avg > bestAvg) { bestAvg = avg; bestStudentId = parseInt(sid); }
+        if (avg > bestAvg) {
+            bestAvg = avg;
+            bestStudentId = parseInt(sid);
+        }
     }
     
     let bestStudentHtml = '';
@@ -612,7 +536,7 @@ async function exportClassCSV() {
         
         studentScores.sort((a, b) => {
             if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
-            return (a.lastName || '').localeCompare(b.lastName || '', 'fa');
+            return a.lastName.localeCompare(b.lastName, 'fa');
         });
 
         studentScores.forEach((st, i) => {
@@ -628,13 +552,14 @@ async function exportClassCSV() {
         URL.revokeObjectURL(url);
         showToast('فایل CSV دانلود شد!', 'success');
     } catch (e) {
+        console.error(e);
         showToast('خطا در تولید فایل.', 'error');
     }
 }
 
 function printClassReport() {
     const content = document.getElementById('report-card-content');
-    if (!content) return;
+    if(!content) return;
     
     const headerSubtitle = document.getElementById('header-subtitle');
     const classData = headerSubtitle ? headerSubtitle.textContent : '';
@@ -665,7 +590,7 @@ function printClassReport() {
     
     studentScores.sort((a, b) => {
         if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
-        return (a.lastName || '').localeCompare(b.lastName || '', 'fa');
+        return a.lastName.localeCompare(b.lastName, 'fa');
     });
     
     studentScores.forEach((st, i) => {
@@ -683,5 +608,7 @@ function printClassReport() {
     
     const modal = document.getElementById('report-card-modal');
     if (modal) modal.classList.add('show');
-    setTimeout(() => { window.print(); }, 100);
+    setTimeout(() => {
+        window.print();
+    }, 100);
 }
