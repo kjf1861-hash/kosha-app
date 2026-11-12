@@ -10,7 +10,6 @@ let currentAttReportFilter = 'class';
 let currentScheduleMode = 'view';
 
 const jalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
-const leapYears = [1408];
 
 const officialHolidays = {
     1405: ["1405/01/01", "1405/01/02", "1405/01/03", "1405/01/04", "1405/01/12", "1405/01/13", "1405/01/21", "1405/01/23", "1405/02/01", "1405/02/09", "1405/03/05", "1405/03/06", "1405/03/14", "1405/03/15", "1405/03/25", "1405/04/02", "1405/04/04", "1405/04/12", "1405/04/20", "1405/05/09", "1405/06/01", "1405/07/13", "1405/08/27", "1405/09/15", "1405/10/25", "1405/11/19", "1405/11/22", "1405/12/29"],
@@ -418,27 +417,9 @@ function printSchedule() {
 
 // ==========================================
 // 2. توابع تقویم شمسی
+// (این توابع حالا از jalali-utils.js می‌آیند)
 // ==========================================
-function isLeapYear(year) { return leapYears.includes(year); }
 
-function getDaysInMonth(year, month) {
-    if (month <= 6) return 31;
-    if (month <= 11) return 30;
-    return isLeapYear(year) ? 30 : 29;
-}
-
-function getFirstDayOfWeek(year, month) {
-    let daysPassed = 0;
-    for (let y = 1405; y < year; y++) {
-        daysPassed += isLeapYear(y) ? 366 : 365;
-    }
-    for (let m = 1; m < month; m++) {
-        daysPassed += getDaysInMonth(year, m);
-    }
-    return daysPassed % 7;
-}
-
-// *** تغییر: initCalendar اصلاح شد تا مناسبت را نمایش دهد ***
 function initCalendar() {
     const yearSelect = document.getElementById('calendarYearSelect');
     const monthSelect = document.getElementById('calendarMonthSelect');
@@ -527,8 +508,8 @@ function renderCalendarGrid() {
     if (!grid) return;
 
     grid.innerHTML = '';
-    const firstDay = getFirstDayOfWeek(currentCalendarYear, currentCalendarMonth);
-    const daysInMonth = getDaysInMonth(currentCalendarYear, currentCalendarMonth);
+    const firstDay = getJalaliFirstDayOfWeek(currentCalendarYear, currentCalendarMonth);
+    const daysInMonth = getJalaliDaysInMonth(currentCalendarYear, currentCalendarMonth);
     
     const ay = window.activeAcademicYear || '1405-1406';
     const [startYear, endYear] = ay.split('-');
@@ -624,7 +605,7 @@ function selectCalendarDay(day, dateStr) {
     const hiddenDate = document.getElementById('sessionDateHidden');
     if (hiddenDate) hiddenDate.value = dateStr;
     
-    const firstDay = getFirstDayOfWeek(currentCalendarYear, currentCalendarMonth);
+    const firstDay = getJalaliFirstDayOfWeek(currentCalendarYear, currentCalendarMonth);
     const dayOfWeekIndex = (firstDay + day - 1) % 7;
     const dayNames = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
     selectedSessionDayOfWeek = dayNames[dayOfWeekIndex];
