@@ -1,14 +1,14 @@
 // ==========================================
-// فایل sw.js — نسخه v114 (رفع کامل مشکل کش)
+// فایل sw.js — سرویس‌ورکر بهینه‌شده (نسخه v106)
 // ==========================================
 
-const CACHE_NAME = 'kosha-cache-v114';
-
-// فایل‌هایی که باید در نصب اولیه کش شوند
+const CACHE_NAME = 'kosha-cache-v106';
 const ASSETS_TO_CACHE = [
     './', 
     './index.html', 
     './styles.css', 
+    './app.js', 
+    './db.js', 
     './manifest.json', 
     './icon.svg', 
     './class.js', 
@@ -26,28 +26,34 @@ const ASSETS_TO_CACHE = [
     './back-button.js'
 ];
 
-// ⚠️ فایل‌های حساس که در زمان توسعه باید همیشه از شبکه لود شوند (بدون کش)
-// این کار باعث می‌شود هر بار تغییرات جدید را ببینید و کش قدیمی آزارتان ندهد
-const NETWORK_ONLY_ASSETS = [
+// فایل‌هایی که همیشه باید از شبکه به‌روز شوند (حساس به تغییر)
+const NETWORK_FIRST_ASSETS = [
     './index.html',
     './app.js',
-    './db.js',
-    './sw.js'
+    './exam.js',
+    './game.js',
+    './score.js',
+    './session.js',
+    './calendar.js',
+    './jalali-utils.js',
+    './back-button.js',
+    './styles.css'
 ];
 
+// ==========================================
 // نصب: کش کردن فایل‌های اصلی
+// ==========================================
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(ASSETS_TO_CACHE);
-        }).then(() => {
-            console.log('✅ سرویس‌ورکر جدید نصب شد.');
-            return self.skipWaiting();
-        })
+        }).then(() => self.skipWaiting())
     );
 });
 
+// ==========================================
 // فعال‌سازی: پاک کردن کش‌های قدیمی
+// ==========================================
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
@@ -59,55 +65,63 @@ self.addEventListener('activate', (event) => {
                     }
                 })
             );
-        }).then(() => {
-            console.log('✅ سرویس‌ورکر فعال شد.');
-            return self.clients.claim();
-        })
+        }).then(() => self.clients.claim())
     );
 });
 
+// ==========================================
 // استراتژی هوشمند Fetch
+// ==========================================
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
     
-    // فقط درخواست‌های GET را مدیریت کن
     if (event.request.method !== 'GET') return;
-    // درخواست‌های خارجی (مثل گوگل فونت) را مدیریت نکن
-    if (url.origin !== self.location.origin) return;
     
-    // اگر فایل در لیست Network-Only است، همیشه از شبکه بگیر (حتی اگر کش وجود داشت)
-    const isNetworkOnly = NETWORK_ONLY_ASSETS.some(asset => url.pathname.endsWith(asset.replace('./', '')));
-    
-    if (isNetworkOnly) {
-        event.respondWith(
-            fetch(event.request).catch(() => {
-                // اگر شبکه قطع بود، از کش استفاده کن (برای اطمینان)
-                return caches.match(event.request);
-            })
-        );
+    if (url.origin !== self.location.origin) {
         return;
     }
     
-    // برای بقیه فایل‌ها: اول از کش بگیر، اگر نبود از شبکه
-    event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) {
-                return cachedResponse;
-            }
-            return fetch(event.request).then((response) => {
-                if (response && response.status === 200) {
-                    const responseClone = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(event.request, responseClone);
-                    });
+    const isNetworkFirst = NETWORK_FIRST_ASSETS.some(asset => url.pathname.endsWith(asset.replace('./', '')));
+    
+    if (isNetworkFirst) {
+        event.respondWith(
+            fetch(event.request)
+                .then((response) => {
+                    if (response && response.status === 200) {
+                        const responseClone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseClone);
+                        });
+                    }
+                    return response;
+                })
+                .catch(() => {
+                    return caches.match(event.request);
+                })
+        );
+    } else {
+        event.respondWith(
+            caches.match(event.request).then((cachedResponse) => {
+                if (cachedResponse) {
+                    return cachedResponse;
                 }
-                return response;
-            });
-        })
-    );
+                return fetch(event.request).then((response) => {
+                    if (response && response.status === 200) {
+                        const responseClone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseClone);
+                        });
+                    }
+                    return response;
+                });
+            })
+        );
+    }
 });
 
-// پیام‌ها
+// ==========================================
+// پیام‌ها (برای به‌روزرسانی خودکار)
+// ==========================================
 self.addEventListener('message', (event) => {
     if (event.data && event.data.action === 'skipWaiting') {
         self.skipWaiting();
