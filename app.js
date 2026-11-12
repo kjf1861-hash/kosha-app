@@ -18,6 +18,11 @@ let currentStudentView = 'flat';
 let currentPage = { students: 1, records: 1, reports: 1 };
 const itemsPerPage = 40;
 
+// *** متغیرهای جدید برای مدیریت تغییرات ذخیره‌نشده ***
+window.isFormDirty = false;
+window.pendingExitAction = null;
+window.currentFormName = '';
+
 // *** مدیریت خطای سراسری ***
 window.onerror = function(msg, url, line, col, error) {
     console.error('خطای سراسری:', msg, 'در', url, line);
@@ -123,6 +128,110 @@ function applyEmojiRestriction(inputId) {
     }
 }
 
+// ==========================================
+// توابع مدیریت تغییرات ذخیره‌نشده (جدید)
+// ==========================================
+
+// دریافت متن هشدار مناسب بر اساس نام فرم
+function getExitMessage(formName) {
+    const messages = {
+        'record-form': 'شما در حال ثبت یک ارزشیابی جدید هستید. اطلاعات وارد شده ذخیره نشده است.',
+        'exam-editor-form': 'شما در حال ساخت یا ویرایش یک آزمون هستید. سوالات و اطلاعات ذخیره نشده است.',
+        'class-form': 'تغییرات تنظیمات کلاس ذخیره نشده است.',
+        'student-form': 'اطلاعات دانش‌آموز جدید ذخیره نشده است.',
+        'group-form': 'اطلاعات گروه جدید ذخیره نشده است.',
+        'lesson-form': 'اطلاعات درس جدید ذخیره نشده است.',
+        'quran-form': 'اطلاعات پویش قرآن ذخیره نشده است.',
+        'special-reward-form': 'اطلاعات تشویق ویژه ذخیره نشده است.',
+        'handwriting-reward-form': 'اطلاعات تشویق خوش‌خط‌نویسی ذخیره نشده است.',
+        'edit-student-form': 'تغییرات دانش‌آموز ذخیره نشده است.',
+        'edit-group-form': 'تغییرات گروه ذخیره نشده است.',
+        'edit-lesson-form': 'تغییرات درس ذخیره نشده است.',
+        'edit-record-form': 'تغییرات رکورد ارزشیابی ذخیره نشده است.',
+        'item-manager-form': 'آیتم جدید یا تغییرات آن ذخیره نشده است.'
+    };
+    return messages[formName] || 'شما تغییرات ذخیره‌نشده دارید. اگر خارج شوید، این تغییرات از بین می‌رود.';
+}
+
+// علامت‌گذاری فرم به عنوان دارای تغییرات
+function markFormDirty(formName) {
+    if (formName) window.currentFormName = formName;
+    window.isFormDirty = true;
+}
+
+// پاک کردن علامت تغییرات
+function clearFormDirty() {
+    window.isFormDirty = false;
+    window.pendingExitAction = null;
+    window.currentFormName = '';
+}
+
+// درخواست خروج (با بررسی وضعیت فرم)
+function requestExit(callback) {
+    if (!window.isFormDirty) {
+        if (callback) callback();
+        return;
+    }
+    
+    window.pendingExitAction = callback;
+    const messageEl = document.getElementById('exit-confirm-message');
+    if (messageEl) {
+        messageEl.textContent = getExitMessage(window.currentFormName);
+    }
+    document.getElementById('exit-confirm-modal').classList.add('show');
+}
+
+// لغو خروج (کاربر روی انصراف کلیک کرد)
+function cancelExit() {
+    document.getElementById('exit-confirm-modal').classList.remove('show');
+    window.pendingExitAction = null;
+}
+
+// تأیید خروج (کاربر روی خروج کلیک کرد)
+function confirmExit() {
+    document.getElementById('exit-confirm-modal').classList.remove('show');
+    const action = window.pendingExitAction;
+    
+    window.isFormDirty = false;
+    window.pendingExitAction = null;
+    window.currentFormName = '';
+    
+    if (action) action();
+}
+
+// رصد خودکار تمام فرم‌های اپلیکیشن
+function attachDirtyListeners() {
+    // فرم‌هایی که باید رصد شوند (چه در صفحه اصلی، چه در مودال‌ها)
+    const formSelectors = [
+        '#record-form', '#exam-editor-form', '#class-form', '#student-form', 
+        '#group-form', '#lesson-form', '#quran-form', '#special-reward-form', 
+        '#handwriting-reward-form', '#edit-student-form', '#edit-group-form', 
+        '#edit-lesson-form', '#edit-record-form', '#item-manager-form'
+    ];
+
+    formSelectors.forEach(selector => {
+        const form = document.querySelector(selector);
+        if (form) {
+            // به جای افزودن رویداد به هر فیلد، به خود فرم گوش می‌دهیم (Event Bubbling)
+            form.addEventListener('input', function() {
+                markFormDirty(form.id);
+            });
+            form.addEventListener('change', function() {
+                markFormDirty(form.id);
+            });
+        }
+    });
+
+    // هشدار مرورگر برای بستن تب یا رفرش
+    window.addEventListener('beforeunload', function(e) {
+        if (window.isFormDirty) {
+            e.preventDefault();
+            e.returnValue = 'شما تغییرات ذخیره‌نشده دارید. آیا می‌خواهید خارج شوید؟';
+            return e.returnValue;
+        }
+    });
+}
+
 function initAppEvents() {
     const classForm = document.getElementById('class-form');
     if (classForm) classForm.addEventListener('submit', saveClassProfile);
@@ -167,6 +276,9 @@ async function initApp() {
     applyEmojiRestriction('classSymbol');
     applyEmojiRestriction('lessonSymbol');
     applyEmojiRestriction('groupSymbol');
+    
+    // *** فعال‌سازی رصد تغییرات فرم‌ها ***
+    attachDirtyListeners();
     
     try {
         initAppEvents();
@@ -471,6 +583,9 @@ async function saveItem(e) {
         if (oldTitle && oldTitle !== title) {
             await loadAllData();
         }
+        
+        // *** پاک کردن وضعیت Dirty بعد از ذخیره آیتم ***
+        clearFormDirty();
 
     } catch (error) { 
         console.error(error); 
