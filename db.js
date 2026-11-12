@@ -3,7 +3,7 @@
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 12; // نسخه 12 برای جداول آزمون‌ها
+const DB_VERSION = 13; // ارتقا به 13 برای اضافه شدن جدول تنظیمات پشتیبان‌گیری
 
 let db;
 
@@ -90,6 +90,11 @@ function initDB() {
                 resultStore.createIndex('examId', 'examId', { unique: false });
                 resultStore.createIndex('studentNationalId', 'studentNationalId', { unique: false });
             }
+            
+            // *** جدول جدید برای تنظیمات پشتیبان‌گیری ***
+            if (!db.objectStoreNames.contains('backupSettings')) {
+                db.createObjectStore('backupSettings', { keyPath: 'id' });
+            }
         };
     });
 }
@@ -102,11 +107,6 @@ function saveData(storeName, data) {
         
         request.onsuccess = () => {
             resolve(request.result);
-            
-            // ==========================================
-            // ✅ تغییر اصلی: فراخوانی پشتیبان‌گیری خودکار
-            // پس از هر ذخیره موفق، پشتیبان خودکار در پس‌زمینه اجرا می‌شود.
-            // ==========================================
             if (typeof window.triggerAutoBackup === 'function') {
                 window.triggerAutoBackup();
             }
@@ -128,10 +128,6 @@ function saveBulkData(storeName, dataArray) {
                 completed++;
                 if (completed === dataArray.length) {
                     resolve();
-                    
-                    // ==========================================
-                    // ✅ پشتیبان‌گیری خودکار پس از ذخیره گروهی
-                    // ==========================================
                     if (typeof window.triggerAutoBackup === 'function') {
                         window.triggerAutoBackup();
                     }
@@ -170,10 +166,6 @@ function deleteData(storeName, id) {
         
         request.onsuccess = () => {
             resolve();
-            
-            // ==========================================
-            // ✅ پشتیبان‌گیری خودکار پس از حذف
-            // ==========================================
             if (typeof window.triggerAutoBackup === 'function') {
                 window.triggerAutoBackup();
             }
@@ -191,10 +183,6 @@ function clearStore(storeName) {
         
         request.onsuccess = () => {
             resolve();
-            
-            // ==========================================
-            // ✅ پشتیبان‌گیری خودکار پس از پاکسازی جدول
-            // ==========================================
             if (typeof window.triggerAutoBackup === 'function') {
                 window.triggerAutoBackup();
             }
@@ -206,7 +194,7 @@ function clearStore(storeName) {
 
 async function exportAllData() {
     const data = {};
-    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults'];
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
     for (const store of stores) {
         try { data[store] = await getAllData(store); } catch (e) { data[store] = []; }
     }
@@ -216,7 +204,7 @@ async function exportAllData() {
 async function importAllData(data) {
     if (!data || typeof data !== 'object') throw new Error('داده‌های نامعتبر');
     
-    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults'];
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
     const backup = {};
     for (const store of stores) { backup[store] = await getAllData(store); }
     
@@ -237,5 +225,33 @@ async function importAllData(data) {
             }
         }
         throw new Error('خطا در بازیابی داده‌ها، تغییرات لغو شد.');
+    }
+}
+
+// ==========================================
+// ✅ تابع جدید: دریافت تنظیمات پشتیبان‌گیری با مقادیر پیش‌فرض
+// ==========================================
+async function getBackupSettings() {
+    try {
+        let settings = await getDataById('backupSettings', 1);
+        if (!settings) {
+            // اگر تنظیمات وجود نداشت، مقادیر پیش‌فرض را ایجاد کن
+            settings = {
+                id: 1,
+                reminderType: 'off', // 'off' | 'daily' | 'weekly' | 'monthly'
+                lastReminderDate: null,
+                periods: [] // آرایه‌ای از بازه‌ها
+            };
+            await saveData('backupSettings', settings);
+        }
+        return settings;
+    } catch (e) {
+        console.error('خطا در دریافت تنظیمات پشتیبان‌گیری:', e);
+        return {
+            id: 1,
+            reminderType: 'off',
+            lastReminderDate: null,
+            periods: []
+        };
     }
 }
