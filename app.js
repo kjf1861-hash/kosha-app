@@ -506,17 +506,22 @@ function applyEmojiRestriction(inputId) {
 // ==========================================
 function getExitMessage(formName) {
     const messages = {
-        'record-form': 'شما در حال ثبت یک ارزشیابی جدید هستید.',
-        'exam-editor-form': 'شما در حال ساخت یا ویرایش یک آزمون هستید.',
+        'record-form': 'شما در حال ثبت یک ارزشیابی جدید هستید. اطلاعات وارد شده ذخیره نشده است.',
+        'exam-editor-form': 'شما در حال ساخت یا ویرایش یک آزمون هستید. سوالات و اطلاعات ذخیره نشده است.',
         'class-form': 'تغییرات تنظیمات کلاس ذخیره نشده است.',
         'student-form': 'اطلاعات دانش‌آموز جدید ذخیره نشده است.',
         'group-form': 'اطلاعات گروه جدید ذخیره نشده است.',
         'lesson-form': 'اطلاعات درس جدید ذخیره نشده است.',
         'quran-form': 'اطلاعات پویش قرآن ذخیره نشده است.',
         'special-reward-form': 'اطلاعات تشویق ویژه ذخیره نشده است.',
-        'handwriting-reward-form': 'اطلاعات تشویق خوش‌خط‌نویسی ذخیره نشده است.'
+        'handwriting-reward-form': 'اطلاعات تشویق خوش‌خط‌نویسی ذخیره نشده است.',
+        'edit-student-form': 'تغییرات دانش‌آموز ذخیره نشده است.',
+        'edit-group-form': 'تغییرات گروه ذخیره نشده است.',
+        'edit-lesson-form': 'تغییرات درس ذخیره نشده است.',
+        'edit-record-form': 'تغییرات رکورد ارزشیابی ذخیره نشده است.',
+        'item-manager-form': 'آیتم جدید یا تغییرات آن ذخیره نشده است.'
     };
-    return messages[formName] || 'شما تغییرات ذخیره‌نشده دارید.';
+    return messages[formName] || 'شما تغییرات ذخیره‌نشده دارید. اگر خارج شوید، این تغییرات از بین می‌رود.';
 }
 
 function markFormDirty(formName) {
@@ -531,10 +536,16 @@ function clearFormDirty() {
 }
 
 function requestExit(callback) {
-    if (!window.isFormDirty) { if (callback) callback(); return; }
+    if (!window.isFormDirty) {
+        if (callback) callback();
+        return;
+    }
+    
     window.pendingExitAction = callback;
     const messageEl = document.getElementById('exit-confirm-message');
-    if (messageEl) messageEl.textContent = getExitMessage(window.currentFormName);
+    if (messageEl) {
+        messageEl.textContent = getExitMessage(window.currentFormName);
+    }
     document.getElementById('exit-confirm-modal').classList.add('show');
 }
 
@@ -546,25 +557,38 @@ function cancelExit() {
 function confirmExit() {
     document.getElementById('exit-confirm-modal').classList.remove('show');
     const action = window.pendingExitAction;
+    
     window.isFormDirty = false;
     window.pendingExitAction = null;
     window.currentFormName = '';
+    
     if (action) action();
 }
 
 function attachDirtyListeners() {
-    const formSelectors = ['#record-form', '#exam-editor-form', '#class-form', '#student-form', '#group-form', '#lesson-form', '#quran-form', '#special-reward-form', '#handwriting-reward-form'];
+    const formSelectors = [
+        '#record-form', '#exam-editor-form', '#class-form', '#student-form', 
+        '#group-form', '#lesson-form', '#quran-form', '#special-reward-form', 
+        '#handwriting-reward-form', '#edit-student-form', '#edit-group-form', 
+        '#edit-lesson-form', '#edit-record-form', '#item-manager-form'
+    ];
+
     formSelectors.forEach(selector => {
         const form = document.querySelector(selector);
         if (form) {
-            form.addEventListener('input', function() { markFormDirty(form.id); });
-            form.addEventListener('change', function() { markFormDirty(form.id); });
+            form.addEventListener('input', function() {
+                markFormDirty(form.id);
+            });
+            form.addEventListener('change', function() {
+                markFormDirty(form.id);
+            });
         }
     });
+
     window.addEventListener('beforeunload', function(e) {
         if (window.isFormDirty) {
             e.preventDefault();
-            e.returnValue = 'شما تغییرات ذخیره‌نشده دارید.';
+            e.returnValue = 'شما تغییرات ذخیره‌نشده دارید. آیا می‌خواهید خارج شوید؟';
             return e.returnValue;
         }
     });
@@ -573,17 +597,22 @@ function attachDirtyListeners() {
 function initAppEvents() {
     const classForm = document.getElementById('class-form');
     if (classForm) classForm.addEventListener('submit', saveClassProfile);
+    
     const studentForm = document.getElementById('student-form');
     if (studentForm) studentForm.addEventListener('submit', saveStudent);
+    
     const lessonForm = document.getElementById('lesson-form');
     if (lessonForm) lessonForm.addEventListener('submit', saveLesson);
+    
     const groupForm = document.getElementById('group-form');
     if (groupForm && !groupForm.dataset.listenerAttached) {
         groupForm.addEventListener('submit', saveGroup);
         groupForm.dataset.listenerAttached = 'true';
     }
+    
     const itemManagerForm = document.getElementById('item-manager-form');
     if (itemManagerForm) itemManagerForm.addEventListener('submit', saveItem);
+    
     const itemType = document.getElementById('itemType');
     if (itemType) itemType.addEventListener('change', toggleItemTypeFields);
     
@@ -594,10 +623,13 @@ function initAppEvents() {
     
     const editRecordForm = document.getElementById('edit-record-form');
     if (editRecordForm) editRecordForm.addEventListener('submit', saveEditedRecord);
+    
     const editGroupForm = document.getElementById('edit-group-form');
     if (editGroupForm) editGroupForm.addEventListener('submit', saveEditedGroup);
+    
     const editLessonForm = document.getElementById('edit-lesson-form');
     if (editLessonForm) editLessonForm.addEventListener('submit', saveEditedLesson);
+    
     const editStudentForm = document.getElementById('edit-student-form');
     if (editStudentForm) editStudentForm.addEventListener('submit', saveEditedStudent);
 }
@@ -700,16 +732,26 @@ function renderUI() {
     } catch (e) { console.error('خطا در رندر UI:', e); }
 }
 
-// بقیه توابع (مدیریت آیتم‌ها، خروجی، ورودی) از بخش قبلی (بدون تغییر)
+function jalaliToDateString(jy, jm, jd) {
+    return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
+}
+
+// ==========================================
+// توابع مدیریت آیتم‌ها
+// ==========================================
 function openItemManagementModal() {
-    document.getElementById('item-management-modal').classList.add('show');
+    const modal = document.getElementById('item-management-modal');
+    if (modal) modal.classList.add('show');
     renderItemsList();
     resetItemForm();
 }
+
 function closeItemManagementModal() {
-    document.getElementById('item-management-modal').classList.remove('show');
+    const modal = document.getElementById('item-management-modal');
+    if (modal) modal.classList.remove('show');
     loadAllData();
 }
+
 function renderItemsList() {
     const container = document.getElementById('items-list-container');
     if (!container) return;
@@ -722,97 +764,283 @@ function renderItemsList() {
             <div class="item-management-row">
                 <div><strong>${item.title}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">(${typeName})</span></div>
                 <div style="display:flex; gap:5px;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="editItem('${item.id}')" ${isSystem ? 'disabled' : ''}>✏️</button>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteCustomItem('${item.id}')" ${isSystem ? 'disabled' : ''}>🗑️</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="editItem('${item.id}')" ${isSystem ? 'disabled title="سیستمی"' : ''}>✏️</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteCustomItem('${item.id}')" ${isSystem ? 'disabled title="سیستمی"' : ''}>🗑️</button>
                 </div>
             </div>`;
     });
 }
+
 function resetItemForm() {
-    document.getElementById('item-manager-form').reset();
-    document.getElementById('editItemId').value = '';
-    document.getElementById('item-form-title').textContent = '➕ افزودن آیتم جدید';
-    document.getElementById('levels-container').innerHTML = '';
-    document.getElementById('itemLevelPlaceholder').value = '';
-    document.getElementById('item-type-level').style.display = 'none';
-    document.getElementById('item-type-count').style.display = 'none';
-    document.getElementById('item-type-free').style.display = 'none';
-    document.getElementById('itemTitle').readOnly = false;
+    const form = document.getElementById('item-manager-form');
+    if (form) form.reset();
+    const editId = document.getElementById('editItemId');
+    if (editId) editId.value = '';
+    const title = document.getElementById('item-form-title');
+    if (title) title.textContent = '➕ افزودن آیتم جدید';
+    const levelsContainer = document.getElementById('levels-container');
+    if (levelsContainer) levelsContainer.innerHTML = '';
+    const placeholder = document.getElementById('itemLevelPlaceholder');
+    if (placeholder) placeholder.value = '';
+    const typeLevel = document.getElementById('item-type-level');
+    if (typeLevel) typeLevel.style.display = 'none';
+    const typeCount = document.getElementById('item-type-count');
+    if (typeCount) typeCount.style.display = 'none';
+    const typeFree = document.getElementById('item-type-free');
+    if (typeFree) typeFree.style.display = 'none';
+    const itemTitle = document.getElementById('itemTitle');
+    if (itemTitle) itemTitle.readOnly = false;
 }
+
 function toggleItemTypeFields() {
-    const type = document.getElementById('itemType').value;
-    document.getElementById('item-type-level').style.display = type === 'level' ? 'block' : 'none';
-    document.getElementById('item-type-count').style.display = type === 'count' ? 'block' : 'none';
-    document.getElementById('item-type-free').style.display = type === 'free' ? 'block' : 'none';
-    if (type === 'level' && document.getElementById('levels-container').children.length === 0) { addLevelRow(); addLevelRow(); }
+    const typeEl = document.getElementById('itemType');
+    if (!typeEl) return;
+    const type = typeEl.value;
+    const typeLevel = document.getElementById('item-type-level');
+    const typeCount = document.getElementById('item-type-count');
+    const typeFree = document.getElementById('item-type-free');
+    if (typeLevel) typeLevel.style.display = type === 'level' ? 'block' : 'none';
+    if (typeCount) typeCount.style.display = type === 'count' ? 'block' : 'none';
+    if (typeFree) typeFree.style.display = type === 'free' ? 'block' : 'none';
+    const levelsContainer = document.getElementById('levels-container');
+    if (type === 'level' && levelsContainer && levelsContainer.children.length === 0) {
+        addLevelRow(); addLevelRow(); 
+    }
 }
+
 function addLevelRow(name = '', score = '') {
     const container = document.getElementById('levels-container');
+    if (!container) return;
     const row = document.createElement('div');
     row.className = 'level-row-input';
-    row.innerHTML = `<input type="text" class="form-control level-name" placeholder="نام سطح" value="${name}"><input type="number" class="form-control level-score" placeholder="امتیاز" value="${score}"><button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✖</button>`;
+    row.innerHTML = `
+        <input type="text" class="form-control level-name" placeholder="نام سطح" value="${name}">
+        <input type="number" class="form-control level-score" placeholder="امتیاز" value="${score}">
+        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✖</button>
+    `;
     container.appendChild(row);
 }
+
 async function editItem(id) {
     const item = assessmentItems.find(i => i.id === id);
-    if (!item) return;
-    document.getElementById('editItemId').value = item.id;
-    document.getElementById('itemTitle').value = item.title;
-    document.getElementById('itemType').value = item.type;
-    document.getElementById('item-form-title').textContent = '✏️ ویرایش آیتم';
-    // ... (بقیه کد بدون تغییر)
+    if (!item) { showToast('آیتم یافت نشد.', 'error'); return; }
+    const editId = document.getElementById('editItemId');
+    if (editId) editId.value = item.id;
+    const titleEl = document.getElementById('itemTitle');
+    if (titleEl) titleEl.value = item.title;
+    const typeEl = document.getElementById('itemType');
+    if (typeEl) typeEl.value = item.type;
+    const formTitle = document.getElementById('item-form-title');
+    if (formTitle) formTitle.textContent = '✏️ ویرایش آیتم';
+    const typeLevel = document.getElementById('item-type-level');
+    if (typeLevel) typeLevel.style.display = 'none';
+    const typeCount = document.getElementById('item-type-count');
+    if (typeCount) typeCount.style.display = 'none';
+    const typeFree = document.getElementById('item-type-free');
+    if (typeFree) typeFree.style.display = 'none';
+    if (item.type === 'level') {
+        if (typeLevel) typeLevel.style.display = 'block';
+        const placeholder = document.getElementById('itemLevelPlaceholder');
+        if (placeholder) placeholder.value = item.placeholder || 'انتخاب سطح عملکرد:';
+        const container = document.getElementById('levels-container');
+        if (container) {
+            container.innerHTML = '';
+            item.levels.forEach(l => addLevelRow(l.name, l.score));
+        }
+    } else if (item.type === 'count') {
+        if (typeCount) typeCount.style.display = 'block';
+        const unitScore = document.getElementById('itemUnitScore');
+        if (unitScore) unitScore.value = item.unitScore;
+        const placeholder = document.getElementById('itemCountPlaceholder');
+        if (placeholder) placeholder.value = item.placeholder || '';
+    } else if (item.type === 'free') {
+        if (typeFree) typeFree.style.display = 'block';
+        const placeholder = document.getElementById('itemFreePlaceholder');
+        if (placeholder) placeholder.value = item.placeholder || '';
+    }
 }
+
 async function saveItem(e) {
     if (e) e.preventDefault();
-    const currentYear = window.activeAcademicYear;
-    const editingId = document.getElementById('editItemId').value;
-    const title = document.getElementById('itemTitle').value.trim();
-    const type = document.getElementById('itemType').value;
-    if (!title) { showToast('عنوان را وارد کنید.', 'error'); return; }
-    let itemData = { title, type, academicYear: currentYear };
-    if (editingId) itemData.id = editingId;
-    else itemData.id = currentYear + '_item_' + Date.now();
     
-    // ... (کد کامل در فایل ارسالی)
+    const idEl = document.getElementById('editItemId');
+    const titleEl = document.getElementById('itemTitle');
+    const typeEl = document.getElementById('itemType');
+    if (!idEl || !titleEl || !typeEl) return;
+    
+    const currentYear = window.activeAcademicYear;
+    const editingId = idEl.value;
+    const title = titleEl.value.trim();
+    const type = typeEl.value;
+    
+    if (!title) { showToast('عنوان آیتم را وارد کنید.', 'error'); return; }
+    if (!type) { showToast('نوع آیتم را انتخاب کنید.', 'error'); return; }
+    
+    const customItems = assessmentItems.filter(i => i.type !== 'quran' && i.type !== 'fixed' && i.type !== 'free');
+    if (!editingId && customItems.length >= 16) {
+        showToast('حداکثر تعداد مجاز آیتم ارزشیابی سفارشی (۱۶ آیتم) تکمیل شده است.', 'error');
+        return;
+    }
+    
+    const oldItem = editingId ? assessmentItems.find(i => i.id === editingId) : null;
+    const oldTitle = oldItem ? oldItem.title : null;
+
+    let itemData = { title, type, academicYear: currentYear };
+    
+    if (editingId) {
+        itemData.id = editingId;
+    } else {
+        itemData.id = currentYear + '_item_' + Date.now();
+    }
+    
+    if (type === 'level') {
+        const placeholder = document.getElementById('itemLevelPlaceholder');
+        itemData.placeholder = (placeholder && placeholder.value) || 'انتخاب سطح عملکرد:';
+        const levels = [];
+        const rows = document.querySelectorAll('#levels-container .level-row-input');
+        rows.forEach(row => {
+            const name = row.querySelector('.level-name').value.trim();
+            const score = parseInt(row.querySelector('.level-score').value);
+            if (name && !isNaN(score)) levels.push({ name, score });
+        });
+        if (levels.length === 0) { showToast('حداقل یک سطح با نام و امتیاز تعریف کنید.', 'error'); return; }
+        itemData.levels = levels;
+    } else if (type === 'count') {
+        const unitScore = document.getElementById('itemUnitScore');
+        const placeholder = document.getElementById('itemCountPlaceholder');
+        itemData.unitScore = parseInt(unitScore ? unitScore.value : 10);
+        itemData.placeholder = placeholder ? placeholder.value : '';
+    } else if (type === 'free') {
+        const placeholder = document.getElementById('itemFreePlaceholder');
+        itemData.placeholder = placeholder ? placeholder.value : '';
+    }
     
     try {
         await saveData('assessmentItems', itemData);
-        showToast('آیتم ذخیره شد!', 'success');
+        
+        if (oldTitle && oldTitle !== title) {
+            const yearRecords = await getAllDataByYear('records', currentYear);
+            let updatedCount = 0;
+            for (let rec of yearRecords) {
+                if (rec.itemName === oldTitle) {
+                    rec.itemName = title;
+                    await saveData('records', rec);
+                    updatedCount++;
+                }
+            }
+            if (updatedCount > 0) {
+                showToast(`نام آیتم در ${toPersianNumber(updatedCount)} رکورد قبلی نیز به‌روزرسانی شد.`, 'info');
+            }
+        }
+
+        showToast('آیتم با موفقیت ذخیره شد!', 'success');
+        
         const freshItems = await getAllDataByYear('assessmentItems', currentYear);
+        window.allAssessmentItems = freshItems;
         assessmentItems = freshItems;
+        
         renderItemsList();
         resetItemForm();
-        loadAllData();
-    } catch (err) { showToast('خطا!', 'error'); }
+        
+        const itemSelect = document.getElementById('recordItem');
+        if (itemSelect) {
+            itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
+        }
+        const editItemSelect = document.getElementById('editRecordItem');
+        if (editItemSelect) {
+            editItemSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
+        }
+
+        if (oldTitle && oldTitle !== title) {
+            await loadAllData();
+        }
+        
+        if (typeof clearFormDirty === 'function') clearFormDirty();
+
+    } catch (error) { 
+        console.error(error); 
+        showToast('خطا در ذخیره آیتم!', 'error'); 
+    }
 }
+
 async function deleteCustomItem(id) {
-    if(!confirm('حذف شود؟')) return;
-    await deleteData('assessmentItems', id);
-    loadAllData();
+    if(!confirm('آیا از حذف این آیتم مطمئن هستید؟')) return;
+    try {
+        const currentYear = window.activeAcademicYear;
+        await deleteData('assessmentItems', id);
+        showToast('آیتم حذف شد.', 'success');
+        const freshItems = await getAllDataByYear('assessmentItems', currentYear);
+        window.allAssessmentItems = freshItems;
+        assessmentItems = freshItems;
+        renderItemsList();
+        const itemSelect = document.getElementById('recordItem');
+        if (itemSelect) itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
+        const editItemSelect = document.getElementById('editRecordItem');
+        if (editItemSelect) editItemSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
+    } catch (e) { console.error(e); showToast('خطا در حذف آیتم!', 'error'); }
 }
+
+// ==========================================
+// خروجی و ورودی داده‌ها
+// ==========================================
 async function exportData() {
-    const data = await exportAllData();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `kosha_backup_${window.activeAcademicYear || 'unknown'}.json`; a.click();
-    localStorage.setItem('kosha-last-backup', Date.now());
-    checkBackupReminder();
+    try {
+        const data = await exportAllData();
+        const currentYear = window.activeAcademicYear || 'unknown';
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); 
+        a.href = url; 
+        a.download = `kosha_backup_${currentYear}_${new Date().toISOString().slice(0,10)}.json`; 
+        a.click();
+        URL.revokeObjectURL(url);
+        localStorage.setItem('kosha-last-backup', Date.now());
+        checkBackupReminder(); 
+        showToast('فایل پشتیبان دانلود شد. آن را در جای امنی نگه دارید.', 'info');
+    } catch (e) { showToast('خطا در تولید فایل پشتیبان!', 'error'); }
 }
+
 async function importData(event) {
-    const file = event.target.files[0]; if (!file) return;
-    if (!confirm('اطلاعات فعلی پاک می‌شوند. مطمئنید؟')) { event.target.value = ''; return; }
+    const file = event.target.files[0]; 
+    if (!file) return;
+    
+    const isConfirmed = confirm('⚠️ هشدار مهم:\n\nبا بازیابی این فایل، تمام اطلاعات فعلی شما (از جمله تغییرات و آیتم‌های جدید) پاک شده و با اطلاعات داخل فایل بکاپ جایگزین می‌شود.\n\nآیا مطمئن هستید؟');
+    
+    if (!isConfirmed) {
+        event.target.value = ''; 
+        return;
+    }
+
     const reader = new FileReader();
     reader.onload = async (e) => {
-        try { await importAllData(JSON.parse(e.target.result)); showToast('بازیابی شد!', 'success'); setTimeout(() => window.location.reload(), 1000); }
-        catch (err) { showToast('خطا!', 'error'); }
-        event.target.value = '';
+        try { 
+            const data = JSON.parse(e.target.result); 
+            await importAllData(data); 
+            
+            showToast('اطلاعات با موفقیت بازیابی شد! در حال بارگذاری مجدد...', 'success'); 
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+
+        }
+        catch (err) { 
+            console.error(err);
+            showToast('فایل نامعتبر! تغییرات لغو شد.', 'error'); 
+        }
+        event.target.value = ''; 
     };
     reader.readAsText(file);
 }
+
 function changePage(section, direction) {
-    if (section === 'students') { currentPage.students += direction; renderStudentsList(); }
-    else if (section === 'records') { currentPage.records += direction; loadAssessmentRecords(); }
+    if (section === 'students') { currentPage.students += direction; if(typeof renderStudentsList === 'function') renderStudentsList(); }
+    else if (section === 'records') { currentPage.records += direction; if(typeof loadAssessmentRecords === 'function') loadAssessmentRecords(); }
 }
+
+// ==========================================
+// راه‌اندازی Service Worker
+// ==========================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').then((reg) => {
@@ -825,6 +1053,7 @@ if ('serviceWorker' in navigator) {
         });
     });
 }
+
 function showUpdateToast(newWorker) {
     const toast = document.createElement('div');
     toast.className = 'toast-container';
