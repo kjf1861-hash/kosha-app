@@ -77,7 +77,7 @@ const quranSurahs = {
     "مطففین": 36, "انفطار": 19, "تکویر": 29, "عبس": 42, "نازعات": 46, "نبأ": 40
 };
 
-// *** تابع Toast با آیکون‌های SVG ***
+// *** تابع بهبودیافته Toast با آیکون‌های SVG ***
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast-container');
     if (existingToast) existingToast.remove();
@@ -184,6 +184,7 @@ async function initApp() {
     } catch (error) { console.error("خطا در بارگذاری آزمون‌ها:", error); }
 }
 
+// *** جدا کردن بارگذاری داده از رندر UI ***
 async function loadAllData() {
     try {
         const classData = await getDataById('classProfile', 1);
@@ -544,68 +545,32 @@ function changePage(section, direction) {
     else if (section === 'records') { currentPage.records += direction; if(typeof loadAssessmentRecords === 'function') loadAssessmentRecords(); }
 }
 
-// ==========================================
-// مدیریت Service Worker و آپدیت
-// ==========================================
-let _pendingWorker = null;
-
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').then((reg) => {
-            // بررسی آپدیت هنگام لود
-            reg.update().catch(() => {});
-
-            // اگر از قبل worker در انتظار است
-            if (reg.waiting) {
-                _pendingWorker = reg.waiting;
-                showUpdateBanner();
-            }
-
-            // رویداد آپدیت جدید
             reg.addEventListener('updatefound', () => {
                 const newWorker = reg.installing;
-                if (!newWorker) return;
                 newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        _pendingWorker = newWorker;
-                        showUpdateBanner();
-                    }
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) showUpdateToast(newWorker);
                 });
             });
-        }).catch((e) => {
-            console.warn('Service Worker registration failed:', e);
-        });
-
-        // اگر controller عوض شد (یعنی نسخه جدید فعال شد) → reload
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (refreshing) return;
-            refreshing = true;
-            window.location.reload();
         });
     });
 }
 
-// ==========================================
-// توابع مدیریت بنر آپدیت
-// ==========================================
-function showUpdateBanner() {
-    const banner = document.getElementById('update-banner');
-    if (!banner) return;
-    if (banner.classList.contains('show')) return;
-    banner.classList.add('show');
+function showUpdateToast(newWorker) {
+    const toast = document.createElement('div');
+    toast.className = 'toast-container';
+    toast.innerHTML = `<span>🚀 نسخه جدید!</span><button class="toast-btn" id="update-btn">به‌روزرسانی</button>`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 100);
+    document.getElementById('update-btn').addEventListener('click', () => {
+        if (newWorker) newWorker.postMessage({ action: 'skipWaiting' });
+        setTimeout(() => window.location.reload(), 500);
+    });
 }
 
-function dismissUpdateBanner() {
-    const banner = document.getElementById('update-banner');
-    if (banner) banner.classList.remove('show');
-}
-
-function applyUpdate() {
-    if (_pendingWorker) {
-        _pendingWorker.postMessage({ action: 'skipWaiting' });
-    } else if (navigator.serviceWorker.controller) {
-        // اگر waiting پیدا نشد، شاید آپدیت بین راه اعمال شده باشد
-        window.location.reload();
-    }
-}
+// ==========================================
+// توجه: کدهای مربوط به مدیریت دکمه Back حذف شدند
+// و به فایل جدید back-button.js منتقل شدند.
+// ==========================================
