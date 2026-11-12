@@ -1,5 +1,5 @@
 // ==========================================
-// فایل class.js — منطق تب کلاس (داشبورد) و تنظیمات
+// فایل class.js — منطق تب کلاس (نسخه اصلاح‌شده نهایی)
 // ==========================================
 
 async function saveClassProfile(e) {
@@ -31,31 +31,70 @@ async function saveClassProfile(e) {
 
     if (!classNameEl) return;
 
+    // ذخیره سال تحصیلی انتخاب‌شده در حافظه
+    let selectedYear = window.activeAcademicYear;
+    if (academicYearEl && academicYearEl.value) {
+        selectedYear = academicYearEl.value;
+        window.activeAcademicYear = selectedYear;
+        localStorage.setItem('kosha-active-academic-year', selectedYear);
+    }
+
     const data = {
-        id: 1,
+        id: 1, // همیشه id=1 باشد تا همیشه یک رکورد کلاس داشته باشیم
         name: classNameEl.value,
         symbol: classSymbolEl ? classSymbolEl.value : '',
         motto: classMottoEl ? classMottoEl.value : '',
         grade: classGradeEl ? classGradeEl.value : '',
         teacherName: teacherNameEl ? teacherNameEl.value : '',
         schoolName: schoolNameEl ? schoolNameEl.value : '',
-        academicYear: academicYearEl ? academicYearEl.value : window.activeAcademicYear,
+        academicYear: selectedYear,
         scheduleActiveDays: selectedDays,
         schedulePeriodsCount: periodsCount
     };
     
-    await saveData('classProfile', data);
-    
-    window.scheduleActiveDays = selectedDays;
-    window.schedulePeriodsCount = periodsCount;
+    try {
+        await saveData('classProfile', data);
+        
+        window.scheduleActiveDays = selectedDays;
+        window.schedulePeriodsCount = periodsCount;
 
-    showToast('مشخصات کلاس ذخیره شد!', 'success');
-    const headerSubtitle = document.getElementById('header-subtitle');
-    if (headerSubtitle) headerSubtitle.textContent = data.name;
-    
-    if(typeof closeSettingsModal === 'function') closeSettingsModal();
-    
-    await loadAllData();
+        showToast('مشخصات کلاس ذخیره شد!', 'success');
+        const headerSubtitle = document.getElementById('header-subtitle');
+        if (headerSubtitle) headerSubtitle.textContent = data.name;
+        
+        // پاک کردن وضعیت ذخیره‌نشده
+        if (typeof clearFormDirty === 'function') clearFormDirty();
+        
+        if(typeof closeSettingsModal === 'function') closeSettingsModal();
+        
+        // دوباره پر کردن فرم با داده‌های ذخیره شده (تا از پاک شدن جلوگیری شود)
+        populateCurrentClassProfile(data);
+        
+        await loadAllData();
+    } catch (err) {
+        console.error(err);
+        showToast('خطا در ذخیره مشخصات کلاس.', 'error');
+    }
+}
+
+function populateCurrentClassProfile(classData) {
+    const classNameEl = document.getElementById('className');
+    const classSymbolEl = document.getElementById('classSymbol');
+    const classMottoEl = document.getElementById('classMotto');
+    const classGradeEl = document.getElementById('classGrade');
+    const teacherNameEl = document.getElementById('teacherName');
+    const schoolNameEl = document.getElementById('schoolName');
+    const academicYearEl = document.getElementById('academicYear');
+
+    if (classData) {
+        if (classNameEl) classNameEl.value = classData.name || '';
+        if (classSymbolEl) classSymbolEl.value = classData.symbol || '';
+        if (classMottoEl) classMottoEl.value = classData.motto || '';
+        if (classGradeEl) classGradeEl.value = classData.grade || '';
+        if (teacherNameEl) teacherNameEl.value = classData.teacherName || '';
+        if (schoolNameEl) schoolNameEl.value = classData.schoolName || '';
+        if (academicYearEl && classData.academicYear) academicYearEl.value = classData.academicYear;
+    }
 }
 
 function populateScheduleDaysCheckboxes() {
@@ -105,7 +144,7 @@ function renderDashboardData() {
     renderRecentActivities();
     renderFullClassReport(studentScores);
     
-    // *** کارت جدید گزارش آزمون‌ها ***
+    // *** کارت گزارش آزمون‌ها ***
     renderExamsDashboard();
 }
 
@@ -430,7 +469,6 @@ function renderExamsDashboard() {
     const container = document.getElementById('dashboard-exams-report');
     if (!container) return;
     
-    // بارگذاری داده‌های آزمون اگر قبلاً انجام نشده
     if (!window.allExamsData) window.allExamsData = [];
     if (!window.allExamResultsData) window.allExamResultsData = [];
     
@@ -442,11 +480,9 @@ function renderExamsDashboard() {
         return;
     }
     
-    // آمار کلی
     const totalExams = exams.length;
     const totalResults = results.length;
     
-    // میانگین کل
     let totalScorePercent = 0;
     let validResults = 0;
     results.forEach(r => {
@@ -458,7 +494,6 @@ function renderExamsDashboard() {
     });
     const avgPercent = validResults > 0 ? Math.round(totalScorePercent / validResults) : 0;
     
-    // بهترین دانش‌آموز (بیشترین میانگین درصد)
     const studentPercentMap = {};
     results.forEach(r => {
         const exam = exams.find(e => e.id === r.examId);
@@ -473,10 +508,7 @@ function renderExamsDashboard() {
     let bestAvg = -1;
     for (const sid in studentPercentMap) {
         const avg = studentPercentMap[sid].total / studentPercentMap[sid].count;
-        if (avg > bestAvg) {
-            bestAvg = avg;
-            bestStudentId = parseInt(sid);
-        }
+        if (avg > bestAvg) { bestAvg = avg; bestStudentId = parseInt(sid); }
     }
     
     let bestStudentHtml = '';
@@ -552,7 +584,6 @@ async function exportClassCSV() {
         URL.revokeObjectURL(url);
         showToast('فایل CSV دانلود شد!', 'success');
     } catch (e) {
-        console.error(e);
         showToast('خطا در تولید فایل.', 'error');
     }
 }
@@ -608,7 +639,5 @@ function printClassReport() {
     
     const modal = document.getElementById('report-card-modal');
     if (modal) modal.classList.add('show');
-    setTimeout(() => {
-        window.print();
-    }, 100);
+    setTimeout(() => { window.print(); }, 100);
 }
