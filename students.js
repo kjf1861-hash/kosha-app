@@ -45,7 +45,14 @@ function renderStudentsList() {
     if (!container) return;
     
     if (window.allStudentsData.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:#64748b;">لیست خالی است. ابتدا دانش‌آموز اضافه کنید.</p>';
+        container.innerHTML = `
+            <div class="empty-state">
+                <svg><use href="#empty-students"/></svg>
+                <div class="empty-title">هنوز دانش‌آموزی اضافه نکردی!</div>
+                <div class="empty-desc">اولین دانش‌آموز کلاس رو اضافه کن تا بتونی ارزشیابی رو شروع کنی.</div>
+                <button class="empty-action" onclick="document.getElementById('studentFirstName').focus()">➕ افزودن اولین دانش‌آموز</button>
+            </div>
+        `;
         const pagination = document.getElementById('students-pagination');
         if (pagination) pagination.style.display = 'none';
         return;
@@ -342,7 +349,13 @@ async function loadStudentExamsForDetails(studentId) {
     const studentResults = results.filter(r => r.studentId === studentId);
     
     if (exams.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:#64748b;">هنوز آزمونی تعریف نشده است.</p>';
+        container.innerHTML = `
+            <div class="empty-state">
+                <svg><use href="#empty-exams"/></svg>
+                <div class="empty-title">هنوز آزمونی تعریف نشده!</div>
+                <div class="empty-desc">از تب «آزمون‌ها» اولین آزمون رو بساز تا نمرات اینجا نمایش داده بشه.</div>
+            </div>
+        `;
         return;
     }
     
