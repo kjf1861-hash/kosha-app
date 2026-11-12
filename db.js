@@ -1,10 +1,9 @@
 /**
  * فایل db.js — لایه ارتباط با IndexedDB
- * نسخه سالم ۱۳
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 13;
+const DB_VERSION = 13; // ارتقا به 13 برای اضافه شدن جدول تنظیمات پشتیبان‌گیری
 
 let db;
 
@@ -73,11 +72,14 @@ function initDB() {
             }
             if (!db.objectStoreNames.contains('assessmentItems')) {
                 const itemStore = db.createObjectStore('assessmentItems', { keyPath: 'id' });
-                for (const item of defaultAssessmentItems) itemStore.put(item);
+                for (const item of defaultAssessmentItems) {
+                    itemStore.put(item);
+                }
             }
             if (!db.objectStoreNames.contains('weeklySchedule')) {
                 db.createObjectStore('weeklySchedule', { keyPath: 'day' });
             }
+            
             if (!db.objectStoreNames.contains('exams')) {
                 const examStore = db.createObjectStore('exams', { keyPath: 'id' });
                 examStore.createIndex('subjectId', 'subjectId', { unique: false });
@@ -88,6 +90,8 @@ function initDB() {
                 resultStore.createIndex('examId', 'examId', { unique: false });
                 resultStore.createIndex('studentNationalId', 'studentNationalId', { unique: false });
             }
+            
+            // *** جدول جدید برای تنظیمات پشتیبان‌گیری ***
             if (!db.objectStoreNames.contains('backupSettings')) {
                 db.createObjectStore('backupSettings', { keyPath: 'id' });
             }
@@ -100,10 +104,14 @@ function saveData(storeName, data) {
         const transaction = db.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
         const request = store.put(data);
+        
         request.onsuccess = () => {
             resolve(request.result);
-            if (typeof window.triggerAutoBackup === 'function') window.triggerAutoBackup();
+            if (typeof window.triggerAutoBackup === 'function') {
+                window.triggerAutoBackup();
+            }
         };
+        
         request.onerror = (event) => reject(event.target.error);
     });
 }
@@ -120,7 +128,9 @@ function saveBulkData(storeName, dataArray) {
                 completed++;
                 if (completed === dataArray.length) {
                     resolve();
-                    if (typeof window.triggerAutoBackup === 'function') window.triggerAutoBackup();
+                    if (typeof window.triggerAutoBackup === 'function') {
+                        window.triggerAutoBackup();
+                    }
                 }
             };
             request.onerror = (event) => reject(event.target.error);
@@ -153,10 +163,14 @@ function deleteData(storeName, id) {
         const transaction = db.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
         const request = store.delete(id);
+        
         request.onsuccess = () => {
             resolve();
-            if (typeof window.triggerAutoBackup === 'function') window.triggerAutoBackup();
+            if (typeof window.triggerAutoBackup === 'function') {
+                window.triggerAutoBackup();
+            }
         };
+        
         request.onerror = (event) => reject(event.target.error);
     });
 }
@@ -166,10 +180,14 @@ function clearStore(storeName) {
         const transaction = db.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
         const request = store.clear();
+        
         request.onsuccess = () => {
             resolve();
-            if (typeof window.triggerAutoBackup === 'function') window.triggerAutoBackup();
+            if (typeof window.triggerAutoBackup === 'function') {
+                window.triggerAutoBackup();
+            }
         };
+        
         request.onerror = (event) => reject(event.target.error);
     });
 }
@@ -185,6 +203,7 @@ async function exportAllData() {
 
 async function importAllData(data) {
     if (!data || typeof data !== 'object') throw new Error('داده‌های نامعتبر');
+    
     const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
     const backup = {};
     for (const store of stores) { backup[store] = await getAllData(store); }
@@ -193,28 +212,46 @@ async function importAllData(data) {
         for (const store of stores) {
             if (data[store] && Array.isArray(data[store])) {
                 await clearStore(store);
-                if (data[store].length > 0) await saveBulkData(store, data[store]);
+                if (data[store].length > 0) {
+                    await saveBulkData(store, data[store]);
+                }
             }
         }
     } catch (e) {
         for (const store of stores) {
             await clearStore(store);
-            if (backup[store].length > 0) await saveBulkData(store, backup[store]);
+            if (backup[store].length > 0) {
+                await saveBulkData(store, backup[store]);
+            }
         }
         throw new Error('خطا در بازیابی داده‌ها، تغییرات لغو شد.');
     }
 }
 
+// ==========================================
+// ✅ تابع جدید: دریافت تنظیمات پشتیبان‌گیری با مقادیر پیش‌فرض
+// ==========================================
 async function getBackupSettings() {
     try {
         let settings = await getDataById('backupSettings', 1);
         if (!settings) {
-            settings = { id: 1, reminderType: 'off', lastReminderDate: null, periods: [] };
+            // اگر تنظیمات وجود نداشت، مقادیر پیش‌فرض را ایجاد کن
+            settings = {
+                id: 1,
+                reminderType: 'off', // 'off' | 'daily' | 'weekly' | 'monthly'
+                lastReminderDate: null,
+                periods: [] // آرایه‌ای از بازه‌ها
+            };
             await saveData('backupSettings', settings);
         }
         return settings;
-    } catch (e) { return { id: 1, reminderType: 'off', lastReminderDate: null, periods: [] }; }
+    } catch (e) {
+        console.error('خطا در دریافت تنظیمات پشتیبان‌گیری:', e);
+        return {
+            id: 1,
+            reminderType: 'off',
+            lastReminderDate: null,
+            periods: []
+        };
+    }
 }
-
-async function getClassProfile() { return null; }
-async function getAllDataByYear(storeName, academicYear) { return await getAllData(storeName); }
