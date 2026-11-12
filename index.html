@@ -917,44 +917,17 @@
         </div>
     </div>
 
-    <!-- ===== مودال اجباری انتخاب سال تحصیلی ===== -->
-    <div id="academic-year-modal" class="modal-overlay" style="z-index: 9000;">
-        <div class="modal-content" style="max-width: 450px; text-align: center;">
-            <div class="modal-header" style="color: var(--primary); border-bottom: 2px dashed var(--primary); padding-bottom: 15px;">
-                🎓 انتخاب سال تحصیلی
-            </div>
-            <div style="padding: 20px 0;">
-                <div style="font-size: 3.5rem; margin-bottom: 15px;">📚</div>
-                <p style="font-size: 1rem; line-height: 1.8; margin-bottom: 20px; color: var(--text-main);">
-                    برای شروع کار با اپلیکیشن، لطفاً <strong style="color: var(--primary);">سال تحصیلی</strong> خود را انتخاب کنید.
-                </p>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
-                    تمام اطلاعات شما (دانش‌آموزان، دروس، ارزشیابی‌ها و...) به این سال تحصیلی متصل خواهند شد.
-                </p>
-            </div>
-            
-            <div class="form-group" style="text-align: right;">
-                <label class="form-label" for="academicYearSelect">سال تحصیلی:</label>
-                <select id="academicYearSelect" class="form-control" style="font-size: 1.1rem; text-align: center; font-weight: bold; padding: 12px;">
-                    <option value="" disabled selected>لطفاً انتخاب کنید...</option>
-                    <option value="1405-1406">۱۴۰۶-۱۴۰۵</option>
-                    <option value="1406-1407">۱۴۰۷-۱۴۰۶</option>
-                    <option value="1407-1408">۱۴۰۸-۱۴۰۷</option>
-                    <option value="1408-1409">۱۴۰۹-۱۴۰۸</option>
-                    <option value="1409-1410">۱۴۱۰-۱۴۰۹</option>
-                </select>
-            </div>
-            
-            <div class="modal-footer" style="margin-top: 20px; flex-direction: column;">
-                <button type="button" class="btn btn-primary btn-block" onclick="confirmAcademicYearSelection()" style="padding: 14px; font-size: 1.05rem;">
-                    ✅ تأیید و شروع کار
-                </button>
-                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 12px; text-align: center;">
-                    ⚠️ توجه: با انتخاب سال تحصیلی، تمام اطلاعات قبلی (در صورت وجود) پاک خواهند شد.
-                </p>
-            </div>
-        </div>
-    </div>
+<div class="form-group">
+    <label class="form-label" for="academicYear">سال تحصیلی</label>
+    <select id="academicYear" class="form-control" required>
+        <option value="" disabled selected>سال تحصیلی را انتخاب کنید...</option>
+        <option value="1405-1406">۱۴۰۶-۱۴۰۵</option>
+        <option value="1406-1407">۱۴۰۷-۱۴۰۶</option>
+        <option value="1407-1408">۱۴۰۸-۱۴۰۷</option>
+        <option value="1408-1409">۱۴۰۹-۱۴۰۸</option>
+        <option value="1409-1410">۱۴۱۰-۱۴۰۹</option>
+    </select>
+</div>
 
     <!-- ===== اسکریپت‌ها ===== -->
     <script src="jalali-utils.js?v=1"></script>
