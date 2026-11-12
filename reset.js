@@ -3,15 +3,66 @@
 // ==========================================
 
 async function resetYearlyRecords() {
-    const isConfirmed = confirm('⚠️ هشدار مهم:\n\nبا این کار تمام سوابق ارزشیابی، حضور و غیاب‌ها، جلسات و تشویق‌ها پاک می‌شوند.\nاما اطلاعات کلاس، دانش‌آموزان، دروس و گروه‌ها حفظ می‌شوند.\n\nآیا مطمئن هستید؟');
+    const currentYear = window.activeAcademicYear || '1405-1406';
+    
+    const isConfirmed = confirm(
+        '⚠️ هشدار بسیار مهم:\n\n' +
+        'شما در حال پاک کردن سوابق سال تحصیلی «' + toPersianNumber(currentYear) + '» هستید.\n\n' +
+        'با این کار:\n' +
+        '❌ تمام سوابق ارزشیابی این سال پاک می‌شوند.\n' +
+        '❌ تمام جلسات و حضور و غیاب‌های این سال پاک می‌شوند.\n' +
+        '❌ تمام تشویق‌های این سال پاک می‌شوند.\n\n' +
+        'اما موارد زیر حفظ می‌شوند:\n' +
+        '✅ مشخصات کلاس\n' +
+        '✅ لیست دانش‌آموزان\n' +
+        '✅ لیست دروس و گروه‌ها\n\n' +
+        'آیا مطمئن هستید؟'
+    );
     
     if (!isConfirmed) return;
 
+    const doubleConfirm = confirm(
+        '🚨 آخرین هشدار!\n\n' +
+        'این عمل غیرقابل بازگشت است. آیا ۱۰۰٪ مطمئن هستید؟\n\n' +
+        '(پیشنهاد: قبل از ادامه، از تنظیمات یک نسخه پشتیبان دستی بگیرید.)'
+    );
+    
+    if (!doubleConfirm) return;
+
     try {
-        await clearStore('records');
-        await clearStore('attendance');
-        await clearStore('sessions');
-        await clearStore('badgesSettings');
+        // ==========================================
+        // ✅ تغییر اصلی: پاک کردن فقط رکوردهای مربوط به سال تحصیلی جاری
+        // (نه کل جدول، تا در آینده که چند ساله شد، به سال‌های دیگر آسیب نزند)
+        // ==========================================
+        
+        // ۱. حذف سوابق ارزشیابی سال تحصیلی جاری
+        const allRecords = await getAllData('records');
+        const currentYearRecords = allRecords.filter(r => r.academicYear === currentYear);
+        for (const rec of currentYearRecords) {
+            await deleteData('records', rec.id);
+        }
+        
+        // ۲. حذف جلسات سال تحصیلی جاری
+        const allSessions = await getAllData('sessions');
+        const currentYearSessions = allSessions.filter(s => s.academicYear === currentYear);
+        for (const sess of currentYearSessions) {
+            await deleteData('sessions', sess.id);
+        }
+        
+        // ۳. حذف حضور و غیاب‌های مربوط به این جلسات
+        const allAttendance = await getAllData('attendance');
+        const currentYearSessionIds = currentYearSessions.map(s => s.id);
+        const currentYearAttendance = allAttendance.filter(a => currentYearSessionIds.includes(a.sessionId));
+        for (const att of currentYearAttendance) {
+            await deleteData('attendance', att.id);
+        }
+        
+        // ۴. حذف تشویق‌های سال تحصیلی جاری
+        const allBadges = await getAllData('badgesSettings');
+        const currentYearBadges = allBadges.filter(b => b.academicYear === currentYear);
+        for (const badge of currentYearBadges) {
+            await deleteData('badgesSettings', badge.id);
+        }
         
         // پاک کردن وضعیت تقویم‌ها تا به حالت اولیه برگردند
         localStorage.removeItem('kosha-session-cal');
@@ -20,11 +71,16 @@ async function resetYearlyRecords() {
         localStorage.removeItem('kosha-score-cal-special');
         localStorage.removeItem('kosha-score-cal-handwriting');
         
-        showToast('سوابق با موفقیت پاک شد. سال تحصیلی جدید آغاز شد!', 'success');
+        showToast(
+            `سوابق سال تحصیلی ${toPersianNumber(currentYear)} پاک شد. ` +
+            `(دانش‌آموزان، دروس و مشخصات کلاس حفظ شدند.)`, 
+            'success'
+        );
+        
         loadAllData();
     } catch (e) {
         console.error(e);
-        showToast('خطا در پاک کردن سوابق!', 'error');
+        showToast('خطا در پاک کردن سوابق! لطفاً از پشتیبان خود بازیابی کنید.', 'error');
     }
 }
 
@@ -72,13 +128,14 @@ async function resetSpecificRecords() {
     if (!confirm(confirmMsg)) return;
 
     try {
+        const currentYear = window.activeAcademicYear || '1405-1406';
         const allRecords = await getAllData('records');
         let recordsToDelete = [];
         
         if (type === 'subject') {
-            recordsToDelete = allRecords.filter(r => r.subjectId === parseInt(target));
+            recordsToDelete = allRecords.filter(r => r.subjectId === parseInt(target) && r.academicYear === currentYear);
         } else if (type === 'item') {
-            recordsToDelete = allRecords.filter(r => r.itemName === target);
+            recordsToDelete = allRecords.filter(r => r.itemName === target && r.academicYear === currentYear);
         }
         
         for (const rec of recordsToDelete) {
@@ -101,7 +158,7 @@ async function resetFactoryAll() {
     if (!confirm2) return;
 
     try {
-        const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults'];
+        const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
         for (const store of stores) {
             await clearStore(store);
         }
