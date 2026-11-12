@@ -77,15 +77,21 @@ const quranSurahs = {
     "مطففین": 36, "انفطار": 19, "تکویر": 29, "عبس": 42, "نازعات": 46, "نبأ": 40
 };
 
+// *** تابع بهبودیافته Toast با آیکون‌های SVG ***
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast-container');
     if (existingToast) existingToast.remove();
+
+    const iconMap = {
+        success: '<svg viewBox="0 0 24 24"><use href="#ico-check"/></svg>',
+        error: '<svg viewBox="0 0 24 24"><use href="#ico-x"/></svg>',
+        info: '<svg viewBox="0 0 24 24"><use href="#ico-info"/></svg>'
+    };
+    const iconSvg = iconMap[type] || iconMap.info;
+
     const toast = document.createElement('div');
     toast.className = `custom-toast-container custom-toast-${type}`;
-    let icon = 'ℹ️';
-    if (type === 'success') icon = '✅';
-    else if (type === 'error') icon = '❌';
-    toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+    toast.innerHTML = `${iconSvg}<span>${message}</span>`;
     document.body.appendChild(toast);
     setTimeout(() => toast.classList.add('show'), 100);
     setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
