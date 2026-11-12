@@ -1,6 +1,6 @@
 // ==========================================
-// فایل back-button.js — مدیریت دکمه بازگشت (Back) در PWA
-// نسخه v5 — اصلاح منطق هشدار و خروج
+// فایل back-button.js — مدیریت دکمه بازگشت و هشدار خروج در PWA
+// نسخه v6 — هماهنگ با سیستم هشدار تغییرات ذخیره‌نشده (app.js)
 // ==========================================
 
 (function() {
@@ -17,6 +17,7 @@
     let backPressCount = 0;
     let backPressTimer = null;
     let isInitialized = false;
+    let hasGuardState = false;
     
     function getOpenModal() {
         for (let i = 0; i < MODAL_IDS.length; i++) {
@@ -98,15 +99,25 @@
         } catch (e) { console.warn('render error:', e); }
     }
     
-    function pushGuard() {
-        try {
-            window.history.pushState(
-                { koshaGuard: true, page: getActivePageId(), ts: Date.now() },
-                '',
-                window.location.href
-            );
-        } catch (e) { console.warn('pushState failed:', e); }
+    // یک بار pushState برای قرار دادن یک گارد در تاریخچه (بدون تکرار)
+    function ensureGuardState() {
+        if (!hasGuardState) {
+            try {
+                window.history.pushState(
+                    { koshaGuard: true, ts: Date.now() },
+                    '',
+                    window.location.href
+                );
+                hasGuardState = true;
+            } catch (e) { console.warn('pushState failed:', e); }
+        }
     }
+    
+    // برای فراخوانی از بیرون (وقتی تب عوض می‌شود)
+    window.resetBackGuard = function() {
+        hasGuardState = false;
+        ensureGuardState();
+    };
     
     function initBackButtonHandler() {
         if (isInitialized) return;
@@ -114,44 +125,66 @@
         
         try {
             window.history.replaceState(
-                { koshaGuard: true, page: 'page-class', ts: Date.now() },
+                { koshaGuard: true, ts: Date.now() },
                 '',
                 window.location.href
             );
         } catch (e) { console.warn('replaceState failed:', e); }
         
-        pushGuard();
+        ensureGuardState();
         
         console.log('✅ Back handler initialized.');
         
         window.addEventListener('popstate', function(event) {
-            console.log('🔙 popstate fired.');
             handleBackAction();
         });
     }
     
     function handleBackAction() {
-        // ۱. بررسی مودال باز
+        // مرحله ۱: اگر مودال باز است، ببند
         const openModal = getOpenModal();
         if (openModal) {
             closeModal(openModal);
-            pushGuard();
+            ensureGuardState();
             backPressCount = 0;
             if (backPressTimer) { clearTimeout(backPressTimer); backPressTimer = null; }
             return;
         }
         
-        // ۲. بررسی تب فعال
+        // مرحله ۲: اگر فرم دارای تغییرات ذخیره‌نشده است
+        if (window.isFormDirty) {
+            // از تابع هشدار در app.js استفاده می‌کنیم
+            if (typeof window.requestExit === 'function') {
+                window.requestExit(function() {
+                    // کاربر «خروج» را زد، به تب کلاس برو
+                    if (getActivePageId() !== 'page-class') {
+                        goToPage('page-class');
+                    }
+                    ensureGuardState();
+                });
+            } else {
+                // در صورت خطا، مستقیم برو
+                if (getActivePageId() !== 'page-class') {
+                    goToPage('page-class');
+                }
+            }
+            ensureGuardState();
+            backPressCount = 0;
+            if (backPressTimer) { clearTimeout(backPressTimer); backPressTimer = null; }
+            return;
+        }
+        
+        // مرحله ۳: بررسی تب فعال (اگر در تب دیگری غیر از کلاس هستیم)
         const activePage = getActivePageId();
         if (activePage && activePage !== 'page-class') {
             goToPage('page-class');
-            pushGuard();
+            ensureGuardState();
             backPressCount = 0;
             if (backPressTimer) { clearTimeout(backPressTimer); backPressTimer = null; }
             return;
         }
         
-        // ۳. در تب کلاس هستیم (مدیریت خروج)
+        // مرحله ۴: در تب کلاس هستیم (مدیریت خروج)
         backPressCount++;
         
         if (backPressCount === 1) {
@@ -159,8 +192,7 @@
             if (typeof showToast === 'function') {
                 showToast('برای خروج از برنامه، دوباره دکمه بازگشت را بزنید.', 'info');
             }
-            // ثبت گام جدید تا کاربر در اپ بماند
-            pushGuard();
+            ensureGuardState();
             
             if (backPressTimer) clearTimeout(backPressTimer);
             backPressTimer = setTimeout(function() {
@@ -172,11 +204,24 @@
             backPressCount = 0;
             if (backPressTimer) { clearTimeout(backPressTimer); backPressTimer = null; }
             
-            // چون دو بار pushState زدیم، باید دو گام به عقب برویم
-            try {
-                window.history.go(-2);
-            } catch (e) {
-                window.history.back();
+            // تلاش برای خروج در PWA
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+                // در حالت PWA نصب‌شده
+                try {
+                    window.close();
+                } catch (e) {
+                    // اگر مرورگر اجازه نداد
+                    if (typeof showToast === 'function') {
+                        showToast('برای خروج، برنامه را از گوشی ببندید.', 'info');
+                    }
+                }
+            } else {
+                // در حالت مرورگر معمولی
+                try {
+                    window.history.go(-2);
+                } catch (e) {
+                    window.history.back();
+                }
             }
         }
     }
