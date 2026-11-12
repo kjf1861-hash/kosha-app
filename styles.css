@@ -8,9 +8,11 @@ body, button, input, select, textarea, .form-control, .btn, .nav-item, .list-ite
 }
 
 /* =========================================
-   متغیرهای اصلی (حالت روشن)
+   متغیرهای اصلی (حالت روشن) + color-scheme
    ========================================= */
 :root {
+    color-scheme: light;
+    
     --primary: #4A90E2;
     --primary-dark: #357ABD;
     --primary-light: #eef2ff;
@@ -37,9 +39,11 @@ body, button, input, select, textarea, .form-control, .btn, .nav-item, .list-ite
 }
 
 /* =========================================
-   متغیرهای حالت شب (Dark Mode)
+   متغیرهای حالت شب (Dark Mode) - بهبودیافته
    ========================================= */
 [data-theme="dark"] {
+    color-scheme: dark;
+    
     --primary: #5AA1F5;
     --primary-dark: #3B7FD1;
     --primary-light: rgba(90, 161, 245, 0.16);
@@ -58,8 +62,9 @@ body, button, input, select, textarea, .form-control, .btn, .nav-item, .list-ite
     --arf-bg: rgba(245, 158, 11, 0.15);
     --arf-border: #f59e0b;
     
-    --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.30);
-    --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.45);
+    /* سایه‌های بهبودیافته برای حالت شب (روشن‌تر + رنگی) */
+    --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.40), 0 0 1px rgba(90, 161, 245, 0.10);
+    --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 1px rgba(90, 161, 245, 0.15);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -98,6 +103,10 @@ h1, h2, h3, h4, p { margin-top: 0; }
     margin-bottom: 20px;
     position: relative;
     overflow: hidden;
+}
+
+[data-theme="dark"] .app-header {
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.50);
 }
 
 .app-header::before {
@@ -353,6 +362,7 @@ select.form-control {
 .btn-secondary:hover { opacity: 0.8; }
 .btn-danger { background: rgba(254, 226, 226, 0.8); color: #dc2626; }
 [data-theme="dark"] .btn-danger { background: rgba(220, 38, 38, 0.2); color: #f87171; }
+[data-theme="dark"] .btn-primary { box-shadow: 0 4px 12px rgba(90, 161, 245, 0.35); }
 .btn-block { width: 100%; }
 .btn-sm { padding: 6px 12px; font-size: 0.85rem; border-radius: 8px; }
 .mt-4 { margin-top: 12px; }
@@ -378,6 +388,10 @@ select.form-control {
     z-index: 100;
     border-top: 1px solid var(--border-color);
     transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+[data-theme="dark"] .bottom-nav {
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.40);
 }
 
 .nav-item {
@@ -479,7 +493,7 @@ select.form-control {
 }
 
 /* =========================================
-   Toast
+   Toast (با بهبود رنگ‌ها برای حالت شب)
    ========================================= */
 .custom-toast-container {
     position: fixed;
@@ -503,6 +517,13 @@ select.form-control {
     direction: rtl;
     max-width: 88vw;
 }
+
+[data-theme="dark"] .custom-toast-container {
+    background: #E9EFFA;
+    color: #0B1220;
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55);
+}
+
 .custom-toast-container.show {
     opacity: 1;
     visibility: visible;
@@ -522,12 +543,8 @@ select.form-control {
 .custom-toast-error svg { color: #ef4444; }
 .custom-toast-info { border-right: 4px solid #3b82f6; }
 .custom-toast-info svg { color: #3b82f6; }
-
 /* =========================================
-   سایر استایل‌ها (ادامه در بخش ۲)
-   ========================================= */
-/* =========================================
-   لیست‌ها
+   لیست‌ها (بهبود حالت شب)
    ========================================= */
 .list-group { display: flex; flex-direction: column; gap: 10px; }
 .list-item {
@@ -549,14 +566,16 @@ select.form-control {
     display: inline-block;
     margin-right: 8px;
 }
-[data-theme="dark"] .group-label { background: var(--input-bg); color: var(--primary); }
+[data-theme="dark"] .group-label { background: rgba(90, 161, 245, 0.20); color: #7EB3F7; }
 
 .arf-badge { background-color: var(--arf-bg); border-right: 4px solid var(--arf-border); padding: 8px 12px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--arf-border); margin-top: 8px; }
 .rank-badge { display: inline-flex; align-items: center; background: var(--primary-light); color: var(--text-main); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; white-space: nowrap; }
+[data-theme="dark"] .rank-badge { background: rgba(90, 161, 245, 0.20); color: #E9EFFA; }
 .top-student-row { background: linear-gradient(90deg, var(--arf-bg) 0%, rgba(245, 158, 11, 0.3) 100%) !important; border-right: 4px solid var(--arf-border) !important; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15); }
+[data-theme="dark"] .top-student-row { background: linear-gradient(90deg, rgba(245, 158, 11, 0.20) 0%, rgba(245, 158, 11, 0.05) 100%) !important; border-right: 4px solid var(--arf-border) !important; }
 
 /* =========================================
-   مودال‌ها
+   مودال‌ها (بهبود حالت شب)
    ========================================= */
 .modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -564,6 +583,7 @@ select.form-control {
     display: flex; justify-content: center; align-items: center;
     z-index: 2000; opacity: 0; visibility: hidden; transition: all 0.3s ease;
 }
+[data-theme="dark"] .modal-overlay { background: rgba(0, 0, 0, 0.75); }
 .modal-overlay.show { opacity: 1; visibility: visible; }
 .modal-content {
     background: var(--card-bg); width: 90%; max-width: 420px;
@@ -571,12 +591,17 @@ select.form-control {
     box-shadow: var(--shadow-md); transform: scale(0.9) translateY(20px);
     transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
     max-height: 90vh; overflow-y: auto;
+    border: 1px solid var(--border-color);
+}
+[data-theme="dark"] .modal-content {
+    border: 1px solid rgba(90, 161, 245, 0.20);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.70);
 }
 .modal-overlay.show .modal-content { transform: scale(1) translateY(0); }
 .modal-header {
     font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;
     text-align: center; color: var(--primary);
-    padding-bottom: 12px; border-bottom: 2px dashed var(--primary-light);
+    padding-bottom: 12px; border-bottom: 2px dashed var(--border-color);
 }
 .modal-footer { display: flex; gap: 10px; margin-top: 24px; }
 
@@ -585,17 +610,18 @@ select.form-control {
 .preview-row strong { color: var(--primary); }
 
 /* =========================================
-   Student Checkbox
+   Student Checkbox (بهبود حالت شب)
    ========================================= */
 .student-checkbox-list { max-height: 300px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px; background: var(--input-bg); }
 .student-checkbox-item { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid var(--border-color); cursor: pointer; border-radius: 6px; transition: background 0.15s; }
 .student-checkbox-item:hover { background: var(--primary-light); }
+[data-theme="dark"] .student-checkbox-item:hover { background: rgba(90, 161, 245, 0.15); }
 .student-checkbox-item:last-child { border-bottom: none; }
 .student-checkbox-item input { accent-color: var(--primary); width: 18px; height: 18px; }
 .student-checkbox-item-content { display: flex; justify-content: space-between; align-items: center; width: 100%; }
 
 /* =========================================
-   Group Accordion
+   Group Accordion (بهبود حالت شب)
    ========================================= */
 details.group-accordion { margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--card-bg); overflow: hidden; }
 details.group-accordion summary { padding: 12px; background: var(--input-bg); font-weight: 700; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; }
@@ -606,7 +632,7 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .group-students-container { padding: 10px; border-top: 1px solid var(--border-color); }
 
 /* =========================================
-   Attendance
+   Attendance (بهبود حالت شب)
    ========================================= */
 .attendance-list-container { display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding: 5px; }
 .attendance-student-row { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); }
@@ -617,30 +643,31 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .att-btn.present.active { background: rgba(34, 197, 94, 0.2); color: #15803d; border-color: #22c55e; }
 .att-btn.absent.active { background: rgba(239, 68, 68, 0.2); color: #b91c1c; border-color: #ef4444; }
 .att-btn.late.active { background: rgba(245, 158, 11, 0.2); color: #b45309; border-color: #f59e0b; }
-[data-theme="dark"] .att-btn.present.active { color: #4ade80; }
-[data-theme="dark"] .att-btn.absent.active { color: #f87171; }
-[data-theme="dark"] .att-btn.late.active { color: #fbbf24; }
+[data-theme="dark"] .att-btn.present.active { background: rgba(34, 197, 94, 0.25); color: #4ade80; border-color: #22c55e; }
+[data-theme="dark"] .att-btn.absent.active { background: rgba(239, 68, 68, 0.25); color: #f87171; border-color: #ef4444; }
+[data-theme="dark"] .att-btn.late.active { background: rgba(245, 158, 11, 0.25); color: #fbbf24; border-color: #f59e0b; }
 
 .att-report-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: 700; margin: 2px; }
 .att-report-badge.present { background: rgba(34, 197, 94, 0.2); color: #15803d; }
 .att-report-badge.absent { background: rgba(239, 68, 68, 0.2); color: #b91c1c; }
 .att-report-badge.late { background: rgba(245, 158, 11, 0.2); color: #b45309; }
-[data-theme="dark"] .att-report-badge.present { color: #4ade80; }
-[data-theme="dark"] .att-report-badge.absent { color: #f87171; }
-[data-theme="dark"] .att-report-badge.late { color: #fbbf24; }
+[data-theme="dark"] .att-report-badge.present { background: rgba(34, 197, 94, 0.25); color: #4ade80; }
+[data-theme="dark"] .att-report-badge.absent { background: rgba(239, 68, 68, 0.25); color: #f87171; }
+[data-theme="dark"] .att-report-badge.late { background: rgba(245, 158, 11, 0.25); color: #fbbf24; }
 
 /* =========================================
-   Records
+   Records (بهبود حالت شب)
    ========================================= */
 .record-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px 15px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
 .record-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
 .record-title { color: var(--primary); font-size: 1.05rem; }
 .record-score { background: var(--primary-light); color: var(--text-main); padding: 4px 10px; border-radius: 20px; font-size: 0.9rem; }
+[data-theme="dark"] .record-score { background: rgba(90, 161, 245, 0.20); color: #E9EFFA; }
 .record-details { font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
 .record-actions { display: flex; gap: 8px; margin-top: 5px; justify-content: flex-end; }
 
 /* =========================================
-   Report Card
+   Report Card (بهبود حالت شب)
    ========================================= */
 .report-card-modal { max-width: 600px; width: 95%; padding: 30px; background: var(--card-bg); }
 .rc-header { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 15px; margin-bottom: 20px; }
@@ -662,16 +689,19 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .rc-subject-row:last-child { border-bottom: none; }
 
 /* =========================================
-   Progress Bars
+   Progress Bars (بهبود حالت شب)
    ========================================= */
 .score-bar-container { width: 100%; height: 10px; background-color: var(--border-color); border-radius: 5px; margin-top: 8px; overflow: hidden; direction: ltr; }
+[data-theme="dark"] .score-bar-container { background-color: rgba(255, 255, 255, 0.08); }
 .score-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 5px; transition: width 0.8s ease-out; }
 .score-bar-fill.is-first { background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%); }
 
 .progress-bar-container { width: 100%; height: 10px; background-color: var(--border-color); border-radius: 5px; overflow: hidden; margin-top: 5px; direction: ltr; }
+[data-theme="dark"] .progress-bar-container { background-color: rgba(255, 255, 255, 0.08); }
 .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 5px; transition: width 0.8s ease-out; }
 
 .att-stacked-bar-container { width: 100%; height: 25px; background-color: var(--border-color); border-radius: 8px; display: flex; overflow: hidden; margin-bottom: 15px; direction: ltr; }
+[data-theme="dark"] .att-stacked-bar-container { background-color: rgba(255, 255, 255, 0.08); }
 .att-stacked-segment { height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: 700; transition: width 0.8s ease-out; }
 .att-stacked-segment.present { background-color: #22c55e; }
 .att-stacked-segment.absent { background-color: #ef4444; }
@@ -700,15 +730,16 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 }
 
 /* =========================================
-   Pagination
+   Pagination (بهبود حالت شب)
    ========================================= */
 .pagination-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; margin-bottom: 20px; }
 .pagination-btn { padding: 8px 15px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; transition: all 0.2s; }
 .pagination-btn:disabled { background: var(--border-color); cursor: not-allowed; color: var(--text-muted); }
+[data-theme="dark"] .pagination-btn:disabled { background: rgba(255, 255, 255, 0.08); }
 .pagination-info { font-size: 0.9rem; font-weight: 700; color: var(--text-main); }
 
 /* =========================================
-   Item Management
+   Item Management (بهبود حالت شب)
    ========================================= */
 .item-management-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color); }
 .item-management-row:last-child { border-bottom: none; }
@@ -718,20 +749,20 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .medal-badge { font-size: 1.2rem; margin-left: 5px; vertical-align: middle; }
 
 /* =========================================
-   Details List
+   Details List (بهبود حالت شب)
    ========================================= */
 .details-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px dashed var(--border-color); }
 .details-list-item:last-child { border-bottom: none; }
 .details-list-item .rank { font-weight: 700; color: var(--primary); min-width: 30px; }
 
 /* =========================================
-   Session Period
+   Session Period (بهبود حالت شب)
    ========================================= */
 .session-period-section { background: var(--input-bg); border-radius: var(--radius-sm); padding: 15px; margin-bottom: 15px; border: 1px solid var(--border-color); }
-.session-period-title { font-weight: 700; color: var(--primary-dark); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
+.session-period-title { font-weight: 700; color: var(--primary); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
 
 /* =========================================
-   Jalali Calendar
+   Jalali Calendar (بهبود حالت شب)
    ========================================= */
 .jalali-calendar-wrapper { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 15px; box-shadow: var(--shadow-sm); direction: rtl; margin-top: 10px; }
 .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color); }
@@ -744,18 +775,24 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: 700; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid var(--border-color); }
 .calendar-weekdays span { display: flex; justify-content: center; align-items: center; height: 30px; }
 .calendar-weekdays span.friday { color: #ef4444; }
+[data-theme="dark"] .calendar-weekdays span.friday { color: #f87171; }
 
 .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
 .calendar-day { display: flex; justify-content: center; align-items: center; height: 40px; border-radius: var(--radius-sm); background: var(--input-bg); border: 1px solid transparent; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; user-select: none; position: relative; }
 .calendar-day:hover { background: var(--primary-light); }
+[data-theme="dark"] .calendar-day:hover { background: rgba(90, 161, 245, 0.15); }
 .calendar-day.empty { background: transparent; cursor: default; border: none; pointer-events: none; }
 .calendar-day.today { border-color: var(--primary); }
 .calendar-day.friday, .calendar-day.holiday { color: #ef4444; }
+[data-theme="dark"] .calendar-day.friday, [data-theme="dark"] .calendar-day.holiday { color: #f87171; }
 .calendar-day.has-session { color: #16a34a; border: 1px dashed #16a34a; }
+[data-theme="dark"] .calendar-day.has-session { color: #4ade80; border-color: #4ade80; }
 .calendar-day.selected { background: var(--primary); color: white !important; border: 1px solid var(--primary); box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4); transform: scale(1.05); }
+[data-theme="dark"] .calendar-day.selected { box-shadow: 0 4px 12px rgba(90, 161, 245, 0.50); }
 .calendar-day.selected.has-session { border: 1px solid white; }
 
 .selected-date-display { text-align: center; margin-top: 15px; font-weight: 700; color: var(--primary); font-size: 1.1rem; padding: 10px; background: var(--primary-light); border-radius: var(--radius-sm); }
+[data-theme="dark"] .selected-date-display { background: rgba(90, 161, 245, 0.20); }
 
 .score-calendar-accordion { border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--input-bg); margin-bottom: 10px; overflow: hidden; }
 .score-calendar-accordion summary { padding: 12px 15px; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; list-style: none; color: var(--text-main); background: var(--card-bg); }
@@ -770,16 +807,17 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .score-calendar-body .calendar-grid { margin-bottom: 10px; }
 
 .calendar-day.has-record { color: #16a34a; border: 1px solid #16a34a; background: rgba(22, 163, 74, 0.05); }
-[data-theme="dark"] .calendar-day.has-record { color: #4ade80; border-color: #4ade80; background: rgba(74, 222, 128, 0.1); }
+[data-theme="dark"] .calendar-day.has-record { color: #4ade80; border-color: #4ade80; background: rgba(74, 222, 128, 0.10); }
 
 .score-day-archive { padding: 12px 15px; background: var(--primary-light); border-top: 1px dashed var(--border-color); font-size: 0.85rem; }
-.score-day-archive h4 { margin: 0 0 8px 0; color: var(--primary-dark); font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
+[data-theme="dark"] .score-day-archive { background: rgba(90, 161, 245, 0.10); }
+.score-day-archive h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
 .score-archive-item { padding: 6px 0; border-bottom: 1px dotted var(--border-color); display: flex; justify-content: space-between; align-items: center; color: var(--text-main); }
 .score-archive-item:last-child { border-bottom: none; }
 .score-archive-item strong { color: var(--primary); font-weight: 700; }
 
 /* =========================================
-   Exam Editor
+   Exam Editor (بهبود حالت شب)
    ========================================= */
 #exam-editor-modal .modal-content { max-width: 700px; width: 95%; }
 #exam-editor-modal fieldset { border: 2px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; margin-bottom: 20px; background: var(--card-bg); transition: border-color 0.3s; }
@@ -791,8 +829,11 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .exam-question-item:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
 .exam-question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color); }
 .exam-question-number { font-weight: 700; color: var(--primary); background: var(--primary-light); padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; }
+[data-theme="dark"] .exam-question-number { background: rgba(90, 161, 245, 0.20); }
 .exam-question-delete-btn { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
 .exam-question-delete-btn:hover { background: rgba(239, 68, 68, 0.2); transform: scale(1.1); }
+[data-theme="dark"] .exam-question-delete-btn { background: rgba(239, 68, 68, 0.20); color: #f87171; }
+[data-theme="dark"] .exam-question-delete-btn:hover { background: rgba(239, 68, 68, 0.30); }
 .exam-question-body { display: flex; flex-direction: column; gap: 12px; }
 .exam-question-field { display: flex; flex-direction: column; gap: 5px; }
 .exam-question-field label { font-size: 0.85rem; color: var(--text-muted); font-weight: 700; }
@@ -807,12 +848,13 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .exam-option-row .exam-option-delete:hover { transform: scale(1.2); }
 .exam-add-option-btn { background: transparent; border: 1px dashed var(--primary); color: var(--primary); padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-family: inherit; transition: all 0.2s; margin-top: 5px; }
 .exam-add-option-btn:hover { background: var(--primary-light); }
+[data-theme="dark"] .exam-add-option-btn:hover { background: rgba(90, 161, 245, 0.15); }
 .exam-question-score-row { display: flex; gap: 10px; align-items: center; }
 .exam-question-score-row label { font-size: 0.85rem; color: var(--text-muted); font-weight: 700; white-space: nowrap; }
 .exam-question-score-row input { flex: 1; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--card-bg); color: var(--text-main); font-family: inherit; font-size: 0.9rem; }
 
 /* =========================================
-   Exam List
+   Exam List (بهبود حالت شب)
    ========================================= */
 .exam-list-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 15px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; transition: all 0.2s; }
 .exam-list-item:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
@@ -824,49 +866,174 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 #exam-grading-modal .modal-content { max-width: 700px; width: 95%; }
 .exam-grading-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); margin-bottom: 8px; transition: all 0.2s; }
 .exam-grading-row:hover { border-color: var(--primary); background: var(--input-bg); }
+[data-theme="dark"] .exam-grading-row:hover { background: rgba(90, 161, 245, 0.08); }
 .exam-grading-student-info { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
 .exam-grading-student-rank { font-weight: 700; color: var(--text-muted); min-width: 25px; text-align: center; font-size: 0.9rem; }
 .exam-grading-student-name { font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.exam-grading-student-group { font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; background: var(--primary-light); color: var(--primary-dark); white-space: nowrap; }
+.exam-grading-student-group { font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; background: var(--primary-light); color: var(--primary); white-space: nowrap; }
+[data-theme="dark"] .exam-grading-student-group { background: rgba(90, 161, 245, 0.20); color: #7EB3F7; }
 .exam-grading-score-wrapper { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
 .exam-grading-score-input { width: 80px; padding: 8px 10px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-main); font-family: inherit; font-size: 0.95rem; font-weight: 700; text-align: center; outline: none; transition: all 0.2s; }
-.exam-grading-score-input:focus { border-color: var(--primary); background: var(--input-focus-bg); box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15); }
+.exam-grading-score-input:focus { border-color: var(--primary); background: var(--input-focus-bg); box-shadow: 0 0 0 3px var(--primary-soft); }
 .exam-grading-score-input.has-value { border-color: #22c55e; background: rgba(34, 197, 94, 0.05); }
+[data-theme="dark"] .exam-grading-score-input.has-value { background: rgba(34, 197, 94, 0.10); }
 .exam-grading-score-input.invalid { border-color: #ef4444; background: rgba(239, 68, 68, 0.05); animation: shake 0.3s ease-in-out; }
+[data-theme="dark"] .exam-grading-score-input.invalid { background: rgba(239, 68, 68, 0.10); }
 .exam-grading-score-max { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
 #exam-grading-stats { display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 10px; }
 #exam-grading-stats span { display: inline-flex; align-items: center; gap: 5px; }
 #exam-grading-stats strong { color: var(--primary); font-size: 1.05rem; }
-[data-theme="dark"] .exam-grading-score-input.has-value { background: rgba(34, 197, 94, 0.1); }
-[data-theme="dark"] .exam-grading-score-input.invalid { background: rgba(239, 68, 68, 0.1); }
 .exam-grading-empty { text-align: center; padding: 30px 15px; color: var(--text-muted); font-size: 0.95rem; }
 
 /* =========================================
-   Full Calendar
+   Full Calendar (بهبود حالت شب)
    ========================================= */
 .full-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
 .full-calendar-day { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 45px; border-radius: var(--radius-sm); background: var(--input-bg); border: 1px solid transparent; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; user-select: none; position: relative; color: var(--text-main); }
 .full-calendar-day:hover { background: var(--primary-light); transform: scale(1.05); }
+[data-theme="dark"] .full-calendar-day:hover { background: rgba(90, 161, 245, 0.15); }
 .full-calendar-day.empty { background: transparent; cursor: default; border: none; pointer-events: none; }
 .full-calendar-day.friday { color: #ef4444; }
+[data-theme="dark"] .full-calendar-day.friday { color: #f87171; }
 .full-calendar-day.has-event { border: 1px dashed var(--primary); background: rgba(74, 144, 226, 0.05); }
+[data-theme="dark"] .full-calendar-day.has-event { background: rgba(90, 161, 245, 0.15); }
 .full-calendar-day.selected { background: var(--primary); color: white !important; border: 1px solid var(--primary); box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4); transform: scale(1.05); }
+[data-theme="dark"] .full-calendar-day.selected { box-shadow: 0 4px 12px rgba(90, 161, 245, 0.50); }
 .full-calendar-day .event-dot { width: 6px; height: 6px; background: #ef4444; border-radius: 50%; position: absolute; bottom: 4px; }
 .full-calendar-day.selected .event-dot { background: white; }
 .events-list { display: flex; flex-direction: column; gap: 8px; }
 .event-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; }
 .event-item:hover { border-color: var(--primary); background: var(--input-bg); }
+[data-theme="dark"] .event-item:hover { background: rgba(90, 161, 245, 0.08); }
 .event-item.selected { border-color: var(--primary); background: var(--primary-light); box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2); }
+[data-theme="dark"] .event-item.selected { background: rgba(90, 161, 245, 0.20); }
 .event-day-badge { background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
 .event-text { flex: 1; font-size: 0.9rem; line-height: 1.5; color: var(--text-main); }
 .event-highlight { background: linear-gradient(135deg, var(--primary-light) 0%, rgba(74, 144, 226, 0.1) 100%); border: 2px solid var(--primary); border-radius: var(--radius-md); padding: 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 12px; animation: fadeIn 0.3s ease; }
+[data-theme="dark"] .event-highlight { background: linear-gradient(135deg, rgba(90, 161, 245, 0.15) 0%, rgba(90, 161, 245, 0.05) 100%); }
 .event-highlight-day { background: var(--primary); color: white; padding: 8px 15px; border-radius: var(--radius-sm); font-weight: 700; white-space: nowrap; font-size: 0.95rem; }
 .event-highlight-text { font-size: 0.95rem; color: var(--text-main); line-height: 1.6; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 .calendar-title { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px; }
 .calendar-title select { padding: 8px 15px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-size: 1rem; font-weight: 700; font-family: inherit; outline: none; cursor: pointer; transition: all 0.2s; }
 .calendar-title select:hover { border-color: var(--primary); }
-[data-theme="dark"] .full-calendar-day.has-event { background: rgba(74, 144, 226, 0.15); }
-[data-theme="dark"] .event-highlight { background: linear-gradient(135deg, rgba(74, 144, 226, 0.15) 0%, rgba(74, 144, 226, 0.05) 100%); }
 .full-calendar-day.has-event-soft { background: rgba(74, 144, 226, 0.06); border: 1px solid rgba(74, 144, 226, 0.15); }
-[data-theme="dark"] .full-calendar-day.has-event-soft { background: rgba(74, 144, 226, 0.15); border: 1px solid rgba(74, 144, 226, 0.25); }
+[data-theme="dark"] .full-calendar-day.has-event-soft { background: rgba(90, 161, 245, 0.15); border: 1px solid rgba(90, 161, 245, 0.25); }
+
+/* =========================================
+   Schedule Table (بهبود حالت شب)
+   ========================================= */
+.schedule-table-wrapper {
+    overflow-x: auto;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 15px;
+    background: var(--card-bg);
+    width: 100%;
+}
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    table-layout: auto;
+}
+.schedule-table th, .schedule-table td {
+    border: 1px solid var(--border-color);
+    padding: 12px 10px;
+    vertical-align: middle;
+    height: 50px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+.schedule-table thead th {
+    background: var(--primary);
+    color: white;
+    font-weight: 700;
+    border-bottom: 3px solid var(--primary-dark);
+    position: sticky;
+    top: 0;
+}
+.schedule-table tbody th {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-weight: 700;
+    position: sticky;
+    right: 0;
+    z-index: 2;
+    border-left: 2px solid var(--primary);
+    min-width: 80px;
+}
+[data-theme="dark"] .schedule-table tbody th { background: rgba(90, 161, 245, 0.20); color: #7EB3F7; }
+.schedule-table td {
+    background: var(--card-bg);
+    color: var(--text-main);
+    cursor: default;
+    min-width: 70px;
+}
+
+.schedule-edit-accordion {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--input-bg);
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+.schedule-edit-accordion summary {
+    padding: 12px 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    list-style: none;
+    background: var(--card-bg);
+    color: var(--text-main);
+}
+.schedule-edit-accordion summary::-webkit-details-marker { display: none; }
+.schedule-edit-accordion summary::after {
+    content: '▼';
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+}
+.schedule-edit-accordion[open] summary::after { transform: rotate(180deg); }
+.schedule-edit-accordion[open] summary { border-bottom: 1px dashed var(--border-color); }
+
+.schedule-edit-content {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.schedule-period-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.schedule-period-row span {
+    min-width: 60px;
+    font-size: 0.9rem;
+    color: var(--primary);
+    font-weight: 700;
+}
+.schedule-period-row select {
+    flex: 1;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-main);
+    font-size: 0.9rem;
+    outline: none;
+}
+
+/* =========================================
+   Special Cards (بهبود حالت شب)
+   ========================================= */
+[data-theme="dark"] .card[style*="linear-gradient(135deg, #fff8e1"],
+[data-theme="dark"] .card[style*="linear-gradient(135deg, #f0fdf4"],
+[data-theme="dark"] .card[style*="linear-gradient(135deg, #eef2ff"] {
+    background: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+}
