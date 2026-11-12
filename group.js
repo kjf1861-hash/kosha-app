@@ -48,7 +48,14 @@ function renderGroupsList() {
     if (!container) return;
 
     if (window.allGroupsData.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:#64748b;">لیست خالی است. ابتدا گروه اضافه کنید.</p>';
+        container.innerHTML = `
+            <div class="empty-state">
+                <svg><use href="#empty-groups"/></svg>
+                <div class="empty-title">هنوز گروهی ایجاد نکردی!</div>
+                <div class="empty-desc">گروه‌ها بهت کمک می‌کنن تا رقابت سالم بین دانش‌آموزها ایجاد کنی.</div>
+                <button class="empty-action" onclick="document.getElementById('groupName').focus()">➕ ایجاد اولین گروه</button>
+            </div>
+        `;
         return;
     }
 
@@ -163,7 +170,6 @@ async function deleteGroup(id) {
 }
 
 function openGroupDetails(id) {
-    // *** رفع باگ ۱۰: ابتدا گروه را پیدا می‌کنیم، بعد ID را تنظیم می‌کنیم ***
     const group = window.allGroupsData.find(g => g.id === id);
     if (!group) {
         showToast('گروه یافت نشد.', 'error');
