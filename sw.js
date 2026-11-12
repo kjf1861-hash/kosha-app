@@ -1,8 +1,8 @@
 // ==========================================
-// فایل sw.js — سرویس‌ورکر با پشتیبانی از آپدیت هوشمند (v105)
+// فایل sw.js — سرویس‌ورکر بهینه‌شده (نسخه v104)
 // ==========================================
 
-const CACHE_NAME = 'kosha-cache-v105';
+const CACHE_NAME = 'kosha-cache-v104';
 const ASSETS_TO_CACHE = [
     './', 
     './index.html', 
@@ -25,7 +25,7 @@ const ASSETS_TO_CACHE = [
     './back-button.js'
 ];
 
-// فایل‌هایی که همیشه باید از شبکه به‌روز شوند
+// فایل‌هایی که همیشه باید از شبکه به‌روز شوند (حساس به تغییر)
 const NETWORK_FIRST_ASSETS = [
     './index.html',
     './app.js',
@@ -44,9 +44,7 @@ self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(ASSETS_TO_CACHE);
-        })
-        // ⚠️ نکته: skipWaiting را اینجا صدا نمی‌زنیم
-        // تا فرصت داشته باشیم به کاربر اعلان بدیم
+        }).then(() => self.skipWaiting())
     );
 });
 
@@ -75,7 +73,10 @@ self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
     
     if (event.request.method !== 'GET') return;
-    if (url.origin !== self.location.origin) return;
+    
+    if (url.origin !== self.location.origin) {
+        return;
+    }
     
     const isNetworkFirst = NETWORK_FIRST_ASSETS.some(asset => url.pathname.endsWith(asset.replace('./', '')));
     
@@ -91,12 +92,16 @@ self.addEventListener('fetch', (event) => {
                     }
                     return response;
                 })
-                .catch(() => caches.match(event.request))
+                .catch(() => {
+                    return caches.match(event.request);
+                })
         );
     } else {
         event.respondWith(
             caches.match(event.request).then((cachedResponse) => {
-                if (cachedResponse) return cachedResponse;
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
                 return fetch(event.request).then((response) => {
                     if (response && response.status === 200) {
                         const responseClone = response.clone();
@@ -112,7 +117,7 @@ self.addEventListener('fetch', (event) => {
 });
 
 // ==========================================
-// پیام‌ها (برای آپدیت با اذن کاربر)
+// پیام‌ها (برای به‌روزرسانی خودکار)
 // ==========================================
 self.addEventListener('message', (event) => {
     if (event.data && event.data.action === 'skipWaiting') {
