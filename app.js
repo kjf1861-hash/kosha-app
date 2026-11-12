@@ -1,5 +1,5 @@
 // ==========================================
-// فایل app.js — نسخه پایدار v12 (رفع کامل باگ‌ها)
+// فایل app.js — نسخه نجات‌بخش (بازگشت به حالت پایدار)
 // ==========================================
 
 window.allStudentsData = [];
@@ -10,11 +10,7 @@ window.allSessionsData = [];
 window.allAttendanceData = [];
 window.allWeeklyScheduleData = [];
 let assessmentItems = [];
-window.activeAcademicYear = null; 
-
-const ALLOWED_ACADEMIC_YEARS = [
-    '1405-1406', '1406-1407', '1407-1408', '1408-1409', '1409-1410'
-];
+window.activeAcademicYear = '1405-1406'; 
 
 window.scheduleActiveDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه'];
 window.schedulePeriodsCount = 5;
@@ -25,56 +21,18 @@ const itemsPerPage = 40;
 window.isFormDirty = false;
 window.pendingExitAction = null;
 window.currentFormName = '';
-
 let autoBackupTimer = null;
 const AUTO_BACKUP_DELAY = 2000;
-
 let currentBackupSettings = null;
-let periodCalendarState = { year: 1405, month: 7, selectedDate: '' };
-let currentEditingPeriodIndex = -1;
-let currentCalendarTarget = 'start';
 
 // ==========================================
-// مدیریت خطای سراسری
+// توابع پایه
 // ==========================================
-window.onerror = function(msg, url, line, col, error) {
-    console.error('خطای سراسری:', msg, 'در', url, line);
-    return true;
-};
-
 function toPersianNumber(num) {
     if (num === undefined || num === null || num === '') return '';
     const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
     return num.toString().replace(/\d/g, x => persianDigits[x]);
 }
-
-function validateNationalId(nationalId) {
-    if (!/^\d{10}$/.test(nationalId)) return false;
-    if (/^(\d)\1{9}$/.test(nationalId)) return false;
-    let check = parseInt(nationalId[9]);
-    let sum = 0;
-    for (let i = 0; i < 9; i++) { sum += parseInt(nationalId[i]) * (10 - i); }
-    let remainder = sum % 11;
-    return (remainder < 2 && check === remainder) || (remainder >= 2 && check === 11 - remainder);
-}
-
-function generateStudentPassword(nationalId) {
-    if (!nationalId || nationalId.length !== 10) return '0000';
-    const part1 = nationalId.substring(0, 5);
-    const part2 = nationalId.substring(5, 10);
-    let sum1 = 0; for (let i = 0; i < part1.length; i++) sum1 += parseInt(part1[i]);
-    let sum2 = 0; for (let i = 0; i < part2.length; i++) sum2 += parseInt(part2[i]);
-    const hash = Math.pow((sum1 * 7) + (sum2 * 3), 2);
-    return ((hash % 9000) + 1000).toString();
-}
-
-const quranSurahs = {
-    "ناس": 6, "فلق": 5, "توحید": 4, "مسد": 5, "نصر": 3, "کافرون": 6, "کوثر": 3, "ماعون": 7,
-    "قریش": 4, "فیل": 5, "همزه": 9, "عصر": 3, "تکاثر": 8, "قارعه": 11, "عاديات": 11, "زلزال": 8,
-    "بینه": 8, "قدر": 5, "علق": 19, "تین": 8, "شرح": 8, "ضحی": 11, "لیل": 21, "شمس": 15,
-    "بلد": 20, "فجر": 30, "غاشیه": 26, "اعلی": 19, "طارق": 17, "بروج": 22, "انشقاق": 25,
-    "مطففین": 36, "انفطار": 19, "تکویر": 29, "عبس": 42, "نازعات": 46, "نبأ": 40
-};
 
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast-container');
@@ -84,73 +42,57 @@ function showToast(message, type = 'success') {
         error: '<svg viewBox="0 0 24 24"><use href="#ico-x"/></svg>',
         info: '<svg viewBox="0 0 24 24"><use href="#ico-info"/></svg>'
     };
-    const iconSvg = iconMap[type] || iconMap.info;
     const toast = document.createElement('div');
     toast.className = `custom-toast-container custom-toast-${type}`;
-    toast.innerHTML = `${iconSvg}<span>${message}</span>`;
+    toast.innerHTML = `${iconMap[type] || iconMap.info}<span>${message}</span>`;
     document.body.appendChild(toast);
     setTimeout(() => toast.classList.add('show'), 100);
     setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
 }
 
-// ==========================================
-// توابع انتخاب سال تحصیلی
-// ==========================================
-function openAcademicYearModal() {
-    const modal = document.getElementById('academic-year-modal');
-    if (modal) modal.classList.add('show');
-}
-
-function confirmAcademicYearSelection() {
-    const selectEl = document.getElementById('academicYearSelect');
-    if (!selectEl || !selectEl.value) {
-        showToast('لطفاً یک سال تحصیلی انتخاب کنید.', 'error');
-        return;
-    }
-    const selectedYear = selectEl.value;
-    if (!ALLOWED_ACADEMIC_YEARS.includes(selectedYear)) {
-        showToast('سال تحصیلی معتبر نیست.', 'error');
-        return;
-    }
-    if (window.activeAcademicYear === selectedYear) {
-        document.getElementById('academic-year-modal').classList.remove('show');
-        return;
-    }
-    localStorage.setItem('kosha-active-academic-year', selectedYear);
-    showToast('در حال بارگذاری سال ' + toPersianNumber(selectedYear) + '...', 'success');
-    setTimeout(() => window.location.reload(), 800);
-}
+window.triggerAutoBackup = function() {
+    if (autoBackupTimer) clearTimeout(autoBackupTimer);
+    autoBackupTimer = setTimeout(async () => {
+        try {
+            const allData = await exportAllData();
+            localStorage.setItem('kosha-emergency-backup', JSON.stringify(allData));
+            localStorage.setItem('kosha-emergency-backup-time', Date.now().toString());
+        } catch (e) { }
+    }, AUTO_BACKUP_DELAY);
+};
 
 // ==========================================
-// توابع بارگذاری
+// loadAllData (همه‌چیز را ساده لود می‌کند)
 // ==========================================
 async function loadAllData() {
     try {
-        const currentYear = window.activeAcademicYear;
-        if (!currentYear) return;
-
-        const classData = await getClassProfile(currentYear);
+        const classData = await getDataById('classProfile', 1);
         if (classData) {
+            if (classData.academicYear) window.activeAcademicYear = classData.academicYear;
             if (classData.scheduleActiveDays) window.scheduleActiveDays = classData.scheduleActiveDays;
             if (classData.schedulePeriodsCount) window.schedulePeriodsCount = parseInt(classData.schedulePeriodsCount);
         }
 
-        window.allStudentsData = await getAllDataByYear('students', currentYear);
-        window.allGroupsData = await getAllDataByYear('groups', currentYear);
-        window.allSubjectsData = await getAllDataByYear('subjects', currentYear);
-        window.allRecordsData = await getAllDataByYear('records', currentYear);
-        window.allSessionsData = await getAllDataByYear('sessions', currentYear);
+        const rawStudents = await getAllData('students');
+        const rawGroups = await getAllData('groups');
+        const rawSubjects = await getAllData('subjects');
+        const rawRecords = await getAllData('records');
+        const rawSessions = await getAllData('sessions');
+        const rawAttendance = await getAllData('attendance');
+
+        window.allStudentsData = rawStudents;
+        window.allGroupsData = rawGroups;
+        window.allSubjectsData = rawSubjects;
+        window.allRecordsData = rawRecords.filter(r => !r.academicYear || r.academicYear === window.activeAcademicYear);
+        window.allSessionsData = rawSessions.filter(s => !s.academicYear || s.academicYear === window.activeAcademicYear);
         
-        const allAttendance = await getAllData('attendance');
         const validSessionIds = window.allSessionsData.map(s => s.id);
-        window.allAttendanceData = allAttendance.filter(a => validSessionIds.includes(a.sessionId));
+        window.allAttendanceData = rawAttendance.filter(a => validSessionIds.includes(a.sessionId));
         
-        window.allWeeklyScheduleData = await getAllDataByYear('weeklySchedule', currentYear);
-        window.allWeeklyScheduleData = window.allWeeklyScheduleData.map(sched => ({ ...sched, day: sched.day || (sched.id ? sched.id.split('_')[1] : null) }));
-        
-        assessmentItems = await getAllDataByYear('assessmentItems', currentYear);
+        window.allWeeklyScheduleData = await getAllData('weeklySchedule');
+        assessmentItems = await getAllData('assessmentItems');
         window.allAssessmentItems = assessmentItems;
-        currentBackupSettings = await getBackupSettings(currentYear);
+        currentBackupSettings = await getBackupSettings();
 
         renderUI();
     } catch (e) { 
@@ -166,30 +108,28 @@ function renderUI() {
         if (typeof renderGroupData === 'function') renderGroupData();
         if (typeof renderSessionData === 'function') renderSessionData();
         if (typeof renderScoreData === 'function') renderScoreData();
-    } catch (e) {}
+    } catch (e) { console.error(e); }
 }
 
 // ==========================================
-// initApp (بخش حیاتی)
+// initApp (بازگشت به حالت عادی)
 // ==========================================
 async function initApp() {
-    const savedYear = localStorage.getItem('kosha-active-academic-year');
-    
-    if (!savedYear || !ALLOWED_ACADEMIC_YEARS.includes(savedYear)) {
-        // باز کردن مودال انتخاب سال با اطمینان
-        openAcademicYearModal();
-        return; 
+    if (typeof applyEmojiRestriction === 'function') {
+        applyEmojiRestriction('classSymbol');
+        applyEmojiRestriction('lessonSymbol');
+        applyEmojiRestriction('groupSymbol');
     }
-    
-    window.activeAcademicYear = savedYear;
-    const yearDisplay = document.getElementById('current-academic-year-display');
-    if (yearDisplay) yearDisplay.textContent = toPersianNumber(savedYear);
     
     if (typeof attachDirtyListeners === 'function') attachDirtyListeners();
     if (typeof initAppEvents === 'function') initAppEvents();
     
-    await initDefaultAssessmentItemsForYear(savedYear);
     await loadAllData();
     
     if (typeof checkBackupReminder === 'function') checkBackupReminder();
+    
+    try {
+        if (typeof loadExamsData === 'function') await loadExamsData();
+        if (typeof renderExamsData === 'function') renderExamsData();
+    } catch (error) { }
 }
