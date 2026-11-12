@@ -1,5 +1,12 @@
 // ==========================================
-// فایل class.js — منطق تب کلاس (نسخه اصلاح‌شده نهایی)
+// فایل class.js — منطق تب کلاس (نسخه اصلاح‌شده نهایی v2)
+// ==========================================
+//
+// تغییرات نسخه v2:
+// - اصلاح saveClassProfile: فقط بعد از موفقیت saveData، سال تحصیلی در localStorage ذخیره می‌شود
+// - جلوگیری از ناسازگاری داده در صورت خطای ذخیره
+// - اصلاح populateCurrentClassProfile: پشتیبانی از حالت بدون داده
+// - جابجایی منطق ذخیره سال تحصیلی به بعد از await
 // ==========================================
 
 async function saveClassProfile(e) {
@@ -31,16 +38,17 @@ async function saveClassProfile(e) {
 
     if (!classNameEl) return;
 
-    // ⚠️ خواندن سال تحصیلی از فیلد و هماهنگی با حافظه
+    // ==========================================
+    // ✅ تغییر اصلی: تعیین سال تحصیلی جدید فقط به‌عنوان متغیر محلی
+    // (تا در صورت خطا، localStorage و window تغییر نکنند)
+    // ==========================================
     let selectedYear = window.activeAcademicYear;
     if (academicYearEl && academicYearEl.value) {
         selectedYear = academicYearEl.value;
-        window.activeAcademicYear = selectedYear;
-        localStorage.setItem('kosha-active-academic-year', selectedYear); // ذخیره در حافظه
     }
 
     const data = {
-        id: 1, // همیشه id=1 باشد
+        id: 1,
         name: classNameEl.value,
         symbol: classSymbolEl ? classSymbolEl.value : '',
         motto: classMottoEl ? classMottoEl.value : '',
@@ -53,30 +61,55 @@ async function saveClassProfile(e) {
     };
     
     try {
+        // ۱. اول ذخیره در DB
         await saveData('classProfile', data);
         
+        // ۲. فقط بعد از موفقیت، حافظه سراسری و localStorage را به‌روز کن
         window.scheduleActiveDays = selectedDays;
         window.schedulePeriodsCount = periodsCount;
+        
+        if (window.activeAcademicYear !== selectedYear) {
+            window.activeAcademicYear = selectedYear;
+            try {
+                localStorage.setItem('kosha-active-academic-year', selectedYear);
+            } catch (e) { console.warn('خطا در ذخیره سال تحصیلی در localStorage:', e); }
+        }
 
         showToast('مشخصات کلاس ذخیره شد!', 'success');
         const headerSubtitle = document.getElementById('header-subtitle');
         if (headerSubtitle) headerSubtitle.textContent = data.name;
         
+        // پاک کردن وضعیت ذخیره‌نشده
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
-        if(typeof closeSettingsModal === 'function') closeSettingsModal();
+        if (typeof closeSettingsModal === 'function') closeSettingsModal();
         
-        // ✅ دوباره پر کردن فرم با مقادیر ذخیره‌شده
+        // دوباره پر کردن فرم با داده‌های ذخیره شده
         populateCurrentClassProfile(data);
         
         await loadAllData();
     } catch (err) {
         console.error(err);
-        showToast('خطا در ذخیره مشخصات کلاس.', 'error');
+        showToast('خطا در ذخیره مشخصات کلاس. تغییرات ذخیره نشد.', 'error');
     }
 }
 
-function populateCurrentClassProfile(classData) {
+// ==========================================
+// پر کردن فرم مشخصات کلاس
+// - اگر classData ارسال نشود، از دیتابیس خوانده می‌شود
+// - در صورت نبود داده، فرم پاک می‌شود (نه اینکه مقادیر قبلی بمانند)
+// ==========================================
+async function populateCurrentClassProfile(classData) {
+    // اگر classData ارسال نشد، خودمان از DB می‌خوانیم
+    if (classData === undefined) {
+        try {
+            classData = await getDataById('classProfile', 1);
+        } catch (e) {
+            console.warn('خطا در خواندن پروفایل کلاس:', e);
+            classData = null;
+        }
+    }
+
     const classNameEl = document.getElementById('className');
     const classSymbolEl = document.getElementById('classSymbol');
     const classMottoEl = document.getElementById('classMotto');
@@ -84,6 +117,7 @@ function populateCurrentClassProfile(classData) {
     const teacherNameEl = document.getElementById('teacherName');
     const schoolNameEl = document.getElementById('schoolName');
     const academicYearEl = document.getElementById('academicYear');
+    const periodsInput = document.getElementById('schedulePeriodsCount');
 
     if (classData) {
         if (classNameEl) classNameEl.value = classData.name || '';
@@ -93,6 +127,17 @@ function populateCurrentClassProfile(classData) {
         if (teacherNameEl) teacherNameEl.value = classData.teacherName || '';
         if (schoolNameEl) schoolNameEl.value = classData.schoolName || '';
         if (academicYearEl && classData.academicYear) academicYearEl.value = classData.academicYear;
+        if (periodsInput && classData.schedulePeriodsCount) periodsInput.value = classData.schedulePeriodsCount;
+    } else {
+        // نبود داده → فرم را پاک کن
+        if (classNameEl) classNameEl.value = '';
+        if (classSymbolEl) classSymbolEl.value = '';
+        if (classMottoEl) classMottoEl.value = '';
+        if (classGradeEl) classGradeEl.value = '';
+        if (teacherNameEl) teacherNameEl.value = '';
+        if (schoolNameEl) schoolNameEl.value = '';
+        if (academicYearEl) academicYearEl.value = '';
+        if (periodsInput) periodsInput.value = 5;
     }
 }
 
@@ -104,7 +149,7 @@ function populateScheduleDaysCheckboxes() {
     
     container.innerHTML = '';
     weekDays.forEach(day => {
-        const isChecked = window.scheduleActiveDays.includes(day) ? 'checked' : '';
+        const isChecked = (window.scheduleActiveDays || []).includes(day) ? 'checked' : '';
         const label = document.createElement('label');
         label.className = 'day-checkbox-label';
         label.innerHTML = `
@@ -142,6 +187,8 @@ function renderDashboardData() {
     renderNeedsAttention(studentScores);
     renderRecentActivities();
     renderFullClassReport(studentScores);
+    
+    // *** کارت گزارش آزمون‌ها ***
     renderExamsDashboard();
 }
 
@@ -242,146 +289,398 @@ function renderAttendanceChart() {
 function renderSubjectAveragesChart() {
     const container = document.getElementById('dashboard-subject-averages');
     if (!container) return;
+
     if (window.allSubjectsData.length === 0) {
         container.innerHTML = '<p style="color:#64748b; text-align:center;">هنوز درسی تعریف نشده است.</p>';
         return;
     }
+
     const subjectData = window.allSubjectsData.map(sub => {
         let total = 0;
-        window.allRecordsData.forEach(rec => { if (rec.subjectId === sub.id) total += rec.finalScore; });
+        window.allRecordsData.forEach(rec => {
+            if (rec.subjectId === sub.id) total += rec.finalScore;
+        });
         return { ...sub, total };
     });
+
     subjectData.sort((a, b) => b.total - a.total);
     const maxTotal = subjectData[0].total || 1;
+
     container.innerHTML = subjectData.map(sub => {
         const percent = Math.round((sub.total / maxTotal) * 100);
-        return `<div><div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 4px;"><span>${sub.symbol || '📚'} ${sub.name}</span><strong style="color: var(--primary);">${toPersianNumber(sub.total)} امتیاز</strong></div><div class="progress-bar-container"><div class="progress-bar-fill" style="width: ${percent}%;"></div></div></div>`;
+        return `
+            <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 4px;">
+                    <span>${sub.symbol || '📚'} ${sub.name}</span>
+                    <strong style="color: var(--primary);">${toPersianNumber(sub.total)} امتیاز</strong>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" style="width: ${percent}%;"></div>
+                </div>
+            </div>
+        `;
     }).join('');
 }
 
 function renderTopStudents(studentScores) {
     const container = document.getElementById('dashboard-top-students');
     if (!container) return;
-    const sorted = [...studentScores].sort((a, b) => { if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore; return a.lastName.localeCompare(b.lastName, 'fa'); });
+
+    const sorted = [...studentScores].sort((a, b) => {
+        if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+        return (a.lastName || '').localeCompare(b.lastName || '', 'fa');
+    });
+
     const topStudents = sorted.filter(st => st.totalScore > 0).slice(0, 3);
-    if (topStudents.length === 0) { container.innerHTML = '<p style="text-align:center; color:#64748b;">هنوز امتیازی ثبت نشده است.</p>'; return; }
+
+    if (topStudents.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#64748b;">هنوز امتیازی ثبت نشده است.</p>';
+        return;
+    }
+
     const medals = ['🥇', '🥈', '🥉'];
     container.innerHTML = topStudents.map((st, index) => {
         const g = window.allGroupsData.find(x => x.id === st.groupId);
         const groupBadge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
-        return `<div class="list-item top-student-row" style="padding: 12px 15px; margin-bottom: 8px;"><div style="display:flex; align-items:center; gap:10px;"><span class="medal-badge" style="font-size:1.5rem;">${medals[index]}</span><span style="font-size: 1.1rem; font-weight: bold;">${st.firstName} ${st.lastName}</span>${groupBadge}</div><span class="rank-badge" style="background: var(--primary); color: white;">${toPersianNumber(st.totalScore)} امتیاز</span></div>`;
+        return `
+            <div class="list-item top-student-row" style="padding: 12px 15px; margin-bottom: 8px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="medal-badge" style="font-size:1.5rem;">${medals[index]}</span>
+                    <span style="font-size: 1.1rem; font-weight: bold;">${st.firstName} ${st.lastName}</span>
+                    ${groupBadge}
+                </div>
+                <span class="rank-badge" style="background: var(--primary); color: white;">${toPersianNumber(st.totalScore)} امتیاز</span>
+            </div>
+        `;
     }).join('');
 }
 
 function renderTopGroups() {
     const container = document.getElementById('dashboard-top-groups');
     if (!container) return;
-    if (window.allGroupsData.length === 0) { container.innerHTML = '<p style="text-align:center; color:#64748b;">هنوز گروهی تعریف نشده است.</p>'; return; }
+
+    if (window.allGroupsData.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#64748b;">هنوز گروهی تعریف نشده است.</p>';
+        return;
+    }
+
     const groupData = window.allGroupsData.map(g => {
         let total = 0;
-        window.allRecordsData.forEach(rec => { if (rec.students) { rec.students.forEach(stId => { const st = window.allStudentsData.find(s => s.id === stId); if (st && st.groupId === g.id) total += rec.finalScore; }); } });
+        window.allRecordsData.forEach(rec => {
+            if (rec.students) {
+                rec.students.forEach(stId => {
+                    const st = window.allStudentsData.find(s => s.id === stId);
+                    if (st && st.groupId === g.id) total += rec.finalScore;
+                });
+            }
+        });
         return { ...g, totalScore: total };
     });
+
     groupData.sort((a, b) => b.totalScore - a.totalScore);
     const topGroups = groupData.filter(g => g.totalScore > 0).slice(0, 3);
-    if (topGroups.length === 0) { container.innerHTML = '<p style="text-align:center; color:#64748b;">هنوز امتیازی برای گروه‌ها ثبت نشده است.</p>'; return; }
+
+    if (topGroups.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#64748b;">هنوز امتیازی برای گروه‌ها ثبت نشده است.</p>';
+        return;
+    }
+
     const medals = ['🥇', '🥈', '🥉'];
-    container.innerHTML = topGroups.map((g, index) => `<div class="list-item" style="padding: 12px 15px; margin-bottom: 8px; border-right: 4px solid var(--primary);"><div style="display:flex; align-items:center; gap:10px;"><span class="medal-badge" style="font-size:1.5rem;">${medals[index]}</span><span style="font-size:1.3rem;">${g.symbol}</span><span style="font-size: 1.1rem; font-weight: bold;">${g.name}</span></div><span class="rank-badge">${toPersianNumber(g.totalScore)} امتیاز</span></div>`).join('');
+    container.innerHTML = topGroups.map((g, index) => `
+        <div class="list-item" style="padding: 12px 15px; margin-bottom: 8px; border-right: 4px solid var(--primary);">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span class="medal-badge" style="font-size:1.5rem;">${medals[index]}</span>
+                <span style="font-size:1.3rem;">${g.symbol}</span>
+                <span style="font-size: 1.1rem; font-weight: bold;">${g.name}</span>
+            </div>
+            <span class="rank-badge">${toPersianNumber(g.totalScore)} امتیاز</span>
+        </div>
+    `).join('');
 }
 
 function renderNeedsAttention(studentScores) {
     const container = document.getElementById('dashboard-needs-attention');
     if (!container) return;
-    if (studentScores.length === 0) { container.innerHTML = '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>'; return; }
+
+    if (studentScores.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>';
+        return;
+    }
+
     const studentStats = studentScores.map(st => {
         let absences = 0;
-        window.allAttendanceData.forEach(att => { if (att.studentId === st.id && att.status === 'absent') absences++; });
+        window.allAttendanceData.forEach(att => {
+            if (att.studentId === st.id && att.status === 'absent') absences++;
+        });
         return { ...st, absences };
     });
-    studentStats.sort((a, b) => { if (a.totalScore !== b.totalScore) return a.totalScore - b.totalScore; return b.absences - a.absences; });
+
+    studentStats.sort((a, b) => {
+        if (a.totalScore !== b.totalScore) return a.totalScore - b.totalScore;
+        return b.absences - a.absences;
+    });
+
     const needsAttention = studentStats.slice(0, 3);
-    container.innerHTML = needsAttention.map(st => `<div class="list-item" style="padding: 12px 15px; background: rgba(255,255,255,0.5);"><div style="display:flex; align-items:center; gap:8px;"><span style="font-size: 1.2rem;">⚠️</span><strong>${st.firstName} ${st.lastName}</strong></div><div style="display:flex; gap:8px; font-size: 0.85rem;"><span class="rank-badge" style="background:#fee2e2; color:#b91c1c;">${toPersianNumber(st.totalScore)} امتیاز</span><span class="rank-badge" style="background:#fef3c7; color:#b45309;">${toPersianNumber(st.absences)} غیبت</span></div></div>`).join('');
+
+    container.innerHTML = needsAttention.map(st => `
+        <div class="list-item" style="padding: 12px 15px; background: rgba(255,255,255,0.5);">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size: 1.2rem;">⚠️</span>
+                <strong>${st.firstName} ${st.lastName}</strong>
+            </div>
+            <div style="display:flex; gap:8px; font-size: 0.85rem;">
+                <span class="rank-badge" style="background:#fee2e2; color:#b91c1c;">${toPersianNumber(st.totalScore)} امتیاز</span>
+                <span class="rank-badge" style="background:#fef3c7; color:#b45309;">${toPersianNumber(st.absences)} غیبت</span>
+            </div>
+        </div>
+    `).join('');
 }
 
 function renderRecentActivities() {
     const container = document.getElementById('dashboard-recent-activities');
     if (!container) return;
-    if (window.allRecordsData.length === 0) { container.innerHTML = '<p style="text-align:center; color:#64748b;">هنوز فعالیتی ثبت نشده است.</p>'; return; }
+
+    if (window.allRecordsData.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#64748b;">هنوز فعالیتی ثبت نشده است.</p>';
+        return;
+    }
+
     const sorted = [...window.allRecordsData].sort((a, b) => b.id - a.id).slice(0, 4);
+
     container.innerHTML = sorted.map(rec => {
         const subject = window.allSubjectsData.find(s => s.id === rec.subjectId);
         const subjectName = subject ? `${subject.symbol || ''} ${subject.name}` : 'بدون درس';
         const studentCount = rec.students ? rec.students.length : 0;
-        return `<div class="list-item" style="padding: 10px 15px; flex-direction: column; align-items: stretch; gap: 5px;"><div style="display:flex; justify-content:space-between; align-items:center;"><strong style="color: var(--primary); font-size: 0.95rem;">${rec.title}</strong><span style="font-size: 0.75rem; color: var(--text-muted);">${toPersianNumber(rec.date)}</span></div><div style="display:flex; justify-content:space-between; font-size: 0.8rem; color: var(--text-muted);"><span>📚 ${subjectName} | 🎯 ${rec.itemName}</span><span>👥 ${toPersianNumber(studentCount)} نفر</span></div></div>`;
+        
+        return `
+            <div class="list-item" style="padding: 10px 15px; flex-direction: column; align-items: stretch; gap: 5px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong style="color: var(--primary); font-size: 0.95rem;">${rec.title}</strong>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">${toPersianNumber(rec.date)}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size: 0.8rem; color: var(--text-muted);">
+                    <span>📚 ${subjectName} | 🎯 ${rec.itemName}</span>
+                    <span>👥 ${toPersianNumber(studentCount)} نفر</span>
+                </div>
+            </div>
+        `;
     }).join('');
 }
 
 function renderFullClassReport(studentScores) {
     const reportsList = document.getElementById('reports-list');
     if (!reportsList) return;
-    if (studentScores.length === 0) { reportsList.innerHTML = '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>'; return; }
-    const sorted = [...studentScores].sort((a, b) => { if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore; return a.lastName.localeCompare(b.lastName, 'fa'); });
+
+    if (studentScores.length === 0) {
+        reportsList.innerHTML = '<p style="text-align:center; color:#64748b;">لیست خالی است.</p>';
+        return;
+    }
+
+    const sorted = [...studentScores].sort((a, b) => {
+        if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+        return (a.lastName || '').localeCompare(b.lastName || '', 'fa');
+    });
+
     reportsList.innerHTML = sorted.map((st, index) => {
         const g = window.allGroupsData.find(x => x.id === st.groupId);
         const groupBadge = g ? `<span class="group-label" style="margin-right:5px;">${g.symbol} ${g.name}</span>` : '';
+        
         const maxScore = sorted[0].totalScore || 1;
         const percent = Math.round((st.totalScore / maxScore) * 100);
-        return `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px; margin-bottom: 8px;"><div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><div style="display:flex; align-items:center; gap:5px;"><span style="font-weight:bold; min-width:25px; color:var(--text-muted);">${toPersianNumber(index + 1)}.</span><span><strong>${st.firstName} ${st.lastName}</strong></span>${groupBadge}</div><span class="rank-badge">${toPersianNumber(st.totalScore)} امتیاز</span></div><div class="score-bar-container"><div class="score-bar-fill ${index === 0 && st.totalScore > 0 ? 'is-first' : ''}" style="width: ${percent}%;"></div></div></div>`;
+
+        return `
+            <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px; margin-bottom: 8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <span style="font-weight:bold; min-width:25px; color:var(--text-muted);">${toPersianNumber(index + 1)}.</span>
+                        <span><strong>${st.firstName} ${st.lastName}</strong></span>
+                        ${groupBadge}
+                    </div>
+                    <span class="rank-badge">${toPersianNumber(st.totalScore)} امتیاز</span>
+                </div>
+                <div class="score-bar-container">
+                    <div class="score-bar-fill ${index === 0 && st.totalScore > 0 ? 'is-first' : ''}" style="width: ${percent}%;"></div>
+                </div>
+            </div>
+        `;
     }).join('');
 }
 
+// ==========================================
+// گزارش جامع آزمون‌ها در داشبورد
+// ==========================================
 function renderExamsDashboard() {
     const container = document.getElementById('dashboard-exams-report');
     if (!container) return;
+    
     if (!window.allExamsData) window.allExamsData = [];
     if (!window.allExamResultsData) window.allExamResultsData = [];
+    
     const exams = window.allExamsData;
     const results = window.allExamResultsData;
-    if (exams.length === 0) { container.innerHTML = '<p style="text-align:center; color:#64748b; padding: 15px;">هنوز آزمونی تعریف نشده است. از تب «آزمون‌ها» اولین آزمون را بسازید.</p>'; return; }
+    
+    if (exams.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#64748b; padding: 15px;">هنوز آزمونی تعریف نشده است. از تب «آزمون‌ها» اولین آزمون را بسازید.</p>';
+        return;
+    }
+    
     const totalExams = exams.length;
     const totalResults = results.length;
+    
     let totalScorePercent = 0;
     let validResults = 0;
-    results.forEach(r => { const exam = exams.find(e => e.id === r.examId); if (exam) { totalScorePercent += (r.score / exam.maxScore) * 100; validResults++; } });
+    results.forEach(r => {
+        const exam = exams.find(e => e.id === r.examId);
+        if (exam) {
+            totalScorePercent += (r.score / exam.maxScore) * 100;
+            validResults++;
+        }
+    });
     const avgPercent = validResults > 0 ? Math.round(totalScorePercent / validResults) : 0;
+    
     const studentPercentMap = {};
-    results.forEach(r => { const exam = exams.find(e => e.id === r.examId); if (!exam) return; const percent = (r.score / exam.maxScore) * 100; if (!studentPercentMap[r.studentId]) studentPercentMap[r.studentId] = { total: 0, count: 0 }; studentPercentMap[r.studentId].total += percent; studentPercentMap[r.studentId].count++; });
+    results.forEach(r => {
+        const exam = exams.find(e => e.id === r.examId);
+        if (!exam) return;
+        const percent = (r.score / exam.maxScore) * 100;
+        if (!studentPercentMap[r.studentId]) studentPercentMap[r.studentId] = { total: 0, count: 0 };
+        studentPercentMap[r.studentId].total += percent;
+        studentPercentMap[r.studentId].count++;
+    });
+    
     let bestStudentId = null;
     let bestAvg = -1;
-    for (const sid in studentPercentMap) { const avg = studentPercentMap[sid].total / studentPercentMap[sid].count; if (avg > bestAvg) { bestAvg = avg; bestStudentId = parseInt(sid); } }
+    for (const sid in studentPercentMap) {
+        const avg = studentPercentMap[sid].total / studentPercentMap[sid].count;
+        if (avg > bestAvg) { bestAvg = avg; bestStudentId = parseInt(sid); }
+    }
+    
     let bestStudentHtml = '';
     if (bestStudentId) {
         const st = window.allStudentsData.find(s => s.id === bestStudentId);
-        if (st) { bestStudentHtml = `<div style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); padding: 12px; border-radius: 12px; text-align: center; color: white;"><div style="font-size: 1.8rem; margin-bottom: 4px;">🏆</div><div style="font-size: 0.75rem; opacity: 0.9;">بهترین دانش‌آموز</div><div style="font-weight: bold; font-size: 1rem; margin-top: 4px;">${st.firstName} ${st.lastName}</div><div style="font-size: 0.8rem; margin-top: 2px;">میانگین: ${toPersianNumber(Math.round(bestAvg))}٪</div></div>`; }
-    } else { bestStudentHtml = `<div style="background: var(--input-bg); padding: 12px; border-radius: 12px; text-align: center; color: var(--text-muted);"><div style="font-size: 1.8rem; margin-bottom: 4px;">🏆</div><div style="font-size: 0.85rem;">هنوز نمره‌ای ثبت نشده</div></div>`; }
-    container.innerHTML = `<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;"><div class="dashboard-card" style="padding: 12px 8px;"><div class="dc-icon" style="font-size: 1.5rem;">🎓</div><div class="dc-value" style="font-size: 1.4rem;">${toPersianNumber(totalExams)}</div><div class="dc-label" style="font-size: 0.75rem;">آزمون</div></div><div class="dashboard-card" style="padding: 12px 8px;"><div class="dc-icon" style="font-size: 1.5rem;">👥</div><div class="dc-value" style="font-size: 1.4rem;">${toPersianNumber(totalResults)}</div><div class="dc-label" style="font-size: 0.75rem;">نمره ثبت‌شده</div></div><div class="dashboard-card" style="padding: 12px 8px;"><div class="dc-icon" style="font-size: 1.5rem;">📊</div><div class="dc-value" style="font-size: 1.4rem; color: ${avgPercent >= 60 ? '#22c55e' : avgPercent >= 40 ? '#f59e0b' : '#ef4444'};">${toPersianNumber(avgPercent)}٪</div><div class="dc-label" style="font-size: 0.75rem;">میانگین کل</div></div></div>${bestStudentHtml}`;
+        if (st) {
+            bestStudentHtml = `
+                <div style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); padding: 12px; border-radius: 12px; text-align: center; color: white;">
+                    <div style="font-size: 1.8rem; margin-bottom: 4px;">🏆</div>
+                    <div style="font-size: 0.75rem; opacity: 0.9;">بهترین دانش‌آموز</div>
+                    <div style="font-weight: bold; font-size: 1rem; margin-top: 4px;">${st.firstName} ${st.lastName}</div>
+                    <div style="font-size: 0.8rem; margin-top: 2px;">میانگین: ${toPersianNumber(Math.round(bestAvg))}٪</div>
+                </div>
+            `;
+        }
+    } else {
+        bestStudentHtml = `
+            <div style="background: var(--input-bg); padding: 12px; border-radius: 12px; text-align: center; color: var(--text-muted);">
+                <div style="font-size: 1.8rem; margin-bottom: 4px;">🏆</div>
+                <div style="font-size: 0.85rem;">هنوز نمره‌ای ثبت نشده</div>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+            <div class="dashboard-card" style="padding: 12px 8px;">
+                <div class="dc-icon" style="font-size: 1.5rem;">🎓</div>
+                <div class="dc-value" style="font-size: 1.4rem;">${toPersianNumber(totalExams)}</div>
+                <div class="dc-label" style="font-size: 0.75rem;">آزمون</div>
+            </div>
+            <div class="dashboard-card" style="padding: 12px 8px;">
+                <div class="dc-icon" style="font-size: 1.5rem;">👥</div>
+                <div class="dc-value" style="font-size: 1.4rem;">${toPersianNumber(totalResults)}</div>
+                <div class="dc-label" style="font-size: 0.75rem;">نمره ثبت‌شده</div>
+            </div>
+            <div class="dashboard-card" style="padding: 12px 8px;">
+                <div class="dc-icon" style="font-size: 1.5rem;">📊</div>
+                <div class="dc-value" style="font-size: 1.4rem; color: ${avgPercent >= 60 ? '#22c55e' : avgPercent >= 40 ? '#f59e0b' : '#ef4444'};">${toPersianNumber(avgPercent)}٪</div>
+                <div class="dc-label" style="font-size: 0.75rem;">میانگین کل</div>
+            </div>
+        </div>
+        ${bestStudentHtml}
+    `;
 }
 
 async function exportClassCSV() {
     try {
         let csvContent = "ردیف,نام,نام خانوادگی,مجموع امتیاز\r\n";
-        const studentScores = window.allStudentsData.map(st => { let total = 0; window.allRecordsData.forEach(rec => { if (rec.students && rec.students.includes(st.id)) total += rec.finalScore; }); return { ...st, totalScore: total }; });
-        studentScores.sort((a, b) => { if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore; return a.lastName.localeCompare(b.lastName, 'fa'); });
-        studentScores.forEach((st, i) => { csvContent += `${i + 1},"${st.firstName}","${st.lastName}",${st.totalScore}\r\n`; });
+        const studentScores = window.allStudentsData.map(st => {
+            let total = 0;
+            window.allRecordsData.forEach(rec => {
+                if (rec.students && rec.students.includes(st.id)) total += rec.finalScore;
+            });
+            return { ...st, totalScore: total };
+        });
+        
+        studentScores.sort((a, b) => {
+            if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+            return (a.lastName || '').localeCompare(b.lastName || '', 'fa');
+        });
+
+        studentScores.forEach((st, i) => {
+            csvContent += `${i + 1},"${st.firstName}","${st.lastName}",${st.totalScore}\r\n`;
+        });
+
         const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = `kosha_class_scores_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+        const a = document.createElement('a'); 
+        a.href = url; 
+        a.download = `kosha_class_scores_${new Date().toISOString().slice(0,10)}.csv`; 
+        a.click();
         URL.revokeObjectURL(url);
         showToast('فایل CSV دانلود شد!', 'success');
-    } catch (e) { showToast('خطا در تولید فایل.', 'error'); }
+    } catch (e) {
+        showToast('خطا در تولید فایل.', 'error');
+    }
 }
 
 function printClassReport() {
     const content = document.getElementById('report-card-content');
-    if(!content) return;
+    if (!content) return;
+    
     const headerSubtitle = document.getElementById('header-subtitle');
     const classData = headerSubtitle ? headerSubtitle.textContent : '';
-    let html = `<div class="rc-header"><h2>گزارش امتیازات کلاس</h2><p>${classData} - سال تحصیلی ${toPersianNumber(window.activeAcademicYear)}</p></div><table style="width:100%; border-collapse: collapse; margin-top:15px; font-family:inherit; text-align:center;"><thead><tr style="background: #f1f5f9;"><th style="border: 1px solid #cbd5e1; padding: 8px;">رتبه</th><th style="border: 1px solid #cbd5e1; padding: 8px; text-align:right;">نام و نام خانوادگی</th><th style="border: 1px solid #cbd5e1; padding: 8px;">مجموع امتیاز</th></tr></thead><tbody>`;
-    const studentScores = window.allStudentsData.map(st => { let total = 0; window.allRecordsData.forEach(rec => { if (rec.students && rec.students.includes(st.id)) total += rec.finalScore; }); return { ...st, totalScore: total }; });
-    studentScores.sort((a, b) => { if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore; return a.lastName.localeCompare(b.lastName, 'fa'); });
-    studentScores.forEach((st, i) => { html += `<tr><td style="border: 1px solid #cbd5e1; padding: 8px;">${toPersianNumber(i + 1)}</td><td style="border: 1px solid #cbd5e1; padding: 8px; text-align:right;">${st.firstName} ${st.lastName}</td><td style="border: 1px solid #cbd5e1; padding: 8px;">${toPersianNumber(st.totalScore)}</td></tr>`; });
+    
+    let html = `
+        <div class="rc-header">
+            <h2>گزارش امتیازات کلاس</h2>
+            <p>${classData} - سال تحصیلی ${toPersianNumber(window.activeAcademicYear)}</p>
+        </div>
+        <table style="width:100%; border-collapse: collapse; margin-top:15px; font-family:inherit; text-align:center;">
+            <thead>
+                <tr style="background: #f1f5f9;">
+                    <th style="border: 1px solid #cbd5e1; padding: 8px;">رتبه</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align:right;">نام و نام خانوادگی</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px;">مجموع امتیاز</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    const studentScores = window.allStudentsData.map(st => {
+        let total = 0;
+        window.allRecordsData.forEach(rec => {
+            if (rec.students && rec.students.includes(st.id)) total += rec.finalScore;
+        });
+        return { ...st, totalScore: total };
+    });
+    
+    studentScores.sort((a, b) => {
+        if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+        return (a.lastName || '').localeCompare(b.lastName || '', 'fa');
+    });
+    
+    studentScores.forEach((st, i) => {
+        html += `
+            <tr>
+                <td style="border: 1px solid #cbd5e1; padding: 8px;">${toPersianNumber(i + 1)}</td>
+                <td style="border: 1px solid #cbd5e1; padding: 8px; text-align:right;">${st.firstName} ${st.lastName}</td>
+                <td style="border: 1px solid #cbd5e1; padding: 8px;">${toPersianNumber(st.totalScore)}</td>
+            </tr>
+        `;
+    });
+    
     html += `</tbody></table>`;
     content.innerHTML = html;
+    
     const modal = document.getElementById('report-card-modal');
     if (modal) modal.classList.add('show');
     setTimeout(() => { window.print(); }, 100);
