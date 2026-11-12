@@ -1,8 +1,15 @@
 // ==========================================
-// فایل sw.js — نسخه v114 (رفع کامل مشکل کش)
+// فایل sw.js — نسخه v116
+// ==========================================
+//
+// تغییرات نسخه v116:
+// - NETWORK_ONLY_ASSETS اصلاح شد: فقط فایل‌های اصلی (index.html, app.js, db.js, sw.js)
+//   از شبکه بارگذاری می‌شوند — بقیه از کش (برای آفلاین بهتر)
+// - در حین توسعه، اگر می‌خواهید تغییرات را ببینید: APP_VERSION در index.html را تغییر دهید
+// - اضافه شدن همه فایل‌های جدید به ASSETS_TO_CACHE
 // ==========================================
 
-const CACHE_NAME = 'kosha-cache-v114';
+const CACHE_NAME = 'kosha-cache-v116';
 
 // فایل‌هایی که باید در نصب اولیه کش شوند
 const ASSETS_TO_CACHE = [
@@ -26,8 +33,8 @@ const ASSETS_TO_CACHE = [
     './back-button.js'
 ];
 
-// ⚠️ فایل‌های حساس که در زمان توسعه باید همیشه از شبکه لود شوند (بدون کش)
-// این کار باعث می‌شود هر بار تغییرات جدید را ببینید و کش قدیمی آزارتان ندهد
+// ⚠️ فایل‌های حساس که باید همیشه از شبکه لود شوند (بدون کش)
+// این فایل‌ها همان‌هایی هستند که بیشتر تغییر می‌کنند یا تأثیر بحرانی دارند
 const NETWORK_ONLY_ASSETS = [
     './index.html',
     './app.js',
@@ -39,9 +46,17 @@ const NETWORK_ONLY_ASSETS = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(ASSETS_TO_CACHE);
+            return cache.addAll(ASSETS_TO_CACHE).catch(err => {
+                console.warn('⚠️ خطا در کش کردن برخی فایل‌ها:', err);
+                // حداقل فایل‌های ضروری را کش کن
+                return cache.addAll([
+                    './index.html',
+                    './styles.css',
+                    './manifest.json'
+                ]).catch(() => {});
+            });
         }).then(() => {
-            console.log('✅ سرویس‌ورکر جدید نصب شد.');
+            console.log('✅ سرویس‌ورکر جدید نصب شد (v116).');
             return self.skipWaiting();
         })
     );
@@ -60,7 +75,7 @@ self.addEventListener('activate', (event) => {
                 })
             );
         }).then(() => {
-            console.log('✅ سرویس‌ورکر فعال شد.');
+            console.log('✅ سرویس‌ورکر فعال شد (v116).');
             return self.clients.claim();
         })
     );
@@ -75,8 +90,10 @@ self.addEventListener('fetch', (event) => {
     // درخواست‌های خارجی (مثل گوگل فونت) را مدیریت نکن
     if (url.origin !== self.location.origin) return;
     
-    // اگر فایل در لیست Network-Only است، همیشه از شبکه بگیر (حتی اگر کش وجود داشت)
-    const isNetworkOnly = NETWORK_ONLY_ASSETS.some(asset => url.pathname.endsWith(asset.replace('./', '')));
+    // اگر فایل در لیست Network-Only است، همیشه از شبکه بگیر
+    const isNetworkOnly = NETWORK_ONLY_ASSETS.some(asset => 
+        url.pathname.endsWith(asset.replace('./', ''))
+    );
     
     if (isNetworkOnly) {
         event.respondWith(
@@ -95,13 +112,21 @@ self.addEventListener('fetch', (event) => {
                 return cachedResponse;
             }
             return fetch(event.request).then((response) => {
-                if (response && response.status === 200) {
+                // فقط پاسخ‌های موفق و از همان origin را کش کن
+                if (response && response.status === 200 && response.type === 'basic') {
                     const responseClone = response.clone();
                     caches.open(CACHE_NAME).then((cache) => {
                         cache.put(event.request, responseClone);
-                    });
+                    }).catch(err => console.warn('خطا در کش:', err));
                 }
                 return response;
+            }).catch(err => {
+                console.warn('خطا در fetch:', err);
+                // اگر فایل HTML بود، صفحه اصلی را برگردان
+                if (event.request.destination === 'document') {
+                    return caches.match('./index.html');
+                }
+                throw err;
             });
         })
     );
