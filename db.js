@@ -1,9 +1,10 @@
 /**
- * فایل db.js — لایه ارتباط با IndexedDB (نسخه سالم)
+ * فایل db.js — لایه ارتباط با IndexedDB
+ * نسخه سالم ۱۳
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 12; // بازگشت به نسخه ۱۲
+const DB_VERSION = 13;
 
 let db;
 
@@ -99,7 +100,10 @@ function saveData(storeName, data) {
         const transaction = db.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
         const request = store.put(data);
-        request.onsuccess = () => resolve(request.result);
+        request.onsuccess = () => {
+            resolve(request.result);
+            if (typeof window.triggerAutoBackup === 'function') window.triggerAutoBackup();
+        };
         request.onerror = (event) => reject(event.target.error);
     });
 }
@@ -114,7 +118,10 @@ function saveBulkData(storeName, dataArray) {
             const request = store.put(data);
             request.onsuccess = () => {
                 completed++;
-                if (completed === dataArray.length) resolve();
+                if (completed === dataArray.length) {
+                    resolve();
+                    if (typeof window.triggerAutoBackup === 'function') window.triggerAutoBackup();
+                }
             };
             request.onerror = (event) => reject(event.target.error);
         });
@@ -146,7 +153,10 @@ function deleteData(storeName, id) {
         const transaction = db.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
         const request = store.delete(id);
-        request.onsuccess = () => resolve();
+        request.onsuccess = () => {
+            resolve();
+            if (typeof window.triggerAutoBackup === 'function') window.triggerAutoBackup();
+        };
         request.onerror = (event) => reject(event.target.error);
     });
 }
@@ -156,7 +166,10 @@ function clearStore(storeName) {
         const transaction = db.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
         const request = store.clear();
-        request.onsuccess = () => resolve();
+        request.onsuccess = () => {
+            resolve();
+            if (typeof window.triggerAutoBackup === 'function') window.triggerAutoBackup();
+        };
         request.onerror = (event) => reject(event.target.error);
     });
 }
@@ -164,25 +177,44 @@ function clearStore(storeName) {
 async function exportAllData() {
     const data = {};
     const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
-    for (const store of stores) { try { data[store] = await getAllData(store); } catch (e) { data[store] = []; } }
+    for (const store of stores) {
+        try { data[store] = await getAllData(store); } catch (e) { data[store] = []; }
+    }
     return data;
 }
 
 async function importAllData(data) {
+    if (!data || typeof data !== 'object') throw new Error('داده‌های نامعتبر');
     const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
-    for (const store of stores) {
-        if (data[store] && Array.isArray(data[store])) {
-            await clearStore(store);
-            if (data[store].length > 0) await saveBulkData(store, data[store]);
+    const backup = {};
+    for (const store of stores) { backup[store] = await getAllData(store); }
+    
+    try {
+        for (const store of stores) {
+            if (data[store] && Array.isArray(data[store])) {
+                await clearStore(store);
+                if (data[store].length > 0) await saveBulkData(store, data[store]);
+            }
         }
+    } catch (e) {
+        for (const store of stores) {
+            await clearStore(store);
+            if (backup[store].length > 0) await saveBulkData(store, backup[store]);
+        }
+        throw new Error('خطا در بازیابی داده‌ها، تغییرات لغو شد.');
     }
 }
 
 async function getBackupSettings() {
-    let settings = await getDataById('backupSettings', 1);
-    if (!settings) {
-        settings = { id: 1, reminderType: 'off', lastReminderDate: null, periods: [] };
-        await saveData('backupSettings', settings);
-    }
-    return settings;
+    try {
+        let settings = await getDataById('backupSettings', 1);
+        if (!settings) {
+            settings = { id: 1, reminderType: 'off', lastReminderDate: null, periods: [] };
+            await saveData('backupSettings', settings);
+        }
+        return settings;
+    } catch (e) { return { id: 1, reminderType: 'off', lastReminderDate: null, periods: [] }; }
 }
+
+async function getClassProfile() { return null; }
+async function getAllDataByYear(storeName, academicYear) { return await getAllData(storeName); }
