@@ -33,11 +33,19 @@ async function saveStudent(e) {
         groupId: null
     };
     
-    await saveData('students', data);
-    
-    document.getElementById('student-form').reset();
-    showToast('دانش‌آموز جدید با موفقیت ثبت شد!', 'success');
-    loadAllData();
+    try {
+        await saveData('students', data);
+        document.getElementById('student-form').reset();
+        
+        // *** پاک کردن وضعیت Dirty بعد از ذخیره موفق ***
+        if (typeof clearFormDirty === 'function') clearFormDirty();
+        
+        showToast('دانش‌آموز جدید با موفقیت ثبت شد!', 'success');
+        loadAllData();
+    } catch (err) {
+        console.error(err);
+        showToast('خطا در ثبت دانش‌آموز.', 'error');
+    }
 }
 
 function renderStudentsList() {
@@ -155,39 +163,94 @@ function closeEditStudentModal() {
 
 async function saveEditedStudent(e) {
     if(e) e.preventDefault();
+    
     const id = parseInt(document.getElementById('editStudentIdModal').value);
+    const newFirstName = document.getElementById('editStudentFirstNameModal').value.trim();
+    const newLastName = document.getElementById('editStudentLastNameModal').value.trim();
     const newNationalId = document.getElementById('editStudentNationalIdModal').value.trim();
 
+    // ==========================================
+    // ✅ اعتبارسنجی گام‌به‌گام با پیام‌های دقیق
+    // ==========================================
+    
+    // ۱. بررسی خالی نبودن نام و نام خانوادگی
+    if (!newFirstName || !newLastName) {
+        showToast('نام و نام خانوادگی نمی‌تواند خالی باشد.', 'error');
+        return;
+    }
+    
+    // ۲. بررسی خالی نبودن کد ملی
+    if (!newNationalId) {
+        showToast('کد ملی نمی‌تواند خالی باشد.', 'error');
+        return;
+    }
+    
+    // ۳. بررسی طول کد ملی
+    if (newNationalId.length !== 10) {
+        showToast('کد ملی باید دقیقاً ۱۰ رقم باشد.', 'error');
+        return;
+    }
+    
+    // ۴. بررسی عددی بودن کد ملی
+    if (!/^\d{10}$/.test(newNationalId)) {
+        showToast('کد ملی باید فقط شامل اعداد باشد.', 'error');
+        return;
+    }
+    
+    // ۵. بررسی صحت الگوریتمی (چک‌سام)
     if (!validateNationalId(newNationalId)) {
-        showToast('کد ملی وارد شده معتبر نیست.', 'error');
+        showToast('کد ملی وارد شده معتبر نیست (الگوریتم چک‌سام). لطفاً کد صحیح وارد کنید.', 'error');
         return;
     }
 
+    // ۶. بررسی تکراری نبودن کد ملی (با دانش‌آموزان دیگر)
     const isDuplicate = window.allStudentsData.some(st => st.nationalId === newNationalId && st.id !== id);
     if (isDuplicate) {
-        showToast('این کد ملی برای دانش‌آموز دیگری ثبت شده است.', 'error');
+        const duplicateStudent = window.allStudentsData.find(st => st.nationalId === newNationalId && st.id !== id);
+        showToast(`این کد ملی قبلاً برای «${duplicateStudent.firstName} ${duplicateStudent.lastName}» ثبت شده است.`, 'error');
         return;
     }
 
+    // ۷. بررسی وجود دانش‌آموز
     const existing = await getDataById('students', id);
     if (!existing) {
-        showToast('دانش‌آموز یافت نشد!', 'error');
+        showToast('دانش‌آموز یافت نشد! ممکن است حذف شده باشد.', 'error');
+        closeEditStudentModal();
+        loadAllData();
         return;
     }
     const existingGroupId = existing.groupId;
 
     const data = {
         id: id,
-        firstName: document.getElementById('editStudentFirstNameModal').value,
-        lastName: document.getElementById('editStudentLastNameModal').value,
+        firstName: newFirstName,
+        lastName: newLastName,
         nationalId: newNationalId,
         groupId: existingGroupId
     };
     
-    await saveData('students', data);
-    showToast('اطلاعات دانش‌آموز با موفقیت ویرایش شد!', 'success');
-    closeEditStudentModal();
-    loadAllData();
+    // ==========================================
+    // ✅ مدیریت خطای دیتابیس
+    // ==========================================
+    try {
+        await saveData('students', data);
+        
+        // پاک کردن وضعیت Dirty
+        if (typeof clearFormDirty === 'function') clearFormDirty();
+        
+        showToast('اطلاعات دانش‌آموز با موفقیت ویرایش شد!', 'success');
+        closeEditStudentModal();
+        loadAllData();
+    } catch (err) {
+        console.error('خطا در ویرایش دانش‌آموز:', err);
+        
+        // مدیریت خطای ConstraintError (تکراری بودن در دیتابیس)
+        if (err && err.name === 'ConstraintError') {
+            showToast('خطای دیتابیس: این کد ملی قبلاً ثبت شده است.', 'error');
+        } else {
+            showToast('خطا در ذخیره تغییرات. لطفاً دوباره تلاش کنید.', 'error');
+        }
+    }
 }
 
 async function deleteStudent(id) {
