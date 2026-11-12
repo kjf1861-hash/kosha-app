@@ -504,7 +504,7 @@
     </a>
 </nav>
 
-<!-- ===== مودال‌ها (بدون تغییر در این گام) ===== -->
+<!-- ===== مودال‌ها ===== -->
 <div id="settings-modal" class="modal-overlay">
     <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header">⚙️ تنظیمات</div>
@@ -813,13 +813,30 @@
     </div>
 </div>
 
+    <!-- ===== مودال جدید: هشدار سفارشی خروج ===== -->
+    <div id="exit-confirm-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header" style="color: #b45309;">⚠️ خروج از صفحه</div>
+            <div style="padding: 15px 0 25px;">
+                <p id="exit-confirm-message" style="font-size: 1rem; line-height: 1.8; margin-bottom: 15px;">
+                    شما تغییرات ذخیره‌نشده دارید. اگر خارج شوید، این تغییرات از بین می‌رود.
+                </p>
+                <p style="font-size: 0.9rem; color: var(--text-muted);">آیا مطمئن هستید؟</p>
+            </div>
+            <div class="modal-footer" style="gap: 10px;">
+                <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="cancelExit()">انصراف</button>
+                <button type="button" class="btn btn-primary" style="flex: 1; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);" onclick="confirmExit()">خروج</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== اسکریپت‌ها ===== -->
     <script src="jalali-utils.js?v=1"></script>
     <script src="calendar-data.js?v=4"></script>
     <script src="calendar.js?v=5"></script>
     <script src="db.js"></script>
-    <script src="app.js?v=6"></script>
-    <script src="back-button.js?v=5" defer></script>
+    <script src="app.js?v=7"></script>
+    <script src="back-button.js?v=6" defer></script>
     <script src="class.js"></script>
     <script src="students.js"></script>
     <script src="lesson.js"></script>
@@ -918,7 +935,7 @@
     <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) -->
     <script>
         (function() {
-            const APP_VERSION = 'v105';
+            const APP_VERSION = 'v106';
             const storedVersion = localStorage.getItem('kosha-version');
             
             if (storedVersion !== APP_VERSION) {
