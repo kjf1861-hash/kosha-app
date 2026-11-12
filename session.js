@@ -464,7 +464,6 @@ function initCalendar() {
             const isHoliday = officialHolidays[currentCalendarYear]?.includes(selectedSessionDate) || false;
             const isActiveDay = (window.scheduleActiveDays || []).includes(selectedSessionDayOfWeek);
             
-            // *** جدید: دریافت مناسبت ***
             const eventText = (typeof getFormattedEventsForDate === 'function') 
                 ? getFormattedEventsForDate(selectedSessionDate) 
                 : '';
@@ -599,7 +598,6 @@ function changeCalendarYear() {
     renderCalendarGrid();
 }
 
-// *** تغییر اصلی: نمایش مناسبت در باکس تاریخ انتخاب شده ***
 function selectCalendarDay(day, dateStr) {
     selectedSessionDate = dateStr;
     const hiddenDate = document.getElementById('sessionDateHidden');
@@ -620,7 +618,6 @@ function selectCalendarDay(day, dateStr) {
     
     const isActiveDay = (window.scheduleActiveDays || []).includes(selectedSessionDayOfWeek);
 
-    // *** جدید: دریافت مناسبت ***
     const eventText = (typeof getFormattedEventsForDate === 'function') 
         ? getFormattedEventsForDate(dateStr) 
         : '';
@@ -628,7 +625,6 @@ function selectCalendarDay(day, dateStr) {
     if (detectedDisplay && actionArea) {
         detectedDisplay.style.display = 'block';
         
-        // ساخت متن پایه با احتساب مناسبت
         let baseDisplayHtml = `📅 تاریخ انتخابی: <strong>${toPersianNumber(selectedSessionDate)}</strong> (${selectedSessionDayOfWeek})`;
         if (eventText) {
             baseDisplayHtml += `<br><span style="color: #7c3aed; font-size: 0.9rem; font-weight: normal;">${eventText}</span>`;
@@ -717,8 +713,17 @@ async function editSessionDate(sessionId, currentDate) {
     const newDate = prompt('تاریخ جدید (مثلاً 1405/08/20):', currentDate);
     if (newDate === null) return;
     const trimmed = newDate.trim();
-    if (!/^\d{4}\/\d{2}\/\d{2}$/.test(trimmed)) { showToast('فرمت نامعتبر است.', 'error'); return; }
-    if (trimmed === currentDate) return;
+    
+    // ✅ تغییر اصلی: استفاده از اعتبارسنجی هوشمند به جای regex ساده
+    if (!window.isValidJalaliDateString(trimmed)) { 
+        showToast('تاریخ وارد شده معتبر نیست. لطفاً یک تاریخ واقعی (با در نظر گرفتن تعداد روزهای ماه) وارد کنید.', 'error'); 
+        return; 
+    }
+    
+    if (trimmed === currentDate) {
+        showToast('تاریخ جدید با تاریخ فعلی یکسان است.', 'info');
+        return;
+    }
 
     const session = await getDataById('sessions', sessionId);
     if(session) {
