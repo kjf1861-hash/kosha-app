@@ -550,19 +550,48 @@
 
         <hr style="border-top: 1px dashed var(--border-color); margin: 20px 0;">
 
+        <!-- ===== بخش پشتیبان‌گیری بازطراحی شده ===== -->
         <div class="card" style="border: none; box-shadow: none; padding: 0; margin-bottom: 20px;">
             <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">📤 پشتیبان‌گیری و بازیابی</h3>
+            
             <div id="backup-status" style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 5px; padding: 8px; background: var(--input-bg); border-radius: 8px;">
                 آخرین پشتیبان‌گیری دستی: <strong>نامشخص</strong>
             </div>
             <div id="emergency-backup-status" style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 15px; padding: 8px; background: var(--input-bg); border-radius: 8px;">
                 ♻️ آخرین نسخه خودکار: <strong>در حال محاسبه...</strong>
             </div>
+
             <button type="button" class="btn btn-primary btn-block" onclick="exportData()">📤 خروجی JSON (پشتیبان دستی)</button>
             <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; text-align: center; margin-bottom: 15px;">این فایل را در جای امنی ذخیره کنید.</p>
             
             <button type="button" class="btn btn-block" onclick="restoreFromEmergencyBackup()" style="background: #f59e0b; color: white; margin-bottom: 15px;">♻️ بازیابی از آخرین نسخه خودکار</button>
-            
+
+            <!-- تنظیمات یادآور پشتیبان‌گیری -->
+            <div style="border-top: 1px dashed var(--border-color); padding-top: 15px; margin-bottom: 15px;">
+                <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 0.95rem;">🔔 یادآور پشتیبان‌گیری خودکار</h4>
+                <div class="form-group">
+                    <label class="form-label" style="font-size: 0.85rem;">یادآوری دانلود پشتیبان:</label>
+                    <select id="backupReminderType" class="form-control" style="margin-bottom: 8px;">
+                        <option value="off">غیرفعال</option>
+                        <option value="daily">روزانه</option>
+                        <option value="weekly">هفتگی</option>
+                        <option value="monthly">ماهانه</option>
+                    </select>
+                    <button type="button" class="btn btn-secondary btn-block btn-sm" onclick="saveBackupSettings()">💾 ذخیره تنظیمات یادآور</button>
+                </div>
+            </div>
+
+            <!-- مدیریت بازه‌ها -->
+            <div style="border-top: 1px dashed var(--border-color); padding-top: 15px;">
+                <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span>📅 بازه‌های بایگانی (مثل نوبت اول)</span>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openPeriodEditor()" style="padding: 4px 10px; font-size: 0.8rem;">➕ بازه جدید</button>
+                </h4>
+                <div id="periods-list-container" style="margin-bottom: 15px;">
+                    <!-- لیست بازه‌ها توسط JS پر می‌شود -->
+                </div>
+            </div>
+
             <div style="border-top: 1px dashed var(--border-color); padding-top: 15px;">
                 <label class="form-label">بازیابی از فایل:</label>
                 <input type="file" id="importFile" accept=".json" class="form-control" onchange="importData(event)">
@@ -823,12 +852,77 @@
         </div>
     </div>
 
+    <!-- ===== مودال جدید: یادآور پشتیبان‌گیری ===== -->
+    <div id="backup-reminder-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 450px; text-align: center;">
+            <div class="modal-header" style="color: #4f46e5;">📤 یادآور پشتیبان‌گیری</div>
+            <div style="padding: 15px 0 25px;">
+                <div style="font-size: 3rem; margin-bottom: 10px;">💾</div>
+                <p id="backup-reminder-message" style="font-size: 1rem; line-height: 1.8; margin-bottom: 15px;">
+                    موعد پشتیبان‌گیری فرا رسیده است.
+                </p>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">پیشنهاد می‌شود از داده‌های خود نسخه پشتیبان تهیه کنید تا در صورت بروز مشکل، اطلاعاتتان از بین نرود.</p>
+            </div>
+            <div class="modal-footer" style="flex-direction: column; gap: 10px;">
+                <button type="button" class="btn btn-primary" style="width: 100%; background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);" onclick="handleReminderDownload()">📥 دانلود پشتیبان</button>
+                <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="snoozeReminder()">⏰ بعداً یادآوری کن</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== مودال جدید: تعریف بازه ===== -->
+    <div id="period-editor-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header" id="period-editor-title">➕ تعریف بازه جدید</div>
+            
+            <div class="form-group">
+                <label class="form-label">عنوان بازه</label>
+                <input type="text" id="periodTitle" class="form-control" placeholder="مثلاً: نوبت اول، نوبت دوم..." required>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">تاریخ شروع</label>
+                    <div style="background: var(--input-bg); padding: 10px; border-radius: var(--radius-sm); text-align: center; cursor: pointer; border: 1px solid var(--border-color);" onclick="setCalendarTarget('start')">
+                        <span id="periodStartDisplay" style="font-size: 0.9rem; font-weight: bold; color: var(--primary);">انتخاب نشده</span>
+                    </div>
+                    <input type="hidden" id="periodStartDate" value="">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">تاریخ پایان</label>
+                    <div style="background: var(--input-bg); padding: 10px; border-radius: var(--radius-sm); text-align: center; cursor: pointer; border: 1px solid var(--border-color);" onclick="setCalendarTarget('end')">
+                        <span id="periodEndDisplay" style="font-size: 0.9rem; font-weight: bold; color: var(--primary);">انتخاب نشده</span>
+                    </div>
+                    <input type="hidden" id="periodEndDate" value="">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">📅 تقویم (ابتدا دکمه شروع یا پایان را بزنید)</label>
+                <div class="score-calendar-body" style="background: var(--card-bg); border: 1px solid var(--border-color); padding: 10px; border-radius: var(--radius-sm);">
+                    <div class="calendar-header">
+                        <button type="button" onclick="updatePeriodCalendarSelect('month', Math.max(1, periodCalendarState.month - 1))">◀</button>
+                        <div class="calendar-title" id="period-calendar-title"></div>
+                        <button type="button" onclick="updatePeriodCalendarSelect('month', Math.min(12, periodCalendarState.month + 1))">▶</button>
+                    </div>
+                    <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
+                    <div class="calendar-grid" id="period-calendar-grid"></div>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="margin-top: 20px; display: flex; gap: 10px;">
+                <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closePeriodEditor()">انصراف</button>
+                <button type="button" class="btn btn-primary" style="flex: 2;" onclick="savePeriod()">💾 ذخیره بازه</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== اسکریپت‌ها ===== -->
     <script src="jalali-utils.js?v=1"></script>
     <script src="calendar-data.js?v=4"></script>
     <script src="calendar.js?v=5"></script>
-    <script src="db.js?v=1"></script>
-    <script src="app.js?v=8"></script>
+    <script src="db.js?v=2"></script>
+    <script src="app.js?v=9"></script>
     <script src="back-button.js?v=6" defer></script>
     <script src="class.js"></script>
     <script src="students.js"></script>
@@ -883,6 +977,7 @@
             if (typeof populateResetSelect === 'function') populateResetSelect();
             if (typeof populateScheduleDaysCheckboxes === 'function') populateScheduleDaysCheckboxes();
             if (typeof checkBackupReminder === 'function') checkBackupReminder();
+            if (typeof initBackupSettingsForm === 'function') initBackupSettingsForm();
         }
         function closeSettingsModal() {
             document.getElementById('settings-modal').classList.remove('show');
@@ -929,7 +1024,7 @@
     <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) -->
     <script>
         (function() {
-            const APP_VERSION = 'v107';
+            const APP_VERSION = 'v108';
             const storedVersion = localStorage.getItem('kosha-version');
             
             if (storedVersion !== APP_VERSION) {
