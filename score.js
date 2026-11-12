@@ -8,7 +8,6 @@ let currentQuranStudentView = 'flat';
 let currentSpecialStudentView = 'flat';
 let currentHandwritingStudentView = 'flat';
 
-// وضعیت تقویم‌های تب امتیاز
 let scoreCalendarState = {
     record: { year: 1405, month: 7, selectedDate: '' },
     quran: { year: 1405, month: 7, selectedDate: '' },
@@ -615,6 +614,9 @@ async function confirmAndSaveRecord() {
         showToast('امتیاز با موفقیت ثبت شد!', 'success');
         closePreviewModal();
         
+        // *** پاک کردن وضعیت Dirty بعد از ذخیره موفق ***
+        if (typeof clearFormDirty === 'function') clearFormDirty();
+        
         if (isSaveAndNext) {
             document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = false);
             const scoreInput = document.getElementById('dynamicLevelInput') || document.getElementById('dynamicCountInput') || document.getElementById('dynamicFreeInput');
@@ -695,6 +697,10 @@ async function saveQuranRecord() {
         showToast('پویش قرآن با موفقیت ثبت شد!', 'success');
         const form = document.getElementById('quran-form');
         if (form) form.reset();
+        
+        // *** پاک کردن وضعیت Dirty ***
+        if (typeof clearFormDirty === 'function') clearFormDirty();
+        
         loadAllData();
     } catch (e) { console.error(e); showToast('خطا در ثبت پویش قرآن.', 'error'); }
 }
@@ -729,6 +735,10 @@ async function saveSpecialReward() {
         showToast('تشویق ویژه با موفقیت ثبت شد!', 'success');
         const form = document.getElementById('special-reward-form');
         if (form) form.reset();
+        
+        // *** پاک کردن وضعیت Dirty ***
+        if (typeof clearFormDirty === 'function') clearFormDirty();
+        
         loadAllData();
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق ویژه.', 'error'); }
 }
@@ -756,6 +766,10 @@ async function saveHandwritingReward() {
         showToast('تشویق خوش‌خط‌نویسی با موفقیت ثبت شد!', 'success');
         const form = document.getElementById('handwriting-reward-form');
         if (form) form.reset();
+        
+        // *** پاک کردن وضعیت Dirty ***
+        if (typeof clearFormDirty === 'function') clearFormDirty();
+        
         loadAllData();
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق خوش‌خط‌نویسی.', 'error'); }
 }
@@ -912,6 +926,9 @@ async function openEditRecordModal(id) {
 function closeEditModal() { 
     const modal = document.getElementById('edit-record-modal');
     if (modal) modal.classList.remove('show'); 
+    
+    // *** پاک کردن وضعیت Dirty بعد از بستن مودال ***
+    if (typeof clearFormDirty === 'function') clearFormDirty();
 }
 
 async function saveEditedRecord(event) {
@@ -935,8 +952,9 @@ async function saveEditedRecord(event) {
         itemName = selectedItem ? selectedItem.title : '';
     }
 
-    if (!/^\d{4}\/\d{2}\/\d{2}$/.test(newDate)) {
-        showToast('فرمت تاریخ نامعتبر است. مثلاً: 1405/08/15', 'error');
+    // ✅ تغییر اصلی: استفاده از اعتبارسنجی هوشمند به جای regex ساده
+    if (!window.isValidJalaliDateString(newDate)) {
+        showToast('تاریخ وارد شده معتبر نیست. لطفاً یک تاریخ واقعی (با در نظر گرفتن تعداد روزهای ماه) وارد کنید.', 'error');
         return;
     }
 
@@ -969,6 +987,10 @@ async function saveEditedRecord(event) {
         
         await saveData('records', record);
         showToast('رکورد با موفقیت ویرایش شد.', 'success');
+        
+        // *** پاک کردن وضعیت Dirty ***
+        if (typeof clearFormDirty === 'function') clearFormDirty();
+        
         closeEditModal(); loadAllData();
     } catch (e) { console.error(e); showToast('خطا در ذخیره.', 'error'); }
 }
