@@ -17,7 +17,6 @@ let scoreCalendarState = {
 };
 
 const scoreJalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
-const scoreLeapYears = [1408]; 
 
 let _lastStudentsHash = '';
 
@@ -109,25 +108,8 @@ function renderScoreData() {
 
 // ==========================================
 // توابع تقویم شمسی تب امتیاز
+// (این توابع حالا از jalali-utils.js می‌آیند)
 // ==========================================
-function isScoreLeapYear(year) { return scoreLeapYears.includes(year); }
-
-function getScoreDaysInMonth(year, month) {
-    if (month <= 6) return 31;
-    if (month <= 11) return 30;
-    return isScoreLeapYear(year) ? 30 : 29;
-}
-
-function getScoreFirstDayOfWeek(year, month) {
-    let daysPassed = 0;
-    for (let y = 1405; y < year; y++) {
-        daysPassed += isScoreLeapYear(y) ? 366 : 365;
-    }
-    for (let m = 1; m < month; m++) {
-        daysPassed += getScoreDaysInMonth(year, m);
-    }
-    return daysPassed % 7;
-}
 
 function initScoreCalendars() {
     const ay = window.activeAcademicYear || '1405-1406';
@@ -218,8 +200,8 @@ function renderScoreCalendar(type) {
     if (!grid) return;
     grid.innerHTML = '';
 
-    const firstDay = getScoreFirstDayOfWeek(state.year, state.month);
-    const daysInMonth = getScoreDaysInMonth(state.year, state.month);
+    const firstDay = getJalaliFirstDayOfWeek(state.year, state.month);
+    const daysInMonth = getJalaliDaysInMonth(state.year, state.month);
     
     const startBound = `${startY}/07/01`;
     const endBound = `${endY}/06/31`;
@@ -260,7 +242,7 @@ function updateScoreCalendarSelect(type, field, value) {
     saveScoreCalendarState(type);
     renderScoreCalendar(type);
 }
-// *** تغییر اصلی: اضافه کردن نمایش مناسبت به تابع selectScoreCalendarDay ***
+
 function selectScoreCalendarDay(type, dateStr) {
     scoreCalendarState[type].selectedDate = dateStr;
     saveScoreCalendarState(type);
@@ -274,17 +256,13 @@ function selectScoreCalendarDay(type, dateStr) {
 
     renderScoreCalendar(type);
     renderScoreDayArchive(type, dateStr);
-    
-    // آکاردئون باز می‌ماند تا کاربر خودش ببندد
 }
 
-// *** تغییر اصلی: نمایش مناسبت در باکس آرشیو روز ***
 function renderScoreDayArchive(type, dateStr) {
     const archiveContainer = document.getElementById(`${type}-day-archive`);
     const archiveList = document.getElementById(`${type}-day-archive-list`);
     if (!archiveContainer || !archiveList) return;
 
-    // دریافت مناسبت این روز
     const eventText = (typeof getEventTitleForDateString === 'function') 
         ? getEventTitleForDateString(dateStr) 
         : '';
@@ -298,7 +276,6 @@ function renderScoreDayArchive(type, dateStr) {
         return false;
     });
 
-    // اگر نه مناسبت هست و نه رکورد، باکس را مخفی کن
     if (!eventText && dayRecords.length === 0) {
         archiveContainer.style.display = 'none';
         return;
@@ -307,7 +284,6 @@ function renderScoreDayArchive(type, dateStr) {
     archiveContainer.style.display = 'block';
     archiveList.innerHTML = '';
 
-    // *** نمایش مناسبت (اگر وجود داشته باشد) ***
     if (eventText) {
         archiveList.innerHTML += `
             <div style="background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); border: 1px solid #c4b5fd; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px;">
@@ -320,7 +296,6 @@ function renderScoreDayArchive(type, dateStr) {
         `;
     }
 
-    // نمایش رکوردهای روز
     if (dayRecords.length > 0) {
         archiveList.innerHTML += `<h4 style="margin: 8px 0;">📋 سوابق ثبت‌شده در این روز (${toPersianNumber(dayRecords.length)} مورد):</h4>`;
         
@@ -364,6 +339,11 @@ function resetScoreCalendar(type) {
 
     renderScoreCalendar(type);
 }
+
+// ==========================================
+// مدیریت انتخاب دانش‌آموزان
+// ==========================================
+
 function createStudentLabel(st, checkboxClass) {
     const g = window.allGroupsData.find(x => x.id === st.groupId);
     const badge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
@@ -522,6 +502,10 @@ function toggleHandwritingGroupSelection(checkbox, groupId, checkboxClass) {
     document.querySelectorAll(`.handwriting-student-checkbox.group-student-${groupId}`).forEach(cb => cb.checked = checkbox.checked);
 }
 
+// ==========================================
+// ثبت ارزشیابی
+// ==========================================
+
 function renderScoreInput(item) {
     const section = document.getElementById('dynamic-score-section');
     const container = document.getElementById('score-input-container');
@@ -591,7 +575,6 @@ function showPreview(isFinal) {
 
     const previewContent = document.getElementById('preview-content');
     if (previewContent) {
-        // نمایش مناسبت در پیش‌نمایش (اختیاری)
         const eventText = (typeof getFormattedEventsForDate === 'function') 
             ? getFormattedEventsForDate(dateStr) 
             : '';
@@ -776,6 +759,11 @@ async function saveHandwritingReward() {
         loadAllData();
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق خوش‌خط‌نویسی.', 'error'); }
 }
+
+// ==========================================
+// سوابق ارزشیابی
+// ==========================================
+
 function loadAssessmentRecords() {
     const container = document.getElementById('assessment-records-list');
     const pagination = document.getElementById('records-pagination');
