@@ -585,24 +585,50 @@ async function initApp() {
 }
 
 // ==========================================
-// بارگذاری داده‌ها (بدون ریستارت!)
+// بارگذاری داده‌ها — نسخه اصلاح‌شده v2
+// ==========================================
+// ✅ تغییرات:
+// - خواندن academicYear از classProfile و اولویت دادن به آن (منبع حقیقت = DB)
+// - همگام‌سازی localStorage با مقدار DB
+// - ایمن‌سازی در برابر ناسازگاری سال تحصیلی
 // ==========================================
 async function loadAllData() {
     try {
         const classData = await getDataById('classProfile', 1);
+        
         if (classData) {
-            // ✅ فقط اگر academicYear وجود نداشت، از حافظه بخوان
+            // ✅ منبع حقیقت = DB. اول academicYear رو از DB بخون
             if (classData.academicYear) {
-                window.activeAcademicYear = classData.academicYear;
-                localStorage.setItem('kosha-active-academic-year', classData.academicYear);
+                const dbYear = classData.academicYear;
+                const storedYear = localStorage.getItem('kosha-active-academic-year');
+                
+                // اگر DB و localStorage ناسازگارن، DB رو ترجیح بده
+                if (dbYear !== storedYear) {
+                    console.warn('⚠️ ناسازگاری سال تحصیلی:', { dbYear, storedYear });
+                    localStorage.setItem('kosha-active-academic-year', dbYear);
+                }
+                window.activeAcademicYear = dbYear;
+            } else {
+                // اگر DB سال تحصیلی نداره، از localStorage یا پیش‌فرض استفاده کن
+                window.activeAcademicYear = localStorage.getItem('kosha-active-academic-year') || '1405-1406';
             }
-            if (classData.scheduleActiveDays) window.scheduleActiveDays = classData.scheduleActiveDays;
-            if (classData.schedulePeriodsCount) window.schedulePeriodsCount = parseInt(classData.schedulePeriodsCount);
             
-            // ✅ پر کردن فرم تنظیمات با داده‌های ذخیره شده
-            if (typeof populateCurrentClassProfile === 'function') {
-                populateCurrentClassProfile(classData);
+            // بقیه تنظیمات
+            if (classData.scheduleActiveDays) {
+                window.scheduleActiveDays = classData.scheduleActiveDays;
             }
+            if (classData.schedulePeriodsCount) {
+                window.schedulePeriodsCount = parseInt(classData.schedulePeriodsCount);
+            }
+            
+            // ✅ به‌روزرسانی subtitle هدر
+            const headerSubtitle = document.getElementById('header-subtitle');
+            if (headerSubtitle && classData.name) {
+                headerSubtitle.textContent = classData.name;
+            }
+        } else {
+            // اگر کلاس تعریف نشده، از localStorage یا پیش‌فرض
+            window.activeAcademicYear = localStorage.getItem('kosha-active-academic-year') || '1405-1406';
         }
 
         window.allStudentsData = await getAllData('students');
@@ -621,26 +647,9 @@ async function loadAllData() {
         currentBackupSettings = await getBackupSettings();
 
         renderUI();
-    } catch (e) { console.error('خطا در بارگذاری داده‌ها:', e); }
-}
-
-        window.allStudentsData = await getAllData('students');
-        window.allGroupsData = await getAllData('groups');
-        window.allSubjectsData = await getAllData('subjects');
-        window.allRecordsData = await getAllData('records');
-        window.allSessionsData = await getAllData('sessions');
-        
-        const validSessionIds = window.allSessionsData.map(s => s.id);
-        const allAttendance = await getAllData('attendance');
-        window.allAttendanceData = allAttendance.filter(a => validSessionIds.includes(a.sessionId));
-        
-        window.allWeeklyScheduleData = await getAllData('weeklySchedule');
-        assessmentItems = await getAllData('assessmentItems');
-        window.allAssessmentItems = assessmentItems;
-        currentBackupSettings = await getBackupSettings();
-
-        renderUI();
-    } catch (e) { console.error('خطا در بارگذاری داده‌ها:', e); }
+    } catch (e) { 
+        console.error('خطا در بارگذاری داده‌ها:', e); 
+    }
 }
 
 function renderUI() {
