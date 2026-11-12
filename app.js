@@ -9,7 +9,7 @@ window.allSessionsData = [];
 window.allAttendanceData = [];
 window.allWeeklyScheduleData = [];
 let assessmentItems = [];
-window.activeAcademicYear = '1405-1406'; 
+window.activeAcademicYear = localStorage.getItem('kosha-active-academic-year') || '1405-1406'; 
 
 window.scheduleActiveDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه'];
 window.schedulePeriodsCount = 5;
@@ -590,11 +590,11 @@ async function initApp() {
 async function loadAllData() {
     try {
         const classData = await getDataById('classProfile', 1);
-        if (classData) {
-            if (classData.academicYear) window.activeAcademicYear = classData.academicYear;
-            if (classData.scheduleActiveDays) window.scheduleActiveDays = classData.scheduleActiveDays;
-            if (classData.schedulePeriodsCount) window.schedulePeriodsCount = parseInt(classData.schedulePeriodsCount);
-        }
+if (classData) {
+    // به جای تغییر سال تحصیلی، فقط فیلدهای دیگر را پر کن
+    if (classData.scheduleActiveDays) window.scheduleActiveDays = classData.scheduleActiveDays;
+    if (classData.schedulePeriodsCount) window.schedulePeriodsCount = parseInt(classData.schedulePeriodsCount);
+}
 
         window.allStudentsData = await getAllData('students');
         window.allGroupsData = await getAllData('groups');
