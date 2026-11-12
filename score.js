@@ -1,11 +1,5 @@
 // ==========================================
-// فایل score.js — منطق تب امتیاز (ارزشیابی) — نسخه اصلاح‌شده v3
-// ==========================================
-//
-// تغییرات نسخه v3:
-// - اصلاح getStudentsHash: شامل نام/نام‌خانوادگی/گروه (رفع باگ چک‌باکس‌های قدیمی)
-// - اصلاح toggleAllStudents: ایمن‌سازی برای همه انواع چک‌باکس
-// - اصلاح saveQuranRecord: یک‌بار getAllData خارج از حلقه (رفع N+1)
+// فایل score.js — منطق تب امتیاز (ارزشیابی) — نسخه اصلاح‌شده مرحله ۲
 // ==========================================
 
 let isSaveAndNext = false;
@@ -25,21 +19,8 @@ const scoreJalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "
 
 let _lastStudentsHash = '';
 
-// ==========================================
-// ✅ getStudentsHash — اصلاح‌شده (رفع باگ شماره ۴)
-// ==========================================
-// باگ قبلی: فقط idها را چک می‌کرد، بنابراین تغییر نام/گروه دانش‌آموز
-// باعث رفرش چک‌باکس‌ها نمی‌شد.
-// راه‌حل: شامل نام، نام خانوادگی و گروه + مشخصات گروه‌ها.
-// ==========================================
 function getStudentsHash() {
-    const studentsPart = window.allStudentsData
-        .map(s => `${s.id}:${s.firstName || ''}:${s.lastName || ''}:${s.groupId || ''}`)
-        .join(',');
-    const groupsPart = window.allGroupsData
-        .map(g => `${g.id}:${g.name || ''}:${g.symbol || ''}`)
-        .join(',');
-    return studentsPart + '|' + groupsPart;
+    return window.allStudentsData.map(s => s.id).join(',') + '|' + window.allGroupsData.map(g => g.id).join(',');
 }
 
 function saveScoreCalendarState(type) {
@@ -66,7 +47,7 @@ function initScoreEvents() {
         recordItem.addEventListener('change', (e) => {
             if (e.target.value !== "") {
                 const item = window.allAssessmentItems.find(i => i.id == e.target.value);
-                if (item) renderScoreInput(item);
+                if(item) renderScoreInput(item);
             } else {
                 const section = document.getElementById('dynamic-score-section');
                 if (section) section.style.display = 'none';
@@ -81,7 +62,7 @@ function renderScoreData() {
     const recordsFilterSubject = document.getElementById('recordsFilterSubject');
     const editRecordSubject = document.getElementById('editRecordSubject');
     
-    const subjOptions = (window.allSubjectsData || []).map(s => `<option value="${s.id}">${s.symbol || ''} ${s.name}</option>`).join('');
+    const subjOptions = window.allSubjectsData.map(s => `<option value="${s.id}">${s.symbol || ''} ${s.name}</option>`).join('');
     
     if (recordSubjectSelect) recordSubjectSelect.innerHTML = '<option value="" disabled selected>درسی را انتخاب کنید!</option>' + subjOptions;
     if (editRecordSubject) editRecordSubject.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + subjOptions;
@@ -89,15 +70,14 @@ function renderScoreData() {
 
     const itemSelect = document.getElementById('recordItem');
     const editRecordItemSelect = document.getElementById('editRecordItem');
-    const itemOptions = (window.allAssessmentItems || []).map(i => `<option value="${i.id}">${i.title}</option>`).join('');
+    const itemOptions = window.allAssessmentItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
     
     if (itemSelect) itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + itemOptions;
     if (editRecordItemSelect) editRecordItemSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + itemOptions;
 
     const recordsFilterStudent = document.getElementById('recordsFilterStudent');
     if (recordsFilterStudent) {
-        recordsFilterStudent.innerHTML = '<option value="">همه دانش‌آموزان</option>' + 
-            (window.allStudentsData || []).map(st => `<option value="${st.id}">${st.firstName} ${st.lastName}</option>`).join('');
+        recordsFilterStudent.innerHTML = '<option value="">همه دانش‌آموزان</option>' + window.allStudentsData.map(st => `<option value="${st.id}">${st.firstName} ${st.lastName}</option>`).join('');
     }
 
     const quranSurahSelect = document.getElementById('quranSurahSelect');
@@ -112,7 +92,6 @@ function renderScoreData() {
         initScoreCalendars();
     }
     
-    // ✅ استفاده از هش اصلاح‌شده (شامل نام و گروه)
     const currentHash = getStudentsHash();
     if (currentHash !== _lastStudentsHash) {
         renderStudentCheckboxes();
@@ -128,24 +107,20 @@ function renderScoreData() {
 
 // ==========================================
 // توابع تقویم شمسی تب امتیاز
+// (این توابع حالا از jalali-utils.js می‌آیند)
 // ==========================================
 
 function initScoreCalendars() {
     const ay = window.activeAcademicYear || '1405-1406';
-    const [startYearStr, endYearStr] = ay.split('-');
+    const [startYearStr] = ay.split('-');
     const startYear = parseInt(startYearStr);
-    const endYear = parseInt(endYearStr);
     
     ['record', 'quran', 'special', 'handwriting'].forEach(type => {
         loadScoreCalendarState(type, startYear);
         
-        // ✅ ریست کامل اگر خارج از بازه باشد (در هر دو جهت)
-        if (!scoreCalendarState[type].year || 
-            scoreCalendarState[type].year < startYear || 
-            scoreCalendarState[type].year > endYear) {
+        if (!scoreCalendarState[type].year || scoreCalendarState[type].year < startYear) {
             scoreCalendarState[type].year = startYear;
-            scoreCalendarState[type].month = 7;
-            scoreCalendarState[type].selectedDate = '';
+            if (!scoreCalendarState[type].month) scoreCalendarState[type].month = 7;
         }
         
         if (scoreCalendarState[type].selectedDate) {
@@ -191,9 +166,6 @@ function changeScoreCalendarMonth(type, delta) {
         if (titleEl && titleEl.dataset.year) {
             state.year = parseInt(titleEl.dataset.year);
             state.month = parseInt(titleEl.dataset.month);
-        } else {
-            state.year = startYear;
-            state.month = 7;
         }
         return;
     }
@@ -366,6 +338,7 @@ function resetScoreCalendar(type) {
 
     renderScoreCalendar(type);
 }
+
 // ==========================================
 // مدیریت انتخاب دانش‌آموزان
 // ==========================================
@@ -377,22 +350,16 @@ function createStudentLabel(st, checkboxClass) {
 }
 
 function createGroupedView(container, checkboxClass, toggleGroupFnName) {
-    if (window.allGroupsData.length === 0) { 
-        container.innerHTML = '<p style="text-align:center; color:#dc2626;">هیچ گروهی ساخته نشده است.</p>'; 
-        return; 
-    }
+    if (window.allGroupsData.length === 0) { container.innerHTML = '<p style="text-align:center; color:#dc2626;">هیچ گروهی ساخته نشده است.</p>'; return; }
     window.allGroupsData.forEach(g => {
         const groupStudents = window.allStudentsData.filter(st => st.groupId === g.id);
         let groupHtml = `<details class="group-accordion"><summary><div class="group-header-checkbox"><input type="checkbox" class="group-select-all-checkbox" onchange="${toggleGroupFnName}(this, ${g.id}, '${checkboxClass}')"><span>${g.symbol} ${g.name} (${toPersianNumber(groupStudents.length)} نفر)</span></div></summary><div class="group-students-container">`;
-        if (groupStudents.length === 0) {
-            groupHtml += `<p style="color:#64748b; font-size:0.85rem; text-align:center;">خالی</p>`;
-        } else {
-            groupStudents.forEach(st => { 
-                const g2 = window.allGroupsData.find(x => x.id === st.groupId);
-                const badge = g2 ? `<span class="group-label">${g2.symbol} ${g2.name}</span>` : '';
-                groupHtml += `<label class="student-checkbox-item"><input type="checkbox" class="${checkboxClass} group-student-${g.id}" value="${st.id}"><div class="student-checkbox-item-content"><span>${st.firstName} ${st.lastName}</span>${badge}</div></label>`; 
-            });
-        }
+        if (groupStudents.length === 0) groupHtml += `<p style="color:#64748b; font-size:0.85rem; text-align:center;">خالی</p>`;
+        else groupStudents.forEach(st => { 
+            const g2 = window.allGroupsData.find(x => x.id === st.groupId);
+            const badge = g2 ? `<span class="group-label">${g2.symbol} ${g2.name}</span>` : '';
+            groupHtml += `<label class="student-checkbox-item"><input type="checkbox" class="${checkboxClass} group-student-${g.id}" value="${st.id}"><div class="student-checkbox-item-content"><span>${st.firstName} ${st.lastName}</span>${badge}</div></label>`; 
+        });
         groupHtml += `</div></details>`;
         container.innerHTML += groupHtml;
     });
@@ -431,29 +398,13 @@ function toggleGroupSelection(checkbox, groupId, checkboxClass = 'student-checkb
     });
 }
 
-// ==========================================
-// ✅ toggleAllStudents — اصلاح‌شده
-// ==========================================
-// باگ قبلی: منطق تشخیص "همه گروه‌ها" با replace نادرست بود.
-// راه‌حل: تشخیص نوع چک‌باکس از روی کلاس، و انتخاب تمام چک‌باکس‌های هم‌نوع.
-// ==========================================
-function toggleAllStudents(checked, checkboxClass = 'student-checkbox') {
-    // ۱. انتخاب همه چک‌باکس‌های هم‌نوع در لیست دانش‌آموزان
-    document.querySelectorAll(`.${checkboxClass}`).forEach(cb => cb.checked = checked);
-    
-    // ۲. انتخاب/لغو همه چک‌باکس‌های "انتخاب همه گروه" مربوط به همان نوع
-    const containersMap = {
-        'student-checkbox': 'students-checkbox-container',
-        'quran-student-checkbox': 'quran-students-container',
-        'special-student-checkbox': 'special-reward-students-container',
-        'handwriting-student-checkbox': 'handwriting-students-container'
-    };
-    const containerId = containersMap[checkboxClass];
-    if (containerId) {
-        const container = document.getElementById(containerId);
-        if (container) {
-            container.querySelectorAll('.group-select-all-checkbox').forEach(cb => cb.checked = checked);
-        }
+function toggleAllStudents(checked, checkboxClass = 'student-checkbox') { 
+    document.querySelectorAll(`.${checkboxClass}`).forEach(cb => cb.checked = checked); 
+    const section = checkboxClass === 'student-checkbox' ? null : document.getElementById(`${checkboxClass.replace('-student-checkbox', '')}-students-container`);
+    if (section) {
+        section.querySelectorAll('.group-select-all-checkbox').forEach(cb => cb.checked = checked);
+    } else {
+        document.querySelectorAll('.group-select-all-checkbox').forEach(cb => cb.checked = checked);
     }
 }
 
@@ -587,9 +538,7 @@ function renderScoreInput(item) {
         container.appendChild(input);
     }
 }
-// ==========================================
-// پیش‌نمایش و تأیید ثبت ارزشیابی عادی
-// ==========================================
+
 function showPreview(isFinal) {
     isSaveAndNext = !isFinal;
     const selectedIndexEl = document.getElementById('recordItem');
@@ -607,15 +556,11 @@ function showPreview(isFinal) {
             if (!l || !l.value) { showToast('سطح را انتخاب کنید.', 'error'); return; }
             finalScore = parseInt(l.value) || 0;
         } else if (selectedItem.type === 'count') { 
-            const inputEl = document.getElementById('dynamicCountInput');
-            if (!inputEl || !inputEl.value) { showToast('تعداد را وارد کنید.', 'error'); return; }
-            finalScore = (parseInt(inputEl.value) || 0) * selectedItem.unitScore; 
+            finalScore = (parseInt(document.getElementById('dynamicCountInput').value) || 0) * selectedItem.unitScore; 
         } else if (selectedItem.type === 'fixed') { 
             finalScore = selectedItem.score; 
         } else if (selectedItem.type === 'free') { 
-            const inputEl = document.getElementById('dynamicFreeInput');
-            if (!inputEl || !inputEl.value) { showToast('امتیاز را وارد کنید.', 'error'); return; }
-            finalScore = parseInt(inputEl.value) || 0; 
+            finalScore = parseInt(document.getElementById('dynamicFreeInput').value) || 0; 
         }
     } catch (e) { showToast('فیلدها را کامل کنید.', 'error'); return; }
 
@@ -659,7 +604,6 @@ function showPreview(isFinal) {
 function closePreviewModal() { 
     const modal = document.getElementById('preview-modal');
     if (modal) modal.classList.remove('show'); 
-    window.tempRecordData = null;
 }
 
 async function confirmAndSaveRecord() {
@@ -670,6 +614,7 @@ async function confirmAndSaveRecord() {
         showToast('امتیاز با موفقیت ثبت شد!', 'success');
         closePreviewModal();
         
+        // *** پاک کردن وضعیت Dirty بعد از ذخیره موفق ***
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
         if (isSaveAndNext) {
@@ -687,20 +632,9 @@ async function confirmAndSaveRecord() {
             if (dynSection) dynSection.style.display = 'none'; 
             loadAllData();
         }
-    } catch (error) { 
-        console.error(error);
-        showToast('خطا در ذخیره!', 'error'); 
-        closePreviewModal(); 
-    }
+    } catch (error) { showToast('خطا در ذخیره!', 'error'); closePreviewModal(); }
 }
 
-// ==========================================
-// ثبت پویش قرآن
-// ==========================================
-// ✅ تغییرات:
-// - getAllData خارج از حلقه (رفع N+1 — باگ شماره ۱۰)
-// - استفاده از یک آرایه واحد از records برای همه دانش‌آموزان
-// ==========================================
 async function saveQuranRecord() {
     const studentCheckboxes = document.querySelectorAll('.quran-student-checkbox:checked');
     if (studentCheckboxes.length === 0) { showToast('دانش‌آموز انتخاب کنید.', 'error'); return; }
@@ -739,29 +673,18 @@ async function saveQuranRecord() {
     try {
         await saveData('records', recordData);
 
-        // ✅ فقط یک بار خواندن تمام رکوردها (نه به ازای هر دانش‌آموز)
-        const allRecords = await getAllData('records');
-        const relevantQuranRecords = allRecords.filter(rec => 
-            rec.itemName === "پویش حفظ جزء سی قرآن کریم" && 
-            rec.academicYear === window.activeAcademicYear
-        );
-
-        const baseId = Date.now();
-        let badgeCounter = 0;
-
         for (const studentId of recordData.students) {
+            const allRecords = await getAllData('records'); 
             let totalSurahs = 0, totalAyats = 0;
-            relevantQuranRecords.forEach(rec => {
-                if (rec.students && rec.students.includes(studentId)) {
+            allRecords.forEach(rec => {
+                if (rec.itemName === "پویش حفظ جزء سی قرآن کریم" && rec.students.includes(studentId) && rec.academicYear === window.activeAcademicYear) {
                     totalSurahs += 1;
                     const match = rec.title.match(/- (\d+) آیه/); 
                     if (match) totalAyats += parseInt(match[1]);
                 }
             });
-            
-            badgeCounter++;
             await saveData('badgesSettings', { 
-                id: `quranReward_${studentId}_${baseId}_${badgeCounter}`, 
+                id: `quranReward_${studentId}_${Date.now()}`, 
                 studentId: studentId, 
                 title: "تشویق شرکت در پویش حفظ جزء سی قرآن کریم", 
                 totalSurahs: totalSurahs, 
@@ -775,19 +698,13 @@ async function saveQuranRecord() {
         const form = document.getElementById('quran-form');
         if (form) form.reset();
         
+        // *** پاک کردن وضعیت Dirty ***
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
-        resetScoreCalendar('quran');
         loadAllData();
-    } catch (e) { 
-        console.error(e); 
-        showToast('خطا در ثبت پویش قرآن.', 'error'); 
-    }
+    } catch (e) { console.error(e); showToast('خطا در ثبت پویش قرآن.', 'error'); }
 }
 
-// ==========================================
-// ثبت تشویق ویژه
-// ==========================================
 async function saveSpecialReward() {
     const studentCheckboxes = document.querySelectorAll('.special-student-checkbox:checked');
     if (studentCheckboxes.length === 0) { showToast('دانش‌آموز انتخاب کنید.', 'error'); return; }
@@ -819,19 +736,13 @@ async function saveSpecialReward() {
         const form = document.getElementById('special-reward-form');
         if (form) form.reset();
         
+        // *** پاک کردن وضعیت Dirty ***
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
-        resetScoreCalendar('special');
         loadAllData();
-    } catch (e) { 
-        console.error(e); 
-        showToast('خطا در ثبت تشویق ویژه.', 'error'); 
-    }
+    } catch (e) { console.error(e); showToast('خطا در ثبت تشویق ویژه.', 'error'); }
 }
 
-// ==========================================
-// ثبت تشویق خوش‌خط‌نویسی
-// ==========================================
 async function saveHandwritingReward() {
     const studentCheckboxes = document.querySelectorAll('.handwriting-student-checkbox:checked');
     if (studentCheckboxes.length === 0) { showToast('دانش‌آموز انتخاب کنید.', 'error'); return; }
@@ -856,15 +767,13 @@ async function saveHandwritingReward() {
         const form = document.getElementById('handwriting-reward-form');
         if (form) form.reset();
         
+        // *** پاک کردن وضعیت Dirty ***
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
-        resetScoreCalendar('handwriting');
         loadAllData();
-    } catch (e) { 
-        console.error(e); 
-        showToast('خطا در ثبت تشویق خوش‌خط‌نویسی.', 'error'); 
-    }
+    } catch (e) { console.error(e); showToast('خطا در ثبت تشویق خوش‌خط‌نویسی.', 'error'); }
 }
+
 // ==========================================
 // سوابق ارزشیابی
 // ==========================================
@@ -880,20 +789,20 @@ function loadAssessmentRecords() {
     const filterStudent = document.getElementById('recordsFilterStudent')?.value || '';
     const searchText = document.getElementById('recordsSearchText')?.value.trim() || '';
 
-    let filteredRecords = (window.allRecordsData || []).filter(rec => {
+    let filteredRecords = window.allRecordsData.filter(rec => {
         if (filterSubject && rec.subjectId != filterSubject) return false;
         if (filterStudent && (!rec.students || !rec.students.includes(parseInt(filterStudent)))) return false;
-        if (searchText && !(rec.title || '').includes(searchText)) return false;
+        if (searchText && !rec.title.includes(searchText)) return false;
         return true;
     });
 
-    filteredRecords.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    filteredRecords.sort((a, b) => b.date.localeCompare(a.date));
     const countEl = document.getElementById('records-count');
     if (countEl) countEl.textContent = `تعداد نتایج: ${toPersianNumber(filteredRecords.length)} رکورد`;
 
     if (filteredRecords.length === 0) { 
         container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ رکوردی یافت نشد.</p>'; 
-        if (pagination) pagination.style.display = 'none';
+        if(pagination) pagination.style.display = 'none';
         return; 
     }
 
@@ -940,9 +849,7 @@ function loadAssessmentRecords() {
             const btnNext = document.getElementById('btnNextRecords');
             if (btnPrev) btnPrev.disabled = (currentPage.records === 1);
             if (btnNext) btnNext.disabled = (currentPage.records === totalPages);
-        } else { 
-            pagination.style.display = 'none'; 
-        }
+        } else { pagination.style.display = 'none'; }
     }
 }
 
@@ -959,14 +866,8 @@ function clearRecordFilters() {
 
 async function deleteRecord(id) {
     if (!confirm('آیا از حذف این رکورد مطمئن هستید؟')) return;
-    try { 
-        await deleteData('records', id); 
-        showToast('رکورد حذف شد.', 'success'); 
-        loadAllData(); 
-    } catch (e) { 
-        console.error(e); 
-        showToast('خطا در حذف رکورد.', 'error'); 
-    }
+    try { await deleteData('records', id); showToast('رکورد حذف شد.', 'success'); loadAllData(); }
+    catch (e) { console.error(e); showToast('خطا در حذف رکورد.', 'error'); }
 }
 
 async function openEditRecordModal(id) {
@@ -1007,7 +908,7 @@ async function openEditRecordModal(id) {
             window.allStudentsData.forEach(st => {
                 const g = window.allGroupsData.find(x => x.id === st.groupId);
                 const badge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
-                const isChecked = (record.students || []).includes(st.id) ? 'checked' : '';
+                const isChecked = record.students.includes(st.id) ? 'checked' : '';
                 container.innerHTML += `
                     <label class="student-checkbox-item">
                         <input type="checkbox" class="edit-student-checkbox" value="${st.id}" ${isChecked}>
@@ -1019,27 +920,25 @@ async function openEditRecordModal(id) {
 
         const modal = document.getElementById('edit-record-modal');
         if (modal) modal.classList.add('show');
-    } catch (e) { 
-        console.error(e); 
-        showToast('خطا در باز کردن فرم ویرایش.', 'error'); 
-    }
+    } catch (e) { console.error(e); showToast('خطا در باز کردن فرم ویرایش.', 'error'); }
 }
 
 function closeEditModal() { 
     const modal = document.getElementById('edit-record-modal');
     if (modal) modal.classList.remove('show'); 
     
+    // *** پاک کردن وضعیت Dirty بعد از بستن مودال ***
     if (typeof clearFormDirty === 'function') clearFormDirty();
 }
 
 async function saveEditedRecord(event) {
-    if (event) event.preventDefault();
+    if(event) event.preventDefault();
     const id = parseInt(document.getElementById('editRecordId').value);
     const subjectSelect = document.getElementById('editRecordSubject');
     const itemSelect = document.getElementById('editRecordItem');
     
-    const subjectId = (subjectSelect && subjectSelect.value) ? parseInt(subjectSelect.value) : null;
-    const itemId = itemSelect ? itemSelect.value : '';
+    const subjectId = (subjectSelect.value) ? parseInt(subjectSelect.value) : null;
+    const itemId = itemSelect.value;
     const newTitle = document.getElementById('editRecordTitle').value;
     const newDate = document.getElementById('editRecordDate').value.trim();
     const newScore = parseInt(document.getElementById('editRecordScore').value);
@@ -1053,9 +952,9 @@ async function saveEditedRecord(event) {
         itemName = selectedItem ? selectedItem.title : '';
     }
 
-    // ✅ اعتبارسنجی هوشمند تاریخ
+    // ✅ تغییر اصلی: استفاده از اعتبارسنجی هوشمند به جای regex ساده
     if (!window.isValidJalaliDateString(newDate)) {
-        showToast('تاریخ وارد شده معتبر نیست. لطفاً یک تاریخ واقعی وارد کنید.', 'error');
+        showToast('تاریخ وارد شده معتبر نیست. لطفاً یک تاریخ واقعی (با در نظر گرفتن تعداد روزهای ماه) وارد کنید.', 'error');
         return;
     }
 
@@ -1089,14 +988,11 @@ async function saveEditedRecord(event) {
         await saveData('records', record);
         showToast('رکورد با موفقیت ویرایش شد.', 'success');
         
+        // *** پاک کردن وضعیت Dirty ***
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
-        closeEditModal(); 
-        loadAllData();
-    } catch (e) { 
-        console.error(e); 
-        showToast('خطا در ذخیره.', 'error'); 
-    }
+        closeEditModal(); loadAllData();
+    } catch (e) { console.error(e); showToast('خطا در ذخیره.', 'error'); }
 }
 
 async function loadQuranRewards() {
@@ -1104,16 +1000,9 @@ async function loadQuranRewards() {
     if (!container) return;
     try {
         const allBadges = await getAllData('badgesSettings');
-        const quranRewards = allBadges.filter(b => 
-            b.id && typeof b.id === 'string' && 
-            b.id.startsWith('quranReward_') && 
-            b.academicYear === window.activeAcademicYear
-        );
+        const quranRewards = allBadges.filter(b => b.id && b.id.startsWith('quranReward_') && b.academicYear === window.activeAcademicYear);
         
-        if (quranRewards.length === 0) { 
-            container.innerHTML = '<p style="color:#64748b; text-align:center;">هنوز تشویقی صادر نشده است.</p>'; 
-            return; 
-        }
+        if (quranRewards.length === 0) { container.innerHTML = '<p style="color:#64748b; text-align:center;">هنوز تشویقی صادر نشده است.</p>'; return; }
         
         const grouped = {};
         quranRewards.forEach(reward => { 
@@ -1129,16 +1018,13 @@ async function loadQuranRewards() {
             html += `<div class="list-item" style="flex-direction: column; align-items: flex-start; padding: 15px; background: var(--arf-bg); border-right: 4px solid var(--arf-border); margin-bottom: 10px;"><strong style="font-size: 1.1rem;">🏅 ${studentName}</strong><span style="font-size: 0.9rem; color: var(--arf-border);">تعداد سوره‌ها: ${toPersianNumber(latest.totalSurahs)} | تعداد آیات: ${toPersianNumber(latest.totalAyats)}</span></div>`;
         }
         container.innerHTML = html;
-    } catch (e) { 
-        console.error(e);
-        container.innerHTML = '<p style="color:red;">خطا در بارگذاری تشویق‌ها</p>'; 
-    }
+    } catch (e) { container.innerHTML = '<p style="color:red;">خطا</p>'; }
 }
 
 async function exportScoreCSV() {
     try {
         let csvContent = "ردیف,عنوان,درس,آیتم,تاریخ,امتیاز,ارفاق\r\n";
-        const sorted = [...window.allRecordsData].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        const sorted = [...window.allRecordsData].sort((a, b) => b.date.localeCompare(a.date));
         
         sorted.forEach((rec, i) => {
             const s = window.allSubjectsData.find(x => x.id === rec.subjectId); 
