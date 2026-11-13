@@ -42,6 +42,11 @@ async function saveStudent(e) {
         
         showToast('دانش‌آموز جدید با موفقیت ثبت شد!', 'success');
         loadAllData();
+        
+        // ✅ اسکرول آرام به بالای فرم
+        const studentForm = document.getElementById('student-form');
+        if (studentForm) studentForm.scrollIntoView({ behavior: 'smooth' });
+        
     } catch (err) {
         console.error(err);
         showToast('خطا در ثبت دانش‌آموز.', 'error');
