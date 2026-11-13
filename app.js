@@ -958,16 +958,27 @@ async function loadAllData() {
         const rawAttendance = await getDataByYear('attendance', currentYear);
         const rawWeeklySchedule = await getDataByYear('weeklySchedule', currentYear);
         
-        let migrationNeeded = false;
-        
-        const allRecords = await getAllData('records');
-        for (let r of allRecords) {
-            if (!r.academicYear) { r.academicYear = currentYear; await saveData('records', r); migrationNeeded = true; }
-        }
-        
-        const allSessions = await getAllData('sessions');
-        for (let s of allSessions) {
-            if (!s.academicYear) { s.academicYear = currentYear; await saveData('sessions', s); migrationNeeded = true; }
+        // ✅ بهینه‌سازی: بررسی مهاجرت فقط یک بار انجام می‌شود
+        if (!localStorage.getItem('kosha-db-migrated-v16')) {
+            let migrationNeeded = false;
+            
+            const allRecords = await getAllData('records');
+            for (let r of allRecords) {
+                if (!r.academicYear) { r.academicYear = currentYear; await saveData('records', r); migrationNeeded = true; }
+            }
+            
+            const allSessions = await getAllData('sessions');
+            for (let s of allSessions) {
+                if (!s.academicYear) { s.academicYear = currentYear; await saveData('sessions', s); migrationNeeded = true; }
+            }
+            
+            if (migrationNeeded) {
+                showToast('اطلاعات قبلی به سال تحصیلی جاری منتقل شد.', 'info');
+            }
+            
+            // ثبت پرچم که مهاجرت انجام شده است
+            localStorage.setItem('kosha-db-migrated-v16', 'true');
+            console.log('✅ مهاجرت یک‌باره داده‌ها انجام و ثبت شد.');
         }
 
         window.allStudentsData = rawStudents;
@@ -982,18 +993,16 @@ async function loadAllData() {
         window.allWeeklyScheduleData = rawWeeklySchedule;
 
         assessmentItems = await getDataByYear('assessmentItems', currentYear);
-if (!assessmentItems || assessmentItems.length === 0) {
-    if (typeof window.ensureAssessmentItemsForYear === 'function') {
-        assessmentItems = await window.ensureAssessmentItemsForYear(currentYear);
-    }
-}
-window.allAssessmentItems = assessmentItems;
+        if (!assessmentItems || assessmentItems.length === 0) {
+            if (typeof window.ensureAssessmentItemsForYear === 'function') {
+                assessmentItems = await window.ensureAssessmentItemsForYear(currentYear);
+            }
+        }
+        window.allAssessmentItems = assessmentItems;
         
         currentBackupSettings = await getBackupSettings(currentYear);
 
         renderUI();
-
-        if (migrationNeeded) showToast('اطلاعات قبلی به سال تحصیلی جاری منتقل شد.', 'info');
         
     } catch (e) { 
         console.error('خطا در بارگذاری داده‌ها:', e); 
