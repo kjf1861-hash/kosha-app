@@ -83,26 +83,35 @@ function renderStudentsList() {
         return;
     }
 
-    const studentScores = window.allStudentsData.map(st => {
-        let total = 0;
-        window.allRecordsData.forEach(rec => {
-            if (rec.students && rec.students.includes(st.id)) {
-                total += rec.finalScore;
-            }
-        });
-        return { ...st, totalScore: total };
-    });
+    // ✅ اطمینان از وجود کش (اگر برای اولین بار است و لود نشده)
+    if (!window._cacheStudentScores && typeof buildScoreCaches === 'function') {
+        buildScoreCaches();
+    }
+    const scoreCache = window._cacheStudentScores || {};
 
+    // ✅ ساخت آرایه دانش‌آموزان با امتیاز از کش (بدون حلقه روی رکوردها)
+    const studentScores = window.allStudentsData.map(st => ({
+        ...st,
+        totalScore: scoreCache[st.id] || 0
+    }));
+
+    // مرتب‌سازی: بیشترین امتیاز اول، در صورت تساوی بر اساس نام خانوادگی
     studentScores.sort((a, b) => {
         if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
         return a.lastName.localeCompare(b.lastName, 'fa');
     });
 
+    // ✅ محاسبه مدال‌ها (یک بار)
     const uniqueScores = [...new Set(studentScores.map(s => s.totalScore))].filter(s => s > 0).sort((a, b) => b - a);
     const goldScore = uniqueScores.length > 0 ? uniqueScores[0] : -1;
     const silverScore = uniqueScores.length > 1 ? uniqueScores[1] : -1;
     const bronzeScore = uniqueScores.length > 2 ? uniqueScores[2] : -1;
 
+    // ✅ نقشه گروه (یک بار) — به جای find() درون حلقه
+    const groupMap = {};
+    for (const g of window.allGroupsData) groupMap[g.id] = g;
+
+    // صفحه‌بندی
     const totalPages = Math.ceil(studentScores.length / itemsPerPage);
     if (currentPage.students > totalPages) currentPage.students = totalPages;
     if (currentPage.students < 1) currentPage.students = 1;
@@ -110,9 +119,11 @@ function renderStudentsList() {
     const startIndex = (currentPage.students - 1) * itemsPerPage;
     const paginated = studentScores.slice(startIndex, startIndex + itemsPerPage);
 
-    container.innerHTML = '';
-    paginated.forEach((st, index) => {
-        const globalRank = startIndex + index + 1;
+    // ✅ ساخت HTML در یک رشته و درج یک‌باره (به جای += در حلقه)
+    let html = '';
+    for (let i = 0; i < paginated.length; i++) {
+        const st = paginated[i];
+        const globalRank = startIndex + i + 1;
         
         let medalHtml = '';
         if (st.totalScore > 0) { 
@@ -121,12 +132,12 @@ function renderStudentsList() {
             else if (st.totalScore === bronzeScore) medalHtml = '<span class="medal-badge">🥉</span>';
         }
 
-        const g = window.allGroupsData.find(x => x.id === st.groupId);
+        const g = groupMap[st.groupId];
         const groupBadge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
         
         const studentPass = st.nationalId ? generateStudentPassword(st.nationalId) : '---';
 
-        container.innerHTML += `
+        html += `
             <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                     <div style="display:flex; align-items:center; gap:5px;">
@@ -148,8 +159,12 @@ function renderStudentsList() {
                 </div>
             </div>
         `;
-    });
+    }
 
+    // ✅ درج یک‌باره (خیلی سریع‌تر از += در حلقه)
+    container.innerHTML = html;
+
+    // صفحه‌بندی
     const pagination = document.getElementById('students-pagination');
     if (pagination) {
         if (totalPages > 1) {
