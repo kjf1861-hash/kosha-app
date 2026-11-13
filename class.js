@@ -22,43 +22,43 @@ async function saveClassProfile(e) {
     if (periodsCount > 6) periodsCount = 6;
 
     const classNameEl = document.getElementById('className');
-const classSymbolEl = document.getElementById('classSymbol');
-const classMottoEl = document.getElementById('classMotto');
-const classGradeEl = document.getElementById('classGrade');
-const teacherNameEl = document.getElementById('teacherName');
-const schoolNameEl = document.getElementById('schoolName');
+    const classSymbolEl = document.getElementById('classSymbol');
+    const classMottoEl = document.getElementById('classMotto');
+    const classGradeEl = document.getElementById('classGrade');
+    const teacherNameEl = document.getElementById('teacherName');
+    const schoolNameEl = document.getElementById('schoolName');
 
-if (!classNameEl) return;
+    if (!classNameEl) return;
 
-const selectedYear = window.activeAcademicYear;
+    const selectedYear = window.activeAcademicYear;
 
-let sanitizedData;
-try {
-    sanitizedData = {
-        name: sanitizeInput(classNameEl.value, 100),
-        symbol: classSymbolEl ? sanitizeInput(classSymbolEl.value, 10) : '',
-        motto: classMottoEl ? sanitizeInput(classMottoEl.value, 200) : '',
-        grade: classGradeEl ? sanitizeInput(classGradeEl.value, 50) : '',
-        teacherName: teacherNameEl ? sanitizeInput(teacherNameEl.value, 100) : '',
-        schoolName: schoolNameEl ? sanitizeInput(schoolNameEl.value, 150) : ''
+    let sanitizedData;
+    try {
+        sanitizedData = {
+            name: sanitizeInput(classNameEl.value, 100),
+            symbol: classSymbolEl ? sanitizeInput(classSymbolEl.value, 10) : '',
+            motto: classMottoEl ? sanitizeInput(classMottoEl.value, 200) : '',
+            grade: classGradeEl ? sanitizeInput(classGradeEl.value, 50) : '',
+            teacherName: teacherNameEl ? sanitizeInput(teacherNameEl.value, 100) : '',
+            schoolName: schoolNameEl ? sanitizeInput(schoolNameEl.value, 150) : ''
+        };
+    } catch (err) {
+        showToast(err.message, 'error');
+        return;
+    }
+
+    const data = {
+        name: sanitizedData.name,
+        symbol: sanitizedData.symbol,
+        motto: sanitizedData.motto,
+        grade: sanitizedData.grade,
+        teacherName: sanitizedData.teacherName,
+        schoolName: sanitizedData.schoolName,
+        academicYear: selectedYear,
+        scheduleActiveDays: selectedDays,
+        schedulePeriodsCount: periodsCount
     };
-} catch (err) {
-    showToast(err.message, 'error');
-    return;
-}
-
-const data = {
-    name: sanitizedData.name,
-    symbol: sanitizedData.symbol,
-    motto: sanitizedData.motto,
-    grade: sanitizedData.grade,
-    teacherName: sanitizedData.teacherName,
-    schoolName: sanitizedData.schoolName,
-    academicYear: selectedYear,
-    scheduleActiveDays: selectedDays,
-    schedulePeriodsCount: periodsCount
-};
-    
+        
     await saveData('classProfile', data);
     
     window.scheduleActiveDays = selectedDays;
@@ -71,6 +71,9 @@ const data = {
     if (headerSubtitle) headerSubtitle.textContent = data.name;
     
     if(typeof closeSettingsModal === 'function') closeSettingsModal();
+    
+    // ✅ رفع باگ: پاک کردن وضعیت فرم‌های ذخیره‌نشده
+    if (typeof clearFormDirty === 'function') clearFormDirty();
     
     await loadAllData();
 }
@@ -105,7 +108,6 @@ function renderDashboardData() {
     if (statSessions) statSessions.textContent = toPersianNumber(window.allSessionsData.length);
     if (statRecords) statRecords.textContent = toPersianNumber(window.allRecordsData.length);
 
-    // ✅ استفاده از کش (به جای حلقه روی رکوردها برای هر دانش‌آموز)
     if (!window._cacheStudentScores && typeof buildScoreCaches === 'function') {
         buildScoreCaches();
     }
@@ -280,7 +282,9 @@ function renderTopStudents(studentScores) {
     const medals = ['🥇', '🥈', '🥉'];
     container.innerHTML = topStudents.map((st, index) => {
         const g = window.allGroupsData.find(x => x.id === st.groupId);
-        const groupBadge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
+        // ✅ اصلاح امنیتی: escape نام و نماد گروه
+        const groupBadge = g ? `<span class="group-label">${escapeHtml(g.symbol)} ${escapeHtml(g.name)}</span>` : '';
+        // ✅ اصلاح امنیتی: escape نام دانش‌آموز
         return `
             <div class="list-item top-student-row" style="padding: 12px 15px; margin-bottom: 8px;">
                 <div style="display:flex; align-items:center; gap:10px;">
@@ -325,6 +329,7 @@ function renderTopGroups() {
     let html = '';
     for (let i = 0; i < topGroups.length; i++) {
         const g = topGroups[i];
+        // ✅ اصلاح امنیتی: escape نام گروه
         html += `
             <div class="list-item" style="padding: 12px 15px; margin-bottom: 8px; border-right: 4px solid var(--primary);">
                 <div style="display:flex; align-items:center; gap:10px;">
@@ -338,6 +343,7 @@ function renderTopGroups() {
     container.innerHTML = html;
 }
 
+// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 function renderNeedsAttention(studentScores) {
     const container = document.getElementById('dashboard-needs-attention');
     if (!container) return;
@@ -366,6 +372,7 @@ function renderNeedsAttention(studentScores) {
 
     let html = '';
     for (const st of needsAttention) {
+        // ✅ اصلاح امنیتی: escape نام و نام خانوادگی دانش‌آموز
         html += `
             <div class="list-item" style="padding: 12px 15px; background: rgba(255,255,255,0.5);">
                 <div style="display:flex; align-items:center; gap:8px;">
@@ -400,9 +407,11 @@ function renderRecentActivities() {
     let html = '';
     for (const rec of sorted) {
         const subject = subjectMap[rec.subjectId];
-        const subjectName = subject ? `${subject.symbol || ''} ${subject.name}` : 'بدون درس';
+        // ✅ اصلاح امنیتی: escape نام و نماد درس
+        const subjectName = subject ? `${escapeHtml(subject.symbol || '')} ${escapeHtml(subject.name)}` : 'بدون درس';
         const studentCount = rec.students ? rec.students.length : 0;
         
+        // ✅ اصلاح امنیتی: escape عنوان رکورد و نام آیتم
         html += `
             <div class="list-item" style="padding: 10px 15px; flex-direction: column; align-items: stretch; gap: 5px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -410,7 +419,7 @@ function renderRecentActivities() {
                     <span style="font-size: 0.75rem; color: var(--text-muted);">${toPersianNumber(rec.date)}</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; font-size: 0.8rem; color: var(--text-muted);">
-                    <span>📚 ${escapeHtml(subjectName)} | 🎯 ${escapeHtml(rec.itemName)}</span>
+                    <span>📚 ${subjectName} | 🎯 ${escapeHtml(rec.itemName)}</span>
                     <span>👥 ${toPersianNumber(studentCount)} نفر</span>
                 </div>
             </div>
@@ -435,7 +444,8 @@ function renderFullClassReport(studentScores) {
 
     reportsList.innerHTML = sorted.map((st, index) => {
         const g = window.allGroupsData.find(x => x.id === st.groupId);
-        const groupBadge = g ? `<span class="group-label" style="margin-right:5px;">${g.symbol} ${g.name}</span>` : '';
+        // ✅ اصلاح امنیتی: escape نام و نماد گروه
+        const groupBadge = g ? `<span class="group-label" style="margin-right:5px;">${escapeHtml(g.symbol)} ${escapeHtml(g.name)}</span>` : '';
         
         const maxScore = sorted[0].totalScore || 1;
         const percent = Math.round((st.totalScore / maxScore) * 100);
@@ -445,7 +455,7 @@ function renderFullClassReport(studentScores) {
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                     <div style="display:flex; align-items:center; gap:5px;">
                         <span style="font-weight:bold; min-width:25px; color:var(--text-muted);">${toPersianNumber(index + 1)}.</span>
-                        <span><strong>${st.firstName} ${st.lastName}</strong></span>
+                        <span><strong>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</strong></span>
                         ${groupBadge}
                     </div>
                     <span class="rank-badge">${toPersianNumber(st.totalScore)} امتیاز</span>
@@ -476,11 +486,9 @@ function renderExamsDashboard() {
     const totalExams = exams.length;
     const totalResults = results.length;
     
-    // ✅ نقشه آزمون‌ها (یک بار)
     const examMap = {};
     for (const e of exams) examMap[e.id] = e;
     
-    // ✅ یک حلقه برای همه چیز (به جای find در حلقه)
     let totalScorePercent = 0;
     let validResults = 0;
     const studentPercentMap = {};
@@ -501,7 +509,6 @@ function renderExamsDashboard() {
     
     const avgPercent = validResults > 0 ? Math.round(totalScorePercent / validResults) : 0;
     
-    // ✅ پیدا کردن بهترین دانش‌آموز (parseInt برای تطابق با autoIncrement عددی)
     let bestStudentId = null;
     let bestAvg = -1;
     for (const sid in studentPercentMap) {
@@ -512,11 +519,11 @@ function renderExamsDashboard() {
         }
     }
     
-    // ساخت کارت بهترین دانش‌آموز
     let bestStudentHtml = '';
     if (bestStudentId) {
         const st = window.allStudentsData.find(s => s.id === bestStudentId);
         if (st) {
+            // ✅ اصلاح امنیتی: escape نام دانش‌آموز
             bestStudentHtml = `
                 <div style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); padding: 12px; border-radius: 12px; text-align: center; color: white;">
                     <div style="font-size: 1.8rem; margin-bottom: 4px;">🏆</div>
@@ -558,16 +565,30 @@ function renderExamsDashboard() {
     `;
 }
 
+// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ (آخرین بخش) را بفرستم.
 async function exportClassCSV() {
     try {
+        // ✅ اصلاح امنیتی: جلوگیری از فرمول تزریقی در اکسل (CSV Injection)
+        const safeCsv = (val) => {
+            if (val === null || val === undefined) return '';
+            let str = String(val);
+            if (str.startsWith('=') || str.startsWith('+') || str.startsWith('-') || str.startsWith('@')) {
+                str = "'" + str;
+            }
+            return str.replace(/"/g, '""');
+        };
+
+        // ✅ بهبود عملکرد: استفاده از کش (به جای حلقه تو در تو)
+        if (!window._cacheStudentScores && typeof buildScoreCaches === 'function') {
+            buildScoreCaches();
+        }
+        const scoreCache = window._cacheStudentScores || {};
+
         let csvContent = "ردیف,نام,نام خانوادگی,مجموع امتیاز\r\n";
-        const studentScores = window.allStudentsData.map(st => {
-            let total = 0;
-            window.allRecordsData.forEach(rec => {
-                if (rec.students && rec.students.includes(st.id)) total += rec.finalScore;
-            });
-            return { ...st, totalScore: total };
-        });
+        const studentScores = window.allStudentsData.map(st => ({
+            ...st,
+            totalScore: scoreCache[st.id] || 0
+        }));
         
         studentScores.sort((a, b) => {
             if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
@@ -575,7 +596,7 @@ async function exportClassCSV() {
         });
 
         studentScores.forEach((st, i) => {
-            csvContent += `${i + 1},"${st.firstName}","${st.lastName}",${st.totalScore}\r\n`;
+            csvContent += `${i + 1},"${safeCsv(st.firstName)}","${safeCsv(st.lastName)}",${st.totalScore}\r\n`;
         });
 
         const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -597,8 +618,15 @@ function printClassReport() {
     if(!content) return;
     
     const headerSubtitle = document.getElementById('header-subtitle');
-    const classData = headerSubtitle ? headerSubtitle.textContent : '';
+    // ✅ اصلاح امنیتی: escape نام کلاس
+    const classData = headerSubtitle ? escapeHtml(headerSubtitle.textContent) : '';
     
+    // ✅ بهبود عملکرد: استفاده از کش
+    if (!window._cacheStudentScores && typeof buildScoreCaches === 'function') {
+        buildScoreCaches();
+    }
+    const scoreCache = window._cacheStudentScores || {};
+
     let html = `
         <div class="rc-header">
             <h2>گزارش امتیازات کلاس</h2>
@@ -615,13 +643,10 @@ function printClassReport() {
             <tbody>
     `;
     
-    const studentScores = window.allStudentsData.map(st => {
-        let total = 0;
-        window.allRecordsData.forEach(rec => {
-            if (rec.students && rec.students.includes(st.id)) total += rec.finalScore;
-        });
-        return { ...st, totalScore: total };
-    });
+    const studentScores = window.allStudentsData.map(st => ({
+        ...st,
+        totalScore: scoreCache[st.id] || 0
+    }));
     
     studentScores.sort((a, b) => {
         if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
@@ -629,10 +654,11 @@ function printClassReport() {
     });
     
     studentScores.forEach((st, i) => {
+        // ✅ اصلاح امنیتی: escape نام و نام خانوادگی دانش‌آموز
         html += `
             <tr>
                 <td style="border: 1px solid #cbd5e1; padding: 8px;">${toPersianNumber(i + 1)}</td>
-                <td style="border: 1px solid #cbd5e1; padding: 8px; text-align:right;">${st.firstName} ${st.lastName}</td>
+                <td style="border: 1px solid #cbd5e1; padding: 8px; text-align:right;">${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</td>
                 <td style="border: 1px solid #cbd5e1; padding: 8px;">${toPersianNumber(st.totalScore)}</td>
             </tr>
         `;
