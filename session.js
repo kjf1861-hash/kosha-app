@@ -921,7 +921,7 @@ async function saveAllSessionAttendance() {
                 periodNumber: parseInt(periodNum),
                 studentId: parseInt(studentId),
                 status: currentSessionAttendanceState[periodNum][studentId],
-                academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
+                academicYear: window.activeAcademicYear
             });
         }
     }
