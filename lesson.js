@@ -28,6 +28,10 @@ async function saveLesson(e) {
     document.getElementById('lesson-form').reset();
     showToast('درس جدید با موفقیت ثبت شد!', 'success');
     loadAllData();
+    
+    // ✅ اسکرول آرام به بالای فرم
+    const lessonForm = document.getElementById('lesson-form');
+    if (lessonForm) lessonForm.scrollIntoView({ behavior: 'smooth' });
 }
 
 async function editLesson(id) {
