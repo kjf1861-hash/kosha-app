@@ -105,13 +105,15 @@ function renderDashboardData() {
     if (statSessions) statSessions.textContent = toPersianNumber(window.allSessionsData.length);
     if (statRecords) statRecords.textContent = toPersianNumber(window.allRecordsData.length);
 
-    const studentScores = window.allStudentsData.map(st => {
-        let total = 0;
-        window.allRecordsData.forEach(rec => {
-            if (rec.students && rec.students.includes(st.id)) total += rec.finalScore;
-        });
-        return { ...st, totalScore: total };
-    });
+    // ✅ استفاده از کش (به جای حلقه روی رکوردها برای هر دانش‌آموز)
+    if (!window._cacheStudentScores && typeof buildScoreCaches === 'function') {
+        buildScoreCaches();
+    }
+    const scoreCache = window._cacheStudentScores || {};
+    const studentScores = window.allStudentsData.map(st => ({
+        ...st,
+        totalScore: scoreCache[st.id] || 0
+    }));
 
     renderActivityCards();
     renderAttendanceChart();
@@ -228,20 +230,23 @@ function renderSubjectAveragesChart() {
         return;
     }
 
-    const subjectData = window.allSubjectsData.map(sub => {
-        let total = 0;
-        window.allRecordsData.forEach(rec => {
-            if (rec.subjectId === sub.id) total += rec.finalScore;
-        });
-        return { ...sub, total };
-    });
+    if (!window._cacheSubjectScores && typeof buildScoreCaches === 'function') {
+        buildScoreCaches();
+    }
+    const subjectCache = window._cacheSubjectScores || {};
+
+    const subjectData = window.allSubjectsData.map(sub => ({
+        ...sub,
+        total: subjectCache[sub.id] || 0
+    }));
 
     subjectData.sort((a, b) => b.total - a.total);
     const maxTotal = subjectData[0].total || 1;
 
-    container.innerHTML = subjectData.map(sub => {
+    let html = '';
+    for (const sub of subjectData) {
         const percent = Math.round((sub.total / maxTotal) * 100);
-        return `
+        html += `
             <div>
                 <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 4px;">
                     <span>${escapeHtml(sub.symbol || '📚')} ${escapeHtml(sub.name)}</span>
@@ -252,7 +257,8 @@ function renderSubjectAveragesChart() {
                 </div>
             </div>
         `;
-    }).join('');
+    }
+    container.innerHTML = html;
 }
 
 function renderTopStudents(studentScores) {
@@ -297,18 +303,15 @@ function renderTopGroups() {
         return;
     }
 
-    const groupData = window.allGroupsData.map(g => {
-        let total = 0;
-        window.allRecordsData.forEach(rec => {
-            if (rec.students) {
-                rec.students.forEach(stId => {
-                    const st = window.allStudentsData.find(s => s.id === stId);
-                    if (st && st.groupId === g.id) total += rec.finalScore;
-                });
-            }
-        });
-        return { ...g, totalScore: total };
-    });
+    if (!window._cacheGroupScores && typeof buildScoreCaches === 'function') {
+        buildScoreCaches();
+    }
+    const groupCache = window._cacheGroupScores || {};
+
+    const groupData = window.allGroupsData.map(g => ({
+        ...g,
+        totalScore: groupCache[g.id] || 0
+    }));
 
     groupData.sort((a, b) => b.totalScore - a.totalScore);
     const topGroups = groupData.filter(g => g.totalScore > 0).slice(0, 3);
@@ -319,16 +322,20 @@ function renderTopGroups() {
     }
 
     const medals = ['🥇', '🥈', '🥉'];
-    container.innerHTML = topGroups.map((g, index) => `
-        <div class="list-item" style="padding: 12px 15px; margin-bottom: 8px; border-right: 4px solid var(--primary);">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <span class="medal-badge" style="font-size:1.5rem;">${medals[index]}</span>
-                <span style="font-size: 1.1rem; font-weight: bold;">${escapeHtml(g.name)}</span>
-                <span style="font-size: 1.1rem; font-weight: bold;">${g.name}</span>
+    let html = '';
+    for (let i = 0; i < topGroups.length; i++) {
+        const g = topGroups[i];
+        html += `
+            <div class="list-item" style="padding: 12px 15px; margin-bottom: 8px; border-right: 4px solid var(--primary);">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="medal-badge" style="font-size:1.5rem;">${medals[i]}</span>
+                    <span style="font-size: 1.1rem; font-weight: bold;">${escapeHtml(g.name)}</span>
+                </div>
+                <span class="rank-badge">${toPersianNumber(g.totalScore)} امتیاز</span>
             </div>
-            <span class="rank-badge">${toPersianNumber(g.totalScore)} امتیاز</span>
-        </div>
-    `).join('');
+        `;
+    }
+    container.innerHTML = html;
 }
 
 function renderNeedsAttention(studentScores) {
@@ -340,12 +347,14 @@ function renderNeedsAttention(studentScores) {
         return;
     }
 
+    if (!window._cacheStudentAttendance && typeof buildScoreCaches === 'function') {
+        buildScoreCaches();
+    }
+    const attCache = window._cacheStudentAttendance || {};
+
     const studentStats = studentScores.map(st => {
-        let absences = 0;
-        window.allAttendanceData.forEach(att => {
-            if (att.studentId === st.id && att.status === 'absent') absences++;
-        });
-        return { ...st, absences };
+        const bucket = attCache[st.id];
+        return { ...st, absences: bucket ? bucket.absent : 0 };
     });
 
     studentStats.sort((a, b) => {
@@ -355,18 +364,22 @@ function renderNeedsAttention(studentScores) {
 
     const needsAttention = studentStats.slice(0, 3);
 
-    container.innerHTML = needsAttention.map(st => `
-        <div class="list-item" style="padding: 12px 15px; background: rgba(255,255,255,0.5);">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size: 1.2rem;">⚠️</span>
-                <strong>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</strong>
+    let html = '';
+    for (const st of needsAttention) {
+        html += `
+            <div class="list-item" style="padding: 12px 15px; background: rgba(255,255,255,0.5);">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size: 1.2rem;">⚠️</span>
+                    <strong>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</strong>
+                </div>
+                <div style="display:flex; gap:8px; font-size: 0.85rem;">
+                    <span class="rank-badge" style="background:#fee2e2; color:#b91c1c;">${toPersianNumber(st.totalScore)} امتیاز</span>
+                    <span class="rank-badge" style="background:#fef3c7; color:#b45309;">${toPersianNumber(st.absences)} غیبت</span>
+                </div>
             </div>
-            <div style="display:flex; gap:8px; font-size: 0.85rem;">
-                <span class="rank-badge" style="background:#fee2e2; color:#b91c1c;">${toPersianNumber(st.totalScore)} امتیاز</span>
-                <span class="rank-badge" style="background:#fef3c7; color:#b45309;">${toPersianNumber(st.absences)} غیبت</span>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }
+    container.innerHTML = html;
 }
 
 function renderRecentActivities() {
@@ -380,24 +393,30 @@ function renderRecentActivities() {
 
     const sorted = [...window.allRecordsData].sort((a, b) => b.id - a.id).slice(0, 4);
 
-    container.innerHTML = sorted.map(rec => {
-        const subject = window.allSubjectsData.find(s => s.id === rec.subjectId);
+    // ✅ نقشه دروس (یک بار)
+    const subjectMap = {};
+    for (const s of window.allSubjectsData) subjectMap[s.id] = s;
+
+    let html = '';
+    for (const rec of sorted) {
+        const subject = subjectMap[rec.subjectId];
         const subjectName = subject ? `${subject.symbol || ''} ${subject.name}` : 'بدون درس';
         const studentCount = rec.students ? rec.students.length : 0;
         
-        return `
+        html += `
             <div class="list-item" style="padding: 10px 15px; flex-direction: column; align-items: stretch; gap: 5px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <strong style="color: var(--primary); font-size: 0.95rem;">${rec.title}</strong>
+                    <strong style="color: var(--primary); font-size: 0.95rem;">${escapeHtml(rec.title)}</strong>
                     <span style="font-size: 0.75rem; color: var(--text-muted);">${toPersianNumber(rec.date)}</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; font-size: 0.8rem; color: var(--text-muted);">
-                    <span>📚 ${subjectName} | 🎯 ${rec.itemName}</span>
+                    <span>📚 ${escapeHtml(subjectName)} | 🎯 ${escapeHtml(rec.itemName)}</span>
                     <span>👥 ${toPersianNumber(studentCount)} نفر</span>
                 </div>
             </div>
         `;
-    }).join('');
+    }
+    container.innerHTML = html;
 }
 
 function renderFullClassReport(studentScores) {
