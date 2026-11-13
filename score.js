@@ -62,7 +62,8 @@ function renderScoreData() {
     const recordsFilterSubject = document.getElementById('recordsFilterSubject');
     const editRecordSubject = document.getElementById('editRecordSubject');
     
-    const subjOptions = window.allSubjectsData.map(s => `<option value="${s.id}">${s.symbol || ''} ${s.name}</option>`).join('');
+    // ✅ اصلاح امنیتی: escape نام دروس در option ها
+    const subjOptions = window.allSubjectsData.map(s => `<option value="${s.id}">${escapeHtml(s.symbol || '')} ${escapeHtml(s.name)}</option>`).join('');
     
     if (recordSubjectSelect) recordSubjectSelect.innerHTML = '<option value="" disabled selected>درسی را انتخاب کنید!</option>' + subjOptions;
     if (editRecordSubject) editRecordSubject.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + subjOptions;
@@ -70,14 +71,16 @@ function renderScoreData() {
 
     const itemSelect = document.getElementById('recordItem');
     const editRecordItemSelect = document.getElementById('editRecordItem');
-    const itemOptions = window.allAssessmentItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
+    // ✅ اصلاح امنیتی: escape عنوان آیتم‌ها در option ها
+    const itemOptions = window.allAssessmentItems.map(i => `<option value="${i.id}">${escapeHtml(i.title)}</option>`).join('');
     
     if (itemSelect) itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + itemOptions;
     if (editRecordItemSelect) editRecordItemSelect.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + itemOptions;
 
     const recordsFilterStudent = document.getElementById('recordsFilterStudent');
     if (recordsFilterStudent) {
-        recordsFilterStudent.innerHTML = '<option value="">همه دانش‌آموزان</option>' + window.allStudentsData.map(st => `<option value="${st.id}">${st.firstName} ${st.lastName}</option>`).join('');
+        // ✅ اصلاح امنیتی: escape نام دانش‌آموزان در option ها
+        recordsFilterStudent.innerHTML = '<option value="">همه دانش‌آموزان</option>' + window.allStudentsData.map(st => `<option value="${st.id}">${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</option>`).join('');
     }
 
     const quranSurahSelect = document.getElementById('quranSurahSelect');
@@ -169,6 +172,7 @@ function changeScoreCalendarMonth(type, delta) {
     renderScoreCalendar(type);
 }
 
+// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 function renderScoreCalendar(type) {
     const state = scoreCalendarState[type];
     
@@ -302,11 +306,12 @@ function renderScoreDayArchive(type, dateStr) {
                 }).filter(n => n !== '').join('، ');
             }
             
+            // ✅ اصلاح امنیتی: escape عنوان رکورد و نام دانش‌آموزان
             archiveList.innerHTML += `
                 <div class="score-archive-item">
                     <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                        <strong>${rec.title}</strong> 
-                        <span style="font-size:0.75rem; color:var(--text-muted);">(${names || 'بدون دانش‌آموز'})</span>
+                        <strong>${escapeHtml(rec.title)}</strong> 
+                        <span style="font-size:0.75rem; color:var(--text-muted);">(${escapeHtml(names || 'بدون دانش‌آموز')})</span>
                     </div>
                     <div style="color:var(--primary); font-weight:bold; margin-right:10px;">${toPersianNumber(rec.finalScore)} امتیاز</div>
                 </div>
@@ -333,26 +338,31 @@ function resetScoreCalendar(type) {
 
     renderScoreCalendar(type);
 }
+
 // ==========================================
 // مدیریت انتخاب دانش‌آموزان
 // ==========================================
 
 function createStudentLabel(st, checkboxClass) {
     const g = window.allGroupsData.find(x => x.id === st.groupId);
-    const badge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
-    return `<label class="student-checkbox-item"><input type="checkbox" class="${checkboxClass}" value="${st.id}"><div class="student-checkbox-item-content"><span>${st.firstName} ${st.lastName}</span>${badge}</div></label>`;
+    // ✅ اصلاح امنیتی: escape نام و نماد گروه
+    const badge = g ? `<span class="group-label">${escapeHtml(g.symbol)} ${escapeHtml(g.name)}</span>` : '';
+    // ✅ اصلاح امنیتی: escape نام دانش‌آموز
+    return `<label class="student-checkbox-item"><input type="checkbox" class="${checkboxClass}" value="${st.id}"><div class="student-checkbox-item-content"><span>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</span>${badge}</div></label>`;
 }
 
 function createGroupedView(container, checkboxClass, toggleGroupFnName) {
     if (window.allGroupsData.length === 0) { container.innerHTML = '<p style="text-align:center; color:#dc2626;">هیچ گروهی ساخته نشده است.</p>'; return; }
     window.allGroupsData.forEach(g => {
         const groupStudents = window.allStudentsData.filter(st => st.groupId === g.id);
-        let groupHtml = `<details class="group-accordion"><summary><div class="group-header-checkbox"><input type="checkbox" class="group-select-all-checkbox" onchange="${toggleGroupFnName}(this, ${g.id}, '${checkboxClass}')"><span>${g.symbol} ${g.name} (${toPersianNumber(groupStudents.length)} نفر)</span></div></summary><div class="group-students-container">`;
+        // ✅ اصلاح امنیتی: escape نام و نماد گروه
+        let groupHtml = `<details class="group-accordion"><summary><div class="group-header-checkbox"><input type="checkbox" class="group-select-all-checkbox" onchange="${toggleGroupFnName}(this, ${g.id}, '${checkboxClass}')"><span>${escapeHtml(g.symbol)} ${escapeHtml(g.name)} (${toPersianNumber(groupStudents.length)} نفر)</span></div></summary><div class="group-students-container">`;
         if (groupStudents.length === 0) groupHtml += `<p style="color:#64748b; font-size:0.85rem; text-align:center;">خالی</p>`;
         else groupStudents.forEach(st => { 
             const g2 = window.allGroupsData.find(x => x.id === st.groupId);
-            const badge = g2 ? `<span class="group-label">${g2.symbol} ${g2.name}</span>` : '';
-            groupHtml += `<label class="student-checkbox-item"><input type="checkbox" class="${checkboxClass} group-student-${g.id}" value="${st.id}"><div class="student-checkbox-item-content"><span>${st.firstName} ${st.lastName}</span>${badge}</div></label>`; 
+            const badge = g2 ? `<span class="group-label">${escapeHtml(g2.symbol)} ${escapeHtml(g2.name)}</span>` : '';
+            // ✅ اصلاح امنیتی: escape نام دانش‌آموز
+            groupHtml += `<label class="student-checkbox-item"><input type="checkbox" class="${checkboxClass} group-student-${g.id}" value="${st.id}"><div class="student-checkbox-item-content"><span>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</span>${badge}</div></label>`; 
         });
         groupHtml += `</div></details>`;
         container.innerHTML += groupHtml;
@@ -402,6 +412,7 @@ function toggleAllStudents(checked, checkboxClass = 'student-checkbox') {
     }
 }
 
+// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 function renderQuranStudentCheckboxes() {
     const container = document.getElementById('quran-students-container');
     if (!container) return;
@@ -514,7 +525,8 @@ function renderScoreInput(item) {
         select.className = 'form-control'; select.id = 'dynamicLevelInput'; select.required = true;
         select.innerHTML = '<option value="" disabled selected>انتخاب سطح...</option>';
         item.levels.forEach(level => {
-            select.innerHTML += `<option value="${level.score}">${level.name} (${toPersianNumber(level.score)} امتیاز)</option>`;
+            // ✅ اصلاح امنیتی: escape نام سطح
+            select.innerHTML += `<option value="${level.score}">${escapeHtml(level.name)} (${toPersianNumber(level.score)} امتیاز)</option>`;
         });
         container.appendChild(select);
     } else if (item.type === 'count') {
@@ -572,16 +584,16 @@ function showPreview(isFinal) {
             ? getFormattedEventsForDate(dateStr) 
             : '';
         
+        // ✅ اصلاح امنیتی: escape عنوان آیتم و متن مناسبت
         previewContent.innerHTML = `
-            <div class="preview-row"><strong>آیتم:</strong> <span>${selectedItem.title}</span></div>
+            <div class="preview-row"><strong>آیتم:</strong> <span>${escapeHtml(selectedItem.title)}</span></div>
             <div class="preview-row"><strong>تعداد:</strong> <span>${toPersianNumber(studentCheckboxes.length)} نفر</span></div>
             <div class="preview-row"><strong>تاریخ:</strong> <span>${toPersianNumber(dateStr)}</span></div>
-            ${eventText ? `<div class="preview-row" style="background: #ede9fe; padding: 8px 10px; border-radius: 8px; margin-top: 5px; font-size: 0.85rem; color: #5b21b6;"><span>${eventText}</span></div>` : ''}
+            ${eventText ? `<div class="preview-row" style="background: #ede9fe; padding: 8px 10px; border-radius: 8px; margin-top: 5px; font-size: 0.85rem; color: #5b21b6;"><span>${escapeHtml(eventText)}</span></div>` : ''}
             <div class="preview-row" style="background: #eef2ff; padding: 10px; border-radius: 8px; margin-top: 10px;"><strong>امتیاز:</strong> <span style="font-size: 1.2rem; color: #4A90E2;">${toPersianNumber(finalScore)}</span></div>
         `;
     }
     
-    // ✅ داده‌های رکورد با سال تحصیلی جاری
     window.tempRecordData = {
         subjectId: parseInt(document.getElementById('recordSubject').value),
         itemName: selectedItem.title, 
@@ -590,7 +602,7 @@ function showPreview(isFinal) {
         students: Array.from(studentCheckboxes).map(cb => parseInt(cb.value)),
         arf: document.getElementById('recordArf').checked, 
         finalScore: finalScore,
-        academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
+        academicYear: window.activeAcademicYear
     };
     const previewModal = document.getElementById('preview-modal');
     if (previewModal) previewModal.classList.add('show');
@@ -732,7 +744,15 @@ async function saveSpecialReward() {
     if (studentCheckboxes.length === 0) { showToast('دانش‌آموز انتخاب کنید.', 'error'); return; }
 
     const titleEl = document.getElementById('specialRewardTitle');
-    const title = titleEl.value.trim();
+    
+    // ✅ اصلاح امنیتی: sanitize عنوان تشویق
+    let title;
+    try {
+        title = sanitizeInput(titleEl.value, 100);
+    } catch (err) {
+        showToast(err.message, 'error');
+        return;
+    }
     if (!title) { showToast('عنوان تشویق را وارد کنید.', 'error'); return; }
 
     const score = parseInt(document.getElementById('specialRewardScore').value);
@@ -749,7 +769,7 @@ async function saveSpecialReward() {
         students: Array.from(studentCheckboxes).map(cb => parseInt(cb.value)),
         arf: false,
         finalScore: score,
-        academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
+        academicYear: window.activeAcademicYear
     };
 
     try {
@@ -783,7 +803,7 @@ async function saveHandwritingReward() {
         students: Array.from(studentCheckboxes).map(cb => parseInt(cb.value)),
         arf: false,
         finalScore: 4,
-        academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
+        academicYear: window.activeAcademicYear
     };
 
     try {
@@ -802,6 +822,7 @@ async function saveHandwritingReward() {
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق خوش‌خط‌نویسی.', 'error'); }
 }
 
+// ⏸️ پایان بخش ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۴ (آخر) را بفرستم.
 // ==========================================
 // سوابق ارزشیابی
 // ==========================================
@@ -845,17 +866,16 @@ function loadAssessmentRecords() {
     const startIndex = (currentPage.records - 1) * itemsPerPage;
     const paginatedRecords = filteredRecords.slice(startIndex, startIndex + itemsPerPage);
 
-    // ✅ نقشه‌های جستجو (یک بار برای همه رکوردها)
     const subjectMap = {};
     for (const s of window.allSubjectsData) subjectMap[s.id] = s;
     const studentMap = {};
     for (const st of window.allStudentsData) studentMap[st.id] = st;
 
-    // ✅ ساخت HTML در یک رشته و درج یک‌باره
     let html = '';
     for (const rec of paginatedRecords) {
         const subject = subjectMap[rec.subjectId];
-        const subjectName = subject ? `${subject.symbol || ''} ${subject.name}` : 'بدون درس (تشویق/قرآن)';
+        // ✅ اصلاح امنیتی: escape اطلاعات درس
+        const subjectName = subject ? `${escapeHtml(subject.symbol || '')} ${escapeHtml(subject.name)}` : 'بدون درس (تشویق/قرآن)';
         
         let studentNames = '';
         if (rec.students && rec.students.length > 0) {
@@ -867,13 +887,14 @@ function loadAssessmentRecords() {
             studentNames = names.join('، ');
         }
         
+        // ✅ اصلاح امنیتی: escape عنوان، نام درس، آیتم و نام دانش‌آموزان
         html += `
             <div class="record-item ${rec.arf ? 'arf-list-item' : ''}">
                 <div class="record-header">
                     <span class="record-title">${escapeHtml(rec.title)} ${rec.arf ? '🎁' : ''}</span>
                     <span class="record-score">${toPersianNumber(rec.finalScore)} امتیاز</span>
                 </div>
-                <div class="record-details"><span>📚 ${escapeHtml(subjectName)} | ${escapeHtml(rec.itemName)}</span><span>📅 ${toPersianNumber(rec.date)}</span></div>
+                <div class="record-details"><span>📚 ${subjectName} | ${escapeHtml(rec.itemName)}</span><span>📅 ${toPersianNumber(rec.date)}</span></div>
                 <div class="record-details" style="font-size: 0.8rem; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">👥 ${escapeHtml(studentNames)}</div>
                 <div class="record-actions">
                     <button class="btn btn-secondary btn-sm" onclick="openEditRecordModal(${rec.id})">✏️ ویرایش</button>
@@ -949,8 +970,10 @@ async function openEditRecordModal(id) {
             container.innerHTML = '';
             window.allStudentsData.forEach(st => {
                 const g = window.allGroupsData.find(x => x.id === st.groupId);
-                const badge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
+                // ✅ اصلاح امنیتی: escape نام و نماد گروه
+                const badge = g ? `<span class="group-label">${escapeHtml(g.symbol)} ${escapeHtml(g.name)}</span>` : '';
                 const isChecked = record.students.includes(st.id) ? 'checked' : '';
+                // ✅ اصلاح امنیتی: escape نام دانش‌آموز
                 container.innerHTML += `
                     <label class="student-checkbox-item">
                         <input type="checkbox" class="edit-student-checkbox" value="${st.id}" ${isChecked}>
@@ -983,7 +1006,15 @@ async function saveEditedRecord(event) {
     
     const subjectId = (subjectSelect.value) ? parseInt(subjectSelect.value) : null;
     const itemId = itemSelect.value;
-    const newTitle = document.getElementById('editRecordTitle').value;
+    
+    // ✅ اصلاح امنیتی: sanitize عنوان رکورد
+    let newTitle;
+    try {
+        newTitle = sanitizeInput(document.getElementById('editRecordTitle').value, 150);
+    } catch (err) {
+        showToast(err.message, 'error'); return;
+    }
+
     const newDate = document.getElementById('editRecordDate').value.trim();
     const newScore = parseInt(document.getElementById('editRecordScore').value);
     
@@ -1073,7 +1104,8 @@ async function loadQuranRewards() {
         let html = '';
         for (const studentId in grouped) {
             const student = window.allStudentsData.find(s => s.id == studentId);
-            const studentName = student ? `${student.firstName} ${student.lastName}` : `دانش‌آموز ${toPersianNumber(studentId)}`;
+            // ✅ اصلاح امنیتی: escape نام دانش‌آموز
+            const studentName = student ? `${escapeHtml(student.firstName)} ${escapeHtml(student.lastName)}` : `دانش‌آموز ${toPersianNumber(studentId)}`;
             const latest = grouped[studentId][grouped[studentId].length - 1];
             html += `<div class="list-item" style="flex-direction: column; align-items: flex-start; padding: 15px; background: var(--arf-bg); border-right: 4px solid var(--arf-border); margin-bottom: 10px;"><strong style="font-size: 1.1rem;">🏅 ${studentName}</strong><span style="font-size: 0.9rem; color: var(--arf-border);">تعداد سوره‌ها: ${toPersianNumber(latest.totalSurahs)} | تعداد آیات: ${toPersianNumber(latest.totalAyats)}</span></div>`;
         }
@@ -1085,13 +1117,23 @@ async function loadQuranRewards() {
 
 async function exportScoreCSV() {
     try {
+        // ✅ اصلاح امنیتی: جلوگیری از فرمول تزریقی در اکسل (CSV Injection)
+        const safeCsv = (val) => {
+            if (val === null || val === undefined) return '';
+            let str = String(val);
+            if (str.startsWith('=') || str.startsWith('+') || str.startsWith('-') || str.startsWith('@')) {
+                str = "'" + str;
+            }
+            return str.replace(/"/g, '""');
+        };
+
         let csvContent = "ردیف,عنوان,درس,آیتم,تاریخ,امتیاز,ارفاق\r\n";
         const sorted = [...window.allRecordsData].sort((a, b) => b.date.localeCompare(a.date));
         
         sorted.forEach((rec, i) => {
             const s = window.allSubjectsData.find(x => x.id === rec.subjectId); 
             const sn = s ? s.name : 'بدون درس';
-            csvContent += `${i + 1},"${rec.title}","${sn}","${rec.itemName}","${rec.date}",${rec.finalScore},"${rec.arf ? 'دارد' : 'ندارد'}"\r\n`;
+            csvContent += `${i + 1},"${safeCsv(rec.title)}","${safeCsv(sn)}","${safeCsv(rec.itemName)}","${safeCsv(rec.date)}",${rec.finalScore},"${rec.arf ? 'دارد' : 'ندارد'}"\r\n`;
         });
 
         const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
