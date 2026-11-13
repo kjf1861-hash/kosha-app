@@ -124,6 +124,7 @@ async function ensureAssessmentItemsForYear(year) {
     }
 }
 window.ensureAssessmentItemsForYear = ensureAssessmentItemsForYear;
+
 // ==========================================
 // مقداردهی اولیه دیتابیس (نسخه ۱۶)
 // ==========================================
