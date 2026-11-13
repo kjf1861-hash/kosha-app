@@ -572,14 +572,14 @@ async function saveExam(event) {
     };
     
     if (editId) {
-        examData.id = parseInt(editId);
-        const existing = await getDataById('exams', parseInt(editId));
-        if (existing && existing.academicYear) {
-            examData.academicYear = existing.academicYear;
-        }
-    } else {
-        examData.id = Date.now();
+    examData.id = parseInt(editId);
+    const existing = await getDataById('exams', parseInt(editId));
+    if (existing && existing.academicYear) {
+        examData.academicYear = existing.academicYear;
     }
+} else {
+    examData.id = generateUniqueId();
+}
     
     try {
         await saveData('exams', examData);
@@ -782,11 +782,10 @@ async function saveExamGrades() {
             await deleteData('examResults', r.id);
         }
         
-        const baseId = Date.now();
         for (let i = 0; i < newResults.length; i++) {
-            newResults[i].id = baseId + i;
-            await saveData('examResults', newResults[i]);
-        }
+    newResults[i].id = generateUniqueId();
+    await saveData('examResults', newResults[i]);
+}
         
         showToast(`نمرات ${toPersianNumber(newResults.length)} دانش‌آموز ذخیره شد!`, 'success');
         
