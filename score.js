@@ -1007,7 +1007,7 @@ async function saveEditedRecord(event) {
         record.date = newDate; 
         record.finalScore = newScore;
         record.students = students;
-        record.academicYear = record.academicYear || window.activeAcademicYear; // ✅ حفظ سال تحصیلی
+        record.academicYear = record.academicYear || window.activeAcademicYear;
         
         await saveData('records', record);
         showToast('رکورد با موفقیت ویرایش شد.', 'success');
@@ -1021,6 +1021,7 @@ async function saveEditedRecord(event) {
         showToast('خطا در ذخیره.', 'error'); 
     }
 }
+
 // ==========================================
 // توابع تکمیلی و کمکی
 // ==========================================
