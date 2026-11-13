@@ -85,25 +85,56 @@ async function resetYearlyRecords() {
 }
 
 async function resetGroupAssignments() {
-    const hasAssignedStudents = window.allStudentsData.some(st => st.groupId !== null);
+    const currentYear = window.activeAcademicYear || '1405-1406';
+    
+    // بررسی اینکه آیا اصلاً دانش‌آموزی در سال جاری گروه‌بندی شده است؟
+    const hasAssignedStudents = window.allStudentsData.some(
+        st => st.groupId !== null && st.groupId !== undefined
+    );
     
     if (!hasAssignedStudents) {
-        showToast('هیچ دانش‌آموزی در گروه‌ها وجود ندارد که خارج شود.', 'error');
+        showToast('هیچ دانش‌آموزی در گروه‌ها (سال تحصیلی جاری) وجود ندارد.', 'error');
         return;
     }
 
-    const isConfirmed = confirm('آیا از خارج کردن تمام دانش‌آموزان از گروه‌ها مطمئن هستید؟ (گروه‌ها و دانش‌آموزان حذف نمی‌شوند)');
+    // ✅ پیام تأیید شفاف‌تر
+    const confirmMessage = 
+        `⚠️ هشدار:\n\n` +
+        `شما در حال خارج کردن تمام دانش‌آموزان از گروه‌ها هستید.\n\n` +
+        `📌 توجه مهم:\n` +
+        `• این عملیات فقط برای سال تحصیلی «${toPersianNumber(currentYear)}» اعمال می‌شود.\n` +
+        `• گروه‌بندی سال‌های دیگر دست‌نخورده باقی می‌ماند.\n` +
+        `• گروه‌ها و دانش‌آموزان حذف نمی‌شوند (فقط گروه‌بندی پاک می‌شود).\n\n` +
+        `آیا مطمئن هستید؟`;
+    
+    const isConfirmed = confirm(confirmMessage);
     if (!isConfirmed) return;
 
     try {
         const allStudents = await getAllData('students');
+        let unassignedCount = 0;
+        
         for (const student of allStudents) {
-            if (student.groupId) {
+            // ✅ فقط دانش‌آموزان سال جاری (یا بدون سال برای سازگاری با نسخه قدیمی)
+            const belongsToCurrentYear = 
+                !student.academicYear || student.academicYear === currentYear;
+            
+            if (student.groupId && belongsToCurrentYear) {
                 student.groupId = null;
                 await saveData('students', student);
+                unassignedCount++;
             }
         }
-        showToast('تمام دانش‌آموزان از گروه‌ها خارج شدند.', 'success');
+        
+        if (unassignedCount > 0) {
+            showToast(
+                `${toPersianNumber(unassignedCount)} دانش‌آموز از گروه‌ها خارج شدند. (سال تحصیلی ${toPersianNumber(currentYear)})`, 
+                'success'
+            );
+        } else {
+            showToast('هیچ دانش‌آموزی در سال تحصیلی جاری گروه‌بندی نشده بود.', 'info');
+        }
+        
         loadAllData();
     } catch (e) {
         console.error(e);
