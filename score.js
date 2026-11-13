@@ -686,7 +686,7 @@ async function saveQuranRecord() {
         students: Array.from(studentCheckboxes).map(cb => parseInt(cb.value)),
         arf: false,
         finalScore: finalScore,
-        academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
+        academicYear: window.activeAcademicYear
     };
 
     try {
@@ -703,14 +703,15 @@ async function saveQuranRecord() {
                 }
             });
             await saveData('badgesSettings', { 
-    id: `quranReward_${studentId}_${generateUniqueId()}`, 
-    studentId: studentId, 
-    title: "تشویق شرکت در پویش حفظ جزء سی قرآن کریم", 
-    totalSurahs: totalSurahs, 
-    totalAyats: totalAyats, 
-    date: dateStr,
-    academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
-});
+                id: `quranReward_${studentId}_${generateUniqueId()}`, 
+                studentId: studentId, 
+                title: "تشویق شرکت در پویش حفظ جزء سی قرآن کریم", 
+                totalSurahs: totalSurahs, 
+                totalAyats: totalAyats, 
+                date: dateStr,
+                academicYear: window.activeAcademicYear
+            });
+        }
 
         showToast('پویش قرآن با موفقیت ثبت شد!', 'success');
         const form = document.getElementById('quran-form');
