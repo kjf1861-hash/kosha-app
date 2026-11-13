@@ -813,9 +813,13 @@ function loadAssessmentRecords() {
     
     container.innerHTML = '<p style="text-align:center;">در حال بارگذاری...</p>';
     
-    const filterSubject = document.getElementById('recordsFilterSubject')?.value || '';
-    const filterStudent = document.getElementById('recordsFilterStudent')?.value || '';
-    const searchText = document.getElementById('recordsSearchText')?.value.trim() || '';
+    const filterSubjectEl = document.getElementById('recordsFilterSubject');
+    const filterStudentEl = document.getElementById('recordsFilterStudent');
+    const searchTextEl = document.getElementById('recordsSearchText');
+    
+    const filterSubject = filterSubjectEl ? filterSubjectEl.value : '';
+    const filterStudent = filterStudentEl ? filterStudentEl.value : '';
+    const searchText = searchTextEl ? searchTextEl.value.trim() : '';
 
     let filteredRecords = window.allRecordsData.filter(rec => {
         if (filterSubject && rec.subjectId != filterSubject) return false;
@@ -830,7 +834,7 @@ function loadAssessmentRecords() {
 
     if (filteredRecords.length === 0) { 
         container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ رکوردی یافت نشد.</p>'; 
-        if(pagination) pagination.style.display = 'none';
+        if (pagination) pagination.style.display = 'none';
         return; 
     }
 
@@ -841,32 +845,44 @@ function loadAssessmentRecords() {
     const startIndex = (currentPage.records - 1) * itemsPerPage;
     const paginatedRecords = filteredRecords.slice(startIndex, startIndex + itemsPerPage);
 
-    container.innerHTML = '';
-    paginatedRecords.forEach(rec => {
-        const subject = window.allSubjectsData.find(s => s.id === rec.subjectId);
+    // ✅ نقشه‌های جستجو (یک بار برای همه رکوردها)
+    const subjectMap = {};
+    for (const s of window.allSubjectsData) subjectMap[s.id] = s;
+    const studentMap = {};
+    for (const st of window.allStudentsData) studentMap[st.id] = st;
+
+    // ✅ ساخت HTML در یک رشته و درج یک‌باره
+    let html = '';
+    for (const rec of paginatedRecords) {
+        const subject = subjectMap[rec.subjectId];
         const subjectName = subject ? `${subject.symbol || ''} ${subject.name}` : 'بدون درس (تشویق/قرآن)';
+        
         let studentNames = '';
         if (rec.students && rec.students.length > 0) {
-            const names = rec.students.map(id => {
-                const st = window.allStudentsData.find(s => s.id === id);
-                return st ? `${st.firstName} ${st.lastName}` : '';
-            }).filter(n => n !== '');
+            const names = [];
+            for (const id of rec.students) {
+                const st = studentMap[id];
+                if (st) names.push(`${st.firstName} ${st.lastName}`);
+            }
             studentNames = names.join('، ');
         }
-        container.innerHTML += `
+        
+        html += `
             <div class="record-item ${rec.arf ? 'arf-list-item' : ''}">
                 <div class="record-header">
-                    <span class="record-title">${rec.title} ${rec.arf ? '🎁' : ''}</span>
+                    <span class="record-title">${escapeHtml(rec.title)} ${rec.arf ? '🎁' : ''}</span>
                     <span class="record-score">${toPersianNumber(rec.finalScore)} امتیاز</span>
                 </div>
-                <div class="record-details"><span>📚 ${subjectName} | ${rec.itemName}</span><span>📅 ${toPersianNumber(rec.date)}</span></div>
-                <div class="record-details" style="font-size: 0.8rem; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">👥 ${studentNames}</div>
+                <div class="record-details"><span>📚 ${escapeHtml(subjectName)} | ${escapeHtml(rec.itemName)}</span><span>📅 ${toPersianNumber(rec.date)}</span></div>
+                <div class="record-details" style="font-size: 0.8rem; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">👥 ${escapeHtml(studentNames)}</div>
                 <div class="record-actions">
                     <button class="btn btn-secondary btn-sm" onclick="openEditRecordModal(${rec.id})">✏️ ویرایش</button>
                     <button class="btn btn-danger btn-sm" onclick="deleteRecord(${rec.id})">🗑️ حذف</button>
                 </div>
             </div>`;
-    });
+    }
+
+    container.innerHTML = html;
 
     if (pagination) {
         if (totalPages > 1) {
@@ -877,7 +893,9 @@ function loadAssessmentRecords() {
             const btnNext = document.getElementById('btnNextRecords');
             if (btnPrev) btnPrev.disabled = (currentPage.records === 1);
             if (btnNext) btnNext.disabled = (currentPage.records === totalPages);
-        } else { pagination.style.display = 'none'; }
+        } else { 
+            pagination.style.display = 'none'; 
+        }
     }
 }
 
