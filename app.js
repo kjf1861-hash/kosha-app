@@ -227,6 +227,32 @@ async function initBackupSettingsForm() {
     periodCalendarState.selectedDate = '';
 }
 
+// *** ✅ تابع جدید: پر کردن فرم مشخصات کلاس از دیتابیس ***
+async function populateClassSettingsForm() {
+    try {
+        const classData = await getDataById('classProfile', 1);
+        if (classData) {
+            const fields = {
+                className: classData.name || '',
+                classSymbol: classData.symbol || '',
+                classMotto: classData.motto || '',
+                classGrade: classData.grade || '',
+                teacherName: classData.teacherName || '',
+                schoolName: classData.schoolName || '',
+                academicYear: classData.academicYear || '1405-1406',
+                schedulePeriodsCount: classData.schedulePeriodsCount || 5
+            };
+            
+            for (const [id, value] of Object.entries(fields)) {
+                const el = document.getElementById(id);
+                if (el) el.value = value;
+            }
+        }
+    } catch (e) {
+        console.error('خطا در پر کردن فرم مشخصات کلاس:', e);
+    }
+}
+
 // ذخیره تنظیمات (نوع یادآور)
 async function saveBackupSettings() {
     if (!currentBackupSettings) {
@@ -792,9 +818,6 @@ function initAppEvents() {
     if (editStudentForm) editStudentForm.addEventListener('submit', saveEditedStudent);
 }
 
-// ==========================================
-// ✅ این بخش اصلاح شد: initApp حالا خودش دیتابیس را مدیریت می‌کند
-// ==========================================
 async function initApp() {
     applyEmojiRestriction('classSymbol');
     applyEmojiRestriction('lessonSymbol');
@@ -807,7 +830,6 @@ async function initApp() {
     } catch (error) { console.error("خطا در اتصال رویدادها:", error); }
     
     try {
-        // 🛠️ این خط مهم‌ترین تغییر است. قبل از بارگذاری، از باز شدن دیتابیس مطمئن می‌شویم
         if (typeof initDB === 'function') {
             await initDB();
             console.log("دیتابیس با موفقیت در initApp باز شد.");
@@ -815,7 +837,7 @@ async function initApp() {
     } catch (dbError) {
         console.error("خطا در باز کردن دیتابیس:", dbError);
         showToast('خطا در ارتباط با دیتابیس. لطفاً صفحه را رفرش کنید.', 'error');
-        return; // اگر دیتابیس باز نشد، ادامه نده
+        return;
     }
 
     try {
