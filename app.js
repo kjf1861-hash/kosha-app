@@ -10,7 +10,6 @@ window.allAttendanceData = [];
 window.allWeeklyScheduleData = [];
 let assessmentItems = [];
 
-// ✅ سال تحصیلی جاری - از دیتابیس خوانده می‌شود
 window.activeAcademicYear = '1405-1406'; 
 
 window.scheduleActiveDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه'];
@@ -20,16 +19,13 @@ let currentStudentView = 'flat';
 let currentPage = { students: 1, records: 1, reports: 1 };
 const itemsPerPage = 40;
 
-// *** متغیرهای مدیریت تغییرات ذخیره‌نشده ***
 window.isFormDirty = false;
 window.pendingExitAction = null;
 window.currentFormName = '';
 
-// *** متغیرهای جدید برای پشتیبان‌گیری خودکار ***
 let autoBackupTimer = null;
 const AUTO_BACKUP_DELAY = 2000;
 
-// *** متغیرهای مربوط به تنظیمات پشتیبان‌گیری دوره‌ای و بازه‌ها ***
 let currentBackupSettings = null;
 let periodCalendarState = {
     year: 1405,
@@ -39,7 +35,6 @@ let periodCalendarState = {
 let currentEditingPeriodIndex = -1;
 let currentCalendarTarget = 'start';
 
-// *** مدیریت خطای سراسری ***
 window.onerror = function(msg, url, line, col, error) {
     console.error('خطای سراسری:', msg, 'در', url, line);
     showToast('خطایی رخ داد. لطفاً صفحه را رفرش کنید.', 'error');
@@ -131,17 +126,8 @@ window.switchAcademicYear = async function(newYear) {
     }
     
     try {
-        // ۱. ذخیره سال جدید در دیتابیس
-        const classData = await getDataById('classProfile', 1);
-        if (classData) {
-            classData.academicYear = newYear;
-            await saveData('classProfile', classData);
-        }
-        
-        // ۲. ذخیره در حافظه محلی
         localStorage.setItem('kosha-active-year', newYear);
-        
-        // ۳. رفرش صفحه
+        window.activeAcademicYear = newYear;
         showToast('در حال سوئیچ به سال جدید...', 'success');
         setTimeout(() => window.location.reload(), 1000);
         
@@ -151,13 +137,12 @@ window.switchAcademicYear = async function(newYear) {
     }
 };
 
-// ✅ دریافت لیست سال‌های تحصیلی موجود
 window.getAvailableAcademicYears = function() {
     return ['1405-1406', '1406-1407', '1407-1408', '1408-1409', '1409-1410', '1410-1411'];
 };
 
 // ==========================================
-// ✅ توابع پشتیبان‌گیری خودکار (همیشه کامل و شامل همه سال‌ها)
+// ✅ پشتیبان‌گیری خودکار (کل اپلیکیشن)
 // ==========================================
 
 window.triggerAutoBackup = function() {
@@ -166,7 +151,6 @@ window.triggerAutoBackup = function() {
     }
     autoBackupTimer = setTimeout(async () => {
         try {
-            // ✅ پشتیبان خودکار همیشه از کل داده‌ها (همه سال‌ها) گرفته می‌شود
             const allData = await exportAllData();
             localStorage.setItem('kosha-emergency-backup', JSON.stringify(allData));
             localStorage.setItem('kosha-emergency-backup-time', Date.now().toString());
@@ -246,11 +230,10 @@ function checkBackupReminder() {
 }
 
 // ==========================================
-// ✅ توابع تنظیمات پشتیبان‌گیری (مجزا برای هر سال)
+// ✅ توابع تنظیمات پشتیبان‌گیری
 // ==========================================
 
 async function initBackupSettingsForm() {
-    // ✅ دریافت تنظیمات مخصوص سال تحصیلی جاری
     currentBackupSettings = await getBackupSettings(window.activeAcademicYear);
     
     const reminderTypeEl = document.getElementById('backupReminderType');
@@ -269,7 +252,7 @@ async function initBackupSettingsForm() {
 
 async function populateClassSettingsForm() {
     try {
-        const classData = await getDataById('classProfile', 1);
+        const classData = await getClassProfile(window.activeAcademicYear);
         if (classData) {
             const fields = {
                 className: classData.name || '',
@@ -558,7 +541,6 @@ async function savePeriod() {
 
 async function checkPeriodReminders() {
     try {
-        // ✅ بررسی یادآورها فقط برای سال تحصیلی جاری
         currentBackupSettings = await getBackupSettings(window.activeAcademicYear);
         const now = Date.now();
         
@@ -642,7 +624,6 @@ function closeReminderModal() {
 
 async function handleReminderDownload() {
     try {
-        // ✅ پشتیبان دستی همیشه شامل تمام سال‌هاست
         const data = await exportAllData();
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -697,6 +678,7 @@ function applyEmojiRestriction(inputId) {
         });
     }
 }
+
 // ==========================================
 // توابع مدیریت تغییرات ذخیره‌نشده
 // ==========================================
@@ -853,14 +835,14 @@ async function initApp() {
         return;
     }
 
-    // ✅ خواندن سال تحصیلی جاری از دیتابیس یا حافظه محلی
     try {
         const savedYear = localStorage.getItem('kosha-active-year');
         if (savedYear) {
             window.activeAcademicYear = savedYear;
         }
         
-        const classData = await getDataById('classProfile', 1);
+        // ✅ استفاده از getClassProfile
+        const classData = await getClassProfile(window.activeAcademicYear);
         if (classData && classData.academicYear) {
             window.activeAcademicYear = classData.academicYear;
             localStorage.setItem('kosha-active-year', classData.academicYear);
@@ -887,16 +869,12 @@ async function initApp() {
     } catch (error) { console.error("خطا در بارگذاری آزمون‌ها:", error); }
 }
 
-// ==========================================
-// ✅ تابع حیاتی: بارگذاری داده‌های سال تحصیلی جاری
-// فقط رکوردهای سال جاری بارگذاری می‌شوند
-// ==========================================
 async function loadAllData() {
     try {
         const currentYear = window.activeAcademicYear;
         
-        // خواندن مشخصات کلاس
-        const classData = await getDataById('classProfile', 1);
+        // ✅ استفاده از getClassProfile برای خواندن مشخصات کلاس هر سال
+        const classData = await getClassProfile(currentYear);
         if (classData) {
             if (classData.academicYear) window.activeAcademicYear = classData.academicYear;
             if (classData.scheduleActiveDays && Array.isArray(classData.scheduleActiveDays)) {
@@ -907,7 +885,6 @@ async function loadAllData() {
             }
         }
 
-        // ✅ خواندن داده‌ها فقط برای سال تحصیلی جاری با استفاده از getDataByYear
         const rawStudents = await getDataByYear('students', currentYear);
         const rawGroups = await getDataByYear('groups', currentYear);
         const rawSubjects = await getDataByYear('subjects', currentYear);
@@ -918,7 +895,6 @@ async function loadAllData() {
         
         let migrationNeeded = false;
         
-        // مهاجرت داده‌های قدیمی که سال تحصیلی ندارند
         const allRecords = await getAllData('records');
         for (let r of allRecords) {
             if (!r.academicYear) { r.academicYear = currentYear; await saveData('records', r); migrationNeeded = true; }
@@ -972,9 +948,6 @@ function jalaliToDateString(jy, jm, jd) {
     return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
 }
 
-// ==========================================
-// توابع مدیریت آیتم‌ها
-// ==========================================
 function openItemManagementModal() {
     const modal = document.getElementById('item-management-modal');
     if (modal) modal.classList.add('show');
@@ -1214,7 +1187,6 @@ async function deleteCustomItem(id) {
 
 async function exportData() {
     try {
-        // ✅ پشتیبان دستی همیشه شامل تمام سال‌هاست
         const data = await exportAllData();
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
