@@ -1,5 +1,5 @@
 // ==========================================
-// فایل score.js — منطق تب امتیاز (ارزشیابی) — نسخه اصلاح‌شده نهایی
+// فایل score.js — منطق تب امتیاز (ارزشیابی) — نسخه نهایی با اسکرول خودکار
 // ==========================================
 
 let isSaveAndNext = false;
@@ -604,14 +604,9 @@ function closePreviewModal() {
     if (modal) modal.classList.remove('show'); 
 }
 
-// ==========================================
-// ✅ تابع اصلاح‌شده نهایی: confirmAndSaveRecord
-// حالا در حالت "ثبت نهایی" هم اسکرول آرام انجام می‌شود
-// ==========================================
 async function confirmAndSaveRecord() {
     if (!window.tempRecordData) return;
     
-    // ذخیره مقادیر فعلی برای بازیابی بعدی
     const recordSubjectEl = document.getElementById('recordSubject');
     const recordItemEl = document.getElementById('recordItem');
     const currentSubject = recordSubjectEl ? recordSubjectEl.value : '';
@@ -623,37 +618,30 @@ async function confirmAndSaveRecord() {
         showToast('امتیاز با موفقیت ثبت شد!', 'success');
         closePreviewModal();
         
-        // *** پاک کردن وضعیت Dirty بعد از ذخیره موفق ***
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
         if (isSaveAndNext) {
-            // ✅ حالت «ثبت و نفر بعدی»: فقط دانش‌آموزان و امتیاز پاک می‌شوند
             document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = false);
             document.querySelectorAll('.group-select-all-checkbox').forEach(cb => cb.checked = false);
             
             const scoreInput = document.getElementById('dynamicLevelInput') || document.getElementById('dynamicCountInput') || document.getElementById('dynamicFreeInput');
             if (scoreInput) scoreInput.value = '';
             
-            // بارگذاری مجدد داده‌ها
             await loadAllData(); 
             
-            // ✅ بازیابی مقادیر درس و آیتم بعد از بارگذاری
             setTimeout(() => {
                 if (currentSubject && recordSubjectEl) recordSubjectEl.value = currentSubject;
                 if (currentItem && recordItemEl) {
                     recordItemEl.value = currentItem;
-                    // بازسازی بخش ورودی امتیاز (چون ممکن است حذف شده باشد)
                     const itemData = window.allAssessmentItems.find(i => i.id == currentItem);
                     if (itemData && typeof renderScoreInput === 'function') renderScoreInput(itemData);
                 }
             }, 100);
             
-            // اسکرول به بالای فرم برای ثبت نفر بعدی
             const recordForm = document.getElementById('record-form');
             if (recordForm) recordForm.scrollIntoView({ behavior: 'smooth' });
             
         } else {
-            // ✅ حالت «ثبت نهایی»: کل فرم ریست می‌شود (رفتار قبلی)
             const recordForm = document.getElementById('record-form');
             if (recordForm) recordForm.reset(); 
             resetScoreCalendar('record');
@@ -661,7 +649,6 @@ async function confirmAndSaveRecord() {
             if (dynSection) dynSection.style.display = 'none'; 
             await loadAllData();
             
-            // ✅ اسکرول آرام به بالای فرم بعد از ثبت نهایی
             if (recordForm) recordForm.scrollIntoView({ behavior: 'smooth' });
         }
     } catch (error) { 
@@ -733,10 +720,14 @@ async function saveQuranRecord() {
         const form = document.getElementById('quran-form');
         if (form) form.reset();
         
-        // *** پاک کردن وضعیت Dirty ***
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
         loadAllData();
+        
+        // ✅ اسکرول آرام به بالای فرم پویش قرآن
+        const quranForm = document.getElementById('quran-form');
+        if (quranForm) quranForm.scrollIntoView({ behavior: 'smooth' });
+        
     } catch (e) { console.error(e); showToast('خطا در ثبت پویش قرآن.', 'error'); }
 }
 
@@ -771,10 +762,14 @@ async function saveSpecialReward() {
         const form = document.getElementById('special-reward-form');
         if (form) form.reset();
         
-        // *** پاک کردن وضعیت Dirty ***
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
         loadAllData();
+        
+        // ✅ اسکرول آرام به بالای فرم تشویق ویژه
+        const specialForm = document.getElementById('special-reward-form');
+        if (specialForm) specialForm.scrollIntoView({ behavior: 'smooth' });
+        
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق ویژه.', 'error'); }
 }
 
@@ -802,13 +797,16 @@ async function saveHandwritingReward() {
         const form = document.getElementById('handwriting-reward-form');
         if (form) form.reset();
         
-        // *** پاک کردن وضعیت Dirty ***
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
         loadAllData();
+        
+        // ✅ اسکرول آرام به بالای فرم خوش‌خط‌نویسی
+        const handwritingForm = document.getElementById('handwriting-reward-form');
+        if (handwritingForm) handwritingForm.scrollIntoView({ behavior: 'smooth' });
+        
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق خوش‌خط‌نویسی.', 'error'); }
 }
-
 // ==========================================
 // سوابق ارزشیابی
 // ==========================================
@@ -888,10 +886,28 @@ function loadAssessmentRecords() {
     }
 }
 
+function clearRecordFilters() {
+    const el1 = document.getElementById('recordsFilterSubject');
+    const el2 = document.getElementById('recordsFilterStudent');
+    const el3 = document.getElementById('recordsSearchText');
+    if (el1) el1.value = '';
+    if (el2) el2.value = '';
+    if (el3) el3.value = '';
+    currentPage.records = 1;
+    loadAssessmentRecords();
+}
+
 async function deleteRecord(id) {
     if (!confirm('آیا از حذف این رکورد مطمئن هستید؟')) return;
-    try { await deleteData('records', id); showToast('رکورد حذف شد.', 'success'); loadAllData(); }
-    catch (e) { console.error(e); showToast('خطا در حذف رکورد.', 'error'); }
+    try { 
+        await deleteData('records', id); 
+        showToast('رکورد حذف شد.', 'success'); 
+        loadAllData(); 
+    }
+    catch (e) { 
+        console.error(e); 
+        showToast('خطا در حذف رکورد.', 'error'); 
+    }
 }
 
 async function openEditRecordModal(id) {
@@ -944,14 +960,16 @@ async function openEditRecordModal(id) {
 
         const modal = document.getElementById('edit-record-modal');
         if (modal) modal.classList.add('show');
-    } catch (e) { console.error(e); showToast('خطا در باز کردن فرم ویرایش.', 'error'); }
+    } catch (e) { 
+        console.error(e); 
+        showToast('خطا در باز کردن فرم ویرایش.', 'error'); 
+    }
 }
 
 function closeEditModal() { 
     const modal = document.getElementById('edit-record-modal');
     if (modal) modal.classList.remove('show'); 
     
-    // *** پاک کردن وضعیت Dirty بعد از بستن مودال ***
     if (typeof clearFormDirty === 'function') clearFormDirty();
 }
 
@@ -976,7 +994,6 @@ async function saveEditedRecord(event) {
         itemName = selectedItem ? selectedItem.title : '';
     }
 
-    // اعتبارسنجی هوشمند تاریخ
     if (!window.isValidJalaliDateString(newDate)) {
         showToast('تاریخ وارد شده معتبر نیست. لطفاً یک تاریخ واقعی وارد کنید.', 'error');
         return;
@@ -1012,26 +1029,14 @@ async function saveEditedRecord(event) {
         await saveData('records', record);
         showToast('رکورد با موفقیت ویرایش شد.', 'success');
         
-        // *** پاک کردن وضعیت Dirty ***
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
         closeEditModal(); 
         loadAllData();
-    } catch (e) { console.error(e); showToast('خطا در ذخیره.', 'error'); }
-}
-// ==========================================
-// توابع تکمیلی و کمکی
-// ==========================================
-
-function clearRecordFilters() {
-    const el1 = document.getElementById('recordsFilterSubject');
-    const el2 = document.getElementById('recordsFilterStudent');
-    const el3 = document.getElementById('recordsSearchText');
-    if (el1) el1.value = '';
-    if (el2) el2.value = '';
-    if (el3) el3.value = '';
-    currentPage.records = 1;
-    loadAssessmentRecords();
+    } catch (e) { 
+        console.error(e); 
+        showToast('خطا در ذخیره.', 'error'); 
+    }
 }
 
 async function loadQuranRewards() {
