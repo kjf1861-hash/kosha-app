@@ -476,27 +476,32 @@ function renderExamsDashboard() {
     const totalExams = exams.length;
     const totalResults = results.length;
     
+    // ✅ نقشه آزمون‌ها (یک بار)
+    const examMap = {};
+    for (const e of exams) examMap[e.id] = e;
+    
+    // ✅ یک حلقه برای همه چیز (به جای find در حلقه)
     let totalScorePercent = 0;
     let validResults = 0;
-    results.forEach(r => {
-        const exam = exams.find(e => e.id === r.examId);
-        if (exam) {
-            totalScorePercent += (r.score / exam.maxScore) * 100;
-            validResults++;
-        }
-    });
-    const avgPercent = validResults > 0 ? Math.round(totalScorePercent / validResults) : 0;
-    
     const studentPercentMap = {};
-    results.forEach(r => {
-        const exam = exams.find(e => e.id === r.examId);
-        if (!exam) return;
+    
+    for (const r of results) {
+        const exam = examMap[r.examId];
+        if (!exam) continue;
         const percent = (r.score / exam.maxScore) * 100;
-        if (!studentPercentMap[r.studentId]) studentPercentMap[r.studentId] = { total: 0, count: 0 };
+        totalScorePercent += percent;
+        validResults++;
+        
+        if (!studentPercentMap[r.studentId]) {
+            studentPercentMap[r.studentId] = { total: 0, count: 0 };
+        }
         studentPercentMap[r.studentId].total += percent;
         studentPercentMap[r.studentId].count++;
-    });
+    }
     
+    const avgPercent = validResults > 0 ? Math.round(totalScorePercent / validResults) : 0;
+    
+    // ✅ پیدا کردن بهترین دانش‌آموز (parseInt برای تطابق با autoIncrement عددی)
     let bestStudentId = null;
     let bestAvg = -1;
     for (const sid in studentPercentMap) {
@@ -507,6 +512,7 @@ function renderExamsDashboard() {
         }
     }
     
+    // ساخت کارت بهترین دانش‌آموز
     let bestStudentHtml = '';
     if (bestStudentId) {
         const st = window.allStudentsData.find(s => s.id === bestStudentId);
@@ -515,12 +521,13 @@ function renderExamsDashboard() {
                 <div style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); padding: 12px; border-radius: 12px; text-align: center; color: white;">
                     <div style="font-size: 1.8rem; margin-bottom: 4px;">🏆</div>
                     <div style="font-size: 0.75rem; opacity: 0.9;">بهترین دانش‌آموز</div>
-                    <div style="font-weight: bold; font-size: 1rem; margin-top: 4px;">${st.firstName} ${st.lastName}</div>
+                    <div style="font-weight: bold; font-size: 1rem; margin-top: 4px;">${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</div>
                     <div style="font-size: 0.8rem; margin-top: 2px;">میانگین: ${toPersianNumber(Math.round(bestAvg))}٪</div>
                 </div>
             `;
         }
-    } else {
+    }
+    if (!bestStudentHtml) {
         bestStudentHtml = `
             <div style="background: var(--input-bg); padding: 12px; border-radius: 12px; text-align: center; color: var(--text-muted);">
                 <div style="font-size: 1.8rem; margin-bottom: 4px;">🏆</div>
