@@ -337,35 +337,35 @@ async function openStudentDetails(id) {
     </div>
 `;
 
-    let subjectHtml += `<div class="details-list-item"><span>${escapeHtml(sub.symbol || '')} ${escapeHtml(sub.name)}</span><strong>${escapeHtml(toPersianNumber(total))} امتیاز</strong></div>`;
-    let hasSubjects = false;
-    window.allSubjectsData.forEach(sub => {
-        const subRecords = srs.filter(r => r.subjectId === sub.id);
-        let total = 0;
-        subRecords.forEach(r => total += r.finalScore);
-        
-        if (subRecords.length > 0) {
-            subjectHtml += `<div class="details-list-item"><span>${sub.symbol || ''} ${sub.name}</span><strong>${toPersianNumber(total)} امتیاز</strong></div>`;
-            hasSubjects = true;
-        }
-    });
-    if (!hasSubjects) subjectHtml += '<p style="color:#64748b; font-size:0.9rem; text-align:center;">هنوز امتیازی در هیچ درسی ثبت نشده است.</p>';
-
-    let itemHtml += `<div class="details-list-item"><span>${escapeHtml(itemName)}</span><span style="color:var(--text-muted); font-size:0.85rem;">${escapeHtml(toPersianNumber(stats.count))} بار (${escapeHtml(toPersianNumber(stats.totalScore))} امتیاز)</span></div>`;
-    let hasItems = false;
+    let subjectHtml = '<h4 style="color:var(--primary); margin-bottom:10px;">📊 امتیاز به تفکیک دروس</h4>';
+let hasSubjects = false;
+window.allSubjectsData.forEach(sub => {
+    const subRecords = srs.filter(r => r.subjectId === sub.id);
+    let total = 0;
+    subRecords.forEach(r => total += r.finalScore);
     
-    const itemCounts = {};
-    srs.forEach(r => {
-        if (!itemCounts[r.itemName]) itemCounts[r.itemName] = { count: 0, totalScore: 0 };
-        itemCounts[r.itemName].count++;
-        itemCounts[r.itemName].totalScore += r.finalScore;
-    });
-
-    for (const [itemName, stats] of Object.entries(itemCounts)) {
-        itemHtml += `<div class="details-list-item"><span>${itemName}</span><span style="color:var(--text-muted); font-size:0.85rem;">${toPersianNumber(stats.count)} بار (${toPersianNumber(stats.totalScore)} امتیاز)</span></div>`;
-        hasItems = true;
+    if (subRecords.length > 0) {
+        subjectHtml += `<div class="details-list-item"><span>${escapeHtml(sub.symbol || '')} ${escapeHtml(sub.name)}</span><strong>${escapeHtml(toPersianNumber(total))} امتیاز</strong></div>`;
+        hasSubjects = true;
     }
-    if (!hasItems) itemHtml += '<p style="color:#64748b; font-size:0.9rem; text-align:center;">هیچ ارزشیابی ثبت نشده است.</p>';
+});
+if (!hasSubjects) subjectHtml += '<p style="color:#64748b; font-size:0.9rem; text-align:center;">هنوز امتیازی در هیچ درسی ثبت نشده است.</p>';
+
+let itemHtml = '<h4 style="color:var(--primary); margin-top:20px; margin-bottom:10px;">📝 دفعات و جزئیات ارزشیابی‌ها</h4>';
+let hasItems = false;
+
+const itemCounts = {};
+srs.forEach(r => {
+    if (!itemCounts[r.itemName]) itemCounts[r.itemName] = { count: 0, totalScore: 0 };
+    itemCounts[r.itemName].count++;
+    itemCounts[r.itemName].totalScore += r.finalScore;
+});
+
+for (const [itemName, stats] of Object.entries(itemCounts)) {
+    itemHtml += `<div class="details-list-item"><span>${escapeHtml(itemName)}</span><span style="color:var(--text-muted); font-size:0.85rem;">${escapeHtml(toPersianNumber(stats.count))} بار (${escapeHtml(toPersianNumber(stats.totalScore))} امتیاز)</span></div>`;
+    hasItems = true;
+}
+if (!hasItems) itemHtml += '<p style="color:#64748b; font-size:0.9rem; text-align:center;">هیچ ارزشیابی ثبت نشده است.</p>';
 
     content.innerHTML = headerHtml + subjectHtml + itemHtml;
 
