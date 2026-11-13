@@ -946,6 +946,77 @@ async function initApp() {
     } catch (error) { console.error("خطا در بارگذاری آزمون‌ها:", error); }
 }
 
+// ==========================================
+// ✅ محاسبه یک‌باره امتیازات (بهینه‌سازی سرعت)
+// ==========================================
+// این تابع یک بار در loadAllData اجرا می‌شود و مجموع امتیازات
+// هر دانش‌آموز، هر گروه، هر درس و آمار حضور/غیاب را محاسبه می‌کند.
+// تمام تابع‌های نمایشی از این کش استفاده می‌کنند.
+function buildScoreCaches() {
+    const studentScores = {};
+    const groupScores = {};
+    const subjectScores = {};
+    const studentAttendance = {};
+
+    // مقدار اولیه
+    for (const st of window.allStudentsData) {
+        studentScores[st.id] = 0;
+        studentAttendance[st.id] = { present: 0, absent: 0, late: 0 };
+    }
+    for (const g of window.allGroupsData) {
+        groupScores[g.id] = 0;
+    }
+    for (const s of window.allSubjectsData) {
+        subjectScores[s.id] = 0;
+    }
+
+    // نقشه دانش‌آموز → گروه (برای جستجوی سریع)
+    const studentGroupMap = {};
+    for (const st of window.allStudentsData) {
+        studentGroupMap[st.id] = st.groupId;
+    }
+
+    // ✅ یک بار روی تمام رکوردها حلقه می‌زنیم (نه برای هر دانش‌آموز)
+    for (const rec of window.allRecordsData) {
+        if (!rec.students || !Array.isArray(rec.students)) continue;
+
+        const score = Number(rec.finalScore) || 0;
+
+        if (rec.subjectId && subjectScores[rec.subjectId] !== undefined) {
+            subjectScores[rec.subjectId] += score;
+        }
+
+        for (const stId of rec.students) {
+            if (studentScores[stId] !== undefined) {
+                studentScores[stId] += score;
+            }
+            const gId = studentGroupMap[stId];
+            if (gId && groupScores[gId] !== undefined) {
+                groupScores[gId] += score;
+            }
+        }
+    }
+
+    // ✅ یک بار روی تمام حضور و غیاب‌ها
+    for (const att of window.allAttendanceData) {
+        const bucket = studentAttendance[att.studentId];
+        if (bucket) {
+            if (att.status === 'present') bucket.present++;
+            else if (att.status === 'absent') bucket.absent++;
+            else if (att.status === 'late') bucket.late++;
+        }
+    }
+
+    // ذخیره در window برای دسترسی از همه فایل‌ها
+    window._cacheStudentScores = studentScores;
+    window._cacheGroupScores = groupScores;
+    window._cacheSubjectScores = subjectScores;
+    window._cacheStudentAttendance = studentAttendance;
+
+    console.log('✅ کش امتیازات محاسبه شد.');
+}
+window.buildScoreCaches = buildScoreCaches;
+
 async function loadAllData() {
     try {
         const currentYear = window.activeAcademicYear;
@@ -1014,7 +1085,10 @@ async function loadAllData() {
         
         currentBackupSettings = await getBackupSettings(currentYear);
 
-        renderUI();
+// ✅ محاسبه یک‌باره امتیازات (برای سرعت)
+buildScoreCaches();
+
+renderUI();
         
     } catch (e) { 
         console.error('خطا در بارگذاری داده‌ها:', e); 
