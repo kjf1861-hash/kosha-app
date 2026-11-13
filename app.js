@@ -51,6 +51,50 @@ function toPersianNumber(num) {
     return num.toString().replace(/\d/g, x => persianDigits[x]);
 }
 
+// ==========================================
+// ✅ توابع امنیتی — escape و sanitize
+// ==========================================
+
+/**
+ * escapeHtml — کاراکترهای خطرناک HTML را امن می‌کند
+ * استفاده: فقط برای نمایش در innerHTML
+ * مثال: escapeHtml("<script>") → "&lt;script&gt;"
+ */
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, function(m) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[m];
+    });
+}
+
+/**
+ * sanitizeInput — پاک‌سازی و اعتبارسنجی متن ورودی
+ * استفاده: قبل از ذخیره در دیتابیس
+ * - حذف فاصله‌های ابتدا و انتها
+ * - حذف کاراکترهای کنترل‌کننده خطرناک
+ * - محدودیت طول
+ */
+function sanitizeInput(value, maxLength) {
+    maxLength = maxLength || 100;
+    if (value === null || value === undefined) return '';
+    var trimmed = String(value).trim();
+    if (trimmed.length > maxLength) {
+        throw new Error('متن نمی‌تواند بیش از ' + maxLength + ' کاراکتر باشد');
+    }
+    // حذف کاراکترهای کنترل‌کننده (به جز newline و tab)
+    return trimmed.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+}
+
+// در دسترس قرار دادن برای همه فایل‌ها
+window.escapeHtml = escapeHtml;
+window.sanitizeInput = sanitizeInput;
+
 function validateNationalId(nationalId) {
     if (!/^\d{10}$/.test(nationalId)) return false;
     if (/^(\d)\1{9}$/.test(nationalId)) return false;
