@@ -606,7 +606,7 @@ function closePreviewModal() {
 
 // ==========================================
 // ✅ تابع اصلاح‌شده نهایی: confirmAndSaveRecord
-// حالا مقادیر درس و آیتم را قبل از بارگذاری مجدد ذخیره و بعد بازیابی می‌کند
+// حالا در حالت "ثبت نهایی" هم اسکرول آرام انجام می‌شود
 // ==========================================
 async function confirmAndSaveRecord() {
     if (!window.tempRecordData) return;
@@ -660,8 +660,14 @@ async function confirmAndSaveRecord() {
             const dynSection = document.getElementById('dynamic-score-section');
             if (dynSection) dynSection.style.display = 'none'; 
             await loadAllData();
+            
+            // ✅ اسکرول آرام به بالای فرم بعد از ثبت نهایی
+            if (recordForm) recordForm.scrollIntoView({ behavior: 'smooth' });
         }
-    } catch (error) { showToast('خطا در ذخیره!', 'error'); closePreviewModal(); }
+    } catch (error) { 
+        showToast('خطا در ذخیره!', 'error'); 
+        closePreviewModal(); 
+    }
 }
 
 async function saveQuranRecord() {
