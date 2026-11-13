@@ -28,7 +28,8 @@ async function saveGroup(e) {
     const data = { 
         name: nameEl.value,
         symbol: symbolEl.value,
-        motto: mottoEl ? mottoEl.value : ''
+        motto: mottoEl ? mottoEl.value : '',
+        academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
     };
     
     await saveData('groups', data);
@@ -38,7 +39,6 @@ async function saveGroup(e) {
     showToast('گروه جدید با موفقیت ثبت شد!', 'success');
     loadAllData();
     
-    // ✅ اسکرول آرام به بالای فرم
     if (form) form.scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -145,11 +145,15 @@ async function saveEditedGroup(e) {
     const idEl = document.getElementById('editGroupIdModal');
     if (!idEl) return;
     const id = parseInt(idEl.value);
+    
+    const existing = await getDataById('groups', id);
+    
     const data = {
         id: id,
         name: document.getElementById('editGroupNameModal').value,
         symbol: document.getElementById('editGroupSymbolModal').value,
-        motto: document.getElementById('editGroupMottoModal').value
+        motto: document.getElementById('editGroupMottoModal').value,
+        academicYear: existing ? existing.academicYear : window.activeAcademicYear // ✅ حفظ سال تحصیلی
     };
     
     await saveData('groups', data);
