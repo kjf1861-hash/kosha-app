@@ -641,12 +641,33 @@ function getTodayJalali() {
             if (p.type === 'month') month = p.value.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).padStart(2, '0');
             if (p.type === 'day') day = p.value.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).padStart(2, '0');
         });
+        
+        if (!year || !month || !day) throw new Error('Intl format failed');
+        
         year = year.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
         month = month.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
         day = day.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+        
         return `${year}/${month}/${day}`;
     } catch (e) {
-        return '1405/01/01';
+        console.warn('⚠️ مرورگر از تقویم فارسی پشتیبانی نمی‌کند. استفاده از روش ریاضی:', e);
+        try {
+            const now = new Date();
+            const gy = now.getFullYear();
+            const gm = now.getMonth() + 1;
+            const gd = now.getDate();
+            
+            if (typeof window.gregorianToJalali === 'function') {
+                const [jy, jm, jd] = window.gregorianToJalali(gy, gm, gd);
+                return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
+            } else {
+                throw new Error('تابع gregorianToJalali یافت نشد.');
+            }
+        } catch (err) {
+            console.error('❌ خطای جدی در دریافت تاریخ:', err);
+            // Fallback نهایی در صورت عدم وجود تابع (نباید اتفاق بیفتد)
+            return '1405/01/01';
+        }
     }
 }
 
