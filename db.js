@@ -1,9 +1,9 @@
 /**
- * فایل db.js — لایه ارتباط با IndexedDB
+ * فایل db.js — لایه ارتباط با IndexedDB (نسخه چندساله)
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 13; // ارتقا به 13 برای اضافه شدن جدول تنظیمات پشتیبان‌گیری
+const DB_VERSION = 14; // ✅ ارتقا به 14 برای پشتیبانی از چند سال تحصیلی
 
 let db;
 
@@ -32,68 +32,146 @@ function initDB() {
 
         request.onsuccess = (event) => {
             db = event.target.result;
-            console.log('پایگاه داده با موفقیت راه‌اندازی شد.');
+            console.log('پایگاه داده با موفقیت راه‌اندازی شد (نسخه چندساله).');
             resolve(db);
         };
 
         request.onupgradeneeded = (event) => {
             const db = event.target.result;
-            console.log('در حال ساخت/به‌روزرسانی جداول پایگاه داده...');
+            console.log('در حال ساخت/به‌روزرسانی جداول پایگاه داده برای پشتیبانی از چند سال تحصیلی...');
 
             if (!db.objectStoreNames.contains('classProfile')) db.createObjectStore('classProfile', { keyPath: 'id' });
             
             if (!db.objectStoreNames.contains('students')) {
                 const studentStore = db.createObjectStore('students', { keyPath: 'id', autoIncrement: true });
                 studentStore.createIndex('groupId', 'groupId', { unique: false });
-                studentStore.createIndex('nationalId', 'nationalId', { unique: true });
+                studentStore.createIndex('nationalId', 'nationalId', { unique: false }); // ✅ یکتایی برداشته شد تا در سال‌های مختلف تکرار شود
+                studentStore.createIndex('academicYear', 'academicYear', { unique: false }); // ✅ ایندکس جدید
             } else {
                 const studentStore = event.currentTarget.transaction.objectStore('students');
-                if (!studentStore.indexNames.contains('nationalId')) {
-                    studentStore.createIndex('nationalId', 'nationalId', { unique: true });
+                if (studentStore.indexNames.contains('nationalId')) {
+                    studentStore.deleteIndex('nationalId');
+                    studentStore.createIndex('nationalId', 'nationalId', { unique: false });
+                }
+                if (!studentStore.indexNames.contains('academicYear')) {
+                    studentStore.createIndex('academicYear', 'academicYear', { unique: false });
                 }
             }
 
-            if (!db.objectStoreNames.contains('groups')) db.createObjectStore('groups', { keyPath: 'id', autoIncrement: true });
-            if (!db.objectStoreNames.contains('subjects')) db.createObjectStore('subjects', { keyPath: 'id', autoIncrement: true });
+            if (!db.objectStoreNames.contains('groups')) {
+                const groupStore = db.createObjectStore('groups', { keyPath: 'id', autoIncrement: true });
+                groupStore.createIndex('academicYear', 'academicYear', { unique: false });
+            } else {
+                const groupStore = event.currentTarget.transaction.objectStore('groups');
+                if (!groupStore.indexNames.contains('academicYear')) {
+                    groupStore.createIndex('academicYear', 'academicYear', { unique: false });
+                }
+            }
+
+            if (!db.objectStoreNames.contains('subjects')) {
+                const subjectStore = db.createObjectStore('subjects', { keyPath: 'id', autoIncrement: true });
+                subjectStore.createIndex('academicYear', 'academicYear', { unique: false });
+            } else {
+                const subjectStore = event.currentTarget.transaction.objectStore('subjects');
+                if (!subjectStore.indexNames.contains('academicYear')) {
+                    subjectStore.createIndex('academicYear', 'academicYear', { unique: false });
+                }
+            }
+
             if (!db.objectStoreNames.contains('records')) {
                 const recordStore = db.createObjectStore('records', { keyPath: 'id', autoIncrement: true });
                 recordStore.createIndex('subjectId', 'subjectId', { unique: false });
                 recordStore.createIndex('date', 'date', { unique: false });
+                recordStore.createIndex('academicYear', 'academicYear', { unique: false });
+            } else {
+                const recordStore = event.currentTarget.transaction.objectStore('records');
+                if (!recordStore.indexNames.contains('academicYear')) {
+                    recordStore.createIndex('academicYear', 'academicYear', { unique: false });
+                }
             }
-            if (!db.objectStoreNames.contains('badgesSettings')) db.createObjectStore('badgesSettings', { keyPath: 'id' });
+
+            if (!db.objectStoreNames.contains('badgesSettings')) {
+                const badgeStore = db.createObjectStore('badgesSettings', { keyPath: 'id' });
+                badgeStore.createIndex('academicYear', 'academicYear', { unique: false });
+            } else {
+                const badgeStore = event.currentTarget.transaction.objectStore('badgesSettings');
+                if (!badgeStore.indexNames.contains('academicYear')) {
+                    badgeStore.createIndex('academicYear', 'academicYear', { unique: false });
+                }
+            }
+
             if (!db.objectStoreNames.contains('sessions')) {
                 const sessionStore = db.createObjectStore('sessions', { keyPath: 'id', autoIncrement: true });
                 sessionStore.createIndex('date', 'date', { unique: false });
+                sessionStore.createIndex('academicYear', 'academicYear', { unique: false });
+            } else {
+                const sessionStore = event.currentTarget.transaction.objectStore('sessions');
+                if (!sessionStore.indexNames.contains('academicYear')) {
+                    sessionStore.createIndex('academicYear', 'academicYear', { unique: false });
+                }
             }
+
             if (!db.objectStoreNames.contains('attendance')) {
                 const attStore = db.createObjectStore('attendance', { keyPath: 'id', autoIncrement: true });
                 attStore.createIndex('sessionId', 'sessionId', { unique: false });
                 attStore.createIndex('studentId', 'studentId', { unique: false });
+                attStore.createIndex('academicYear', 'academicYear', { unique: false });
+            } else {
+                const attStore = event.currentTarget.transaction.objectStore('attendance');
+                if (!attStore.indexNames.contains('academicYear')) {
+                    attStore.createIndex('academicYear', 'academicYear', { unique: false });
+                }
             }
+
             if (!db.objectStoreNames.contains('assessmentItems')) {
                 const itemStore = db.createObjectStore('assessmentItems', { keyPath: 'id' });
                 for (const item of defaultAssessmentItems) {
                     itemStore.put(item);
                 }
             }
+            
             if (!db.objectStoreNames.contains('weeklySchedule')) {
-                db.createObjectStore('weeklySchedule', { keyPath: 'day' });
+                const scheduleStore = db.createObjectStore('weeklySchedule', { keyPath: 'day' });
+                scheduleStore.createIndex('academicYear', 'academicYear', { unique: false });
+            } else {
+                const scheduleStore = event.currentTarget.transaction.objectStore('weeklySchedule');
+                if (!scheduleStore.indexNames.contains('academicYear')) {
+                    scheduleStore.createIndex('academicYear', 'academicYear', { unique: false });
+                }
             }
             
             if (!db.objectStoreNames.contains('exams')) {
                 const examStore = db.createObjectStore('exams', { keyPath: 'id' });
                 examStore.createIndex('subjectId', 'subjectId', { unique: false });
                 examStore.createIndex('date', 'date', { unique: false });
+                examStore.createIndex('academicYear', 'academicYear', { unique: false });
+            } else {
+                const examStore = event.currentTarget.transaction.objectStore('exams');
+                if (!examStore.indexNames.contains('academicYear')) {
+                    examStore.createIndex('academicYear', 'academicYear', { unique: false });
+                }
             }
+
             if (!db.objectStoreNames.contains('examResults')) {
                 const resultStore = db.createObjectStore('examResults', { keyPath: 'id' });
                 resultStore.createIndex('examId', 'examId', { unique: false });
                 resultStore.createIndex('studentNationalId', 'studentNationalId', { unique: false });
+                resultStore.createIndex('academicYear', 'academicYear', { unique: false });
+            } else {
+                const resultStore = event.currentTarget.transaction.objectStore('examResults');
+                if (!resultStore.indexNames.contains('academicYear')) {
+                    resultStore.createIndex('academicYear', 'academicYear', { unique: false });
+                }
             }
             
-            // *** جدول جدید برای تنظیمات پشتیبان‌گیری ***
             if (!db.objectStoreNames.contains('backupSettings')) {
-                db.createObjectStore('backupSettings', { keyPath: 'id' });
+                const backupStore = db.createObjectStore('backupSettings', { keyPath: 'id' });
+                backupStore.createIndex('academicYear', 'academicYear', { unique: false });
+            } else {
+                const backupStore = event.currentTarget.transaction.objectStore('backupSettings');
+                if (!backupStore.indexNames.contains('academicYear')) {
+                    backupStore.createIndex('academicYear', 'academicYear', { unique: false });
+                }
             }
         };
     });
@@ -148,6 +226,32 @@ function getAllData(storeName) {
     });
 }
 
+// ✅ تابع جدید: دریافت داده‌های یک سال تحصیلی خاص
+function getDataByYear(storeName, year) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([storeName], 'readonly');
+        const store = transaction.objectStore(storeName);
+        
+        if (!store.indexNames.contains('academicYear')) {
+            // اگر جدول ایندکس سال ندارد (مثل classProfile)، کل داده‌ها را برگردان
+            const request = store.getAll();
+            request.onsuccess = () => {
+                const allData = request.result;
+                // برای classProfile فقط رکوردی که سالش با year برابر است را برگردان
+                const filtered = allData.filter(item => item.academicYear === year);
+                resolve(filtered);
+            };
+            request.onerror = (event) => reject(event.target.error);
+            return;
+        }
+        
+        const index = store.index('academicYear');
+        const request = index.getAll(year);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = (event) => reject(event.target.error);
+    });
+}
+
 function getDataById(storeName, id) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([storeName], 'readonly');
@@ -192,11 +296,22 @@ function clearStore(storeName) {
     });
 }
 
+// ✅ خروجی کامل (برای پشتیبان‌گیری - شامل تمام سال‌ها)
 async function exportAllData() {
     const data = {};
     const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
     for (const store of stores) {
         try { data[store] = await getAllData(store); } catch (e) { data[store] = []; }
+    }
+    return data;
+}
+
+// ✅ خروجی فقط برای یک سال خاص (برای ریست و مدیریت)
+async function exportYearData(year) {
+    const data = {};
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
+    for (const store of stores) {
+        try { data[store] = await getDataByYear(store, year); } catch (e) { data[store] = []; }
     }
     return data;
 }
@@ -228,19 +343,20 @@ async function importAllData(data) {
     }
 }
 
-// ==========================================
-// ✅ تابع جدید: دریافت تنظیمات پشتیبان‌گیری با مقادیر پیش‌فرض
-// ==========================================
-async function getBackupSettings() {
+// ✅ تابع جدید: دریافت تنظیمات پشتیبان‌گیری برای یک سال خاص
+async function getBackupSettings(year) {
     try {
-        let settings = await getDataById('backupSettings', 1);
+        const allSettings = await getAllData('backupSettings');
+        let settings = allSettings.find(s => s.academicYear === year);
+        
         if (!settings) {
-            // اگر تنظیمات وجود نداشت، مقادیر پیش‌فرض را ایجاد کن
+            // اگر تنظیمات وجود نداشت، مقادیر پیش‌فرض را برای این سال ایجاد کن
             settings = {
-                id: 1,
-                reminderType: 'off', // 'off' | 'daily' | 'weekly' | 'monthly'
+                id: year,
+                academicYear: year,
+                reminderType: 'off',
                 lastReminderDate: null,
-                periods: [] // آرایه‌ای از بازه‌ها
+                periods: []
             };
             await saveData('backupSettings', settings);
         }
@@ -248,7 +364,8 @@ async function getBackupSettings() {
     } catch (e) {
         console.error('خطا در دریافت تنظیمات پشتیبان‌گیری:', e);
         return {
-            id: 1,
+            id: year,
+            academicYear: year,
             reminderType: 'off',
             lastReminderDate: null,
             periods: []
