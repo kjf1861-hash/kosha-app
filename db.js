@@ -3,7 +3,7 @@
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 14; // ✅ ارتقا به 14 برای پشتیبانی از چند سال تحصیلی
+const DB_VERSION = 14; // ✅ نسخه 14 برای پشتیبانی از چند سال تحصیلی
 
 let db;
 
@@ -45,8 +45,8 @@ function initDB() {
             if (!db.objectStoreNames.contains('students')) {
                 const studentStore = db.createObjectStore('students', { keyPath: 'id', autoIncrement: true });
                 studentStore.createIndex('groupId', 'groupId', { unique: false });
-                studentStore.createIndex('nationalId', 'nationalId', { unique: false }); // ✅ یکتایی برداشته شد تا در سال‌های مختلف تکرار شود
-                studentStore.createIndex('academicYear', 'academicYear', { unique: false }); // ✅ ایندکس جدید
+                studentStore.createIndex('nationalId', 'nationalId', { unique: false });
+                studentStore.createIndex('academicYear', 'academicYear', { unique: false });
             } else {
                 const studentStore = event.currentTarget.transaction.objectStore('students');
                 if (studentStore.indexNames.contains('nationalId')) {
@@ -184,7 +184,7 @@ function saveData(storeName, data) {
             if (!data.academicYear) {
                 data.academicYear = window.activeAcademicYear || '1405-1406';
             }
-            data.id = data.academicYear; // ✅ شناسه = سال تحصیلی
+            data.id = data.academicYear;
         }
         
         const transaction = db.transaction([storeName], 'readwrite');
@@ -234,18 +234,15 @@ function getAllData(storeName) {
     });
 }
 
-// ✅ تابع جدید: دریافت داده‌های یک سال تحصیلی خاص
 function getDataByYear(storeName, year) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([storeName], 'readonly');
         const store = transaction.objectStore(storeName);
         
         if (!store.indexNames.contains('academicYear')) {
-            // اگر جدول ایندکس سال ندارد (مثل classProfile)، کل داده‌ها را برگردان
             const request = store.getAll();
             request.onsuccess = () => {
                 const allData = request.result;
-                // برای classProfile فقط رکوردی که سالش با year برابر است را برگردان
                 const filtered = allData.filter(item => item.academicYear === year);
                 resolve(filtered);
             };
@@ -268,6 +265,27 @@ function getDataById(storeName, id) {
         request.onsuccess = () => resolve(request.result);
         request.onerror = (event) => reject(event.target.error);
     });
+}
+
+// ✅ تابع جدید: دریافت مشخصات کلاس برای سال تحصیلی جاری
+async function getClassProfile(year) {
+    try {
+        let classData = await getDataById('classProfile', year);
+        if (classData) return classData;
+        
+        const oldData = await getDataById('classProfile', 1);
+        if (oldData) {
+            oldData.id = year;
+            oldData.academicYear = year;
+            await saveData('classProfile', oldData);
+            return oldData;
+        }
+        
+        return null;
+    } catch (e) {
+        console.error('خطا در دریافت مشخصات کلاس:', e);
+        return null;
+    }
 }
 
 function deleteData(storeName, id) {
@@ -304,7 +322,6 @@ function clearStore(storeName) {
     });
 }
 
-// ✅ خروجی کامل (برای پشتیبان‌گیری - شامل تمام سال‌ها)
 async function exportAllData() {
     const data = {};
     const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
@@ -314,7 +331,6 @@ async function exportAllData() {
     return data;
 }
 
-// ✅ خروجی فقط برای یک سال خاص (برای ریست و مدیریت)
 async function exportYearData(year) {
     const data = {};
     const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
@@ -351,14 +367,12 @@ async function importAllData(data) {
     }
 }
 
-// ✅ تابع جدید: دریافت تنظیمات پشتیبان‌گیری برای یک سال خاص
 async function getBackupSettings(year) {
     try {
         const allSettings = await getAllData('backupSettings');
         let settings = allSettings.find(s => s.academicYear === year);
         
         if (!settings) {
-            // اگر تنظیمات وجود نداشت، مقادیر پیش‌فرض را برای این سال ایجاد کن
             settings = {
                 id: year,
                 academicYear: year,
@@ -378,29 +392,5 @@ async function getBackupSettings(year) {
             lastReminderDate: null,
             periods: []
         };
-    }
-}
-
-// ✅ تابع جدید: دریافت مشخصات کلاس برای سال تحصیلی جاری
-async function getClassProfile(year) {
-    try {
-        // ۱. ابتدا تلاش می‌کنیم رکوردی با id برابر سال تحصیلی پیدا کنیم
-        let classData = await getDataById('classProfile', year);
-        if (classData) return classData;
-        
-        // ۲. اگر پیدا نشد، به دنبال رکورد قدیمی (id=1) می‌گردیم
-        const oldData = await getDataById('classProfile', 1);
-        if (oldData) {
-            // مهاجرت: رکورد قدیمی را به سال جدید منتقل می‌کنیم
-            oldData.id = year;
-            oldData.academicYear = year;
-            await saveData('classProfile', oldData);
-            return oldData;
-        }
-        
-        return null;
-    } catch (e) {
-        console.error('خطا در دریافت مشخصات کلاس:', e);
-        return null;
     }
 }
