@@ -41,6 +41,79 @@
         .view-toggle-btn.active { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
         
         .page-header-title { text-align: center; font-size: 1.6rem; font-weight: bold; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+        /* ✅ استایل سال تحصیلی */
+        .academic-year-badge {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+            border: 2px solid #a5b4fc;
+            border-radius: var(--radius-md);
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+        .academic-year-badge .ay-info { text-align: right; }
+        .academic-year-badge .ay-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; }
+        .academic-year-badge .ay-value { font-size: 1.4rem; font-weight: 800; color: var(--primary); font-family: 'IRNumber'; }
+        .academic-year-badge .btn-change-year {
+            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+        
+        /* ✅ استایل دکمه‌های رادیویی سال تحصیلی */
+        .year-option-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .year-option-item:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .year-option-item.selected {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .year-option-item .year-radio {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+        }
+        .year-option-item.selected .year-radio {
+            border-color: var(--primary);
+        }
+        .year-option-item.selected .year-radio::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: var(--primary);
+            border-radius: 50%;
+        }
     </style>
 </head>
 <body>
@@ -509,26 +582,27 @@
     <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header">⚙️ تنظیمات</div>
         
+        <!-- ✅ بخش سال تحصیلی جاری -->
+        <div class="academic-year-badge">
+            <div class="ay-info">
+                <div class="ay-label">سال تحصیلی جاری</div>
+                <div class="ay-value" id="currentAcademicYearDisplay">۱۴۰۵-۱۴۰۶</div>
+            </div>
+            <button type="button" class="btn-change-year" onclick="openAcademicYearModal()">
+                🔄 تغییر
+            </button>
+        </div>
+        
         <div class="card" style="border: none; box-shadow: none; padding: 0; margin-bottom: 20px;">
             <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">🏫 مشخصات کلاس</h3>
             <form id="class-form">
-                <div class="form-group">
-                    <label class="form-label" for="academicYear">سال تحصیلی</label>
-                    <select id="academicYear" class="form-control" required>
-                        <option value="" disabled selected>سال تحصیلی را انتخاب کنید...</option>
-                        <option value="1405-1406">۱۴۰۶-۱۴۰۵</option>
-                        <option value="1406-1407">۱۴۰۷-۱۴۰۶</option>
-                        <option value="1407-1408">۱۴۰۸-۱۴۰۷</option>
-                        <option value="1408-1409">۱۴۰۹-۱۴۰۸</option>
-                        <option value="1409-1410">۱۴۱۰-۱۴۰۹</option>
-                    </select>
-                </div>
                 <div class="form-group"><label class="form-label" for="className">نام کلاس</label><input type="text" id="className" class="form-control" placeholder="شهید مهدی باکری" autocomplete="on" required></div>
                 <div class="form-group"><label class="form-label" for="classSymbol">نماد (ایموجی)</label><input type="text" id="classSymbol" class="form-control" placeholder="🏫" autocomplete="off"></div>
                 <div class="form-group"><label class="form-label" for="classMotto">شعار کلاس</label><input type="text" id="classMotto" class="form-control" placeholder="تحصیل، تهذیب، ورزش" autocomplete="on" required></div>
                 <div class="form-group"><label class="form-label" for="classGrade">پایه</label><input type="text" id="classGrade" class="form-control" placeholder="پنجم" autocomplete="on" required></div>
                 <div class="form-group"><label class="form-label" for="teacherName">نام آموزگار</label><input type="text" id="teacherName" class="form-control" placeholder="کریم جهانی فانی" autocomplete="on" required></div>
                 <div class="form-group"><label class="form-label" for="schoolName">مدرسه</label><input type="text" id="schoolName" class="form-control" placeholder="مثلاً: دبستان شهید بهشتی" autocomplete="on" required></div>
+                <input type="hidden" id="academicYear" value="">
                 
                 <hr style="border-top: 1px dashed var(--border-color); margin: 15px 0;">
                 
@@ -550,7 +624,7 @@
 
         <hr style="border-top: 1px dashed var(--border-color); margin: 20px 0;">
 
-        <!-- ===== بخش پشتیبان‌گیری بازطراحی شده ===== -->
+        <!-- ===== بخش پشتیبان‌گیری ===== -->
         <div class="card" style="border: none; box-shadow: none; padding: 0; margin-bottom: 20px;">
             <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">📤 پشتیبان‌گیری و بازیابی</h3>
             
@@ -561,14 +635,14 @@
                 ♻️ آخرین نسخه خودکار: <strong>در حال محاسبه...</strong>
             </div>
 
-            <button type="button" class="btn btn-primary btn-block" onclick="exportData()">📤 خروجی JSON (پشتیبان دستی)</button>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; text-align: center; margin-bottom: 15px;">این فایل را در جای امنی ذخیره کنید.</p>
+            <button type="button" class="btn btn-primary btn-block" onclick="exportData()">📤 خروجی JSON (پشتیبان دستی - تمام سال‌ها)</button>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; text-align: center; margin-bottom: 15px;">این فایل شامل تمام داده‌های تمام سال‌های تحصیلی است.</p>
             
             <button type="button" class="btn btn-block" onclick="restoreFromEmergencyBackup()" style="background: #f59e0b; color: white; margin-bottom: 15px;">♻️ بازیابی از آخرین نسخه خودکار</button>
 
             <!-- تنظیمات یادآور پشتیبان‌گیری -->
             <div style="border-top: 1px dashed var(--border-color); padding-top: 15px; margin-bottom: 15px;">
-                <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 0.95rem;">🔔 یادآور پشتیبان‌گیری خودکار</h4>
+                <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 0.95rem;">🔔 یادآور پشتیبان‌گیری خودکار (مخصوص سال تحصیلی جاری)</h4>
                 <div class="form-group">
                     <label class="form-label" style="font-size: 0.85rem;">یادآوری دانلود پشتیبان:</label>
                     <select id="backupReminderType" class="form-control" style="margin-bottom: 8px;">
@@ -584,7 +658,7 @@
             <!-- مدیریت بازه‌ها -->
             <div style="border-top: 1px dashed var(--border-color); padding-top: 15px;">
                 <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center;">
-                    <span>📅 بازه‌های بایگانی (مثل نوبت اول)</span>
+                    <span>📅 بازه‌های بایگانی (مخصوص سال تحصیلی جاری)</span>
                     <button type="button" class="btn btn-primary btn-sm" onclick="openPeriodEditor()" style="padding: 4px 10px; font-size: 0.8rem;">➕ بازه جدید</button>
                 </h4>
                 <div id="periods-list-container" style="margin-bottom: 15px;">
@@ -637,7 +711,6 @@
         </div>
     </div>
 </div>
-
 <!-- ===== مودال‌های دیگر ===== -->
 <div id="preview-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header">👁️ پیش‌نمایش</div><div id="preview-content"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closePreviewModal()">انصراف</button><button type="button" class="btn btn-primary" onclick="confirmAndSaveRecord()">✅ تأیید و ذخیره</button></div></div></div>
 
@@ -917,22 +990,44 @@
         </div>
     </div>
 
+    <!-- ===== ✅ مودال جدید: انتخاب سال تحصیلی ===== -->
+    <div id="academic-year-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">🎓 انتخاب سال تحصیلی</div>
+            
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 3rem; margin-bottom: 10px;">📚</div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">
+                    با انتخاب هر سال، یک محیط کاری کاملاً مستقل باز می‌شود. اطلاعات سال‌های دیگر در آرشیو باقی می‌مانند.
+                </p>
+            </div>
+            
+            <div id="academic-year-options-list" style="margin-bottom: 20px;">
+                <!-- توسط JS پر می‌شود -->
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-block" onclick="closeAcademicYearModal()">انصراف</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== اسکریپت‌ها ===== -->
-    <script src="jalali-utils.js?v=2"></script>
-<script src="calendar-data.js?v=5"></script>
-<script src="calendar.js?v=6"></script>
-    <script src="db.js?v=2"></script>
-    <script src="app.js?v=9"></script>
+    <script src="jalali-utils.js?v=3"></script>
+    <script src="calendar-data.js?v=6"></script>
+    <script src="calendar.js?v=7"></script>
+    <script src="db.js?v=3"></script>
+    <script src="app.js?v=10"></script>
     <script src="back-button.js?v=6" defer></script>
-    <script src="class.js"></script>
-    <script src="students.js"></script>
-    <script src="lesson.js"></script>
-    <script src="group.js"></script>
-    <script src="session.js?v=5"></script>
-    <script src="score.js?v=6"></script>
-    <script src="reset.js"></script>
+    <script src="class.js?v=2"></script>
+    <script src="students.js?v=2"></script>
+    <script src="lesson.js?v=2"></script>
+    <script src="group.js?v=2"></script>
+    <script src="session.js?v=6"></script>
+    <script src="score.js?v=7"></script>
+    <script src="reset.js?v=2"></script>
     <script src="game.js?v=1"></script>
-    <script src="exam.js?v=6"></script>
+    <script src="exam.js?v=7"></script>
     
     <script>
         // *** بخش آیکون‌های SVG برای تم ***
@@ -973,17 +1068,63 @@
         initTheme();
 
         function openSettingsModal() {
-    document.getElementById('settings-modal').classList.add('show');
-    if (typeof populateResetSelect === 'function') populateResetSelect();
-    if (typeof populateScheduleDaysCheckboxes === 'function') populateScheduleDaysCheckboxes();
-    if (typeof checkBackupReminder === 'function') checkBackupReminder();
-    if (typeof initBackupSettingsForm === 'function') initBackupSettingsForm();
-    
-    // *** ✅ خط جدید: پر کردن فرم مشخصات کلاس از دیتابیس ***
-    if (typeof populateClassSettingsForm === 'function') populateClassSettingsForm();
-}
+            document.getElementById('settings-modal').classList.add('show');
+            
+            // ✅ نمایش سال تحصیلی جاری در تنظیمات
+            const yearDisplay = document.getElementById('currentAcademicYearDisplay');
+            if (yearDisplay && typeof toPersianNumber === 'function') {
+                yearDisplay.textContent = toPersianNumber(window.activeAcademicYear || '1405-1406');
+            }
+            
+            if (typeof populateResetSelect === 'function') populateResetSelect();
+            if (typeof populateScheduleDaysCheckboxes === 'function') populateScheduleDaysCheckboxes();
+            if (typeof checkBackupReminder === 'function') checkBackupReminder();
+            if (typeof initBackupSettingsForm === 'function') initBackupSettingsForm();
+            if (typeof populateClassSettingsForm === 'function') populateClassSettingsForm();
+        }
         function closeSettingsModal() {
             document.getElementById('settings-modal').classList.remove('show');
+        }
+
+        // ✅ توابع مربوط به مودال سال تحصیلی
+        function openAcademicYearModal() {
+            const modal = document.getElementById('academic-year-modal');
+            if (!modal) return;
+            
+            renderAcademicYearOptions();
+            modal.classList.add('show');
+        }
+        
+        function closeAcademicYearModal() {
+            const modal = document.getElementById('academic-year-modal');
+            if (modal) modal.classList.remove('show');
+        }
+        
+        function renderAcademicYearOptions() {
+            const container = document.getElementById('academic-year-options-list');
+            if (!container) return;
+            
+            const years = window.getAvailableAcademicYears ? window.getAvailableAcademicYears() : ['1405-1406', '1406-1407', '1407-1408', '1408-1409', '1409-1410', '1410-1411'];
+            const currentYear = window.activeAcademicYear || '1405-1406';
+            
+            let html = '';
+            years.forEach(year => {
+                const isSelected = year === currentYear;
+                html += `
+                    <div class="year-option-item ${isSelected ? 'selected' : ''}" onclick="selectAcademicYear('${year}')">
+                        <span style="font-family: 'IRNumber'; color: ${isSelected ? 'var(--primary)' : 'var(--text-main)'};">${toPersianNumber(year)}</span>
+                        <div class="year-radio"></div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+        
+        async function selectAcademicYear(year) {
+            closeAcademicYearModal();
+            if (window.switchAcademicYear) {
+                await window.switchAcademicYear(year);
+            }
         }
 
         window.addEventListener('load', async () => {
@@ -1027,7 +1168,7 @@
     <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) -->
     <script>
         (function() {
-            const APP_VERSION = 'v108';
+            const APP_VERSION = 'v110';
             const storedVersion = localStorage.getItem('kosha-version');
             
             if (storedVersion !== APP_VERSION) {
