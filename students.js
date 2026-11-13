@@ -2,7 +2,6 @@
 // فایل students.js — منطق تب دانش‌آموزان
 // ==========================================
 
-// متغیر برای نگهداری شناسه دانش‌آموز فعلی در مودال
 let currentStudentDetailsId = null;
 
 async function saveStudent(e) {
@@ -20,9 +19,10 @@ async function saveStudent(e) {
         return;
     }
 
+    // ✅ بررسی تکراری بودن کد ملی فقط در سال تحصیلی جاری
     const isDuplicate = window.allStudentsData.some(st => st.nationalId === nationalId);
     if (isDuplicate) {
-        showToast('این کد ملی قبلاً برای دانش‌آموز دیگری ثبت شده است.', 'error');
+        showToast('این کد ملی در همین سال تحصیلی قبلاً ثبت شده است.', 'error');
         return;
     }
 
@@ -30,20 +30,19 @@ async function saveStudent(e) {
         firstName: document.getElementById('studentFirstName').value,
         lastName: document.getElementById('studentLastName').value,
         nationalId: nationalId,
-        groupId: null
+        groupId: null,
+        academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
     };
     
     try {
         await saveData('students', data);
         document.getElementById('student-form').reset();
         
-        // *** پاک کردن وضعیت Dirty بعد از ذخیره موفق ***
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
         showToast('دانش‌آموز جدید با موفقیت ثبت شد!', 'success');
         loadAllData();
         
-        // ✅ اسکرول آرام به بالای فرم
         const studentForm = document.getElementById('student-form');
         if (studentForm) studentForm.scrollIntoView({ behavior: 'smooth' });
         
@@ -174,49 +173,38 @@ async function saveEditedStudent(e) {
     const newLastName = document.getElementById('editStudentLastNameModal').value.trim();
     const newNationalId = document.getElementById('editStudentNationalIdModal').value.trim();
 
-    // ==========================================
-    // ✅ اعتبارسنجی گام‌به‌گام با پیام‌های دقیق
-    // ==========================================
-    
-    // ۱. بررسی خالی نبودن نام و نام خانوادگی
     if (!newFirstName || !newLastName) {
         showToast('نام و نام خانوادگی نمی‌تواند خالی باشد.', 'error');
         return;
     }
     
-    // ۲. بررسی خالی نبودن کد ملی
     if (!newNationalId) {
         showToast('کد ملی نمی‌تواند خالی باشد.', 'error');
         return;
     }
     
-    // ۳. بررسی طول کد ملی
     if (newNationalId.length !== 10) {
         showToast('کد ملی باید دقیقاً ۱۰ رقم باشد.', 'error');
         return;
     }
     
-    // ۴. بررسی عددی بودن کد ملی
     if (!/^\d{10}$/.test(newNationalId)) {
         showToast('کد ملی باید فقط شامل اعداد باشد.', 'error');
         return;
     }
     
-    // ۵. بررسی صحت الگوریتمی (چک‌سام)
     if (!validateNationalId(newNationalId)) {
         showToast('کد ملی وارد شده معتبر نیست (الگوریتم چک‌سام). لطفاً کد صحیح وارد کنید.', 'error');
         return;
     }
 
-    // ۶. بررسی تکراری نبودن کد ملی (با دانش‌آموزان دیگر)
     const isDuplicate = window.allStudentsData.some(st => st.nationalId === newNationalId && st.id !== id);
     if (isDuplicate) {
         const duplicateStudent = window.allStudentsData.find(st => st.nationalId === newNationalId && st.id !== id);
-        showToast(`این کد ملی قبلاً برای «${duplicateStudent.firstName} ${duplicateStudent.lastName}» ثبت شده است.`, 'error');
+        showToast(`این کد ملی قبلاً برای «${duplicateStudent.firstName} ${duplicateStudent.lastName}» در همین سال ثبت شده است.`, 'error');
         return;
     }
 
-    // ۷. بررسی وجود دانش‌آموز
     const existing = await getDataById('students', id);
     if (!existing) {
         showToast('دانش‌آموز یافت نشد! ممکن است حذف شده باشد.', 'error');
@@ -231,16 +219,13 @@ async function saveEditedStudent(e) {
         firstName: newFirstName,
         lastName: newLastName,
         nationalId: newNationalId,
-        groupId: existingGroupId
+        groupId: existingGroupId,
+        academicYear: existing.academicYear || window.activeAcademicYear // ✅ حفظ سال تحصیلی
     };
     
-    // ==========================================
-    // ✅ مدیریت خطای دیتابیس
-    // ==========================================
     try {
         await saveData('students', data);
         
-        // پاک کردن وضعیت Dirty
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
         showToast('اطلاعات دانش‌آموز با موفقیت ویرایش شد!', 'success');
@@ -249,7 +234,6 @@ async function saveEditedStudent(e) {
     } catch (err) {
         console.error('خطا در ویرایش دانش‌آموز:', err);
         
-        // مدیریت خطای ConstraintError (تکراری بودن در دیتابیس)
         if (err && err.name === 'ConstraintError') {
             showToast('خطای دیتابیس: این کد ملی قبلاً ثبت شده است.', 'error');
         } else {
@@ -283,19 +267,25 @@ async function resetAllStudents() {
         return;
     }
 
-    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید تمام دانش‌آموزان را حذف کنید؟ تمام سوابق ارزشیابی و حضور و غیاب آن‌ها نیز پاک خواهد شد.');
+    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید تمام دانش‌آموزان این سال تحصیلی را حذف کنید؟ تمام سوابق ارزشیابی و حضور و غیاب آن‌ها نیز پاک خواهد شد.');
     if (!confirm1) return;
 
-    const confirm2 = confirm('🚨 آخرین هشدار!\n\nاین عمل غیرقابل بازگشت است و تمام اطلاعات دانش‌آموزان برای همیشه حذف می‌شود. آیا ۱۰۰٪ مطمئن هستید؟');
+    const confirm2 = confirm('🚨 آخرین هشدار!\n\nاین عمل غیرقابل بازگشت است و تمام اطلاعات دانش‌آموزان این سال برای همیشه حذف می‌شود. آیا ۱۰۰٪ مطمئن هستید؟');
     if (!confirm2) return;
 
     try {
-        await clearStore('students');
-        await clearStore('records');
-        await clearStore('attendance');
-        await clearStore('badgesSettings');
+        // ✅ حذف فقط دانش‌آموزان سال جاری
+        for (const st of window.allStudentsData) {
+            await deleteData('students', st.id);
+        }
+        for (const rec of window.allRecordsData) {
+            await deleteData('records', rec.id);
+        }
+        for (const att of window.allAttendanceData) {
+            await deleteData('attendance', att.id);
+        }
         
-        showToast('تمام دانش‌آموزان و سوابق مرتبط با موفقیت حذف شدند.', 'success');
+        showToast('تمام دانش‌آموزان و سوابق مرتبط این سال تحصیلی حذف شدند.', 'success');
         loadAllData();
     } catch (e) {
         console.error(e);
@@ -303,9 +293,6 @@ async function resetAllStudents() {
     }
 }
 
-// ==========================================
-// 4. جزئیات دانش‌آموز (با تب‌های جدید)
-// ==========================================
 async function openStudentDetails(id) {
     const student = window.allStudentsData.find(s => s.id === id);
     if (!student) return;
@@ -314,10 +301,8 @@ async function openStudentDetails(id) {
 
     document.getElementById('student-details-title').textContent = `👤 جزئیات ${student.firstName} ${student.lastName}`;
     
-    // بازگشت به تب خلاصه
     switchStudentDetailsTab('summary');
     
-    // محاسبه خلاصه
     const content = document.getElementById('student-details-content');
     content.innerHTML = '<p style="text-align:center;">در حال محاسبه...</p>';
 
@@ -363,10 +348,8 @@ async function openStudentDetails(id) {
 
     content.innerHTML = headerHtml + subjectHtml + itemHtml;
 
-    // بارگذاری نتایج آزمون‌ها (تب دوم)
     loadStudentExamsForDetails(id);
 
-    // نمایش مودال
     document.getElementById('student-details-modal').classList.add('show');
 }
 
@@ -394,16 +377,12 @@ function switchStudentDetailsTab(tab) {
     }
 }
 
-// ==========================================
-// 5. نمایش نتایج آزمون‌های دانش‌آموز
-// ==========================================
 async function loadStudentExamsForDetails(studentId) {
     const container = document.getElementById('student-exams-content');
     if (!container) return;
     
     container.innerHTML = '<p style="text-align:center;">در حال بارگذاری...</p>';
     
-    // اگر داده‌های آزمون بارگذاری نشده، بارگذاری کن
     if (!window.allExamsData || window.allExamsData.length === 0) {
         if (typeof loadExamsData === 'function') {
             await loadExamsData();
@@ -413,7 +392,6 @@ async function loadStudentExamsForDetails(studentId) {
     const exams = window.allExamsData || [];
     const results = window.allExamResultsData || [];
     
-    // فیلتر نتایج این دانش‌آموز
     const studentResults = results.filter(r => r.studentId === studentId);
     
     if (exams.length === 0) {
@@ -429,12 +407,10 @@ async function loadStudentExamsForDetails(studentId) {
     
     let html = '';
     
-    // محاسبه آمار کلی
     const totalExamsWithScore = studentResults.length;
     const totalScores = studentResults.reduce((sum, r) => sum + r.score, 0);
     const avgScore = totalExamsWithScore > 0 ? (totalScores / totalExamsWithScore).toFixed(1) : 0;
     
-    // کارت آمار
     html += `
         <div style="background: var(--primary-light); padding: 12px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; font-size: 0.85rem;">
             <span>📊 تعداد آزمون: <strong style="color:var(--primary);">${toPersianNumber(totalExamsWithScore)}</strong></span>
@@ -442,7 +418,6 @@ async function loadStudentExamsForDetails(studentId) {
         </div>
     `;
     
-    // مرتب‌سازی آزمون‌ها بر اساس تاریخ
     const sortedExams = [...exams].sort((a, b) => b.date.localeCompare(a.date));
     
     html += '<h4 style="color:var(--primary); margin-bottom: 10px;">📋 نتایج آزمون‌ها</h4>';
