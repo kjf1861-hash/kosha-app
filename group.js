@@ -74,18 +74,25 @@ function renderGroupsList() {
         return;
     }
 
-    const groupScores = window.allGroupsData.map(g => {
-        let total = 0;
-        window.allRecordsData.forEach(rec => {
-            if (rec.students) {
-                rec.students.forEach(stId => {
-                    const st = window.allStudentsData.find(s => s.id === stId);
-                    if (st && st.groupId === g.id) total += rec.finalScore;
-                });
-            }
-        });
-        return { ...g, totalScore: total };
-    });
+    // ✅ استفاده از کش گروه (یک‌بار محاسبه در loadAllData)
+    if (!window._cacheGroupScores && typeof buildScoreCaches === 'function') {
+        buildScoreCaches();
+    }
+    const groupCache = window._cacheGroupScores || {};
+
+    // ✅ شمارش دانش‌آموزان هر گروه — یک بار برای همه
+    const groupStudentCount = {};
+    for (const st of window.allStudentsData) {
+        if (st.groupId) {
+            groupStudentCount[st.groupId] = (groupStudentCount[st.groupId] || 0) + 1;
+        }
+    }
+
+    const groupScores = window.allGroupsData.map(g => ({
+        ...g,
+        totalScore: groupCache[g.id] || 0,
+        studentCount: groupStudentCount[g.id] || 0
+    }));
 
     groupScores.sort((a, b) => {
         if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
@@ -97,27 +104,28 @@ function renderGroupsList() {
     const silverScore = uniqueScores.length > 1 ? uniqueScores[1] : -1;
     const bronzeScore = uniqueScores.length > 2 ? uniqueScores[2] : -1;
 
-    container.innerHTML = '';
-    groupScores.forEach((g, index) => {
-        const rank = index + 1;
+    // ✅ ساخت HTML در یک رشته و درج یک‌باره (به جای += در حلقه)
+    let html = '';
+    for (let i = 0; i < groupScores.length; i++) {
+        const g = groupScores[i];
+        const rank = i + 1;
         let medal = '';
         if (g.totalScore === goldScore) medal = '🥇';
         else if (g.totalScore === silverScore) medal = '🥈';
         else if (g.totalScore === bronzeScore) medal = '🥉';
 
-        const studentCount = window.allStudentsData.filter(s => s.groupId === g.id).length;
-
-        container.innerHTML += `
+        html += `
             <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px; padding: 15px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span style="font-weight:bold; color:var(--text-muted); min-width:20px;">${toPersianNumber(rank)}.</span>
                         <span class="medal-badge" style="font-size:1.3rem;">${medal}</span>
-                        <span style="font-size:1.5rem;">${g.symbol}</span>
+                        <span style="font-size:1.5rem;">${escapeHtml(g.symbol)}</span>
                         <div>
-    <strong>${escapeHtml(g.name)}</strong>
-    <div style="font-size:0.8rem; color:var(--text-muted);">${escapeHtml(toPersianNumber(studentCount))} دانش‌آموز</div>
-</div>
+                            <strong>${escapeHtml(g.name)}</strong>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">${toPersianNumber(g.studentCount)} دانش‌آموز</div>
+                        </div>
+                    </div>
                     <span class="rank-badge">${toPersianNumber(g.totalScore)} امتیاز</span>
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:5px; margin-top:5px; border-top:1px dashed var(--border-color); padding-top:10px;">
@@ -127,7 +135,8 @@ function renderGroupsList() {
                 </div>
             </div>
         `;
-    });
+    }
+    container.innerHTML = html;
 }
 
 async function editGroup(id) {
@@ -276,13 +285,16 @@ function renderGroupDetails() {
         return;
     }
 
-    const studentScores = groupStudents.map(st => {
-        let total = 0;
-        window.allRecordsData.forEach(rec => {
-            if (rec.students && rec.students.includes(st.id)) total += rec.finalScore;
-        });
-        return { ...st, totalScore: total };
-    });
+    // ✅ استفاده از کش (به جای حلقه روی همه رکوردها برای هر دانش‌آموز)
+    if (!window._cacheStudentScores && typeof buildScoreCaches === 'function') {
+        buildScoreCaches();
+    }
+    const scoreCache = window._cacheStudentScores || {};
+
+    const studentScores = groupStudents.map(st => ({
+        ...st,
+        totalScore: scoreCache[st.id] || 0
+    }));
 
     studentScores.sort((a, b) => {
         if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
@@ -295,7 +307,8 @@ function renderGroupDetails() {
     const bronzeScore = uniqueScores.length > 2 ? uniqueScores[2] : -1;
 
     let html = '';
-    studentScores.forEach((st, index) => {
+    for (let i = 0; i < studentScores.length; i++) {
+        const st = studentScores[i];
         let medal = '';
         if (st.totalScore === goldScore) medal = '🥇';
         else if (st.totalScore === silverScore) medal = '🥈';
@@ -304,7 +317,7 @@ function renderGroupDetails() {
         html += `
             <div class="details-list-item" style="background: var(--card-bg); margin-bottom: 5px; border-radius: 8px; border: 1px solid var(--border-color); padding: 10px;">
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-weight:bold; color:var(--text-muted); min-width:25px;">${toPersianNumber(index + 1)}.</span>
+                    <span style="font-weight:bold; color:var(--text-muted); min-width:25px;">${toPersianNumber(i + 1)}.</span>
                     <span class="medal-badge" style="font-size:1.2rem;">${medal}</span>
                     <strong>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</strong>
                 </div>
@@ -314,7 +327,7 @@ function renderGroupDetails() {
                 </div>
             </div>
         `;
-    });
+    }
 
     container.innerHTML = html;
 }
