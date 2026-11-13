@@ -27,22 +27,19 @@ async function saveClassProfile(e) {
     const classGradeEl = document.getElementById('classGrade');
     const teacherNameEl = document.getElementById('teacherName');
     const schoolNameEl = document.getElementById('schoolName');
-    const academicYearEl = document.getElementById('academicYear');
 
     if (!classNameEl) return;
 
-    // ✅ سال تحصیلی از فیلد AcademicYear خوانده می‌شود
-    const selectedYear = academicYearEl ? academicYearEl.value : window.activeAcademicYear;
+    const selectedYear = window.activeAcademicYear;
 
     const data = {
-        id: 1,
         name: classNameEl.value,
         symbol: classSymbolEl ? classSymbolEl.value : '',
         motto: classMottoEl ? classMottoEl.value : '',
         grade: classGradeEl ? classGradeEl.value : '',
         teacherName: teacherNameEl ? teacherNameEl.value : '',
         schoolName: schoolNameEl ? schoolNameEl.value : '',
-        academicYear: selectedYear, // ✅ سال تحصیلی جاری
+        academicYear: selectedYear,
         scheduleActiveDays: selectedDays,
         schedulePeriodsCount: periodsCount
     };
