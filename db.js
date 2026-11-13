@@ -1,25 +1,25 @@
 /**
  * فایل db.js — لایه ارتباط با IndexedDB (نسخه چندساله)
- * نسخه ۱۵ — پشتیبانی از برنامه هفتگی چندساله + بکاپ نسخه‌دار
+ * نسخه ۱۶ — پشتیبانی از آیتم‌های ارزشیابی چندساله
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 15; // ✅ نسخه 15 برای پشتیبانی از weeklySchedule چندساله
+const DB_VERSION = 16; // ✅ نسخه 16 برای پشتیبانی از assessmentItems چندساله
 
 let db;
 
 const defaultAssessmentItems = [
-    { id: 1, title: "پرسش و پاسخ", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
-    { id: 2, title: "حفظ و قرائت", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
-    { id: 4, title: "آزمون مداد و کاغذی", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
-    { id: 5, title: "کاربرگ", type: "count", unitScore: 10, placeholder: "تعداد برگه را وارد کنید:" },
-    { id: 6, title: "آزمون الکترونیکی", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
-    { id: 7, title: "کاردستی و مهارت دست‌ورزی", type: "fixed", score: 25 },
-    { id: 8, title: "نمایش و ایفای نقش", type: "fixed", score: 50 },
-    { id: 9, title: "پروژه و آزمایش علمی", type: "fixed", score: 20 },
-    { id: 10, title: "بازی آموزشی تعاملی", type: "fixed", score: 5 },
-    { id: 11, title: "آزمون مهارت حرکتی", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
-    { id: 12, title: "مشاهده", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] }
+    { title: "پرسش و پاسخ", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
+    { title: "حفظ و قرائت", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
+    { title: "آزمون مداد و کاغذی", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
+    { title: "کاربرگ", type: "count", unitScore: 10, placeholder: "تعداد برگه را وارد کنید:" },
+    { title: "آزمون الکترونیکی", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
+    { title: "کاردستی و مهارت دست‌ورزی", type: "fixed", score: 25 },
+    { title: "نمایش و ایفای نقش", type: "fixed", score: 50 },
+    { title: "پروژه و آزمایش علمی", type: "fixed", score: 20 },
+    { title: "بازی آموزشی تعاملی", type: "fixed", score: 5 },
+    { title: "آزمون مهارت حرکتی", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
+    { title: "مشاهده", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] }
 ];
 
 // ==========================================
@@ -81,7 +81,51 @@ window.getJalaliDateTimeForFilename = getJalaliDateTimeForFilename;
 window.getJalaliDateTimeForDisplay = getJalaliDateTimeForDisplay;
 
 // ==========================================
-// مقداردهی اولیه دیتابیس
+// ✅ تابع جدید: تضمین وجود آیتم‌های ارزشیابی برای یک سال
+// ==========================================
+async function ensureAssessmentItemsForYear(year) {
+    try {
+        // اگر آیتم‌های این سال وجود دارند، همان‌ها را برگردان
+        let items = await getDataByYear('assessmentItems', year);
+        if (items && items.length > 0) return items;
+
+        // اگر خالی است، از سال قبل کپی کن
+        const allItems = await getAllData('assessmentItems');
+        let sourceItems = [];
+        
+        if (allItems.length > 0) {
+            // پیدا کردن سال‌های موجود
+            const years = [...new Set(allItems.map(i => i.academicYear).filter(y => y))];
+            years.sort((a, b) => b.localeCompare(a)); // جدیدترین سال اول
+            
+            if (years.length > 0) {
+                // کپی از جدیدترین سال
+                sourceItems = allItems.filter(i => i.academicYear === years[0]);
+            }
+        }
+
+        // اگر هیچ آیتمی در دیتابیس نبود، از پیش‌فرض‌ها کپی کن
+        if (sourceItems.length === 0) {
+            sourceItems = defaultAssessmentItems;
+        }
+
+        // ساخت آیتم‌های جدید با شناسه یکتا برای این سال
+        const newItems = sourceItems.map((item, index) => ({
+            ...item,
+            id: `${year}_${Date.now()}_${index}`,
+            academicYear: year
+        }));
+
+        await saveBulkData('assessmentItems', newItems);
+        return newItems;
+    } catch (e) {
+        console.error('خطا در تضمین آیتم‌های ارزشیابی:', e);
+        return [];
+    }
+}
+window.ensureAssessmentItemsForYear = ensureAssessmentItemsForYear;
+// ==========================================
+// مقداردهی اولیه دیتابیس (نسخه ۱۶)
 // ==========================================
 function initDB() {
     return new Promise((resolve, reject) => {
@@ -94,7 +138,7 @@ function initDB() {
 
         request.onsuccess = (event) => {
             db = event.target.result;
-            console.log('پایگاه داده با موفقیت راه‌اندازی شد (نسخه چندساله v15).');
+            console.log('پایگاه داده با موفقیت راه‌اندازی شد (نسخه چندساله v16).');
             resolve(db);
         };
 
@@ -105,7 +149,6 @@ function initDB() {
 
             // ==========================================
             // ✅ مهاجرت weeklySchedule از keyPath:'day' به keyPath:'id'
-            // این کار باید اول انجام شود چون keyPath تغییر می‌کند
             // ==========================================
             if (db.objectStoreNames.contains('weeklySchedule') && event.oldVersion >= 1 && event.oldVersion < 15) {
                 console.log('🔄 مهاجرت weeklySchedule به فرمت چندساله...');
@@ -113,7 +156,6 @@ function initDB() {
                 const oldStore = transaction.objectStore('weeklySchedule');
                 const oldKeyPath = oldStore.keyPath;
                 
-                // اگر هنوز کلید قدیمی (day) است، باید داده‌ها را منتقل کنیم
                 if (oldKeyPath === 'day') {
                     const getAllRequest = oldStore.getAll();
                     
@@ -121,15 +163,12 @@ function initDB() {
                         const oldData = getAllRequest.result || [];
                         console.log(`📦 ${oldData.length} رکورد قدیمی weeklySchedule یافت شد.`);
                         
-                        // داده‌ها را در حافظه نگه می‌داریم
-                        // سپس store قدیمی را حذف و جدید را می‌سازیم
                         db.deleteObjectStore('weeklySchedule');
                         
                         const newStore = db.createObjectStore('weeklySchedule', { keyPath: 'id' });
                         newStore.createIndex('day', 'day', { unique: false });
                         newStore.createIndex('academicYear', 'academicYear', { unique: false });
                         
-                        // داده‌های قدیمی را با فرمت جدید بنویس
                         const currentYear = (typeof window !== 'undefined' && window.activeAcademicYear) 
                             ? window.activeAcademicYear 
                             : '1405-1406';
@@ -148,11 +187,45 @@ function initDB() {
                         
                         console.log(`✅ ${oldData.length} رکورد به فرمت جدید منتقل شد.`);
                     };
-                    
-                    getAllRequest.onerror = (err) => {
-                        console.error('❌ خطا در خواندن داده‌های قدیمی:', err);
-                    };
                 }
+            }
+
+            // ==========================================
+            // ✅ مهاجرت assessmentItems به فرمت چندساله (v15 -> v16)
+            // ==========================================
+            if (db.objectStoreNames.contains('assessmentItems') && event.oldVersion >= 1 && event.oldVersion < 16) {
+                console.log('🔄 مهاجرت assessmentItems به فرمت چندساله...');
+                
+                const oldStore = transaction.objectStore('assessmentItems');
+                const getAllRequest = oldStore.getAll();
+                
+                getAllRequest.onsuccess = () => {
+                    const oldData = getAllRequest.result || [];
+                    console.log(`📦 ${oldData.length} آیتم ارزشیابی قدیمی یافت شد.`);
+                    
+                    db.deleteObjectStore('assessmentItems');
+                    
+                    const newStore = db.createObjectStore('assessmentItems', { keyPath: 'id' });
+                    newStore.createIndex('academicYear', 'academicYear', { unique: false });
+                    
+                    const currentYear = (typeof window !== 'undefined' && window.activeAcademicYear) 
+                        ? window.activeAcademicYear 
+                        : '1405-1406';
+                    
+                    oldData.forEach((item, index) => {
+                        const newId = item.academicYear 
+                            ? item.id 
+                            : `${currentYear}_migrated_${item.id || Date.now()}_${index}`;
+                        
+                        newStore.put({
+                            ...item,
+                            id: newId,
+                            academicYear: item.academicYear || currentYear
+                        });
+                    });
+                    
+                    console.log(`✅ ${oldData.length} آیتم به فرمت جدید منتقل شد.`);
+                };
             }
             
             // ==========================================
@@ -244,14 +317,13 @@ function initDB() {
                 }
             }
 
+            // ✅ assessmentItems جدید (اگر برای اولین بار ساخته می‌شود)
             if (!db.objectStoreNames.contains('assessmentItems')) {
                 const itemStore = db.createObjectStore('assessmentItems', { keyPath: 'id' });
-                for (const item of defaultAssessmentItems) {
-                    itemStore.put(item);
-                }
+                itemStore.createIndex('academicYear', 'academicYear', { unique: false });
             }
             
-            // ✅ weeklySchedule: اگر برای اولین بار ساخته می‌شود
+            // ✅ weeklySchedule (اگر برای اولین بار ساخته می‌شود)
             if (!db.objectStoreNames.contains('weeklySchedule')) {
                 const scheduleStore = db.createObjectStore('weeklySchedule', { keyPath: 'id' });
                 scheduleStore.createIndex('day', 'day', { unique: false });
@@ -323,7 +395,7 @@ function saveData(storeName, data) {
 }
 
 // ==========================================
-// ✅ ذخیره دسته‌ای (بهبود یافته با transaction.oncomplete)
+// ذخیره دسته‌ای
 // ==========================================
 function saveBulkData(storeName, dataArray) {
     return new Promise((resolve, reject) => {
@@ -467,7 +539,7 @@ function clearStore(storeName) {
 }
 
 // ==========================================
-// ✅ خروجی کامل با _meta
+// خروجی کامل با _meta
 // ==========================================
 async function exportAllData() {
     const data = {};
@@ -476,14 +548,13 @@ async function exportAllData() {
         try { data[store] = await getAllData(store); } catch (e) { data[store] = []; }
     }
     
-    // ✅ افزودن _meta
     const uniqueYears = new Set();
     if (data.classProfile) data.classProfile.forEach(c => c.academicYear && uniqueYears.add(c.academicYear));
     if (data.students) data.students.forEach(s => s.academicYear && uniqueYears.add(s.academicYear));
     
     data._meta = {
         version: DB_VERSION,
-        appVersion: 'v111',
+        appVersion: 'v114',
         exportedAt: new Date().toISOString(),
         exportedAtJalali: getJalaliDateTimeForDisplay(),
         totalYears: uniqueYears.size,
@@ -499,7 +570,7 @@ async function exportAllData() {
 // ==========================================
 async function exportYearData(year) {
     const data = {};
-    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
+    const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'weeklySchedule', 'exams', 'examResults', 'backupSettings', 'assessmentItems'];
     for (const store of stores) {
         try { data[store] = await getDataByYear(store, year); } catch (e) { data[store] = []; }
     }
@@ -507,12 +578,11 @@ async function exportYearData(year) {
 }
 
 // ==========================================
-// ✅ بازیابی داده‌ها (با پشتیبانی از بکاپ‌های قدیمی/جدید)
+// بازیابی داده‌ها (با پشتیبانی از بکاپ‌های قدیمی/جدید)
 // ==========================================
 async function importAllData(data) {
     if (!data || typeof data !== 'object') throw new Error('داده‌های نامعتبر');
     
-    // ✅ بررسی نسخه بکاپ
     if (data._meta && data._meta.version) {
         if (data._meta.version > DB_VERSION) {
             throw new Error(`این بکاپ از نسخه جدیدتر برنامه (v${data._meta.version}) است. لطفاً برنامه را به‌روزرسانی کنید.`);
@@ -531,8 +601,8 @@ async function importAllData(data) {
             if (data[store] && Array.isArray(data[store])) {
                 await clearStore(store);
                 if (data[store].length > 0) {
-                    // ✅ اگر weeklySchedule رکورد قدیمی (بدون id) داشت، اصلاح کن
                     let storeData = data[store];
+                    
                     if (store === 'weeklySchedule') {
                         storeData = storeData.map(item => {
                             if (!item.id && item.day) {
@@ -544,12 +614,25 @@ async function importAllData(data) {
                             return item;
                         });
                     }
+                    
+                    if (store === 'assessmentItems') {
+                        storeData = storeData.map((item, index) => {
+                            if (!item.academicYear) {
+                                return {
+                                    ...item,
+                                    id: item.id || `${window.activeAcademicYear || '1405-1406'}_migrated_${Date.now()}_${index}`,
+                                    academicYear: window.activeAcademicYear || '1405-1406'
+                                };
+                            }
+                            return item;
+                        });
+                    }
+                    
                     await saveBulkData(store, storeData);
                 }
             }
         }
     } catch (e) {
-        // ✅ بازگردانی در صورت خطا
         for (const store of stores) {
             await clearStore(store);
             if (backup[store].length > 0) {
