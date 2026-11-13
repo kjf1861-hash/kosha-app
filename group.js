@@ -21,34 +21,38 @@ async function saveGroup(e) {
     }
 
     const nameEl = document.getElementById('groupName');
-const symbolEl = document.getElementById('groupSymbol');
-const mottoEl = document.getElementById('groupMotto');
-if (!nameEl || !symbolEl) return;
+    const symbolEl = document.getElementById('groupSymbol');
+    const mottoEl = document.getElementById('groupMotto');
+    if (!nameEl || !symbolEl) return;
 
-let sanitized;
-try {
-    sanitized = {
-        name: sanitizeInput(nameEl.value, 80),
-        symbol: sanitizeInput(symbolEl.value, 10),
-        motto: mottoEl ? sanitizeInput(mottoEl.value, 200) : ''
+    let sanitized;
+    try {
+        sanitized = {
+            name: sanitizeInput(nameEl.value, 80),
+            symbol: sanitizeInput(symbolEl.value, 10),
+            motto: mottoEl ? sanitizeInput(mottoEl.value, 200) : ''
+        };
+    } catch (err) {
+        showToast(err.message, 'error');
+        return;
+    }
+
+    const data = { 
+        name: sanitized.name,
+        symbol: sanitized.symbol,
+        motto: sanitized.motto,
+        academicYear: window.activeAcademicYear
     };
-} catch (err) {
-    showToast(err.message, 'error');
-    return;
-}
-
-const data = { 
-    name: sanitized.name,
-    symbol: sanitized.symbol,
-    motto: sanitized.motto,
-    academicYear: window.activeAcademicYear
-};
-    
+        
     await saveData('groups', data);
     
     const form = document.getElementById('group-form');
     if (form) form.reset();
     showToast('گروه جدید با موفقیت ثبت شد!', 'success');
+    
+    // ✅ رفع باگ: پاک کردن وضعیت فرم‌های ذخیره‌نشده
+    if (typeof clearFormDirty === 'function') clearFormDirty();
+    
     loadAllData();
     
     if (form) form.scrollIntoView({ behavior: 'smooth' });
@@ -74,13 +78,11 @@ function renderGroupsList() {
         return;
     }
 
-    // ✅ استفاده از کش گروه (یک‌بار محاسبه در loadAllData)
     if (!window._cacheGroupScores && typeof buildScoreCaches === 'function') {
         buildScoreCaches();
     }
     const groupCache = window._cacheGroupScores || {};
 
-    // ✅ شمارش دانش‌آموزان هر گروه — یک بار برای همه
     const groupStudentCount = {};
     for (const st of window.allStudentsData) {
         if (st.groupId) {
@@ -104,7 +106,6 @@ function renderGroupsList() {
     const silverScore = uniqueScores.length > 1 ? uniqueScores[1] : -1;
     const bronzeScore = uniqueScores.length > 2 ? uniqueScores[2] : -1;
 
-    // ✅ ساخت HTML در یک رشته و درج یک‌باره (به جای += در حلقه)
     let html = '';
     for (let i = 0; i < groupScores.length; i++) {
         const g = groupScores[i];
@@ -168,28 +169,32 @@ async function saveEditedGroup(e) {
     
     const existing = await getDataById('groups', id);
 
-let sanitized;
-try {
-    sanitized = {
-        name: sanitizeInput(document.getElementById('editGroupNameModal').value, 80),
-        symbol: sanitizeInput(document.getElementById('editGroupSymbolModal').value, 10),
-        motto: sanitizeInput(document.getElementById('editGroupMottoModal').value, 200)
-    };
-} catch (err) {
-    showToast(err.message, 'error');
-    return;
-}
+    let sanitized;
+    try {
+        sanitized = {
+            name: sanitizeInput(document.getElementById('editGroupNameModal').value, 80),
+            symbol: sanitizeInput(document.getElementById('editGroupSymbolModal').value, 10),
+            motto: sanitizeInput(document.getElementById('editGroupMottoModal').value, 200)
+        };
+    } catch (err) {
+        showToast(err.message, 'error');
+        return;
+    }
 
-const data = {
-    id: id,
-    name: sanitized.name,
-    symbol: sanitized.symbol,
-    motto: sanitized.motto,
-    academicYear: existing ? existing.academicYear : window.activeAcademicYear
-};
-    
+    const data = {
+        id: id,
+        name: sanitized.name,
+        symbol: sanitized.symbol,
+        motto: sanitized.motto,
+        academicYear: existing ? existing.academicYear : window.activeAcademicYear
+    };
+        
     await saveData('groups', data);
     showToast('گروه با موفقیت ویرایش شد!', 'success');
+    
+    // ✅ رفع باگ: پاک کردن وضعیت فرم‌های ذخیره‌نشده
+    if (typeof clearFormDirty === 'function') clearFormDirty();
+    
     closeEditGroupModal();
     loadAllData();
 }
@@ -208,6 +213,7 @@ async function deleteGroup(id) {
     loadAllData();
 }
 
+// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ (آخرین بخش) را بفرستم.
 function openGroupDetails(id) {
     const group = window.allGroupsData.find(g => g.id === id);
     if (!group) {
@@ -242,8 +248,9 @@ function populateModalStudentSelect() {
     if (availableStudents.length === 0) {
         select.innerHTML = '<option value="" disabled selected>همه دانش‌آموزان در این گروه هستند.</option>';
     } else {
+        // ✅ اصلاح امنیتی: escape نام و نام خانوادگی دانش‌آموز در منوی کشویی
         select.innerHTML = '<option value="" disabled selected>انتخاب دانش‌آموز...</option>' + 
-            availableStudents.map(st => `<option value="${st.id}">${st.firstName} ${st.lastName}</option>`).join('');
+            availableStudents.map(st => `<option value="${st.id}">${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</option>`).join('');
     }
 }
 
@@ -285,7 +292,6 @@ function renderGroupDetails() {
         return;
     }
 
-    // ✅ استفاده از کش (به جای حلقه روی همه رکوردها برای هر دانش‌آموز)
     if (!window._cacheStudentScores && typeof buildScoreCaches === 'function') {
         buildScoreCaches();
     }
@@ -350,3 +356,5 @@ async function removeStudentFromGroup(studentId) {
         showToast('خطا در حذف دانش‌آموز از گروه!', 'error');
     }
 }
+
+// ✅ پایان فایل group.js
