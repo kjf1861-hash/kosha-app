@@ -249,8 +249,7 @@
                     <div id="lessons-list" class="list-group"></div>
                 </div>
             </div>
-
-<!-- تب ۵: تقویم -->
+            <!-- تب ۵: تقویم -->
 <div id="page-calendar" class="page-section">
     <div class="page-header-title">📅 تقویم</div>
     
@@ -467,6 +466,14 @@
                         <button type="button" class="btn btn-primary btn-block" onclick="saveQuranRecord()" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);">✅ ثبت پویش قرآن</button>
                     </form>
                 </div>
+                <!-- ✅ بخش اضافه شده: نمایش تشویق‌های قرآن -->
+                <div class="card" style="border: 2px solid #86efac; background: white; margin-top: 15px;">
+                    <h4 style="color: #16a34a; font-size: 1rem; margin-bottom: 10px;">🏅 تشویق‌های صادر شده</h4>
+                    <div id="quran-rewards-list" class="list-group">
+                        <!-- لیست تشویق‌ها توسط JS پر می‌شود -->
+                    </div>
+                </div>
+                
                 <div class="card" style="border: 2px solid #bfdbfe; background: white; margin-top: 15px;">
                     <h3 style="color: #2563eb; font-size: 1.1rem; margin-bottom: 5px;">💡 عترت: ستارگان هدایت و کشتی نجات</h3>
                     <p style="color: #64748b; font-size: 0.85rem; text-align: center; padding: 20px;">✨ به زودی... ✨</p>
@@ -548,7 +555,6 @@
         </div>
     </div> 
 </div> 
-
 <!-- منوی پایین با آیکون‌های SVG -->
 <nav class="bottom-nav" style="display: none;">
     <a href="javascript:void(0)" class="nav-item active" onclick="switchPage('page-class', this)" title="کلاس">
@@ -1070,7 +1076,6 @@
         function openSettingsModal() {
             document.getElementById('settings-modal').classList.add('show');
             
-            // ✅ نمایش سال تحصیلی جاری در تنظیمات
             const yearDisplay = document.getElementById('currentAcademicYearDisplay');
             if (yearDisplay && typeof toPersianNumber === 'function') {
                 yearDisplay.textContent = toPersianNumber(window.activeAcademicYear || '1405-1406');
@@ -1128,7 +1133,7 @@
         }
 
         window.addEventListener('load', async () => {
-            try { await initDB(); } catch (error) { console.warn('دیتابیس محلی غیرفعال است.'); }
+            // ✅ اصلاح باگ: حذف initDB تکراری (چون درون initApp صدا زده می‌شود)
             try {
                 if (typeof initApp === 'function') await initApp();
             } catch (error) {
@@ -1148,7 +1153,18 @@
             }, 2000); 
         });
 
+        // ✅ اصلاح باگ: جلوگیری از تغییر صفحه در صورت وجود تغییرات ذخیره‌نشده
         function switchPage(pageId, navElement) {
+            if (window.isFormDirty) {
+                window.requestExit(function() {
+                    doSwitchPage(pageId, navElement);
+                });
+                return;
+            }
+            doSwitchPage(pageId, navElement);
+        }
+
+        function doSwitchPage(pageId, navElement) {
             document.querySelectorAll('.page-section').forEach(page => page.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
@@ -1168,7 +1184,8 @@
     <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) -->
     <script>
         (function() {
-            const APP_VERSION = 'v141';
+            // ✅ آپدیت نسخه اپلیکیشن طبق درخواست شما
+            const APP_VERSION = 'v142';
             const storedVersion = localStorage.getItem('kosha-version');
             
             if (storedVersion !== APP_VERSION) {
