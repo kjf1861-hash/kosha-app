@@ -40,6 +40,10 @@ const data = {
     
     document.getElementById('lesson-form').reset();
     showToast('درس جدید با موفقیت ثبت شد!', 'success');
+    
+    // ✅ رفع باگ: پاک کردن وضعیت فرم‌های ذخیره‌نشده
+    if (typeof clearFormDirty === 'function') clearFormDirty();
+    
     loadAllData();
     
     const lessonForm = document.getElementById('lesson-form');
@@ -89,10 +93,15 @@ const data = {
     
     await saveData('subjects', data);
     showToast('درس با موفقیت ویرایش شد!', 'success');
+    
+    // ✅ رفع باگ: پاک کردن وضعیت فرم‌های ذخیره‌نشده
+    if (typeof clearFormDirty === 'function') clearFormDirty();
+    
     closeEditLessonModal();
     loadAllData();
 }
 
+// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 function renderLessonData() {
     const container = document.getElementById('lessons-list');
     if (!container) return;
@@ -113,15 +122,16 @@ function renderLessonData() {
 
     container.innerHTML = '';
     sortedSubjects.forEach((sub, index) => {
+        // ✅ اصلاح امنیتی: escape نماد درس
         container.innerHTML += `
             <div class="list-item">
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="font-weight:bold; color:var(--text-muted); min-width:20px;">${toPersianNumber(index + 1)}.</span>
-                    <span style="font-size:1.5rem;">${sub.symbol || '📚'}</span>
+                    <span style="font-size:1.5rem;">${escapeHtml(sub.symbol || '📚')}</span>
                     <div>
-    <strong>${escapeHtml(sub.name)}</strong>
-    ${sub.motto ? `<div style="font-size:0.8rem; color:var(--text-muted);">${escapeHtml(sub.motto)}</div>` : ''}
-</div>
+                        <strong>${escapeHtml(sub.name)}</strong>
+                        ${sub.motto ? `<div style="font-size:0.8rem; color:var(--text-muted);">${escapeHtml(sub.motto)}</div>` : ''}
+                    </div>
                 </div>
                 <div style="display:flex; gap:5px;">
                     <button class="btn btn-secondary btn-sm" onclick="openLessonDetails(${sub.id})" title="مشاهده جزئیات">👁️</button>
@@ -136,15 +146,20 @@ function renderLessonData() {
 async function deleteLesson(id) {
     if (!confirm('آیا از حذف این درس مطمئن هستید؟ تمام سوابق ارزشیابی مرتبط با این درس نیز حذف خواهند شد!')) return;
     
-    const allRecords = await getAllData('records');
-    const subjectRecords = allRecords.filter(r => r.subjectId === id);
-    for (const rec of subjectRecords) {
-        await deleteData('records', rec.id);
-    }
+    try {
+        // ✅ بهبود سرعت: استفاده از داده‌های حافظه به جای خواندن مجدد از دیتابیس
+        const subjectRecords = window.allRecordsData.filter(r => r.subjectId === id);
+        for (const rec of subjectRecords) {
+            await deleteData('records', rec.id);
+        }
 
-    await deleteData('subjects', id);
-    showToast('درس و سوابق مرتبط حذف شد.', 'success');
-    loadAllData();
+        await deleteData('subjects', id);
+        showToast('درس و سوابق مرتبط حذف شد.', 'success');
+        loadAllData();
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در حذف درس!', 'error');
+    }
 }
 
 async function resetAllLessons() {
@@ -160,12 +175,15 @@ async function resetAllLessons() {
     if (!confirm2) return;
 
     try {
+        // ✅ بهبود سرعت: پیدا کردن تمام رکوردهای مربوط به دروس در یک مرحله
+        const subjectIds = window.allSubjectsData.map(s => s.id);
+        const recordsToDelete = window.allRecordsData.filter(r => subjectIds.includes(r.subjectId));
+        
+        for (const rec of recordsToDelete) {
+            await deleteData('records', rec.id);
+        }
+
         for (const sub of window.allSubjectsData) {
-            const allRecords = await getAllData('records');
-            const subRecords = allRecords.filter(r => r.subjectId === sub.id);
-            for (const rec of subRecords) {
-                await deleteData('records', rec.id);
-            }
             await deleteData('subjects', sub.id);
         }
         
@@ -205,6 +223,7 @@ function switchLessonDetailView(view) {
     renderLessonDetails();
 }
 
+// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ (آخرین بخش) را بفرستم.
 function renderLessonDetails() {
     const container = document.getElementById('lesson-details-content');
     if (!container || !currentLessonDetailsId) return;
@@ -256,7 +275,6 @@ function renderLessonDetails() {
     };
 
     if (currentLessonDetailView === 'class') {
-        // ✅ خواندن از نقشه (نه حلقه روی رکوردها برای هر دانش‌آموز)
         const studentScores = window.allStudentsData.map(st => ({
             id: st.id,
             name: `${st.firstName} ${st.lastName}`,
@@ -271,7 +289,6 @@ function renderLessonDetails() {
         container.innerHTML = processRanking(studentScores);
 
     } else {
-        // ✅ ساخت نقشه گروه → دانش‌آموزان (یک بار)
         const groupStudentMap = {};
         for (const st of window.allStudentsData) {
             if (!st.groupId) continue;
@@ -338,3 +355,5 @@ function renderLessonDetails() {
         }
     }
 }
+
+// ✅ پایان فایل lesson.js
