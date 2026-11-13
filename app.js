@@ -160,9 +160,10 @@ function showToast(message, type = 'success') {
     };
     const iconSvg = iconMap[type] || iconMap.info;
 
+    // ✅ اصلاح امنیتی: escape پیام قبل از قرار گرفتن در innerHTML
     const toast = document.createElement('div');
     toast.className = `custom-toast-container custom-toast-${type}`;
-    toast.innerHTML = `${iconSvg}<span>${message}</span>`;
+    toast.innerHTML = `${iconSvg}<span>${escapeHtml(message)}</span>`;
     document.body.appendChild(toast);
     setTimeout(() => toast.classList.add('show'), 100);
     setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
@@ -197,6 +198,7 @@ window.getAvailableAcademicYears = function() {
     return ['1405-1406', '1406-1407', '1407-1408', '1408-1409', '1409-1410', '1410-1411'];
 };
 
+// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 // ==========================================
 // ✅ پشتیبان‌گیری خودکار (کل اپلیکیشن)
 // ==========================================
@@ -363,10 +365,11 @@ function renderPeriodsList() {
     
     let html = '';
     periods.forEach((period, index) => {
+        // ✅ اصلاح امنیتی: escape عنوان بازه
         html += `
             <div class="list-item" style="padding: 10px 12px; margin-bottom: 8px; flex-direction: column; align-items: stretch; gap: 5px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <strong style="color: var(--primary); font-size: 0.95rem;">📅 ${period.title}</strong>
+                    <strong style="color: var(--primary); font-size: 0.95rem;">📅 ${escapeHtml(period.title)}</strong>
                     <button type="button" class="btn btn-danger btn-sm" onclick="deletePeriod(${index})" title="حذف" style="padding: 2px 8px;">🗑️</button>
                 </div>
                 <div style="font-size: 0.8rem; color: var(--text-muted);">
@@ -522,7 +525,15 @@ function selectPeriodCalendarDay(dateStr) {
 }
 
 async function savePeriod() {
-    const title = document.getElementById('periodTitle').value.trim();
+    // ✅ اصلاح امنیتی: sanitize عنوان بازه با حداکثر ۸۰ کاراکتر
+    let title;
+    try {
+        title = sanitizeInput(document.getElementById('periodTitle').value, 80);
+    } catch (err) {
+        showToast(err.message, 'error');
+        return;
+    }
+    
     const startDate = document.getElementById('periodStartDate').value;
     const endDate = document.getElementById('periodEndDate').value;
     
@@ -595,6 +606,7 @@ async function savePeriod() {
     }
 }
 
+// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 async function checkPeriodReminders() {
     try {
         currentBackupSettings = await getBackupSettings(window.activeAcademicYear);
@@ -677,7 +689,6 @@ function getTodayJalali() {
             }
         } catch (err) {
             console.error('❌ خطای جدی در دریافت تاریخ:', err);
-            // Fallback نهایی در صورت عدم وجود تابع (نباید اتفاق بیفتد)
             return '1405/01/01';
         }
     }
@@ -918,7 +929,6 @@ async function initApp() {
             window.activeAcademicYear = savedYear;
         }
         
-        // ✅ استفاده از getClassProfile
         const classData = await getClassProfile(window.activeAcademicYear);
         if (classData && classData.academicYear) {
             window.activeAcademicYear = classData.academicYear;
@@ -946,6 +956,7 @@ async function initApp() {
     } catch (error) { console.error("خطا در بارگذاری آزمون‌ها:", error); }
 }
 
+// ⏸️ پایان بخش ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۴ را بفرستم.
 // ==========================================
 // ✅ محاسبه یک‌باره امتیازات (بهینه‌سازی سرعت)
 // ==========================================
@@ -1021,7 +1032,6 @@ async function loadAllData() {
     try {
         const currentYear = window.activeAcademicYear;
         
-        // ✅ استفاده از getClassProfile برای خواندن مشخصات کلاس هر سال
         const classData = await getClassProfile(currentYear);
         if (classData) {
             if (classData.academicYear) window.activeAcademicYear = classData.academicYear;
@@ -1041,7 +1051,6 @@ async function loadAllData() {
         const rawAttendance = await getDataByYear('attendance', currentYear);
         const rawWeeklySchedule = await getDataByYear('weeklySchedule', currentYear);
         
-        // ✅ بهینه‌سازی: بررسی مهاجرت فقط یک بار انجام می‌شود
         if (!localStorage.getItem('kosha-db-migrated-v16')) {
             let migrationNeeded = false;
             
@@ -1059,7 +1068,6 @@ async function loadAllData() {
                 showToast('اطلاعات قبلی به سال تحصیلی جاری منتقل شد.', 'info');
             }
             
-            // ثبت پرچم که مهاجرت انجام شده است
             localStorage.setItem('kosha-db-migrated-v16', 'true');
             console.log('✅ مهاجرت یک‌باره داده‌ها انجام و ثبت شد.');
         }
@@ -1085,10 +1093,9 @@ async function loadAllData() {
         
         currentBackupSettings = await getBackupSettings(currentYear);
 
-// ✅ محاسبه یک‌باره امتیازات (برای سرعت)
-buildScoreCaches();
+        buildScoreCaches();
 
-renderUI();
+        renderUI();
         
     } catch (e) { 
         console.error('خطا در بارگذاری داده‌ها:', e); 
@@ -1185,11 +1192,16 @@ function toggleItemTypeFields() {
 function addLevelRow(name = '', score = '') {
     const container = document.getElementById('levels-container');
     if (!container) return;
+    
+    // ✅ اصلاح امنیتی: escape نام و امتیاز قبل از قرار گرفتن در innerHTML
+    const safeName = escapeHtml(name);
+    const safeScore = escapeHtml(score);
+    
     const row = document.createElement('div');
     row.className = 'level-row-input';
     row.innerHTML = `
-        <input type="text" class="form-control level-name" placeholder="نام سطح" value="${name}">
-        <input type="number" class="form-control level-score" placeholder="امتیاز" value="${score}">
+        <input type="text" class="form-control level-name" placeholder="نام سطح" value="${safeName}">
+        <input type="number" class="form-control level-score" placeholder="امتیاز" value="${safeScore}">
         <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✖</button>
     `;
     container.appendChild(row);
@@ -1274,11 +1286,21 @@ if (id) {
     if (type === 'level') {
         const placeholder = document.getElementById('itemLevelPlaceholder');
         itemData.placeholder = (placeholder && placeholder.value) || 'انتخاب سطح عملکرد:';
+        
+        // ✅ اصلاح امنیتی: sanitize نام سطح‌ها با حداکثر ۵۰ کاراکتر
         const levels = [];
         const rows = document.querySelectorAll('#levels-container .level-row-input');
         rows.forEach(row => {
-            const name = row.querySelector('.level-name').value.trim();
+            const rawName = row.querySelector('.level-name').value;
             const score = parseInt(row.querySelector('.level-score').value);
+            
+            let name;
+            try {
+                name = sanitizeInput(rawName, 50);
+            } catch (err) {
+                name = '';
+            }
+            
             if (name && !isNaN(score)) levels.push({ name, score });
         });
         if (levels.length === 0) { showToast('حداقل یک سطح با نام و امتیاز تعریف کنید.', 'error'); return; }
@@ -1357,6 +1379,7 @@ assessmentItems = freshItems;
     } catch (e) { console.error(e); showToast('خطا در حذف آیتم!', 'error'); }
 }
 
+// ⏸️ پایان بخش ۴ — منتظر پیام «ادامه» شما هستم تا بخش ۵ (آخر) را بفرستم.
 // ==========================================
 // ✅ خروجی داده‌ها با نام فایل شمسی + ساعت
 // ==========================================
@@ -1467,3 +1490,5 @@ function showUpdateToast(newWorker) {
         setTimeout(() => window.location.reload(), 500);
     });
 }
+
+// ✅ پایان فایل app.js
