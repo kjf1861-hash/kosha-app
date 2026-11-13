@@ -49,7 +49,6 @@ async function generateGameFile(examId) {
 
 function buildGameHtml(exam, subName, questions) {
     // ✅ اصلاح امنیتی: امن‌سازی داده‌ها برای جلوگیری از شکستن کدهای جاوااسکریپت
-    // با جایگزین کردن < با \u003c، از بسته شدن زودهنگام تگ اسکریپت جلوگیری می‌شود
     const jsonSafe = (obj) => JSON.stringify(obj).replace(/</g, '\\u003c');
     
     const questionsJson = jsonSafe(questions);
@@ -365,17 +364,17 @@ function buildGameHtml(exam, subName, questions) {
                 q.options.forEach((opt, i) => {
                     const letters = ['الف', 'ب', 'ج', 'د', 'ه', 'و'];
                     const isSelected = userAnswers[currentQuestionIndex] === i;
-                    questionHtml += `
+                    questionHtml += \`
                         <button class="option-btn \${isSelected ? 'selected' : ''}" onclick="selectOption(\${i})">
                             <span class="option-letter">\${letters[i] || (i+1)}</span>
                             <span>\${escapeHtml(opt)}</span>
                         </button>
-                    `;
+                    \`;
                 });
                 questionHtml += '</div>';
             } else if (q.type === 'true-false') {
                 const selected = userAnswers[currentQuestionIndex];
-                questionHtml = `
+                questionHtml = \`
                     <div class="options-list">
                         <button class="option-btn \${selected === true ? 'selected' : ''}" onclick="selectTrueFalse(true)">
                             <span class="option-letter">✅</span>
@@ -386,21 +385,21 @@ function buildGameHtml(exam, subName, questions) {
                             <span>غلط</span>
                         </button>
                     </div>
-                `;
+                \`;
             } else {
                 const currentAnswer = userAnswers[currentQuestionIndex] || '';
-                questionHtml = `
+                questionHtml = \`
                     <input type="text" class="text-answer-input" 
                            placeholder="پاسخ خود را بنویسید..." 
                            value="\${escapeHtml(currentAnswer)}"
                            oninput="updateTextAnswer(this.value)">
-                `;
+                \`;
             }
             
             const isFirst = currentQuestionIndex === 0;
             const isLast = currentQuestionIndex === total - 1;
             
-            body.innerHTML = `
+            body.innerHTML = \`
                 <div class="progress-bar-outer">
                     <div class="progress-bar-inner" style="width: \${progress}%;"></div>
                 </div>
@@ -415,7 +414,7 @@ function buildGameHtml(exam, subName, questions) {
                     <button class="btn-nav btn-prev" onclick="prevQuestion()" \${isFirst ? 'disabled' : ''}>▶ قبلی</button>
                     <button class="btn-nav btn-next" onclick="nextQuestion()">\${isLast ? '🏁 پایان آزمون' : 'بعدی ◀'}</button>
                 </div>
-            `;
+            \`;
         }
         
         function selectOption(index) {
@@ -447,9 +446,7 @@ function buildGameHtml(exam, subName, questions) {
                 showFinishScreen();
             }
         }
-
-// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ (آخرین بخش) را بفرستم.
-        function showFinishScreen() {
+                function showFinishScreen() {
             const answersString = userAnswers.map(a => {
                 if (a === null) return 'null';
                 if (typeof a === 'string') return a.trim();
@@ -465,7 +462,7 @@ function buildGameHtml(exam, subName, questions) {
             }
             const code = Math.abs(hash).toString(36).toUpperCase().substring(0, 8).padStart(8, '0');
             
-            document.getElementById('gameBody').innerHTML = `
+            document.getElementById('gameBody').innerHTML = \`
                 <div class="finish-screen">
                     <div class="finish-icon">🎉</div>
                     <div class="finish-title">آفرین! آزمون را به پایان رساندی.</div>
@@ -476,7 +473,7 @@ function buildGameHtml(exam, subName, questions) {
                     <br>
                     <button class="restart-btn" onclick="restartGame()">🔄 شروع مجدد</button>
                 </div>
-            `;
+            \`;
         }
         
         function copyCode(code) {
