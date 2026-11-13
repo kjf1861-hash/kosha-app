@@ -1,5 +1,5 @@
 // ==========================================
-// فایل exam.js — منطق کامل تب آزمون‌ها (نسخه اصلاح‌شده با تقویم)
+// فایل exam.js — منطق کامل تب آزمون‌ها (نسخه چندساله)
 // ==========================================
 
 window.allExamsData = [];
@@ -8,7 +8,6 @@ window.allExamResultsData = [];
 let examQuestionCounter = 0;
 let currentGradingExamId = null;
 
-// *** متغیرهای وضعیت تقویم آزمون ***
 let examCalendarState = {
     year: 1405,
     month: 7,
@@ -17,8 +16,9 @@ let examCalendarState = {
 
 async function loadExamsData() {
     try {
-        window.allExamsData = await getAllData('exams');
-        window.allExamResultsData = await getAllData('examResults');
+        // ✅ بارگذاری فقط آزمون‌های سال تحصیلی جاری
+        window.allExamsData = await getDataByYear('exams', window.activeAcademicYear);
+        window.allExamResultsData = await getDataByYear('examResults', window.activeAcademicYear);
     } catch (e) {
         console.error('خطا در بارگذاری داده‌های آزمون:', e);
     }
@@ -139,8 +139,6 @@ function initExamCalendar() {
     
     renderExamCalendar();
 }
-
-// *** توابع تقویم شمسی از jalali-utils.js می‌آیند ***
 
 function changeExamCalendarMonth(delta) {
     const ay = window.activeAcademicYear || '1405-1406';
@@ -570,11 +568,15 @@ async function saveExam(event) {
         date: date,
         maxScore: maxScore,
         questions: questions,
-        academicYear: window.activeAcademicYear
+        academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
     };
     
     if (editId) {
         examData.id = parseInt(editId);
+        const existing = await getDataById('exams', parseInt(editId));
+        if (existing && existing.academicYear) {
+            examData.academicYear = existing.academicYear;
+        }
     } else {
         examData.id = Date.now();
     }
@@ -583,7 +585,6 @@ async function saveExam(event) {
         await saveData('exams', examData);
         showToast('آزمون با موفقیت ذخیره شد!', 'success');
         
-        // *** پاک کردن وضعیت Dirty بعد از ذخیره آزمون ***
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
         closeExamEditorModal();
@@ -683,7 +684,6 @@ function closeExamGradingModal() {
     if (modal) modal.classList.remove('show');
     currentGradingExamId = null;
     
-    // *** پاک کردن وضعیت Dirty بعد از بستن مودال ***
     if (typeof clearFormDirty === 'function') clearFormDirty();
 }
 
@@ -770,7 +770,7 @@ async function saveExamGrades() {
             examId: currentGradingExamId,
             studentId: studentId,
             score: score,
-            academicYear: window.activeAcademicYear
+            academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
         });
     });
     
@@ -782,12 +782,6 @@ async function saveExamGrades() {
             await deleteData('examResults', r.id);
         }
         
-        // ==========================================
-        // ✅ تغییر اصلی: تولید id امن و یکتا
-        // به جای Date.now() + Math.random() که ممکن بود تداخل کند،
-        // از یک baseId (زمان فعلی) + شمارنده افزایشی استفاده می‌کنیم.
-        // این تضمین می‌کند که همه idها عدد صحیح و کاملاً یکتا باشند.
-        // ==========================================
         const baseId = Date.now();
         for (let i = 0; i < newResults.length; i++) {
             newResults[i].id = baseId + i;
@@ -796,7 +790,6 @@ async function saveExamGrades() {
         
         showToast(`نمرات ${toPersianNumber(newResults.length)} دانش‌آموز ذخیره شد!`, 'success');
         
-        // *** پاک کردن وضعیت Dirty بعد از ذخیره موفق نمرات ***
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
         closeExamGradingModal();
@@ -808,10 +801,3 @@ async function saveExamGrades() {
         showToast('خطا در ذخیره نمرات.', 'error');
     }
 }
-
-// ==========================================
-// 8. تولید فایل بازی برای دانش‌آموز (آفلاین)
-// ==========================================
-// *** توجه: توابع generateGameFile و buildGameHtml به فایل game.js منتقل شدند ***
-// *** از این پس، این توابع در game.js قرار دارند ***
-// *** این فایل (exam.js) فقط مسئول مدیریت آزمون‌ها و ثبت نمرات است ***
