@@ -1,17 +1,23 @@
 // ==========================================
-// فایل calendar.js — منطق مشترک تقویم شمسی (نسخه JSON خوان)
+// فایل calendar.js — منطق مشترک تقویم شمسی (نسخه متنی و آفلاین)
 // ==========================================
 
-// متغیری برای نگهداری داده‌های مناسبت‌ها (از فایل JSON پر می‌شود)
+// متغیری برای نگهداری داده‌های مناسبت‌ها
 let CALENDAR_EVENTS = {};
+
+// ✅ تبدیل رشته متنی به آبجکت (بدون نیاز به fetch)
+try {
+    if (typeof window.CALENDAR_EVENTS_JSON !== 'undefined') {
+        CALENDAR_EVENTS = JSON.parse(window.CALENDAR_EVENTS_JSON);
+    } else {
+        console.warn('⚠️ متغیر CALENDAR_EVENTS_JSON یافت نشد. فایل calendar-data.js را بررسی کنید.');
+    }
+} catch (e) {
+    console.error('❌ خطا در تبدیل داده‌های مناسبت‌ها:', e);
+}
 
 // ==========================================
 // 1. توابع پایه تقویم شمسی
-// (این توابع حالا از jalali-utils.js می‌آیند)
-// ==========================================
-
-// ==========================================
-// 2. توابع کمکی
 // ==========================================
 
 const JALALI_DAY_NAMES = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
@@ -26,28 +32,11 @@ function getJalaliMonthName(monthIndex) {
 }
 
 // ==========================================
-// 3. توابع جدید: بارگذاری داده‌های مناسبت‌ها از فایل JSON
-// ==========================================
-async function loadCalendarEvents() {
-    try {
-        const response = await fetch('./calendar-events.json?v=1');
-        if (!response.ok) throw new Error('Network response was not ok');
-        
-        CALENDAR_EVENTS = await response.json();
-        console.log('✅ داده‌های مناسبت‌های تقویم با موفقیت بارگذاری شد.');
-    } catch (error) {
-        console.error('❌ خطا در بارگذاری فایل مناسبت‌ها:', error);
-        showToast('خطا در بارگذاری مناسبت‌های تقویم.', 'error');
-    }
-}
-
-// ==========================================
-// 4. توابع دریافت مناسبت‌ها
+// 2. توابع دریافت مناسبت‌ها
 // ==========================================
 
 function getMonthEvents(year, month) {
     if (Object.keys(CALENDAR_EVENTS).length === 0) {
-        console.warn('CALENDAR_EVENTS هنوز بارگذاری نشده است.');
         return {};
     }
     
@@ -70,7 +59,7 @@ function hasEventOnDay(year, month, day) {
 }
 
 // ==========================================
-// 5. توابع جدید برای استفاده در سایر تب‌ها
+// 3. توابع جدید برای استفاده در سایر تب‌ها
 // ==========================================
 
 // دریافت مناسبت یک تاریخ به صورت رشته (مثلاً "1405/08/08")
@@ -94,8 +83,7 @@ function getEventTitleForDateString(dateStr) {
     return event || '';
 }
 
-// *** تابع جدید: خروجی آماده برای نمایش در tooltip یا باکس زیر تقویم ***
-// اگر مناسبت وجود داشته باشد، متن را با پیشوند "🎉 مناسبت: " برمی‌گرداند
+// خروجی آماده برای نمایش در tooltip یا باکس زیر تقویم
 function getFormattedEventsForDate(dateStr) {
     const event = getEventsForDateString(dateStr);
     if (!event) return '';
@@ -103,7 +91,7 @@ function getFormattedEventsForDate(dateStr) {
 }
 
 // ==========================================
-// 6. رندر تقویم جامع در تب تقویم
+// 4. رندر تقویم جامع در تب تقویم
 // ==========================================
 
 let fullCalendarYear = 1405;
@@ -186,7 +174,6 @@ function changeFullCalendarYear(year) {
     renderFullCalendar();
 }
 
-// *** تغییر اصلی: حذف نقطه قرمز و استفاده از یک نشانه‌ی بسیار ملایم ***
 function renderFullCalendarGrid() {
     const grid = document.getElementById('full-calendar-grid');
     if (!grid) return;
@@ -208,10 +195,9 @@ function renderFullCalendarGrid() {
         
         let classes = 'full-calendar-day';
         if (isFriday) classes += ' friday';
-        if (hasEvent) classes += ' has-event-soft';  // کلاس جدید: نشانه‌ی ملایم
+        if (hasEvent) classes += ' has-event-soft';
         if (isSelected) classes += ' selected';
         
-        // tooltip به جای نقطه قرمز
         const tooltipText = hasEvent ? eventsMap[day] : '';
         
         grid.innerHTML += `
