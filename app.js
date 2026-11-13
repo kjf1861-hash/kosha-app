@@ -1013,14 +1013,14 @@ function renderItemsList() {
     assessmentItems.forEach(item => {
         let typeName = item.type === 'level' ? 'سطح محور' : item.type === 'count' ? 'شمارشی' : item.type === 'free' ? 'آزاد' : 'ویژه (قرآن)';
         container.innerHTML += `
-            <div class="item-management-row">
-                <div><strong>${item.title}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">(${typeName})</span></div>
-                <div style="display:flex; gap:5px;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="editItem(${item.id})" ${item.type === 'quran' ? 'disabled title="سیستمی"' : ''}>✏️</button>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteCustomItem(${item.id})" ${item.type === 'quran' ? 'disabled title="سیستمی"' : ''}>🗑️</button>
-                </div>
-            </div>
-        `;
+    <div class="item-management-row">
+        <div><strong>${escapeHtml(item.title)}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">(${escapeHtml(typeName)})</span></div>
+        <div style="display:flex; gap:5px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="editItem(${item.id})" ${item.type === 'quran' ? 'disabled title="سیستمی"' : ''}>✏️</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="deleteCustomItem(${item.id})" ${item.type === 'quran' ? 'disabled title="سیستمی"' : ''}>🗑️</button>
+        </div>
+    </div>
+`;
     });
 }
 
@@ -1122,11 +1122,18 @@ async function saveItem(e) {
     if (!idEl || !titleEl || !typeEl) return;
     
     const id = idEl.value;
-    const title = titleEl.value.trim();
-    const type = typeEl.value;
-    
-    if (!title) { showToast('عنوان آیتم را وارد کنید.', 'error'); return; }
-    if (!type) { showToast('نوع آیتم را انتخاب کنید.', 'error'); return; }
+const type = typeEl.value;
+
+let title;
+try {
+    title = sanitizeInput(titleEl.value, 80);
+} catch (err) {
+    showToast(err.message, 'error');
+    return;
+}
+
+if (!title) { showToast('عنوان آیتم را وارد کنید.', 'error'); return; }
+if (!type) { showToast('نوع آیتم را انتخاب کنید.', 'error'); return; }
     
     if (!id && assessmentItems.length >= 16) {
         showToast('حداکثر تعداد مجاز آیتم ارزشیابی (۱۶ آیتم) تکمیل شده است.', 'error');
