@@ -26,13 +26,26 @@ async function saveStudent(e) {
         return;
     }
 
-    const data = {
-        firstName: document.getElementById('studentFirstName').value,
-        lastName: document.getElementById('studentLastName').value,
-        nationalId: nationalId,
-        groupId: null,
-        academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
-    };
+    let sanitizedFirstName, sanitizedLastName;
+try {
+    sanitizedFirstName = sanitizeInput(document.getElementById('studentFirstName').value, 50);
+    sanitizedLastName = sanitizeInput(document.getElementById('studentLastName').value, 50);
+    if (!sanitizedFirstName || !sanitizedLastName) {
+        showToast('نام و نام خانوادگی نمی‌تواند خالی باشد.', 'error');
+        return;
+    }
+} catch (err) {
+    showToast(err.message, 'error');
+    return;
+}
+
+const data = {
+    firstName: sanitizedFirstName,
+    lastName: sanitizedLastName,
+    nationalId: nationalId,
+    groupId: null,
+    academicYear: window.activeAcademicYear
+};
     
     try {
         await saveData('students', data);
@@ -119,7 +132,7 @@ function renderStudentsList() {
                     <div style="display:flex; align-items:center; gap:5px;">
                         <span style="font-weight:bold; min-width:25px; color:var(--text-muted);">${toPersianNumber(globalRank)}.</span>
                         ${medalHtml}
-                        <span><strong>${st.firstName} ${st.lastName}</strong></span>
+                        <span><strong>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</strong></span>
                         ${groupBadge}
                     </div>
                     <div style="display:flex; align-items:center; gap:5px;">
@@ -130,7 +143,7 @@ function renderStudentsList() {
                     </div>
                 </div>
                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-right: 25px; display: flex; gap: 15px;">
-                    <span>🆔 کد ملی: <strong style="font-family: 'IRNumber';">${toPersianNumber(st.nationalId || 'ثبت نشده')}</strong></span>
+                    <span>🆔 کد ملی: <strong style="font-family: 'IRNumber';">${escapeHtml(toPersianNumber(st.nationalId || 'ثبت نشده'))}</strong></span>
                     <span>🔑 رمز: <strong style="font-family: 'IRNumber'; color: var(--primary);">${toPersianNumber(studentPass)}</strong></span>
                 </div>
             </div>
@@ -169,9 +182,17 @@ async function saveEditedStudent(e) {
     if(e) e.preventDefault();
     
     const id = parseInt(document.getElementById('editStudentIdModal').value);
-    const newFirstName = document.getElementById('editStudentFirstNameModal').value.trim();
-    const newLastName = document.getElementById('editStudentLastNameModal').value.trim();
-    const newNationalId = document.getElementById('editStudentNationalIdModal').value.trim();
+
+let newFirstName, newLastName;
+try {
+    newFirstName = sanitizeInput(document.getElementById('editStudentFirstNameModal').value, 50);
+    newLastName = sanitizeInput(document.getElementById('editStudentLastNameModal').value, 50);
+} catch (err) {
+    showToast(err.message, 'error');
+    return;
+}
+
+const newNationalId = document.getElementById('editStudentNationalIdModal').value.trim();
 
     if (!newFirstName || !newLastName) {
         showToast('نام و نام خانوادگی نمی‌تواند خالی باشد.', 'error');
@@ -310,13 +331,13 @@ async function openStudentDetails(id) {
     const studentPass = student.nationalId ? generateStudentPassword(student.nationalId) : '---';
 
     let headerHtml = `
-        <div style="background: var(--primary-light); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--primary);">
-            <p style="margin: 0 0 5px 0;"><strong>کد ملی:</strong> <span style="font-family: 'IRNumber';">${toPersianNumber(student.nationalId || 'ثبت نشده')}</span></p>
-            <p style="margin: 0;"><strong>رمز عبور:</strong> <span style="font-family: 'IRNumber'; color: var(--primary); font-weight: bold; font-size: 1.2rem;">${toPersianNumber(studentPass)}</span></p>
-        </div>
-    `;
+    <div style="background: var(--primary-light); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--primary);">
+        <p style="margin: 0 0 5px 0;"><strong>کد ملی:</strong> <span style="font-family: 'IRNumber';">${escapeHtml(toPersianNumber(student.nationalId || 'ثبت نشده'))}</span></p>
+        <p style="margin: 0;"><strong>رمز عبور:</strong> <span style="font-family: 'IRNumber'; color: var(--primary); font-weight: bold; font-size: 1.2rem;">${escapeHtml(toPersianNumber(studentPass))}</span></p>
+    </div>
+`;
 
-    let subjectHtml = '<h4 style="color:var(--primary); margin-bottom:10px;">📊 امتیاز به تفکیک دروس</h4>';
+    let subjectHtml += `<div class="details-list-item"><span>${escapeHtml(sub.symbol || '')} ${escapeHtml(sub.name)}</span><strong>${escapeHtml(toPersianNumber(total))} امتیاز</strong></div>`;
     let hasSubjects = false;
     window.allSubjectsData.forEach(sub => {
         const subRecords = srs.filter(r => r.subjectId === sub.id);
@@ -330,7 +351,7 @@ async function openStudentDetails(id) {
     });
     if (!hasSubjects) subjectHtml += '<p style="color:#64748b; font-size:0.9rem; text-align:center;">هنوز امتیازی در هیچ درسی ثبت نشده است.</p>';
 
-    let itemHtml = '<h4 style="color:var(--primary); margin-top:20px; margin-bottom:10px;">📝 دفعات و جزئیات ارزشیابی‌ها</h4>';
+    let itemHtml += `<div class="details-list-item"><span>${escapeHtml(itemName)}</span><span style="color:var(--text-muted); font-size:0.85rem;">${escapeHtml(toPersianNumber(stats.count))} بار (${escapeHtml(toPersianNumber(stats.totalScore))} امتیاز)</span></div>`;
     let hasItems = false;
     
     const itemCounts = {};
