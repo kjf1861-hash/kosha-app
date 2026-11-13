@@ -194,6 +194,9 @@ function renderScheduleEdit() {
     });
 }
 
+// ==========================================
+// ✅ ذخیره برنامه هفتگی (چندساله — id یکتا)
+// ==========================================
 async function saveAllWeeklySchedules() {
     const selects = document.querySelectorAll('.schedule-subject-select');
     const newSchedule = {};
@@ -209,18 +212,27 @@ async function saveAllWeeklySchedules() {
         newSchedule[day][periodIndex] = subId;
     });
 
+    const currentYear = window.activeAcademicYear;
+
     try {
-        // ✅ حذف برنامه‌های سال جاری و ذخیره مجدد
-        const currentYear = window.activeAcademicYear;
-        for (const sched of window.allWeeklyScheduleData) {
-            await deleteData('weeklySchedule', sched.day);
+        // ✅ فقط رکوردهای سال جاری را حذف می‌کنیم (نه سال‌های دیگر)
+        // رکوردهایی که academicYear ندارند (از نسخه قدیمی) هم حذف می‌شوند
+        const schedulesToDelete = window.allWeeklyScheduleData.filter(
+            s => !s.academicYear || s.academicYear === currentYear
+        );
+        
+        for (const sched of schedulesToDelete) {
+            const idToDelete = sched.id || `${sched.academicYear || currentYear}_${sched.day}`;
+            await deleteData('weeklySchedule', idToDelete);
         }
         
+        // ✅ ذخیره با id یکتا: "سال_روز"
         for (const day in newSchedule) {
             await saveData('weeklySchedule', { 
-                day: day, 
+                id: `${currentYear}_${day}`,        // ← کلید یکتا
+                day: day,
                 periods: newSchedule[day],
-                academicYear: currentYear // ✅ سال تحصیلی جاری
+                academicYear: currentYear
             });
         }
 
@@ -233,22 +245,34 @@ async function saveAllWeeklySchedules() {
     }
 }
 
+// ==========================================
+// ✅ حذف برنامه هفتگی (فقط سال جاری)
+// ==========================================
 async function resetAllWeeklySchedules() {
     if (window.allWeeklyScheduleData.length === 0) {
         showToast('هیچ برنامه هفتگی برای حذف وجود ندارد.', 'error');
         return;
     }
 
-    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید کل برنامه هفتگی این سال تحصیلی را حذف کنید؟');
+    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید کل برنامه هفتگی این سال تحصیلی را حذف کنید؟\n\n(برنامه سال‌های دیگر دست‌نخورده باقی می‌ماند)');
     if (!confirm1) return;
 
     const confirm2 = confirm('🚨 آخرین هشدار!\n\nاین عمل غیرقابل بازگشت است. آیا ۱۰۰٪ مطمئن هستید؟');
     if (!confirm2) return;
 
+    const currentYear = window.activeAcademicYear;
+
     try {
-        for (const sched of window.allWeeklyScheduleData) {
-            await deleteData('weeklySchedule', sched.day);
+        // ✅ فقط رکوردهای سال جاری را حذف می‌کنیم
+        const schedulesToDelete = window.allWeeklyScheduleData.filter(
+            s => !s.academicYear || s.academicYear === currentYear
+        );
+        
+        for (const sched of schedulesToDelete) {
+            const idToDelete = sched.id || `${sched.academicYear || currentYear}_${sched.day}`;
+            await deleteData('weeklySchedule', idToDelete);
         }
+        
         showToast('کل برنامه هفتگی این سال تحصیلی حذف شد.', 'success');
         loadAllData();
     } catch (e) {
