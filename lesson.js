@@ -20,7 +20,8 @@ async function saveLesson(e) {
     const data = { 
         name: document.getElementById('lessonName').value,
         symbol: document.getElementById('lessonSymbol').value,
-        motto: document.getElementById('lessonMotto').value 
+        motto: document.getElementById('lessonMotto').value,
+        academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
     };
     
     await saveData('subjects', data);
@@ -29,7 +30,6 @@ async function saveLesson(e) {
     showToast('درس جدید با موفقیت ثبت شد!', 'success');
     loadAllData();
     
-    // ✅ اسکرول آرام به بالای فرم
     const lessonForm = document.getElementById('lesson-form');
     if (lessonForm) lessonForm.scrollIntoView({ behavior: 'smooth' });
 }
@@ -53,11 +53,14 @@ async function saveEditedLesson(e) {
     if(e) e.preventDefault();
     const id = parseInt(document.getElementById('editLessonIdModal').value);
     
+    const existing = await getDataById('subjects', id);
+    
     const data = {
         id: id,
         name: document.getElementById('editLessonNameModal').value,
         symbol: document.getElementById('editLessonSymbolModal').value,
-        motto: document.getElementById('editLessonMottoModal').value
+        motto: document.getElementById('editLessonMottoModal').value,
+        academicYear: existing ? existing.academicYear : window.activeAcademicYear // ✅ حفظ سال تحصیلی
     };
     
     await saveData('subjects', data);
@@ -126,17 +129,23 @@ async function resetAllLessons() {
         return;
     }
 
-    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید تمام دروس را حذف کنید؟ تمام سوابق ارزشیابی مرتبط با دروس نیز پاک خواهد شد.');
+    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید تمام دروس این سال تحصیلی را حذف کنید؟ تمام سوابق ارزشیابی مرتبط با دروس نیز پاک خواهد شد.');
     if (!confirm1) return;
 
-    const confirm2 = confirm('🚨 آخرین هشدار!\n\nاین عمل غیرقابل بازگشت است و تمام دروس برای همیشه حذف می‌شوند. آیا ۱۰۰٪ مطمئن هستید؟');
+    const confirm2 = confirm('🚨 آخرین هشدار!\n\nاین عمل غیرقابل بازگشت است و تمام دروس این سال برای همیشه حذف می‌شوند. آیا ۱۰۰٪ مطمئن هستید؟');
     if (!confirm2) return;
 
     try {
-        await clearStore('subjects');
-        await clearStore('records'); 
+        for (const sub of window.allSubjectsData) {
+            const allRecords = await getAllData('records');
+            const subRecords = allRecords.filter(r => r.subjectId === sub.id);
+            for (const rec of subRecords) {
+                await deleteData('records', rec.id);
+            }
+            await deleteData('subjects', sub.id);
+        }
         
-        showToast('تمام دروس و سوابق مرتبط با موفقیت حذف شدند.', 'success');
+        showToast('تمام دروس و سوابق مرتبط این سال تحصیلی حذف شدند.', 'success');
         loadAllData();
     } catch (e) {
         console.error(e);
