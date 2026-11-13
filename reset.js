@@ -30,11 +30,6 @@ async function resetYearlyRecords() {
     if (!doubleConfirm) return;
 
     try {
-        // ==========================================
-        // ✅ تغییر اصلی: پاک کردن فقط رکوردهای مربوط به سال تحصیلی جاری
-        // (نه کل جدول، تا در آینده که چند ساله شد، به سال‌های دیگر آسیب نزند)
-        // ==========================================
-        
         // ۱. حذف سوابق ارزشیابی سال تحصیلی جاری
         const allRecords = await getAllData('records');
         const currentYearRecords = allRecords.filter(r => r.academicYear === currentYear);
@@ -87,7 +82,6 @@ async function resetYearlyRecords() {
 async function resetGroupAssignments() {
     const currentYear = window.activeAcademicYear || '1405-1406';
     
-    // بررسی اینکه آیا اصلاً دانش‌آموزی در سال جاری گروه‌بندی شده است؟
     const hasAssignedStudents = window.allStudentsData.some(
         st => st.groupId !== null && st.groupId !== undefined
     );
@@ -97,7 +91,6 @@ async function resetGroupAssignments() {
         return;
     }
 
-    // ✅ پیام تأیید شفاف‌تر
     const confirmMessage = 
         `⚠️ هشدار:\n\n` +
         `شما در حال خارج کردن تمام دانش‌آموزان از گروه‌ها هستید.\n\n` +
@@ -115,7 +108,6 @@ async function resetGroupAssignments() {
         let unassignedCount = 0;
         
         for (const student of allStudents) {
-            // ✅ فقط دانش‌آموزان سال جاری (یا بدون سال برای سازگاری با نسخه قدیمی)
             const belongsToCurrentYear = 
                 !student.academicYear || student.academicYear === currentYear;
             
@@ -194,7 +186,6 @@ async function resetFactoryAll() {
             await clearStore(store);
         }
         
-        // پاک کردن تمام حافظه محلی
         localStorage.clear();
         
         showToast('برنامه با موفقیت بازنشانی شد. در حال راه‌اندازی مجدد...', 'info');
@@ -237,7 +228,8 @@ function populateResetSelect() {
     if (window.allSubjectsData && window.allSubjectsData.length > 0) {
         html += '<optgroup label="📚 دروس (حذف تمام سوابق درس)">';
         window.allSubjectsData.forEach(s => {
-            html += `<option value="subject_${s.id}">📚 ${s.symbol || ''} ${s.name}</option>`;
+            // ✅ اصلاح امنیتی: escape نام و نماد درس
+            html += `<option value="subject_${s.id}">📚 ${escapeHtml(s.symbol || '')} ${escapeHtml(s.name)}</option>`;
         });
         html += '</optgroup>';
     }
@@ -246,7 +238,8 @@ function populateResetSelect() {
     
     if (window.allAssessmentItems) {
         window.allAssessmentItems.forEach(i => {
-            html += `<option value="item_${i.title}">🎯 ${i.title}</option>`;
+            // ✅ اصلاح امنیتی: escape عنوان آیتم (هم در value و هم در متن)
+            html += `<option value="item_${escapeHtml(i.title)}">🎯 ${escapeHtml(i.title)}</option>`;
         });
     }
     
@@ -258,3 +251,5 @@ function populateResetSelect() {
     
     select.innerHTML = html;
 }
+
+// ✅ پایان فایل reset.js
