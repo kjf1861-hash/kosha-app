@@ -819,7 +819,7 @@ function loadAssessmentRecords() {
     let filteredRecords = window.allRecordsData.filter(rec => {
         if (filterSubject && rec.subjectId != filterSubject) return false;
         if (filterStudent && (!rec.students || !rec.students.includes(parseInt(filterStudent)))) return false;
-        if (searchText && !rec.title.includes(searchText)) return false;
+        if (searchText && (!rec.title || !rec.title.includes(searchText))) return false;
         return true;
     });
 
