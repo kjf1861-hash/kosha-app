@@ -973,12 +973,15 @@
         initTheme();
 
         function openSettingsModal() {
-            document.getElementById('settings-modal').classList.add('show');
-            if (typeof populateResetSelect === 'function') populateResetSelect();
-            if (typeof populateScheduleDaysCheckboxes === 'function') populateScheduleDaysCheckboxes();
-            if (typeof checkBackupReminder === 'function') checkBackupReminder();
-            if (typeof initBackupSettingsForm === 'function') initBackupSettingsForm();
-        }
+    document.getElementById('settings-modal').classList.add('show');
+    if (typeof populateResetSelect === 'function') populateResetSelect();
+    if (typeof populateScheduleDaysCheckboxes === 'function') populateScheduleDaysCheckboxes();
+    if (typeof checkBackupReminder === 'function') checkBackupReminder();
+    if (typeof initBackupSettingsForm === 'function') initBackupSettingsForm();
+    
+    // *** ✅ خط جدید: پر کردن فرم مشخصات کلاس از دیتابیس ***
+    if (typeof populateClassSettingsForm === 'function') populateClassSettingsForm();
+}
         function closeSettingsModal() {
             document.getElementById('settings-modal').classList.remove('show');
         }
