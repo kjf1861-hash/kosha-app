@@ -963,17 +963,32 @@ function changeAttReportFilter(filter, btn) {
     generateAttendanceReports();
 }
 
-async function generateAttendanceReports() {
+function generateAttendanceReports() {
     const container = document.getElementById('attendance-reports-list');
     const tsc = document.getElementById('total-sessions-count');
     if (!container || !tsc) return;
     
     tsc.textContent = toPersianNumber(window.allSessionsData.length);
-    if (window.allStudentsData.length === 0) { container.innerHTML = '<p style="text-align:center;">لیست خالی است.</p>'; return; }
+    if (window.allStudentsData.length === 0) { 
+        container.innerHTML = '<p style="text-align:center;">لیست خالی است.</p>'; 
+        return; 
+    }
     
+    // ✅ استفاده از کش
+    if (!window._cacheStudentAttendance && typeof buildScoreCaches === 'function') {
+        buildScoreCaches();
+    }
+    const attCache = window._cacheStudentAttendance || {};
+    
+    // ✅ محاسبه یک‌باره جمع کل (به جای حلقه سه‌گانه)
     let tp = 0, ta = 0, tl = 0;
-    window.allAttendanceData.forEach(att => { if (att.status === 'present') tp++; else if (att.status === 'absent') ta++; else if (att.status === 'late') tl++; });
+    for (const stId in attCache) {
+        tp += attCache[stId].present;
+        ta += attCache[stId].absent;
+        tl += attCache[stId].late;
+    }
     const tall = tp + ta + tl;
+    
     let html = '';
     
     if (tall > 0) {
@@ -983,27 +998,43 @@ async function generateAttendanceReports() {
     
     if (currentAttReportFilter === 'class') {
         html += '<h3 style="margin-bottom: 15px;">👦 گزارش حضور کلاسی</h3>';
-        window.allStudentsData.forEach(st => {
-            let p = 0, a = 0, l = 0;
-            window.allAttendanceData.forEach(att => { 
-                if (att.studentId === st.id) { 
-                    if (att.status === 'present') p++; 
-                    else if (att.status === 'absent') a++; 
-                    else if (att.status === 'late') l++; 
-                } 
-            });
-            const g = window.allGroupsData.find(x => x.id === st.groupId);
-            const badge = g ? `<span class="group-label" style="margin-right:5px;">${g.symbol} ${g.name}</span>` : '';
-            html += `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px;"><div style="display: flex; justify-content: space-between; align-items: center;"><div style="font-weight: bold; font-size: 1.05rem;">${st.firstName} ${st.lastName} ${badge}</div></div><div style="display: flex; gap: 5px; flex-wrap: wrap;"><span class="att-report-badge present">حاضر: ${toPersianNumber(p)}</span><span class="att-report-badge absent">غایب: ${toPersianNumber(a)}</span><span class="att-report-badge late">تأخیر: ${toPersianNumber(l)}</span></div></div>`;
-        });
+        
+        // ✅ نقشه گروه (یک بار)
+        const groupMap = {};
+        for (const g of window.allGroupsData) groupMap[g.id] = g;
+        
+        for (const st of window.allStudentsData) {
+            const bucket = attCache[st.id] || { present: 0, absent: 0, late: 0 };
+            const g = groupMap[st.groupId];
+            const badge = g ? `<span class="group-label" style="margin-right:5px;">${escapeHtml(g.symbol)} ${escapeHtml(g.name)}</span>` : '';
+            html += `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px;"><div style="display: flex; justify-content: space-between; align-items: center;"><div style="font-weight: bold; font-size: 1.05rem;">${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)} ${badge}</div></div><div style="display: flex; gap: 5px; flex-wrap: wrap;"><span class="att-report-badge present">حاضر: ${toPersianNumber(bucket.present)}</span><span class="att-report-badge absent">غایب: ${toPersianNumber(bucket.absent)}</span><span class="att-report-badge late">تأخیر: ${toPersianNumber(bucket.late)}</span></div></div>`;
+        }
     } else {
         html += '<h3 style="margin-bottom: 15px;">👥 گزارش حضور گروهی</h3>';
-        window.allGroupsData.forEach(g => {
-            let p = 0, a = 0, l = 0;
-            const gs = window.allStudentsData.filter(s => s.groupId === g.id), gsi = gs.map(s => s.id);
-            window.allAttendanceData.forEach(att => { if (gsi.includes(att.studentId)) { if (att.status === 'present') p++; else if (att.status === 'absent') a++; else if (att.status === 'late') l++; } });
-            html += `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px;"><div style="font-weight: bold; font-size: 1.05rem;">${g.symbol} ${g.name} (${toPersianNumber(gs.length)} نفر)</div><div style="display: flex; gap: 5px; flex-wrap: wrap;"><span class="att-report-badge present">حاضر: ${toPersianNumber(p)}</span><span class="att-report-badge absent">غایب: ${toPersianNumber(a)}</span><span class="att-report-badge late">تأخیر: ${toPersianNumber(l)}</span></div></div>`;
-        });
+        
+        // ✅ جمع‌بندی گروه‌ها با یک حلقه روی دانش‌آموزان (نه سه حلقه تودرتو)
+        const groupTotals = {};
+        const groupStudentCount = {};
+        for (const g of window.allGroupsData) {
+            groupTotals[g.id] = { present: 0, absent: 0, late: 0 };
+            groupStudentCount[g.id] = 0;
+        }
+        for (const st of window.allStudentsData) {
+            if (!st.groupId || !groupTotals[st.groupId]) continue;
+            groupStudentCount[st.groupId]++;
+            const bucket = attCache[st.id];
+            if (bucket) {
+                groupTotals[st.groupId].present += bucket.present;
+                groupTotals[st.groupId].absent += bucket.absent;
+                groupTotals[st.groupId].late += bucket.late;
+            }
+        }
+        
+        for (const g of window.allGroupsData) {
+            const tot = groupTotals[g.id];
+            const count = groupStudentCount[g.id];
+            html += `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px;"><div style="font-weight: bold; font-size: 1.05rem;">${escapeHtml(g.symbol)} ${escapeHtml(g.name)} (${toPersianNumber(count)} نفر)</div><div style="display: flex; gap: 5px; flex-wrap: wrap;"><span class="att-report-badge present">حاضر: ${toPersianNumber(tot.present)}</span><span class="att-report-badge absent">غایب: ${toPersianNumber(tot.absent)}</span><span class="att-report-badge late">تأخیر: ${toPersianNumber(tot.late)}</span></div></div>`;
+        }
     }
     container.innerHTML = html;
 }
