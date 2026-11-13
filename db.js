@@ -380,3 +380,27 @@ async function getBackupSettings(year) {
         };
     }
 }
+
+// ✅ تابع جدید: دریافت مشخصات کلاس برای سال تحصیلی جاری
+async function getClassProfile(year) {
+    try {
+        // ۱. ابتدا تلاش می‌کنیم رکوردی با id برابر سال تحصیلی پیدا کنیم
+        let classData = await getDataById('classProfile', year);
+        if (classData) return classData;
+        
+        // ۲. اگر پیدا نشد، به دنبال رکورد قدیمی (id=1) می‌گردیم
+        const oldData = await getDataById('classProfile', 1);
+        if (oldData) {
+            // مهاجرت: رکورد قدیمی را به سال جدید منتقل می‌کنیم
+            oldData.id = year;
+            oldData.academicYear = year;
+            await saveData('classProfile', oldData);
+            return oldData;
+        }
+        
+        return null;
+    } catch (e) {
+        console.error('خطا در دریافت مشخصات کلاس:', e);
+        return null;
+    }
+}
