@@ -179,6 +179,14 @@ function initDB() {
 
 function saveData(storeName, data) {
     return new Promise((resolve, reject) => {
+        // ✅ اگر در حال ذخیره مشخصات کلاس هستیم، id را برابر سال تحصیلی قرار می‌دهیم
+        if (storeName === 'classProfile' && data) {
+            if (!data.academicYear) {
+                data.academicYear = window.activeAcademicYear || '1405-1406';
+            }
+            data.id = data.academicYear; // ✅ شناسه = سال تحصیلی
+        }
+        
         const transaction = db.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
         const request = store.put(data);
