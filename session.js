@@ -1,5 +1,5 @@
 // ==========================================
-// فایل session.js — منطق تب جلسه (نسخه اصلاح‌شده مرحله ۲)
+// فایل session.js — منطق تب جلسه (نسخه چندساله)
 // ==========================================
 
 let currentSessionId = null;
@@ -33,9 +33,6 @@ async function renderSessionData() {
     generateAttendanceReports();
 }
 
-// ==========================================
-// توابع جدید برای ذخیره و بازیابی وضعیت تقویم جلسات
-// ==========================================
 function saveSessionCalendarState() {
     try {
         localStorage.setItem('kosha-session-cal', JSON.stringify({
@@ -63,7 +60,7 @@ function loadSessionCalendarState(startYear, endYear) {
 }
 
 // ==========================================
-// 1. برنامه هفتگی جدید (جدول و ویرایش)
+// 1. برنامه هفتگی
 // ==========================================
 function toggleScheduleMode(mode) {
     currentScheduleMode = mode;
@@ -213,10 +210,18 @@ async function saveAllWeeklySchedules() {
     });
 
     try {
-        await clearStore('weeklySchedule');
+        // ✅ حذف برنامه‌های سال جاری و ذخیره مجدد
+        const currentYear = window.activeAcademicYear;
+        for (const sched of window.allWeeklyScheduleData) {
+            await deleteData('weeklySchedule', sched.day);
+        }
         
         for (const day in newSchedule) {
-            await saveData('weeklySchedule', { day: day, periods: newSchedule[day] });
+            await saveData('weeklySchedule', { 
+                day: day, 
+                periods: newSchedule[day],
+                academicYear: currentYear // ✅ سال تحصیلی جاری
+            });
         }
 
         showToast('برنامه هفتگی با موفقیت ذخیره شد!', 'success');
@@ -234,15 +239,17 @@ async function resetAllWeeklySchedules() {
         return;
     }
 
-    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید کل برنامه هفتگی را حذف کنید؟');
+    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید کل برنامه هفتگی این سال تحصیلی را حذف کنید؟');
     if (!confirm1) return;
 
     const confirm2 = confirm('🚨 آخرین هشدار!\n\nاین عمل غیرقابل بازگشت است. آیا ۱۰۰٪ مطمئن هستید؟');
     if (!confirm2) return;
 
     try {
-        await clearStore('weeklySchedule');
-        showToast('کل برنامه هفتگی با موفقیت حذف شد.', 'success');
+        for (const sched of window.allWeeklyScheduleData) {
+            await deleteData('weeklySchedule', sched.day);
+        }
+        showToast('کل برنامه هفتگی این سال تحصیلی حذف شد.', 'success');
         loadAllData();
     } catch (e) {
         console.error(e);
@@ -417,7 +424,6 @@ function printSchedule() {
 
 // ==========================================
 // 2. توابع تقویم شمسی
-// (این توابع حالا از jalali-utils.js می‌آیند)
 // ==========================================
 
 function initCalendar() {
@@ -696,13 +702,13 @@ async function createNewSession() {
 
     const allSessions = await getAllData('sessions');
     if (allSessions.find(s => s.date === selectedSessionDate && s.academicYear === window.activeAcademicYear)) {
-        showToast('این تاریخ قبلاً ثبت شده است.', 'error'); return;
+        showToast('این تاریخ قبلاً در این سال تحصیلی ثبت شده است.', 'error'); return;
     }
 
     await saveData('sessions', { 
         date: selectedSessionDate, 
         dayOfWeek: selectedSessionDayOfWeek,
-        academicYear: window.activeAcademicYear
+        academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
     });
     showToast('جلسه با موفقیت ثبت شد!', 'success');
     
@@ -714,9 +720,8 @@ async function editSessionDate(sessionId, currentDate) {
     if (newDate === null) return;
     const trimmed = newDate.trim();
     
-    // ✅ تغییر اصلی: استفاده از اعتبارسنجی هوشمند به جای regex ساده
     if (!window.isValidJalaliDateString(trimmed)) { 
-        showToast('تاریخ وارد شده معتبر نیست. لطفاً یک تاریخ واقعی (با در نظر گرفتن تعداد روزهای ماه) وارد کنید.', 'error'); 
+        showToast('تاریخ وارد شده معتبر نیست. لطفاً یک تاریخ واقعی وارد کنید.', 'error'); 
         return; 
     }
     
@@ -773,40 +778,6 @@ async function deleteSession(sessionId) {
     }
 }
 
-async function resetAllSessions() {
-    if (window.allSessionsData.length === 0) {
-        showToast('هیچ جلسه‌ای برای حذف وجود ندارد.', 'error');
-        return;
-    }
-
-    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید تمام جلسات سال تحصیلی جاری را حذف کنید؟');
-    if (!confirm1) return;
-
-    const confirm2 = confirm('🚨 آخرین هشدار!\n\nاین عمل غیرقابل بازگشت است. آیا ۱۰۰٪ مطمئن هستید؟');
-    if (!confirm2) return;
-
-    try {
-        for (const sess of window.allSessionsData) {
-            const atts = window.allAttendanceData.filter(a => a.sessionId === sess.id);
-            for (const att of atts) await deleteData('attendance', att.id);
-            await deleteData('sessions', sess.id);
-        }
-        
-        showToast('تمام جلسات سال جاری با موفقیت حذف شدند.', 'success');
-        selectedSessionDate = "";
-        selectedSessionDayOfWeek = "";
-        saveSessionCalendarState();
-        const actionArea = document.getElementById('sessionActionArea');
-        if (actionArea) actionArea.innerHTML = '';
-        const detectedDisplay = document.getElementById('detectedDayDisplay');
-        if (detectedDisplay) detectedDisplay.style.display = 'none';
-        loadAllData();
-    } catch (e) {
-        console.error(e);
-        showToast('خطا در حذف جلسات!', 'error');
-    }
-}
-
 // ==========================================
 // 4. مشاهده جزئیات جلسه و ثبت حضور و غیاب زنگ‌ها
 // ==========================================
@@ -826,7 +797,7 @@ async function openSessionDetails(sessionId) {
     if (modal) modal.classList.add('show');
 
     const schedules = await getAllData('weeklySchedule');
-    const schedule = schedules.find(s => s.day === session.dayOfWeek);
+    const schedule = schedules.find(s => s.day === session.dayOfWeek && s.academicYear === window.activeAcademicYear);
     
     if (!schedule || !schedule.periods || !schedule.periods.some(p => p !== null && p !== undefined)) {
         if (contentEl) contentEl.innerHTML = '<p style="text-align:center; color:red;">برنامه‌ای برای این روز تعریف نشده است.</p>';
@@ -926,7 +897,7 @@ async function saveAllSessionAttendance() {
                 periodNumber: parseInt(periodNum),
                 studentId: parseInt(studentId),
                 status: currentSessionAttendanceState[periodNum][studentId],
-                academicYear: window.activeAcademicYear
+                academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
             });
         }
     }
