@@ -22,27 +22,42 @@ async function saveClassProfile(e) {
     if (periodsCount > 6) periodsCount = 6;
 
     const classNameEl = document.getElementById('className');
-    const classSymbolEl = document.getElementById('classSymbol');
-    const classMottoEl = document.getElementById('classMotto');
-    const classGradeEl = document.getElementById('classGrade');
-    const teacherNameEl = document.getElementById('teacherName');
-    const schoolNameEl = document.getElementById('schoolName');
+const classSymbolEl = document.getElementById('classSymbol');
+const classMottoEl = document.getElementById('classMotto');
+const classGradeEl = document.getElementById('classGrade');
+const teacherNameEl = document.getElementById('teacherName');
+const schoolNameEl = document.getElementById('schoolName');
 
-    if (!classNameEl) return;
+if (!classNameEl) return;
 
-    const selectedYear = window.activeAcademicYear;
+const selectedYear = window.activeAcademicYear;
 
-    const data = {
-        name: classNameEl.value,
-        symbol: classSymbolEl ? classSymbolEl.value : '',
-        motto: classMottoEl ? classMottoEl.value : '',
-        grade: classGradeEl ? classGradeEl.value : '',
-        teacherName: teacherNameEl ? teacherNameEl.value : '',
-        schoolName: schoolNameEl ? schoolNameEl.value : '',
-        academicYear: selectedYear,
-        scheduleActiveDays: selectedDays,
-        schedulePeriodsCount: periodsCount
+let sanitizedData;
+try {
+    sanitizedData = {
+        name: sanitizeInput(classNameEl.value, 100),
+        symbol: classSymbolEl ? sanitizeInput(classSymbolEl.value, 10) : '',
+        motto: classMottoEl ? sanitizeInput(classMottoEl.value, 200) : '',
+        grade: classGradeEl ? sanitizeInput(classGradeEl.value, 50) : '',
+        teacherName: teacherNameEl ? sanitizeInput(teacherNameEl.value, 100) : '',
+        schoolName: schoolNameEl ? sanitizeInput(schoolNameEl.value, 150) : ''
     };
+} catch (err) {
+    showToast(err.message, 'error');
+    return;
+}
+
+const data = {
+    name: sanitizedData.name,
+    symbol: sanitizedData.symbol,
+    motto: sanitizedData.motto,
+    grade: sanitizedData.grade,
+    teacherName: sanitizedData.teacherName,
+    schoolName: sanitizedData.schoolName,
+    academicYear: selectedYear,
+    scheduleActiveDays: selectedDays,
+    schedulePeriodsCount: periodsCount
+};
     
     await saveData('classProfile', data);
     
@@ -229,7 +244,7 @@ function renderSubjectAveragesChart() {
         return `
             <div>
                 <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 4px;">
-                    <span>${sub.symbol || '📚'} ${sub.name}</span>
+                    <span>${escapeHtml(sub.symbol || '📚')} ${escapeHtml(sub.name)}</span>
                     <strong style="color: var(--primary);">${toPersianNumber(sub.total)} امتیاز</strong>
                 </div>
                 <div class="progress-bar-container">
@@ -264,7 +279,7 @@ function renderTopStudents(studentScores) {
             <div class="list-item top-student-row" style="padding: 12px 15px; margin-bottom: 8px;">
                 <div style="display:flex; align-items:center; gap:10px;">
                     <span class="medal-badge" style="font-size:1.5rem;">${medals[index]}</span>
-                    <span style="font-size: 1.1rem; font-weight: bold;">${st.firstName} ${st.lastName}</span>
+                    <span style="font-size: 1.1rem; font-weight: bold;">${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</span>
                     ${groupBadge}
                 </div>
                 <span class="rank-badge" style="background: var(--primary); color: white;">${toPersianNumber(st.totalScore)} امتیاز</span>
@@ -308,7 +323,7 @@ function renderTopGroups() {
         <div class="list-item" style="padding: 12px 15px; margin-bottom: 8px; border-right: 4px solid var(--primary);">
             <div style="display:flex; align-items:center; gap:10px;">
                 <span class="medal-badge" style="font-size:1.5rem;">${medals[index]}</span>
-                <span style="font-size:1.3rem;">${g.symbol}</span>
+                <span style="font-size: 1.1rem; font-weight: bold;">${escapeHtml(g.name)}</span>
                 <span style="font-size: 1.1rem; font-weight: bold;">${g.name}</span>
             </div>
             <span class="rank-badge">${toPersianNumber(g.totalScore)} امتیاز</span>
@@ -344,7 +359,7 @@ function renderNeedsAttention(studentScores) {
         <div class="list-item" style="padding: 12px 15px; background: rgba(255,255,255,0.5);">
             <div style="display:flex; align-items:center; gap:8px;">
                 <span style="font-size: 1.2rem;">⚠️</span>
-                <strong>${st.firstName} ${st.lastName}</strong>
+                <strong>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</strong>
             </div>
             <div style="display:flex; gap:8px; font-size: 0.85rem;">
                 <span class="rank-badge" style="background:#fee2e2; color:#b91c1c;">${toPersianNumber(st.totalScore)} امتیاز</span>
