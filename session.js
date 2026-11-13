@@ -135,13 +135,13 @@ function renderScheduleView() {
         for (let i = 0; i < maxPeriodToShow; i++) {
             const subId = periods[i];
             if (subId) {
-                const sub = window.allSubjectsData.find(s => s.id === subId);
-                if (sub) {
-                    html += `<td>${sub.symbol || ''} ${sub.name}</td>`;
-                } else {
-                    html += `<td class="empty-cell">-</td>`;
-                }
-            } else {
+    const sub = window.allSubjectsData.find(s => s.id === subId);
+    if (sub) {
+        html += `<td>${escapeHtml(sub.symbol || '')} ${escapeHtml(sub.name)}</td>`;
+    } else {
+        html += `<td class="empty-cell">-</td>`;
+    }
+} else {
                 html += `<td class="empty-cell">-</td>`;
             }
         }
@@ -853,8 +853,8 @@ function renderSessionDetails(schedule) {
         if (subId === null || subId === undefined) return;
         
         const periodNum = index + 1;
-        const subject = window.allSubjectsData.find(s => s.id === subId);
-        const subName = subject ? `${subject.symbol || ''} ${subject.name}` : 'نامشخص';
+const subject = window.allSubjectsData.find(s => s.id === subId);
+const subName = subject ? `${escapeHtml(subject.symbol || '')} ${escapeHtml(subject.name)}` : 'نامشخص';
 
         let sectionHtml = `
             <div class="session-period-section" id="session-period-${periodNum}">
