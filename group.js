@@ -21,16 +21,28 @@ async function saveGroup(e) {
     }
 
     const nameEl = document.getElementById('groupName');
-    const symbolEl = document.getElementById('groupSymbol');
-    const mottoEl = document.getElementById('groupMotto');
-    if (!nameEl || !symbolEl) return;
+const symbolEl = document.getElementById('groupSymbol');
+const mottoEl = document.getElementById('groupMotto');
+if (!nameEl || !symbolEl) return;
 
-    const data = { 
-        name: nameEl.value,
-        symbol: symbolEl.value,
-        motto: mottoEl ? mottoEl.value : '',
-        academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
+let sanitized;
+try {
+    sanitized = {
+        name: sanitizeInput(nameEl.value, 80),
+        symbol: sanitizeInput(symbolEl.value, 10),
+        motto: mottoEl ? sanitizeInput(mottoEl.value, 200) : ''
     };
+} catch (err) {
+    showToast(err.message, 'error');
+    return;
+}
+
+const data = { 
+    name: sanitized.name,
+    symbol: sanitized.symbol,
+    motto: sanitized.motto,
+    academicYear: window.activeAcademicYear
+};
     
     await saveData('groups', data);
     
@@ -103,10 +115,9 @@ function renderGroupsList() {
                         <span class="medal-badge" style="font-size:1.3rem;">${medal}</span>
                         <span style="font-size:1.5rem;">${g.symbol}</span>
                         <div>
-                            <strong>${g.name}</strong>
-                            <div style="font-size:0.8rem; color:var(--text-muted);">${toPersianNumber(studentCount)} دانش‌آموز</div>
-                        </div>
-                    </div>
+    <strong>${escapeHtml(g.name)}</strong>
+    <div style="font-size:0.8rem; color:var(--text-muted);">${escapeHtml(toPersianNumber(studentCount))} دانش‌آموز</div>
+</div>
                     <span class="rank-badge">${toPersianNumber(g.totalScore)} امتیاز</span>
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:5px; margin-top:5px; border-top:1px dashed var(--border-color); padding-top:10px;">
@@ -147,14 +158,26 @@ async function saveEditedGroup(e) {
     const id = parseInt(idEl.value);
     
     const existing = await getDataById('groups', id);
-    
-    const data = {
-        id: id,
-        name: document.getElementById('editGroupNameModal').value,
-        symbol: document.getElementById('editGroupSymbolModal').value,
-        motto: document.getElementById('editGroupMottoModal').value,
-        academicYear: existing ? existing.academicYear : window.activeAcademicYear // ✅ حفظ سال تحصیلی
+
+let sanitized;
+try {
+    sanitized = {
+        name: sanitizeInput(document.getElementById('editGroupNameModal').value, 80),
+        symbol: sanitizeInput(document.getElementById('editGroupSymbolModal').value, 10),
+        motto: sanitizeInput(document.getElementById('editGroupMottoModal').value, 200)
     };
+} catch (err) {
+    showToast(err.message, 'error');
+    return;
+}
+
+const data = {
+    id: id,
+    name: sanitized.name,
+    symbol: sanitized.symbol,
+    motto: sanitized.motto,
+    academicYear: existing ? existing.academicYear : window.activeAcademicYear
+};
     
     await saveData('groups', data);
     showToast('گروه با موفقیت ویرایش شد!', 'success');
@@ -283,7 +306,7 @@ function renderGroupDetails() {
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="font-weight:bold; color:var(--text-muted); min-width:25px;">${toPersianNumber(index + 1)}.</span>
                     <span class="medal-badge" style="font-size:1.2rem;">${medal}</span>
-                    <strong>${st.firstName} ${st.lastName}</strong>
+                    <strong>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</strong>
                 </div>
                 <div style="display:flex; align-items:center; gap:5px;">
                     <span class="rank-badge" style="font-size:0.9rem;">${toPersianNumber(st.totalScore)} امتیاز</span>
