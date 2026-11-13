@@ -95,6 +95,18 @@ function sanitizeInput(value, maxLength) {
 window.escapeHtml = escapeHtml;
 window.sanitizeInput = sanitizeInput;
 
+// ==========================================
+// ✅ تابع تولید شناسه یکتا (جلوگیری از تداخل)
+// ==========================================
+function generateUniqueId() {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+    // روش جایگزین برای مرورگرهای قدیمی
+    return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
+}
+window.generateUniqueId = generateUniqueId;
+
 function validateNationalId(nationalId) {
     if (!/^\d{10}$/.test(nationalId)) return false;
     if (/^(\d)\1{9}$/.test(nationalId)) return false;
@@ -1182,7 +1194,7 @@ let itemData = { title, type, academicYear: window.activeAcademicYear };
 if (id) {
     itemData.id = id;
 } else {
-    itemData.id = `${window.activeAcademicYear}_${Date.now()}`;
+    itemData.id = `${window.activeAcademicYear}_${generateUniqueId()}`;
 }
     
     if (type === 'level') {
