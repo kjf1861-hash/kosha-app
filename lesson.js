@@ -211,6 +211,16 @@ function renderLessonDetails() {
 
     const subjectRecords = window.allRecordsData.filter(r => r.subjectId === currentLessonDetailsId);
 
+    // ✅ محاسبه یک‌باره امتیاز هر دانش‌آموز در این درس
+    const studentSubjectScores = {};
+    for (const rec of subjectRecords) {
+        if (!rec.students || !Array.isArray(rec.students)) continue;
+        const score = Number(rec.finalScore) || 0;
+        for (const stId of rec.students) {
+            studentSubjectScores[stId] = (studentSubjectScores[stId] || 0) + score;
+        }
+    }
+
     const processRanking = (items) => {
         items.sort((a, b) => {
             if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
@@ -223,37 +233,36 @@ function renderLessonDetails() {
         const bronzeScore = uniqueScores.length > 2 ? uniqueScores[2] : -1;
 
         let html = '';
-        items.forEach((item, index) => {
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
             let medal = '';
             if (item.totalScore === goldScore) medal = '🥇';
             else if (item.totalScore === silverScore) medal = '🥈';
             else if (item.totalScore === bronzeScore) medal = '🥉';
 
-            const rankNum = index + 1;
-            
             html += `
                 <div class="list-item" style="padding: 10px 15px;">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-weight:bold; color:var(--text-muted); min-width:20px;">${toPersianNumber(rankNum)}.</span>
+                        <span style="font-weight:bold; color:var(--text-muted); min-width:20px;">${toPersianNumber(i + 1)}.</span>
                         <span class="medal-badge">${medal}</span>
-                        <strong>${item.name}</strong>
+                        <strong>${escapeHtml(item.name)}</strong>
                         ${item.badgeHtml || ''}
                     </div>
                     <span class="rank-badge">${toPersianNumber(item.totalScore)} امتیاز</span>
                 </div>
             `;
-        });
+        }
         return html;
     };
 
     if (currentLessonDetailView === 'class') {
-        const studentScores = window.allStudentsData.map(st => {
-            let total = 0;
-            subjectRecords.forEach(rec => {
-                if (rec.students && rec.students.includes(st.id)) total += rec.finalScore;
-            });
-            return { id: st.id, name: `${st.firstName} ${st.lastName}`, totalScore: total, badgeHtml: '' };
-        });
+        // ✅ خواندن از نقشه (نه حلقه روی رکوردها برای هر دانش‌آموز)
+        const studentScores = window.allStudentsData.map(st => ({
+            id: st.id,
+            name: `${st.firstName} ${st.lastName}`,
+            totalScore: studentSubjectScores[st.id] || 0,
+            badgeHtml: ''
+        }));
 
         if (studentScores.length === 0) {
             container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ دانش‌آموزی وجود ندارد.</p>';
@@ -262,20 +271,27 @@ function renderLessonDetails() {
         container.innerHTML = processRanking(studentScores);
 
     } else {
+        // ✅ ساخت نقشه گروه → دانش‌آموزان (یک بار)
+        const groupStudentMap = {};
+        for (const st of window.allStudentsData) {
+            if (!st.groupId) continue;
+            if (!groupStudentMap[st.groupId]) groupStudentMap[st.groupId] = [];
+            groupStudentMap[st.groupId].push(st);
+        }
+
         const groupData = window.allGroupsData.map(g => {
-            const groupStudents = window.allStudentsData.filter(st => st.groupId === g.id);
+            const groupStudents = groupStudentMap[g.id] || [];
             let groupTotal = 0;
             
             const studentScores = groupStudents.map(st => {
-                let total = 0;
-                subjectRecords.forEach(rec => {
-                    if (rec.students && rec.students.includes(st.id)) total += rec.finalScore;
-                });
-                groupTotal += total;
-                return { id: st.id, name: `${st.firstName} ${st.lastName}`, totalScore: total, badgeHtml: '' };
+                const score = studentSubjectScores[st.id] || 0;
+                groupTotal += score;
+                return { id: st.id, name: `${st.firstName} ${st.lastName}`, totalScore: score, badgeHtml: '' };
             });
 
-            const studentsHtml = studentScores.length > 0 ? processRanking(studentScores) : '<p style="font-size:0.8rem; color:#64748b; text-align:center;">دانش‌آموزی ندارد.</p>';
+            const studentsHtml = studentScores.length > 0 
+                ? processRanking(studentScores) 
+                : '<p style="font-size:0.8rem; color:#64748b; text-align:center;">دانش‌آموزی ندارد.</p>';
 
             return { id: g.id, name: `${g.symbol} ${g.name}`, totalScore: groupTotal, studentsHtml: studentsHtml };
         });
@@ -291,7 +307,8 @@ function renderLessonDetails() {
         });
 
         let finalHtml = '';
-        groupData.forEach((g, index) => {
+        for (let i = 0; i < groupData.length; i++) {
+            const g = groupData[i];
             let medal = '';
             if (g.totalScore === goldG) medal = '🥇';
             else if (g.totalScore === silverG) medal = '🥈';
@@ -301,9 +318,9 @@ function renderLessonDetails() {
                 <div class="card" style="margin-bottom: 15px; padding: 15px; background: var(--input-bg); border: 1px solid var(--border-color);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px dashed var(--border-color); padding-bottom:10px;">
                         <div style="display:flex; align-items:center; gap:8px;">
-                            <span style="font-weight:bold; color:var(--text-muted);">${toPersianNumber(index + 1)}.</span>
+                            <span style="font-weight:bold; color:var(--text-muted);">${toPersianNumber(i + 1)}.</span>
                             <span class="medal-badge" style="font-size:1.5rem;">${medal}</span>
-                            <strong style="color:var(--primary); font-size:1.1rem;">${g.name}</strong>
+                            <strong style="color:var(--primary); font-size:1.1rem;">${escapeHtml(g.name)}</strong>
                         </div>
                         <span class="rank-badge">${toPersianNumber(g.totalScore)} امتیاز کل</span>
                     </div>
@@ -312,7 +329,7 @@ function renderLessonDetails() {
                     </div>
                 </div>
             `;
-        });
+        }
 
         if (groupData.length === 0) {
             container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ گروهی وجود ندارد.</p>';
