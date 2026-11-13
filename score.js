@@ -935,7 +935,7 @@ async function openEditRecordModal(id) {
                 container.innerHTML += `
                     <label class="student-checkbox-item">
                         <input type="checkbox" class="edit-student-checkbox" value="${st.id}" ${isChecked}>
-                        <div class="student-checkbox-item-content"><span>${st.firstName} ${st.lastName}</span>${badge}</div>
+                        <div class="student-checkbox-item-content"><span>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</span>${badge}</div>
                     </label>
                 `;
             });
@@ -1021,10 +1021,6 @@ async function saveEditedRecord(event) {
         showToast('خطا در ذخیره.', 'error'); 
     }
 }
-
-// ==========================================
-// توابع تکمیلی و کمکی
-// ==========================================
 
 function clearRecordFilters() {
     const el1 = document.getElementById('recordsFilterSubject');
