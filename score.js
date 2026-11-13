@@ -107,7 +107,6 @@ function renderScoreData() {
 
 // ==========================================
 // توابع تقویم شمسی تب امتیاز
-// (این توابع حالا از jalali-utils.js می‌آیند)
 // ==========================================
 
 function initScoreCalendars() {
@@ -338,7 +337,6 @@ function resetScoreCalendar(type) {
 
     renderScoreCalendar(type);
 }
-
 // ==========================================
 // مدیریت انتخاب دانش‌آموزان
 // ==========================================
@@ -606,6 +604,10 @@ function closePreviewModal() {
     if (modal) modal.classList.remove('show'); 
 }
 
+// ==========================================
+// ✅ تابع اصلاح‌شده: confirmAndSaveRecord
+// تغییر اصلی: در حالت "ثبت و نفر بعدی"، فقط چک‌باکس‌ها و امتیاز پاک می‌شوند
+// ==========================================
 async function confirmAndSaveRecord() {
     if (!window.tempRecordData) return;
     try {
@@ -618,13 +620,22 @@ async function confirmAndSaveRecord() {
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
         if (isSaveAndNext) {
+            // ✅ حالت «ثبت و نفر بعدی»: فقط دانش‌آموزان و امتیاز پاک می‌شوند
+            // فیلدهای درس، عنوان، آیتم ارزشیابی و تاریخ حفظ می‌شوند
             document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.group-select-all-checkbox').forEach(cb => cb.checked = false);
+            
             const scoreInput = document.getElementById('dynamicLevelInput') || document.getElementById('dynamicCountInput') || document.getElementById('dynamicFreeInput');
             if (scoreInput) scoreInput.value = '';
+            
+            // اسکرول به بالای فرم برای ثبت نفر بعدی
             const recordForm = document.getElementById('record-form');
             if (recordForm) recordForm.scrollIntoView({ behavior: 'smooth' });
+            
+            // بارگذاری مجدد داده‌ها (برای به‌روزرسانی آمار و لیست)
             loadAllData(); 
         } else {
+            // ✅ حالت «ثبت نهایی»: کل فرم ریست می‌شود (رفتار قبلی)
             const recordForm = document.getElementById('record-form');
             if (recordForm) recordForm.reset(); 
             resetScoreCalendar('record');
@@ -1019,6 +1030,220 @@ async function loadQuranRewards() {
         }
         container.innerHTML = html;
     } catch (e) { container.innerHTML = '<p style="color:red;">خطا</p>'; }
+}
+
+async function exportScoreCSV() {
+    try {
+        let csvContent = "ردیف,عنوان,درس,آیتم,تاریخ,امتیاز,ارفاق\r\n";
+        const sorted = [...window.allRecordsData].sort((a, b) => b.date.localeCompare(a.date));
+        
+        sorted.forEach((rec, i) => {
+            const s = window.allSubjectsData.find(x => x.id === rec.subjectId); 
+            const sn = s ? s.name : 'بدون درس';
+            csvContent += `${i + 1},"${rec.title}","${sn}","${rec.itemName}","${rec.date}",${rec.finalScore},"${rec.arf ? 'دارد' : 'ندارد'}"\r\n`;
+        });
+
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); 
+        a.href = url; 
+        a.download = `kosha_records_${new Date().toISOString().slice(0,10)}.csv`; 
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('فایل CSV سوابق دانلود شد!', 'success');
+    } catch (e) { 
+        console.error(e); 
+        showToast('خطا در تولید فایل.', 'error'); 
+    }
+}
+// ==========================================
+// توابع تکمیلی و کمکی
+// ==========================================
+
+function clearRecordFilters() {
+    const el1 = document.getElementById('recordsFilterSubject');
+    const el2 = document.getElementById('recordsFilterStudent');
+    const el3 = document.getElementById('recordsSearchText');
+    if (el1) el1.value = '';
+    if (el2) el2.value = '';
+    if (el3) el3.value = '';
+    currentPage.records = 1;
+    loadAssessmentRecords();
+}
+
+async function deleteRecord(id) {
+    if (!confirm('آیا از حذف این رکورد مطمئن هستید؟')) return;
+    try { 
+        await deleteData('records', id); 
+        showToast('رکورد حذف شد.', 'success'); 
+        loadAllData(); 
+    } catch (e) { 
+        console.error(e); 
+        showToast('خطا در حذف رکورد.', 'error'); 
+    }
+}
+
+async function openEditRecordModal(id) {
+    try {
+        const record = await getDataById('records', id);
+        if (!record) return;
+        
+        const editId = document.getElementById('editRecordId');
+        if (editId) editId.value = record.id;
+        const editTitle = document.getElementById('editRecordTitle');
+        if (editTitle) editTitle.value = record.title;
+        const editDate = document.getElementById('editRecordDate');
+        if (editDate) editDate.value = record.date;
+        const editScore = document.getElementById('editRecordScore');
+        if (editScore) editScore.value = record.finalScore;
+        
+        const subjectSelect = document.getElementById('editRecordSubject');
+        const itemSelect = document.getElementById('editRecordItem');
+
+        if (subjectSelect && itemSelect) {
+            if (record.subjectId && record.itemName !== "پویش حفظ جزء سی قرآن کریم" && record.itemName !== "تشویق ویژه" && record.itemName !== "تشویق خوش‌خط‌نویسی") {
+                subjectSelect.value = record.subjectId;
+                const itemInList = window.allAssessmentItems.find(i => i.title === record.itemName);
+                if (itemInList) itemSelect.value = itemInList.id;
+                subjectSelect.disabled = false;
+                itemSelect.disabled = false;
+            } else {
+                subjectSelect.value = '';
+                itemSelect.value = '';
+                subjectSelect.disabled = true;
+                itemSelect.disabled = true;
+            }
+        }
+        
+        const container = document.getElementById('edit-record-students-container');
+        if (container) {
+            container.innerHTML = '';
+            window.allStudentsData.forEach(st => {
+                const g = window.allGroupsData.find(x => x.id === st.groupId);
+                const badge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
+                const isChecked = record.students.includes(st.id) ? 'checked' : '';
+                container.innerHTML += `
+                    <label class="student-checkbox-item">
+                        <input type="checkbox" class="edit-student-checkbox" value="${st.id}" ${isChecked}>
+                        <div class="student-checkbox-item-content"><span>${st.firstName} ${st.lastName}</span>${badge}</div>
+                    </label>
+                `;
+            });
+        }
+
+        const modal = document.getElementById('edit-record-modal');
+        if (modal) modal.classList.add('show');
+    } catch (e) { 
+        console.error(e); 
+        showToast('خطا در باز کردن فرم ویرایش.', 'error'); 
+    }
+}
+
+function closeEditModal() { 
+    const modal = document.getElementById('edit-record-modal');
+    if (modal) modal.classList.remove('show'); 
+    
+    // *** پاک کردن وضعیت Dirty بعد از بستن مودال ***
+    if (typeof clearFormDirty === 'function') clearFormDirty();
+}
+
+async function saveEditedRecord(event) {
+    if(event) event.preventDefault();
+    const id = parseInt(document.getElementById('editRecordId').value);
+    const subjectSelect = document.getElementById('editRecordSubject');
+    const itemSelect = document.getElementById('editRecordItem');
+    
+    const subjectId = (subjectSelect.value) ? parseInt(subjectSelect.value) : null;
+    const itemId = itemSelect.value;
+    const newTitle = document.getElementById('editRecordTitle').value;
+    const newDate = document.getElementById('editRecordDate').value.trim();
+    const newScore = parseInt(document.getElementById('editRecordScore').value);
+    
+    const studentCheckboxes = document.querySelectorAll('.edit-student-checkbox:checked');
+    const students = Array.from(studentCheckboxes).map(cb => parseInt(cb.value));
+
+    let itemName = '';
+    if (subjectId !== null && itemId) {
+        const selectedItem = window.allAssessmentItems.find(i => i.id == itemId);
+        itemName = selectedItem ? selectedItem.title : '';
+    }
+
+    // اعتبارسنجی هوشمند تاریخ
+    if (!window.isValidJalaliDateString(newDate)) {
+        showToast('تاریخ وارد شده معتبر نیست. لطفاً یک تاریخ واقعی وارد کنید.', 'error');
+        return;
+    }
+
+    if (!newTitle || isNaN(newScore)) { 
+        showToast('لطفاً عنوان و امتیاز را پر کنید.', 'error'); return; 
+    }
+    if (students.length === 0) {
+        showToast('حداقل یک دانش‌آموز را انتخاب کنید.', 'error'); return;
+    }
+
+    try {
+        const record = await getDataById('records', id);
+        if (!record) {
+            showToast('رکورد یافت نشد.', 'error');
+            return;
+        }
+        
+        if (subjectId !== null && itemName) {
+            record.subjectId = subjectId;
+            record.itemName = itemName;
+        } else {
+            record.subjectId = null;
+        }
+        
+        record.title = newTitle; 
+        record.date = newDate; 
+        record.finalScore = newScore;
+        record.students = students;
+        record.academicYear = window.activeAcademicYear;
+        
+        await saveData('records', record);
+        showToast('رکورد با موفقیت ویرایش شد.', 'success');
+        
+        // *** پاک کردن وضعیت Dirty ***
+        if (typeof clearFormDirty === 'function') clearFormDirty();
+        
+        closeEditModal(); 
+        loadAllData();
+    } catch (e) { 
+        console.error(e); 
+        showToast('خطا در ذخیره.', 'error'); 
+    }
+}
+
+async function loadQuranRewards() {
+    const container = document.getElementById('quran-rewards-list');
+    if (!container) return;
+    try {
+        const allBadges = await getAllData('badgesSettings');
+        const quranRewards = allBadges.filter(b => b.id && b.id.startsWith('quranReward_') && b.academicYear === window.activeAcademicYear);
+        
+        if (quranRewards.length === 0) { 
+            container.innerHTML = '<p style="color:#64748b; text-align:center;">هنوز تشویقی صادر نشده است.</p>'; 
+            return; 
+        }
+        
+        const grouped = {};
+        quranRewards.forEach(reward => { 
+            if (!grouped[reward.studentId]) grouped[reward.studentId] = []; 
+            grouped[reward.studentId].push(reward); 
+        });
+        
+        let html = '';
+        for (const studentId in grouped) {
+            const student = window.allStudentsData.find(s => s.id == studentId);
+            const studentName = student ? `${student.firstName} ${student.lastName}` : `دانش‌آموز ${toPersianNumber(studentId)}`;
+            const latest = grouped[studentId][grouped[studentId].length - 1];
+            html += `<div class="list-item" style="flex-direction: column; align-items: flex-start; padding: 15px; background: var(--arf-bg); border-right: 4px solid var(--arf-border); margin-bottom: 10px;"><strong style="font-size: 1.1rem;">🏅 ${studentName}</strong><span style="font-size: 0.9rem; color: var(--arf-border);">تعداد سوره‌ها: ${toPersianNumber(latest.totalSurahs)} | تعداد آیات: ${toPersianNumber(latest.totalAyats)}</span></div>`;
+        }
+        container.innerHTML = html;
+    } catch (e) { 
+        container.innerHTML = '<p style="color:red;">خطا</p>'; 
+    }
 }
 
 async function exportScoreCSV() {
