@@ -37,6 +37,9 @@ async function saveGroup(e) {
     if (form) form.reset();
     showToast('گروه جدید با موفقیت ثبت شد!', 'success');
     loadAllData();
+    
+    // ✅ اسکرول آرام به بالای فرم
+    if (form) form.scrollIntoView({ behavior: 'smooth' });
 }
 
 function renderGroupData() {
@@ -182,7 +185,7 @@ function openGroupDetails(id) {
     if (titleEl) titleEl.textContent = `📊 جزئیات گروه: ${group.symbol} ${group.name}`;
     
     populateModalStudentSelect(); 
-    
+
     renderGroupDetails();
     const modal = document.getElementById('group-details-modal');
     if (modal) modal.classList.add('show');
@@ -225,7 +228,7 @@ async function assignStudentFromModal() {
             showToast('دانش‌آموز با موفقیت به گروه اضافه شد.', 'success');
             
             await loadAllData(); 
-            
+
             populateModalStudentSelect(); 
             renderGroupDetails(); 
         }
