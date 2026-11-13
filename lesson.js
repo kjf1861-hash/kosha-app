@@ -17,12 +17,24 @@ async function saveLesson(e) {
         return;
     }
 
-    const data = { 
-        name: document.getElementById('lessonName').value,
-        symbol: document.getElementById('lessonSymbol').value,
-        motto: document.getElementById('lessonMotto').value,
-        academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
+    let sanitized;
+try {
+    sanitized = {
+        name: sanitizeInput(document.getElementById('lessonName').value, 80),
+        symbol: sanitizeInput(document.getElementById('lessonSymbol').value, 10),
+        motto: sanitizeInput(document.getElementById('lessonMotto').value, 200)
     };
+} catch (err) {
+    showToast(err.message, 'error');
+    return;
+}
+
+const data = { 
+    name: sanitized.name,
+    symbol: sanitized.symbol,
+    motto: sanitized.motto,
+    academicYear: window.activeAcademicYear
+};
     
     await saveData('subjects', data);
     
@@ -54,14 +66,26 @@ async function saveEditedLesson(e) {
     const id = parseInt(document.getElementById('editLessonIdModal').value);
     
     const existing = await getDataById('subjects', id);
-    
-    const data = {
-        id: id,
-        name: document.getElementById('editLessonNameModal').value,
-        symbol: document.getElementById('editLessonSymbolModal').value,
-        motto: document.getElementById('editLessonMottoModal').value,
-        academicYear: existing ? existing.academicYear : window.activeAcademicYear // ✅ حفظ سال تحصیلی
+
+let sanitized;
+try {
+    sanitized = {
+        name: sanitizeInput(document.getElementById('editLessonNameModal').value, 80),
+        symbol: sanitizeInput(document.getElementById('editLessonSymbolModal').value, 10),
+        motto: sanitizeInput(document.getElementById('editLessonMottoModal').value, 200)
     };
+} catch (err) {
+    showToast(err.message, 'error');
+    return;
+}
+
+const data = {
+    id: id,
+    name: sanitized.name,
+    symbol: sanitized.symbol,
+    motto: sanitized.motto,
+    academicYear: existing ? existing.academicYear : window.activeAcademicYear
+};
     
     await saveData('subjects', data);
     showToast('درس با موفقیت ویرایش شد!', 'success');
@@ -95,9 +119,9 @@ function renderLessonData() {
                     <span style="font-weight:bold; color:var(--text-muted); min-width:20px;">${toPersianNumber(index + 1)}.</span>
                     <span style="font-size:1.5rem;">${sub.symbol || '📚'}</span>
                     <div>
-                        <strong>${sub.name}</strong>
-                        ${sub.motto ? `<div style="font-size:0.8rem; color:var(--text-muted);">${sub.motto}</div>` : ''}
-                    </div>
+    <strong>${escapeHtml(sub.name)}</strong>
+    ${sub.motto ? `<div style="font-size:0.8rem; color:var(--text-muted);">${escapeHtml(sub.motto)}</div>` : ''}
+</div>
                 </div>
                 <div style="display:flex; gap:5px;">
                     <button class="btn btn-secondary btn-sm" onclick="openLessonDetails(${sub.id})" title="مشاهده جزئیات">👁️</button>
