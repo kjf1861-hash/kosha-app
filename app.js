@@ -792,6 +792,9 @@ function initAppEvents() {
     if (editStudentForm) editStudentForm.addEventListener('submit', saveEditedStudent);
 }
 
+// ==========================================
+// ✅ این بخش اصلاح شد: initApp حالا خودش دیتابیس را مدیریت می‌کند
+// ==========================================
 async function initApp() {
     applyEmojiRestriction('classSymbol');
     applyEmojiRestriction('lessonSymbol');
@@ -803,6 +806,18 @@ async function initApp() {
         initAppEvents();
     } catch (error) { console.error("خطا در اتصال رویدادها:", error); }
     
+    try {
+        // 🛠️ این خط مهم‌ترین تغییر است. قبل از بارگذاری، از باز شدن دیتابیس مطمئن می‌شویم
+        if (typeof initDB === 'function') {
+            await initDB();
+            console.log("دیتابیس با موفقیت در initApp باز شد.");
+        }
+    } catch (dbError) {
+        console.error("خطا در باز کردن دیتابیس:", dbError);
+        showToast('خطا در ارتباط با دیتابیس. لطفاً صفحه را رفرش کنید.', 'error');
+        return; // اگر دیتابیس باز نشد، ادامه نده
+    }
+
     try {
         await loadAllData();
     } catch (error) { console.error("خطا در بارگذاری داده‌ها:", error); }
