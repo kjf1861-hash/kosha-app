@@ -1,10 +1,10 @@
 /**
  * فایل db.js — لایه ارتباط با IndexedDB (نسخه چندساله)
- * نسخه ۱۶ — پشتیبانی از آیتم‌های ارزشیابی چندساله
+ * نسخه ۱۷ — اصلاح مهاجرت داده‌ها و آیتم‌های پیش‌فرض
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 16; // ✅ نسخه 16 برای پشتیبانی از assessmentItems چندساله
+const DB_VERSION = 17; // ✅ نسخه 17 برای اصلاح مهاجرت داده‌ها
 
 let db;
 
@@ -14,10 +14,13 @@ const defaultAssessmentItems = [
     { title: "آزمون مداد و کاغذی", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
     { title: "کاربرگ", type: "count", unitScore: 10, placeholder: "تعداد برگه را وارد کنید:" },
     { title: "آزمون الکترونیکی", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 25}, {name: "خوب", score: 16}, {name: "قابل قبول", score: 9}, {name: "نیازمند تلاش", score: 0}] },
-    { title: "کاردستی و مهارت دست‌ورزی", type: "fixed", score: 25 },
-    { title: "نمایش و ایفای نقش", type: "fixed", score: 50 },
-    { title: "پروژه و آزمایش علمی", type: "fixed", score: 20 },
-    { title: "بازی آموزشی تعاملی", type: "fixed", score: 5 },
+    
+    // ✅ اصلاح فنی: تغییر نوع از fixed به count برای هماهنگی با رابط کاربری
+    { title: "کاردستی و مهارت دست‌ورزی", type: "count", unitScore: 25, placeholder: "تعداد کاردستی را وارد کنید:" },
+    { title: "نمایش و ایفای نقش", type: "count", unitScore: 50, placeholder: "تعداد نمایش را وارد کنید:" },
+    { title: "پروژه و آزمایش علمی", type: "count", unitScore: 20, placeholder: "تعداد پروژه را وارد کنید:" },
+    { title: "بازی آموزشی تعاملی", type: "count", unitScore: 5, placeholder: "تعداد بازی را وارد کنید:" },
+    
     { title: "آزمون مهارت حرکتی", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] },
     { title: "مشاهده", type: "level", placeholder: "انتخاب سطح عملکرد:", levels: [{name: "خیلی خوب", score: 100}, {name: "خوب", score: 66}, {name: "قابل قبول", score: 33}, {name: "نیازمند تلاش", score: 0}] }
 ];
@@ -75,41 +78,34 @@ function generateBackupFilename() {
     return `kosha-backup-${getJalaliDateTimeForFilename()}.json`;
 }
 
-// در دسترس قرار دادن برای فایل‌های دیگر
 window.generateBackupFilename = generateBackupFilename;
 window.getJalaliDateTimeForFilename = getJalaliDateTimeForFilename;
 window.getJalaliDateTimeForDisplay = getJalaliDateTimeForDisplay;
 
 // ==========================================
-// ✅ تابع جدید: تضمین وجود آیتم‌های ارزشیابی برای یک سال
+// ✅ تابع: تضمین وجود آیتم‌های ارزشیابی برای یک سال
 // ==========================================
 async function ensureAssessmentItemsForYear(year) {
     try {
-        // اگر آیتم‌های این سال وجود دارند، همان‌ها را برگردان
         let items = await getDataByYear('assessmentItems', year);
         if (items && items.length > 0) return items;
 
-        // اگر خالی است، از سال قبل کپی کن
         const allItems = await getAllData('assessmentItems');
         let sourceItems = [];
         
         if (allItems.length > 0) {
-            // پیدا کردن سال‌های موجود
             const years = [...new Set(allItems.map(i => i.academicYear).filter(y => y))];
-            years.sort((a, b) => b.localeCompare(a)); // جدیدترین سال اول
+            years.sort((a, b) => b.localeCompare(a));
             
             if (years.length > 0) {
-                // کپی از جدیدترین سال
                 sourceItems = allItems.filter(i => i.academicYear === years[0]);
             }
         }
 
-        // اگر هیچ آیتمی در دیتابیس نبود، از پیش‌فرض‌ها کپی کن
         if (sourceItems.length === 0) {
             sourceItems = defaultAssessmentItems;
         }
 
-        // ساخت آیتم‌های جدید با شناسه یکتا برای این سال
         const newItems = sourceItems.map((item, index) => ({
             ...item,
             id: `${year}_${Date.now()}_${index}`,
@@ -125,8 +121,9 @@ async function ensureAssessmentItemsForYear(year) {
 }
 window.ensureAssessmentItemsForYear = ensureAssessmentItemsForYear;
 
+// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 // ==========================================
-// مقداردهی اولیه دیتابیس (نسخه ۱۶)
+// مقداردهی اولیه دیتابیس (نسخه ۱۷)
 // ==========================================
 function initDB() {
     return new Promise((resolve, reject) => {
@@ -137,9 +134,17 @@ function initDB() {
             reject(event.target.error);
         };
 
-        request.onsuccess = (event) => {
+        request.onsuccess = async (event) => {
             db = event.target.result;
-            console.log('پایگاه داده با موفقیت راه‌اندازی شد (نسخه چندساله v16).');
+            console.log('پایگاه داده با موفقیت راه‌اندازی شد (نسخه چندساله v17).');
+            
+            // ✅ اجرای مهاجرت داده‌ها بعد از باز شدن موفق دیتابیس
+            try {
+                await migrateDataToV17();
+            } catch (e) {
+                console.error('خطا در مهاجرت داده‌ها:', e);
+            }
+            
             resolve(db);
         };
 
@@ -148,91 +153,54 @@ function initDB() {
             const transaction = event.currentTarget.transaction;
             console.log('در حال ساخت/به‌روزرسانی جداول پایگاه داده...');
 
-            // ==========================================
-            // ✅ مهاجرت weeklySchedule از keyPath:'day' به keyPath:'id'
-            // ==========================================
+            // مهاجرت weeklySchedule (از قبل وجود داشت)
             if (db.objectStoreNames.contains('weeklySchedule') && event.oldVersion >= 1 && event.oldVersion < 15) {
-                console.log('🔄 مهاجرت weeklySchedule به فرمت چندساله...');
-                
                 const oldStore = transaction.objectStore('weeklySchedule');
                 const oldKeyPath = oldStore.keyPath;
                 
                 if (oldKeyPath === 'day') {
                     const getAllRequest = oldStore.getAll();
-                    
                     getAllRequest.onsuccess = () => {
                         const oldData = getAllRequest.result || [];
-                        console.log(`📦 ${oldData.length} رکورد قدیمی weeklySchedule یافت شد.`);
-                        
                         db.deleteObjectStore('weeklySchedule');
-                        
                         const newStore = db.createObjectStore('weeklySchedule', { keyPath: 'id' });
                         newStore.createIndex('day', 'day', { unique: false });
                         newStore.createIndex('academicYear', 'academicYear', { unique: false });
                         
-                        const currentYear = (typeof window !== 'undefined' && window.activeAcademicYear) 
-                            ? window.activeAcademicYear 
-                            : '1405-1406';
-                        
+                        const currentYear = window.activeAcademicYear || '1405-1406';
                         oldData.forEach(item => {
                             if (item && item.day) {
-                                const migratedItem = {
+                                newStore.put({
                                     id: `${item.academicYear || currentYear}_${item.day}`,
                                     day: item.day,
                                     periods: item.periods || [],
                                     academicYear: item.academicYear || currentYear
-                                };
-                                newStore.put(migratedItem);
+                                });
                             }
                         });
-                        
-                        console.log(`✅ ${oldData.length} رکورد به فرمت جدید منتقل شد.`);
                     };
                 }
             }
 
-            // ==========================================
-            // ✅ مهاجرت assessmentItems به فرمت چندساله (v15 -> v16)
-            // ==========================================
+            // مهاجرت assessmentItems (از قبل وجود داشت)
             if (db.objectStoreNames.contains('assessmentItems') && event.oldVersion >= 1 && event.oldVersion < 16) {
-                console.log('🔄 مهاجرت assessmentItems به فرمت چندساله...');
-                
                 const oldStore = transaction.objectStore('assessmentItems');
                 const getAllRequest = oldStore.getAll();
-                
                 getAllRequest.onsuccess = () => {
                     const oldData = getAllRequest.result || [];
-                    console.log(`📦 ${oldData.length} آیتم ارزشیابی قدیمی یافت شد.`);
-                    
                     db.deleteObjectStore('assessmentItems');
-                    
                     const newStore = db.createObjectStore('assessmentItems', { keyPath: 'id' });
                     newStore.createIndex('academicYear', 'academicYear', { unique: false });
                     
-                    const currentYear = (typeof window !== 'undefined' && window.activeAcademicYear) 
-                        ? window.activeAcademicYear 
-                        : '1405-1406';
-                    
+                    const currentYear = window.activeAcademicYear || '1405-1406';
                     oldData.forEach((item, index) => {
-                        const newId = item.academicYear 
-                            ? item.id 
-                            : `${currentYear}_migrated_${item.id || Date.now()}_${index}`;
-                        
-                        newStore.put({
-                            ...item,
-                            id: newId,
-                            academicYear: item.academicYear || currentYear
-                        });
+                        const newId = item.academicYear ? item.id : `${currentYear}_migrated_${item.id || Date.now()}_${index}`;
+                        newStore.put({ ...item, id: newId, academicYear: item.academicYear || currentYear });
                     });
-                    
-                    console.log(`✅ ${oldData.length} آیتم به فرمت جدید منتقل شد.`);
                 };
             }
             
-            // ==========================================
             // ساخت یا به‌روزرسانی سایر جداول
-            // ==========================================
-            
             if (!db.objectStoreNames.contains('classProfile')) {
                 db.createObjectStore('classProfile', { keyPath: 'id' });
             }
@@ -244,13 +212,9 @@ function initDB() {
                 studentStore.createIndex('academicYear', 'academicYear', { unique: false });
             } else {
                 const studentStore = transaction.objectStore('students');
-                if (studentStore.indexNames.contains('nationalId')) {
-                    studentStore.deleteIndex('nationalId');
-                }
+                if (studentStore.indexNames.contains('nationalId')) studentStore.deleteIndex('nationalId');
                 studentStore.createIndex('nationalId', 'nationalId', { unique: false });
-                if (!studentStore.indexNames.contains('academicYear')) {
-                    studentStore.createIndex('academicYear', 'academicYear', { unique: false });
-                }
+                if (!studentStore.indexNames.contains('academicYear')) studentStore.createIndex('academicYear', 'academicYear', { unique: false });
             }
 
             if (!db.objectStoreNames.contains('groups')) {
@@ -258,9 +222,7 @@ function initDB() {
                 groupStore.createIndex('academicYear', 'academicYear', { unique: false });
             } else {
                 const groupStore = transaction.objectStore('groups');
-                if (!groupStore.indexNames.contains('academicYear')) {
-                    groupStore.createIndex('academicYear', 'academicYear', { unique: false });
-                }
+                if (!groupStore.indexNames.contains('academicYear')) groupStore.createIndex('academicYear', 'academicYear', { unique: false });
             }
 
             if (!db.objectStoreNames.contains('subjects')) {
@@ -268,9 +230,7 @@ function initDB() {
                 subjectStore.createIndex('academicYear', 'academicYear', { unique: false });
             } else {
                 const subjectStore = transaction.objectStore('subjects');
-                if (!subjectStore.indexNames.contains('academicYear')) {
-                    subjectStore.createIndex('academicYear', 'academicYear', { unique: false });
-                }
+                if (!subjectStore.indexNames.contains('academicYear')) subjectStore.createIndex('academicYear', 'academicYear', { unique: false });
             }
 
             if (!db.objectStoreNames.contains('records')) {
@@ -280,9 +240,7 @@ function initDB() {
                 recordStore.createIndex('academicYear', 'academicYear', { unique: false });
             } else {
                 const recordStore = transaction.objectStore('records');
-                if (!recordStore.indexNames.contains('academicYear')) {
-                    recordStore.createIndex('academicYear', 'academicYear', { unique: false });
-                }
+                if (!recordStore.indexNames.contains('academicYear')) recordStore.createIndex('academicYear', 'academicYear', { unique: false });
             }
 
             if (!db.objectStoreNames.contains('badgesSettings')) {
@@ -290,9 +248,7 @@ function initDB() {
                 badgeStore.createIndex('academicYear', 'academicYear', { unique: false });
             } else {
                 const badgeStore = transaction.objectStore('badgesSettings');
-                if (!badgeStore.indexNames.contains('academicYear')) {
-                    badgeStore.createIndex('academicYear', 'academicYear', { unique: false });
-                }
+                if (!badgeStore.indexNames.contains('academicYear')) badgeStore.createIndex('academicYear', 'academicYear', { unique: false });
             }
 
             if (!db.objectStoreNames.contains('sessions')) {
@@ -301,9 +257,7 @@ function initDB() {
                 sessionStore.createIndex('academicYear', 'academicYear', { unique: false });
             } else {
                 const sessionStore = transaction.objectStore('sessions');
-                if (!sessionStore.indexNames.contains('academicYear')) {
-                    sessionStore.createIndex('academicYear', 'academicYear', { unique: false });
-                }
+                if (!sessionStore.indexNames.contains('academicYear')) sessionStore.createIndex('academicYear', 'academicYear', { unique: false });
             }
 
             if (!db.objectStoreNames.contains('attendance')) {
@@ -313,18 +267,14 @@ function initDB() {
                 attStore.createIndex('academicYear', 'academicYear', { unique: false });
             } else {
                 const attStore = transaction.objectStore('attendance');
-                if (!attStore.indexNames.contains('academicYear')) {
-                    attStore.createIndex('academicYear', 'academicYear', { unique: false });
-                }
+                if (!attStore.indexNames.contains('academicYear')) attStore.createIndex('academicYear', 'academicYear', { unique: false });
             }
 
-            // ✅ assessmentItems جدید (اگر برای اولین بار ساخته می‌شود)
             if (!db.objectStoreNames.contains('assessmentItems')) {
                 const itemStore = db.createObjectStore('assessmentItems', { keyPath: 'id' });
                 itemStore.createIndex('academicYear', 'academicYear', { unique: false });
             }
             
-            // ✅ weeklySchedule (اگر برای اولین بار ساخته می‌شود)
             if (!db.objectStoreNames.contains('weeklySchedule')) {
                 const scheduleStore = db.createObjectStore('weeklySchedule', { keyPath: 'id' });
                 scheduleStore.createIndex('day', 'day', { unique: false });
@@ -338,9 +288,7 @@ function initDB() {
                 examStore.createIndex('academicYear', 'academicYear', { unique: false });
             } else {
                 const examStore = transaction.objectStore('exams');
-                if (!examStore.indexNames.contains('academicYear')) {
-                    examStore.createIndex('academicYear', 'academicYear', { unique: false });
-                }
+                if (!examStore.indexNames.contains('academicYear')) examStore.createIndex('academicYear', 'academicYear', { unique: false });
             }
 
             if (!db.objectStoreNames.contains('examResults')) {
@@ -350,9 +298,7 @@ function initDB() {
                 resultStore.createIndex('academicYear', 'academicYear', { unique: false });
             } else {
                 const resultStore = transaction.objectStore('examResults');
-                if (!resultStore.indexNames.contains('academicYear')) {
-                    resultStore.createIndex('academicYear', 'academicYear', { unique: false });
-                }
+                if (!resultStore.indexNames.contains('academicYear')) resultStore.createIndex('academicYear', 'academicYear', { unique: false });
             }
             
             if (!db.objectStoreNames.contains('backupSettings')) {
@@ -360,12 +306,44 @@ function initDB() {
                 backupStore.createIndex('academicYear', 'academicYear', { unique: false });
             } else {
                 const backupStore = transaction.objectStore('backupSettings');
-                if (!backupStore.indexNames.contains('academicYear')) {
-                    backupStore.createIndex('academicYear', 'academicYear', { unique: false });
-                }
+                if (!backupStore.indexNames.contains('academicYear')) backupStore.createIndex('academicYear', 'academicYear', { unique: false });
             }
         };
     });
+}
+
+// ==========================================
+// ✅ تابع مهاجرت داده‌های قدیمی به نسخه ۱۷
+// ==========================================
+async function migrateDataToV17() {
+    const currentYear = window.activeAcademicYear || '1405-1406';
+    if (localStorage.getItem('kosha-db-migrated-v17')) return;
+
+    console.log('🔄 در حال بررسی و مهاجرت داده‌های قدیمی به نسخه چندساله...');
+    const storesToMigrate = ['students', 'groups', 'subjects', 'attendance', 'exams', 'examResults', 'badgesSettings', 'backupSettings'];
+    let migratedCount = 0;
+
+    for (const storeName of storesToMigrate) {
+        try {
+            const allData = await getAllData(storeName);
+            const needsMigration = allData.filter(item => !item.academicYear);
+            
+            if (needsMigration.length > 0) {
+                for (let item of needsMigration) {
+                    item.academicYear = currentYear;
+                    await saveData(storeName, item);
+                    migratedCount++;
+                }
+            }
+        } catch (e) {
+            console.warn(`خطا در مهاجرت جدول ${storeName}:`, e);
+        }
+    }
+
+    localStorage.setItem('kosha-db-migrated-v17', 'true');
+    if (migratedCount > 0) {
+        console.log(`✅ ${migratedCount} رکورد قدیمی به سال تحصیلی جاری منتقل شدند.`);
+    }
 }
 
 // ==========================================
@@ -539,6 +517,7 @@ function clearStore(storeName) {
     });
 }
 
+// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ (آخرین بخش) را بفرستم.
 // ==========================================
 // خروجی کامل با _meta
 // ==========================================
@@ -579,7 +558,7 @@ async function exportYearData(year) {
 }
 
 // ==========================================
-// بازیابی داده‌ها (با پشتیبانی از بکاپ‌های قدیمی/جدید)
+// بازیابی داده‌ها (با پشتیبانی کامل از بکاپ‌های قدیمی/جدید)
 // ==========================================
 async function importAllData(data) {
     if (!data || typeof data !== 'object') throw new Error('داده‌های نامعتبر');
@@ -597,43 +576,55 @@ async function importAllData(data) {
     const backup = {};
     for (const store of stores) { backup[store] = await getAllData(store); }
     
+    const currentYear = window.activeAcademicYear || '1405-1406';
+
     try {
         for (const store of stores) {
             if (data[store] && Array.isArray(data[store])) {
                 await clearStore(store);
                 if (data[store].length > 0) {
-                    let storeData = data[store];
                     
-                    if (store === 'weeklySchedule') {
-                        storeData = storeData.map(item => {
-                            if (!item.id && item.day) {
-                                return {
-                                    ...item,
-                                    id: `${item.academicYear || window.activeAcademicYear || '1405-1406'}_${item.day}`
-                                };
+                    // ✅ اصلاح باگ: بررسی و تزریق academicYear برای تمام جداول (سازگاری با بکاپ‌های قدیمی)
+                    let storeData = data[store].map((item, index) => {
+                        let newItem = { ...item };
+                        
+                        // اگر رکورد اصلاً academicYear ندارد، سال جاری را به آن می‌دهیم
+                        if (!newItem.academicYear) {
+                            newItem.academicYear = currentYear;
+                        }
+
+                        // تنظیمات مخصوص weeklySchedule
+                        if (store === 'weeklySchedule') {
+                            if (!newItem.id && newItem.day) {
+                                newItem.id = `${newItem.academicYear}_${newItem.day}`;
                             }
-                            return item;
-                        });
-                    }
-                    
-                    if (store === 'assessmentItems') {
-                        storeData = storeData.map((item, index) => {
-                            if (!item.academicYear) {
-                                return {
-                                    ...item,
-                                    id: item.id || `${window.activeAcademicYear || '1405-1406'}_migrated_${Date.now()}_${index}`,
-                                    academicYear: window.activeAcademicYear || '1405-1406'
-                                };
+                        }
+                        
+                        // تنظیمات مخصوص assessmentItems
+                        if (store === 'assessmentItems') {
+                            if (!newItem.id) {
+                                newItem.id = `${newItem.academicYear}_migrated_${Date.now()}_${index}`;
                             }
-                            return item;
-                        });
-                    }
+                        }
+
+                        // تنظیمات مخصوص classProfile (شناسه باید با سال تحصیلی یکی شود)
+                        if (store === 'classProfile') {
+                            newItem.id = newItem.academicYear;
+                        }
+                        
+                        return newItem;
+                    });
                     
                     await saveBulkData(store, storeData);
                 }
             }
         }
+        
+        // پاک کردن پرچم مهاجرت تا برنامه یک بار دیگر چک کند (اطمینان از سلامت داده)
+        localStorage.removeItem('kosha-db-migrated-v17');
+        
     } catch (e) {
+        // اگر خطایی رخ داد، داده‌های قبلی را برمی‌گردانیم
         for (const store of stores) {
             await clearStore(store);
             if (backup[store].length > 0) {
@@ -674,3 +665,5 @@ async function getBackupSettings(year) {
         };
     }
 }
+
+// ✅ پایان فایل db.js
