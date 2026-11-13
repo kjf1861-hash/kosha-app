@@ -37,7 +37,7 @@ let currentCalendarTarget = 'start';
 
 window.onerror = function(msg, url, line, col, error) {
     console.error('خطای سراسری:', msg, 'در', url, line);
-    showToast('خطایی رخ داد. لطفاً صفحه را رفرش کنید.', 'error');
+    showToast('خطا: ' + msg + ' (خط ' + line + ')', 'error');
     return true;
 };
 window.onunhandledrejection = function(event) {
