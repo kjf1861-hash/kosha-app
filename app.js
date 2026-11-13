@@ -1185,29 +1185,53 @@ async function deleteCustomItem(id) {
     } catch (e) { console.error(e); showToast('خطا در حذف آیتم!', 'error'); }
 }
 
+// ==========================================
+// ✅ خروجی داده‌ها با نام فایل شمسی + ساعت
+// ==========================================
 async function exportData() {
     try {
         const data = await exportAllData();
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
+        
+        // ✅ استفاده از تابع نام‌گذاری شمسی از db.js
+        const filename = (typeof window.generateBackupFilename === 'function') 
+            ? window.generateBackupFilename() 
+            : `kosha-backup-${new Date().toISOString().slice(0,10)}.json`;
+        
         const a = document.createElement('a'); 
         a.href = url; 
-        a.download = `kosha_backup_ALL_YEARS_${new Date().toISOString().slice(0,10)}.json`; 
+        a.download = filename; 
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        
         localStorage.setItem('kosha-last-backup', Date.now());
         checkBackupReminder(); 
-        showToast('فایل پشتیبان کامل (شامل همه سال‌ها) دانلود شد.', 'info');
+        showToast(`فایل پشتیبان با موفقیت ذخیره شد: ${filename}`, 'success');
     } catch (e) { 
+        console.error(e);
         showToast('خطا در تولید فایل پشتیبان!', 'error'); 
     }
 }
 
+// ==========================================
+// ✅ بازیابی داده‌ها با نمایش نام فایل
+// ==========================================
 async function importData(event) {
     const file = event.target.files[0]; 
     if (!file) return;
     
-    const isConfirmed = confirm('⚠️ هشدار مهم:\n\nبا بازیابی این فایل، تمام اطلاعات فعلی شما (همه سال‌ها) پاک شده و با اطلاعات داخل فایل بکاپ جایگزین می‌شود.\n\nآیا مطمئن هستید؟');
+    // ✅ نمایش نام فایل به کاربر
+    const confirmMessage = 
+        `⚠️ هشدار مهم:\n\n` +
+        `شما در حال بازیابی از فایل زیر هستید:\n` +
+        `📁 ${file.name}\n\n` +
+        `با این کار، تمام اطلاعات فعلی شما (همه سال‌ها) پاک شده و با محتوای این فایل جایگزین می‌شود.\n\n` +
+        `آیا مطمئن هستید؟`;
+    
+    const isConfirmed = confirm(confirmMessage);
     
     if (!isConfirmed) {
         event.target.value = ''; 
@@ -1218,6 +1242,12 @@ async function importData(event) {
     reader.onload = async (e) => {
         try { 
             const data = JSON.parse(e.target.result); 
+            
+            // ✅ نمایش تاریخ بکاپ به کاربر (اگر _meta دارد)
+            if (data._meta && data._meta.exportedAtJalali) {
+                console.log(`📦 در حال بازیابی بکاپ: ${data._meta.exportedAtJalali}`);
+            }
+            
             await importAllData(data); 
             
             showToast('اطلاعات با موفقیت بازیابی شد! در حال بارگذاری مجدد...', 'success'); 
@@ -1229,7 +1259,7 @@ async function importData(event) {
         }
         catch (err) { 
             console.error(err);
-            showToast('فایل نامعتبر! تغییرات لغو شد.', 'error'); 
+            showToast(err.message || 'فایل نامعتبر! تغییرات لغو شد.', 'error'); 
         }
         event.target.value = ''; 
     };
