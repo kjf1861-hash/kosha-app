@@ -1,8 +1,8 @@
 // ==========================================
-// فایل sw.js — سرویس‌ورکر بهینه‌شده (نسخه v107 - پشتیبانی از JSON)
+// فایل sw.js — سرویس‌ورکر بهینه‌شده (نسخه v108 - بازگشت به JS)
 // ==========================================
 
-const CACHE_NAME = 'kosha-cache-v107';
+const CACHE_NAME = 'kosha-cache-v108';
 const ASSETS_TO_CACHE = [
     './', 
     './index.html', 
@@ -20,13 +20,12 @@ const ASSETS_TO_CACHE = [
     './reset.js',
     './exam.js',
     './game.js',
-    './calendar-events.json', // ✅ فایل جدید اضافه شد
+    './calendar-data.js', // ✅ بازگشت به فایل JS
     './calendar.js',
     './jalali-utils.js',
     './back-button.js'
 ];
 
-// فایل‌هایی که همیشه باید از شبکه به‌روز شوند (حساس به تغییر)
 const NETWORK_FIRST_ASSETS = [
     './index.html',
     './app.js',
@@ -35,7 +34,7 @@ const NETWORK_FIRST_ASSETS = [
     './score.js',
     './session.js',
     './calendar.js',
-    './calendar-events.json', // ✅ فایل جدید اضافه شد
+    './calendar-data.js', // ✅ بازگشت به فایل JS
     './jalali-utils.js',
     './back-button.js',
     './styles.css'
