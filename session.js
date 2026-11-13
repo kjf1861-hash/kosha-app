@@ -183,7 +183,7 @@ function renderScheduleEdit() {
                     <span>زنگ ${toPersianNumber(i + 1)}:</span>
                     <select class="schedule-subject-select" data-day="${day}" data-period="${i}">
                         <option value="">-- خالی --</option>
-                        ${window.allSubjectsData.map(s => `<option value="${s.id}" ${s.id == currentSubId ? 'selected' : ''}>${s.symbol || ''} ${s.name}</option>`).join('')}
+                        ${window.allSubjectsData.map(s => `<option value="${s.id}" ${s.id == currentSubId ? 'selected' : ''}>${escapeHtml(s.symbol || '')} ${escapeHtml(s.name)}</option>`).join('')}
                     </select>
                 </div>
             `;
@@ -194,6 +194,7 @@ function renderScheduleEdit() {
     });
 }
 
+// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 // ==========================================
 // ✅ ذخیره برنامه هفتگی (چندساله — id یکتا)
 // ==========================================
@@ -216,7 +217,6 @@ async function saveAllWeeklySchedules() {
 
     try {
         // ✅ فقط رکوردهای سال جاری را حذف می‌کنیم (نه سال‌های دیگر)
-        // رکوردهایی که academicYear ندارند (از نسخه قدیمی) هم حذف می‌شوند
         const schedulesToDelete = window.allWeeklyScheduleData.filter(
             s => !s.academicYear || s.academicYear === currentYear
         );
@@ -309,6 +309,16 @@ function exportScheduleCSV() {
         const { matrix, maxPeriodToShow } = getScheduleDataMatrix(); 
         if (matrix.length === 0) { showToast('برنامه‌ای برای خروجی وجود ندارد.', 'error'); return; }
 
+        // ✅ اصلاح امنیتی: جلوگیری از CSV Injection
+        const safeCsv = (val) => {
+            if (val === null || val === undefined) return '';
+            let str = String(val);
+            if (str.startsWith('=') || str.startsWith('+') || str.startsWith('-') || str.startsWith('@')) {
+                str = "'" + str;
+            }
+            return str.replace(/"/g, '""');
+        };
+
         let csvContent = '"روز / زنگ"';
         for (let i = 1; i <= maxPeriodToShow; i++) {
             csvContent += `,"زنگ ${i}"`;
@@ -316,7 +326,7 @@ function exportScheduleCSV() {
         csvContent += "\r\n"; 
 
         matrix.forEach(row => {
-            const rowData = row.map(cell => `"${cell}"`).join(',');
+            const rowData = row.map(cell => `"${safeCsv(cell)}"`).join(',');
             csvContent += rowData + "\r\n";
         });
 
@@ -369,8 +379,9 @@ function exportScheduleHTML() {
         matrix.forEach(row => {
             html += `<tr>`;
             row.forEach((cell, idx) => {
-                if (idx === 0) html += `<th>${cell}</th>`;
-                else html += `<td>${cell}</td>`;
+                // ✅ اصلاح امنیتی: escape محتوای سلول‌ها
+                if (idx === 0) html += `<th>${escapeHtml(cell)}</th>`;
+                else html += `<td>${escapeHtml(cell)}</td>`;
             });
             html += `</tr>`;
         });
@@ -424,8 +435,9 @@ function printSchedule() {
         matrix.forEach(row => {
             html += `<tr>`;
             row.forEach((cell, idx) => {
-                if (idx === 0) html += `<th>${cell}</th>`;
-                else html += `<td>${cell}</td>`;
+                // ✅ اصلاح امنیتی: escape محتوای سلول‌ها
+                if (idx === 0) html += `<th>${escapeHtml(cell)}</th>`;
+                else html += `<td>${escapeHtml(cell)}</td>`;
             });
             html += `</tr>`;
         });
@@ -572,6 +584,7 @@ function renderCalendarGrid() {
         grid.innerHTML += `<div class="${classes}" ${clickHandler}>${toPersianNumber(day)}</div>`;
     }
 }
+
 function showOutsideRangeError() {
     showToast('این تاریخ خارج از بازه سال تحصیلی جاری است.', 'error');
 }
@@ -694,6 +707,7 @@ function selectCalendarDay(day, dateStr) {
     renderCalendarGrid();
 }
 
+// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 // ==========================================
 // 3. ثبت جلسه
 // ==========================================
@@ -754,12 +768,36 @@ async function editSessionDate(sessionId, currentDate) {
         return;
     }
 
-    const session = await getDataById('sessions', sessionId);
-    if(session) {
-        session.date = trimmed;
-        await saveData('sessions', session);
-        showToast('تاریخ ویرایش شد.', 'success');
-        loadAllData();
+    // ✅ اصلاح باگ ۱: بررسی تکراری نبودن تاریخ جدید
+    const duplicate = window.allSessionsData.find(s => s.date === trimmed && s.id !== sessionId);
+    if (duplicate) {
+        showToast('این تاریخ قبلاً برای جلسه دیگری ثبت شده است.', 'error');
+        return;
+    }
+
+    try {
+        const session = await getDataById('sessions', sessionId);
+        if(session) {
+            // ✅ اصلاح باگ ۲: محاسبه مجدد روز هفته بر اساس تاریخ جدید
+            const parts = trimmed.split('/');
+            const y = parseInt(parts[0]);
+            const m = parseInt(parts[1]);
+            const d = parseInt(parts[2]);
+            
+            const firstDay = getJalaliFirstDayOfWeek(y, m);
+            const dayOfWeekIndex = (firstDay + d - 1) % 7;
+            const dayNames = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+            
+            session.date = trimmed;
+            session.dayOfWeek = dayNames[dayOfWeekIndex];
+            
+            await saveData('sessions', session);
+            showToast('تاریخ جلسه و روز هفته آن با موفقیت ویرایش شد.', 'success');
+            loadAllData();
+        }
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در ویرایش تاریخ جلسه.', 'error');
     }
 }
 
@@ -853,8 +891,9 @@ function renderSessionDetails(schedule) {
         if (subId === null || subId === undefined) return;
         
         const periodNum = index + 1;
-const subject = window.allSubjectsData.find(s => s.id === subId);
-const subName = subject ? `${escapeHtml(subject.symbol || '')} ${escapeHtml(subject.name)}` : 'نامشخص';
+        const subject = window.allSubjectsData.find(s => s.id === subId);
+        // ✅ اصلاح امنیتی: escape نام و نماد درس
+        const subName = subject ? `${escapeHtml(subject.symbol || '')} ${escapeHtml(subject.name)}` : 'نامشخص';
 
         let sectionHtml = `
             <div class="session-period-section" id="session-period-${periodNum}">
@@ -869,11 +908,12 @@ const subName = subject ? `${escapeHtml(subject.symbol || '')} ${escapeHtml(subj
         window.allStudentsData.forEach(st => {
             const status = currentSessionAttendanceState[periodNum][st.id] || 'present';
             const g = window.allGroupsData.find(x => x.id === st.groupId);
-            const badge = g ? `<span class="group-label">${g.symbol} ${g.name}</span>` : '';
+            // ✅ اصلاح امنیتی: escape نام و نماد گروه
+            const badge = g ? `<span class="group-label">${escapeHtml(g.symbol)} ${escapeHtml(g.name)}</span>` : '';
 
             sectionHtml += `
                 <div class="attendance-student-row">
-                    <div class="attendance-student-name">${st.firstName} ${st.lastName} ${badge}</div>
+                    <div class="attendance-student-name">${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)} ${badge}</div>
                     <div class="att-btn-group">
                         <button type="button" class="att-btn present ${status === 'present' ? 'active' : ''}" onclick="setPeriodAttendance(${periodNum}, ${st.id}, 'present', this)">🟢 حاضر</button>
                         <button type="button" class="att-btn absent ${status === 'absent' ? 'active' : ''}" onclick="setPeriodAttendance(${periodNum}, ${st.id}, 'absent', this)">🔴 غایب</button>
@@ -910,6 +950,7 @@ function setAllPeriodAttendance(periodNum, status) {
     }
 }
 
+// ⏸️ پایان بخش ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۴ را بفرستم.
 async function saveAllSessionAttendance() {
     if (!currentSessionId) return;
 
@@ -937,6 +978,10 @@ async function saveAllSessionAttendance() {
         window.allAttendanceData = savedAtt.filter(a => window.allSessionsData.some(s => s.id === a.sessionId));
         
         showToast('حضور و غیاب کل جلسه ذخیره شد!', 'success');
+        
+        // پاک کردن وضعیت فرم‌های ذخیره‌نشده
+        if (typeof clearFormDirty === 'function') clearFormDirty();
+        
         generateAttendanceReports();
         if (typeof renderDashboardData === 'function') renderDashboardData();
     } catch (e) {
@@ -951,6 +996,9 @@ function closeSessionDetails() {
     currentSessionId = null;
     currentSessionDay = null;
     currentSessionAttendanceState = {};
+    
+    // پاک کردن وضعیت فرم‌های ذخیره‌نشده
+    if (typeof clearFormDirty === 'function') clearFormDirty();
 }
 
 // ==========================================
@@ -1006,7 +1054,9 @@ function generateAttendanceReports() {
         for (const st of window.allStudentsData) {
             const bucket = attCache[st.id] || { present: 0, absent: 0, late: 0 };
             const g = groupMap[st.groupId];
+            // ✅ اصلاح امنیتی: escape نام و نماد گروه
             const badge = g ? `<span class="group-label" style="margin-right:5px;">${escapeHtml(g.symbol)} ${escapeHtml(g.name)}</span>` : '';
+            // ✅ اصلاح امنیتی: escape نام و نام خانوادگی دانش‌آموز
             html += `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px;"><div style="display: flex; justify-content: space-between; align-items: center;"><div style="font-weight: bold; font-size: 1.05rem;">${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)} ${badge}</div></div><div style="display: flex; gap: 5px; flex-wrap: wrap;"><span class="att-report-badge present">حاضر: ${toPersianNumber(bucket.present)}</span><span class="att-report-badge absent">غایب: ${toPersianNumber(bucket.absent)}</span><span class="att-report-badge late">تأخیر: ${toPersianNumber(bucket.late)}</span></div></div>`;
         }
     } else {
@@ -1033,25 +1083,37 @@ function generateAttendanceReports() {
         for (const g of window.allGroupsData) {
             const tot = groupTotals[g.id];
             const count = groupStudentCount[g.id];
+            // ✅ اصلاح امنیتی: escape نام و نماد گروه
             html += `<div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px;"><div style="font-weight: bold; font-size: 1.05rem;">${escapeHtml(g.symbol)} ${escapeHtml(g.name)} (${toPersianNumber(count)} نفر)</div><div style="display: flex; gap: 5px; flex-wrap: wrap;"><span class="att-report-badge present">حاضر: ${toPersianNumber(tot.present)}</span><span class="att-report-badge absent">غایب: ${toPersianNumber(tot.absent)}</span><span class="att-report-badge late">تأخیر: ${toPersianNumber(tot.late)}</span></div></div>`;
         }
     }
     container.innerHTML = html;
 }
 
+// ⏸️ پایان بخش ۴ — منتظر پیام «ادامه» شما هستم تا بخش ۵ (آخرین بخش) را بفرستم.
 async function exportSessionCSV() {
     try {
+        // ✅ اصلاح امنیتی: جلوگیری از فرمول تزریقی در اکسل (CSV Injection)
+        const safeCsv = (val) => {
+            if (val === null || val === undefined) return '';
+            let str = String(val);
+            if (str.startsWith('=') || str.startsWith('+') || str.startsWith('-') || str.startsWith('@')) {
+                str = "'" + str;
+            }
+            return str.replace(/"/g, '""');
+        };
+
+        // ✅ بهبود عملکرد: استفاده از کش (به جای حلقه تو در تو)
+        if (!window._cacheStudentAttendance && typeof buildScoreCaches === 'function') {
+            buildScoreCaches();
+        }
+        const attCache = window._cacheStudentAttendance || {};
+
         let csvContent = "ردیف,نام,نام خانوادگی,تعداد حاضر,تعداد غایب,تعداد تأخیر\r\n";
+        
         window.allStudentsData.forEach((st, i) => {
-            let p = 0, a = 0, l = 0;
-            window.allAttendanceData.forEach(att => { 
-                if (att.studentId === st.id) { 
-                    if (att.status === 'present') p++; 
-                    else if (att.status === 'absent') a++; 
-                    else if (att.status === 'late') l++; 
-                } 
-            });
-            csvContent += `${i + 1},"${st.firstName}","${st.lastName}",${p},${a},${l}\r\n`;
+            const bucket = attCache[st.id] || { present: 0, absent: 0, late: 0 };
+            csvContent += `${i + 1},"${safeCsv(st.firstName)}","${safeCsv(st.lastName)}",${bucket.present},${bucket.absent},${bucket.late}\r\n`;
         });
 
         const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1067,3 +1129,5 @@ async function exportSessionCSV() {
         showToast('خطا در تولید فایل.', 'error'); 
     }
 }
+
+// ✅ پایان فایل session.js
