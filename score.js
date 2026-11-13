@@ -1,5 +1,5 @@
 // ==========================================
-// فایل score.js — منطق تب امتیاز (ارزشیابی) — نسخه نهایی با اسکرول خودکار
+// فایل score.js — منطق تب امتیاز (نسخه چندساله)
 // ==========================================
 
 let isSaveAndNext = false;
@@ -104,10 +104,6 @@ function renderScoreData() {
     loadAssessmentRecords();
     loadQuranRewards();
 }
-
-// ==========================================
-// توابع تقویم شمسی تب امتیاز
-// ==========================================
 
 function initScoreCalendars() {
     const ay = window.activeAcademicYear || '1405-1406';
@@ -585,6 +581,7 @@ function showPreview(isFinal) {
         `;
     }
     
+    // ✅ داده‌های رکورد با سال تحصیلی جاری
     window.tempRecordData = {
         subjectId: parseInt(document.getElementById('recordSubject').value),
         itemName: selectedItem.title, 
@@ -593,7 +590,7 @@ function showPreview(isFinal) {
         students: Array.from(studentCheckboxes).map(cb => parseInt(cb.value)),
         arf: document.getElementById('recordArf').checked, 
         finalScore: finalScore,
-        academicYear: window.activeAcademicYear
+        academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
     };
     const previewModal = document.getElementById('preview-modal');
     if (previewModal) previewModal.classList.add('show');
@@ -689,7 +686,7 @@ async function saveQuranRecord() {
         students: Array.from(studentCheckboxes).map(cb => parseInt(cb.value)),
         arf: false,
         finalScore: finalScore,
-        academicYear: window.activeAcademicYear
+        academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
     };
 
     try {
@@ -712,7 +709,7 @@ async function saveQuranRecord() {
                 totalSurahs: totalSurahs, 
                 totalAyats: totalAyats, 
                 date: dateStr,
-                academicYear: window.activeAcademicYear
+                academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
             });
         }
 
@@ -724,7 +721,6 @@ async function saveQuranRecord() {
         
         loadAllData();
         
-        // ✅ اسکرول آرام به بالای فرم پویش قرآن
         const quranForm = document.getElementById('quran-form');
         if (quranForm) quranForm.scrollIntoView({ behavior: 'smooth' });
         
@@ -753,7 +749,7 @@ async function saveSpecialReward() {
         students: Array.from(studentCheckboxes).map(cb => parseInt(cb.value)),
         arf: false,
         finalScore: score,
-        academicYear: window.activeAcademicYear
+        academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
     };
 
     try {
@@ -766,7 +762,6 @@ async function saveSpecialReward() {
         
         loadAllData();
         
-        // ✅ اسکرول آرام به بالای فرم تشویق ویژه
         const specialForm = document.getElementById('special-reward-form');
         if (specialForm) specialForm.scrollIntoView({ behavior: 'smooth' });
         
@@ -788,7 +783,7 @@ async function saveHandwritingReward() {
         students: Array.from(studentCheckboxes).map(cb => parseInt(cb.value)),
         arf: false,
         finalScore: 4,
-        academicYear: window.activeAcademicYear
+        academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
     };
 
     try {
@@ -801,12 +796,12 @@ async function saveHandwritingReward() {
         
         loadAllData();
         
-        // ✅ اسکرول آرام به بالای فرم خوش‌خط‌نویسی
         const handwritingForm = document.getElementById('handwriting-reward-form');
         if (handwritingForm) handwritingForm.scrollIntoView({ behavior: 'smooth' });
         
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق خوش‌خط‌نویسی.', 'error'); }
 }
+
 // ==========================================
 // سوابق ارزشیابی
 // ==========================================
@@ -884,17 +879,6 @@ function loadAssessmentRecords() {
             if (btnNext) btnNext.disabled = (currentPage.records === totalPages);
         } else { pagination.style.display = 'none'; }
     }
-}
-
-function clearRecordFilters() {
-    const el1 = document.getElementById('recordsFilterSubject');
-    const el2 = document.getElementById('recordsFilterStudent');
-    const el3 = document.getElementById('recordsSearchText');
-    if (el1) el1.value = '';
-    if (el2) el2.value = '';
-    if (el3) el3.value = '';
-    currentPage.records = 1;
-    loadAssessmentRecords();
 }
 
 async function deleteRecord(id) {
@@ -1024,7 +1008,7 @@ async function saveEditedRecord(event) {
         record.date = newDate; 
         record.finalScore = newScore;
         record.students = students;
-        record.academicYear = window.activeAcademicYear;
+        record.academicYear = record.academicYear || window.activeAcademicYear; // ✅ حفظ سال تحصیلی
         
         await saveData('records', record);
         showToast('رکورد با موفقیت ویرایش شد.', 'success');
@@ -1037,6 +1021,20 @@ async function saveEditedRecord(event) {
         console.error(e); 
         showToast('خطا در ذخیره.', 'error'); 
     }
+}
+// ==========================================
+// توابع تکمیلی و کمکی
+// ==========================================
+
+function clearRecordFilters() {
+    const el1 = document.getElementById('recordsFilterSubject');
+    const el2 = document.getElementById('recordsFilterStudent');
+    const el3 = document.getElementById('recordsSearchText');
+    if (el1) el1.value = '';
+    if (el2) el2.value = '';
+    if (el3) el3.value = '';
+    currentPage.records = 1;
+    loadAssessmentRecords();
 }
 
 async function loadQuranRewards() {
