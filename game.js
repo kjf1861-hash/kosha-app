@@ -48,14 +48,24 @@ async function generateGameFile(examId) {
 }
 
 function buildGameHtml(exam, subName, questions) {
-    const questionsJson = JSON.stringify(questions);
+    // ✅ اصلاح امنیتی: امن‌سازی داده‌ها برای جلوگیری از شکستن کدهای جاوااسکریپت
+    // با جایگزین کردن < با \u003c، از بسته شدن زودهنگام تگ اسکریپت جلوگیری می‌شود
+    const jsonSafe = (obj) => JSON.stringify(obj).replace(/</g, '\\u003c');
+    
+    const questionsJson = jsonSafe(questions);
+    const safeTitleJs = jsonSafe(exam.title);
+    
+    // ✅ اصلاح امنیتی: escape متن‌ها برای نمایش در HTML
+    const safeExamTitleHtml = escapeHtml(exam.title);
+    const safeSubNameHtml = escapeHtml(subName);
+    const safeDateHtml = escapeHtml(exam.date);
     
     return `<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🎮 بازی آزمون: ${exam.title}</title>
+    <title>🎮 بازی آزمون: ${safeExamTitleHtml}</title>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -133,6 +143,7 @@ function buildGameHtml(exam, subName, questions) {
             background: #f8fafc;
             border-radius: 12px;
             border-right: 4px solid #4A90E2;
+            word-wrap: break-word;
         }
         .question-score-badge {
             display: inline-block;
@@ -163,6 +174,7 @@ function buildGameHtml(exam, subName, questions) {
             display: flex;
             align-items: center;
             gap: 10px;
+            word-wrap: break-word;
         }
         .option-btn:hover {
             border-color: #4A90E2;
@@ -294,10 +306,10 @@ function buildGameHtml(exam, subName, questions) {
 <body>
     <div class="game-container" id="gameContainer">
         <div class="game-header">
-            <h1>🎮 ${exam.title}</h1>
-            <p>${subName}</p>
+            <h1>🎮 ${safeExamTitleHtml}</h1>
+            <p>${safeSubNameHtml}</p>
             <div class="game-info-bar">
-                <span>📅 ${exam.date}</span>
+                <span>📅 ${safeDateHtml}</span>
                 <span>❓ ${questions.length} سوال</span>
                 <span>🎯 ${exam.maxScore} نمره</span>
             </div>
@@ -308,8 +320,22 @@ function buildGameHtml(exam, subName, questions) {
     </div>
 
     <script>
+        // ✅ تابع امنیتی برای جلوگیری از اجرای کدهای HTML در مرورگر دانش‌آموز
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[m];
+            });
+        }
+
         const EXAM_DATA = {
-            title: "${exam.title.replace(/"/g, '\\"')}",
+            title: ${safeTitleJs},
             maxScore: ${exam.maxScore},
             questions: ${questionsJson}
         };
@@ -339,17 +365,17 @@ function buildGameHtml(exam, subName, questions) {
                 q.options.forEach((opt, i) => {
                     const letters = ['الف', 'ب', 'ج', 'د', 'ه', 'و'];
                     const isSelected = userAnswers[currentQuestionIndex] === i;
-                    questionHtml += \`
+                    questionHtml += `
                         <button class="option-btn \${isSelected ? 'selected' : ''}" onclick="selectOption(\${i})">
                             <span class="option-letter">\${letters[i] || (i+1)}</span>
-                            <span>\${opt}</span>
+                            <span>\${escapeHtml(opt)}</span>
                         </button>
-                    \`;
+                    `;
                 });
                 questionHtml += '</div>';
             } else if (q.type === 'true-false') {
                 const selected = userAnswers[currentQuestionIndex];
-                questionHtml = \`
+                questionHtml = `
                     <div class="options-list">
                         <button class="option-btn \${selected === true ? 'selected' : ''}" onclick="selectTrueFalse(true)">
                             <span class="option-letter">✅</span>
@@ -360,21 +386,21 @@ function buildGameHtml(exam, subName, questions) {
                             <span>غلط</span>
                         </button>
                     </div>
-                \`;
+                `;
             } else {
                 const currentAnswer = userAnswers[currentQuestionIndex] || '';
-                questionHtml = \`
+                questionHtml = `
                     <input type="text" class="text-answer-input" 
                            placeholder="پاسخ خود را بنویسید..." 
-                           value="\${currentAnswer}"
+                           value="\${escapeHtml(currentAnswer)}"
                            oninput="updateTextAnswer(this.value)">
-                \`;
+                `;
             }
             
             const isFirst = currentQuestionIndex === 0;
             const isLast = currentQuestionIndex === total - 1;
             
-            body.innerHTML = \`
+            body.innerHTML = `
                 <div class="progress-bar-outer">
                     <div class="progress-bar-inner" style="width: \${progress}%;"></div>
                 </div>
@@ -382,14 +408,14 @@ function buildGameHtml(exam, subName, questions) {
                 <div class="question-text">
                     <span class="question-score-badge">\${q.score} نمره</span>
                     <br>
-                    \${q.text}
+                    \${escapeHtml(q.text)}
                 </div>
                 \${questionHtml}
                 <div class="nav-buttons">
                     <button class="btn-nav btn-prev" onclick="prevQuestion()" \${isFirst ? 'disabled' : ''}>▶ قبلی</button>
                     <button class="btn-nav btn-next" onclick="nextQuestion()">\${isLast ? '🏁 پایان آزمون' : 'بعدی ◀'}</button>
                 </div>
-            \`;
+            `;
         }
         
         function selectOption(index) {
@@ -421,7 +447,8 @@ function buildGameHtml(exam, subName, questions) {
                 showFinishScreen();
             }
         }
-        
+
+// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ (آخرین بخش) را بفرستم.
         function showFinishScreen() {
             const answersString = userAnswers.map(a => {
                 if (a === null) return 'null';
@@ -438,7 +465,7 @@ function buildGameHtml(exam, subName, questions) {
             }
             const code = Math.abs(hash).toString(36).toUpperCase().substring(0, 8).padStart(8, '0');
             
-            document.getElementById('gameBody').innerHTML = \`
+            document.getElementById('gameBody').innerHTML = `
                 <div class="finish-screen">
                     <div class="finish-icon">🎉</div>
                     <div class="finish-title">آفرین! آزمون را به پایان رساندی.</div>
@@ -449,7 +476,7 @@ function buildGameHtml(exam, subName, questions) {
                     <br>
                     <button class="restart-btn" onclick="restartGame()">🔄 شروع مجدد</button>
                 </div>
-            \`;
+            `;
         }
         
         function copyCode(code) {
