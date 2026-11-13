@@ -31,6 +31,9 @@ async function saveClassProfile(e) {
 
     if (!classNameEl) return;
 
+    // ✅ سال تحصیلی از فیلد AcademicYear خوانده می‌شود
+    const selectedYear = academicYearEl ? academicYearEl.value : window.activeAcademicYear;
+
     const data = {
         id: 1,
         name: classNameEl.value,
@@ -39,7 +42,7 @@ async function saveClassProfile(e) {
         grade: classGradeEl ? classGradeEl.value : '',
         teacherName: teacherNameEl ? teacherNameEl.value : '',
         schoolName: schoolNameEl ? schoolNameEl.value : '',
-        academicYear: academicYearEl ? academicYearEl.value : window.activeAcademicYear,
+        academicYear: selectedYear, // ✅ سال تحصیلی جاری
         scheduleActiveDays: selectedDays,
         schedulePeriodsCount: periodsCount
     };
@@ -48,6 +51,8 @@ async function saveClassProfile(e) {
     
     window.scheduleActiveDays = selectedDays;
     window.schedulePeriodsCount = periodsCount;
+    window.activeAcademicYear = selectedYear;
+    localStorage.setItem('kosha-active-year', selectedYear);
 
     showToast('مشخصات کلاس ذخیره شد!', 'success');
     const headerSubtitle = document.getElementById('header-subtitle');
@@ -105,7 +110,6 @@ function renderDashboardData() {
     renderRecentActivities();
     renderFullClassReport(studentScores);
     
-    // *** کارت جدید گزارش آزمون‌ها ***
     renderExamsDashboard();
 }
 
@@ -423,14 +427,10 @@ function renderFullClassReport(studentScores) {
     }).join('');
 }
 
-// ==========================================
-// گزارش جامع آزمون‌ها در داشبورد
-// ==========================================
 function renderExamsDashboard() {
     const container = document.getElementById('dashboard-exams-report');
     if (!container) return;
     
-    // بارگذاری داده‌های آزمون اگر قبلاً انجام نشده
     if (!window.allExamsData) window.allExamsData = [];
     if (!window.allExamResultsData) window.allExamResultsData = [];
     
@@ -442,11 +442,9 @@ function renderExamsDashboard() {
         return;
     }
     
-    // آمار کلی
     const totalExams = exams.length;
     const totalResults = results.length;
     
-    // میانگین کل
     let totalScorePercent = 0;
     let validResults = 0;
     results.forEach(r => {
@@ -458,7 +456,6 @@ function renderExamsDashboard() {
     });
     const avgPercent = validResults > 0 ? Math.round(totalScorePercent / validResults) : 0;
     
-    // بهترین دانش‌آموز (بیشترین میانگین درصد)
     const studentPercentMap = {};
     results.forEach(r => {
         const exam = exams.find(e => e.id === r.examId);
