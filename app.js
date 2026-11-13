@@ -1136,12 +1136,12 @@ if (!title) { showToast('عنوان آیتم را وارد کنید.', 'error');
 if (!type) { showToast('نوع آیتم را انتخاب کنید.', 'error'); return; }
     
     if (!id && assessmentItems.length >= 16) {
-        showToast('حداکثر تعداد مجاز آیتم ارزشیابی (۱۶ آیتم) تکمیل شده است.', 'error');
-        return;
-    }
-    
-    const oldItem = id ? assessmentItems.find(i => i.id === parseInt(id)) : null;
-    const oldTitle = oldItem ? oldItem.title : null;
+    showToast('حداکثر تعداد مجاز آیتم ارزشیابی (۱۶ آیتم) تکمیل شده است.', 'error');
+    return;
+}
+
+const oldItem = id ? assessmentItems.find(i => i.id === parseInt(id)) : null;
+const oldTitle = oldItem ? oldItem.title : null;
 
     let itemData = { title, type };
     if (id) {
