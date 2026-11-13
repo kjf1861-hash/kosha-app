@@ -960,8 +960,13 @@ async function loadAllData() {
         
         window.allWeeklyScheduleData = rawWeeklySchedule;
 
-        assessmentItems = await getAllData('assessmentItems');
-        window.allAssessmentItems = assessmentItems;
+        assessmentItems = await getDataByYear('assessmentItems', currentYear);
+if (!assessmentItems || assessmentItems.length === 0) {
+    if (typeof window.ensureAssessmentItemsForYear === 'function') {
+        assessmentItems = await window.ensureAssessmentItemsForYear(currentYear);
+    }
+}
+window.allAssessmentItems = assessmentItems;
         
         currentBackupSettings = await getBackupSettings(currentYear);
 
@@ -1016,8 +1021,8 @@ function renderItemsList() {
     <div class="item-management-row">
         <div><strong>${escapeHtml(item.title)}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">(${escapeHtml(typeName)})</span></div>
         <div style="display:flex; gap:5px;">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="editItem(${item.id})" ${item.type === 'quran' ? 'disabled title="سیستمی"' : ''}>✏️</button>
-            <button type="button" class="btn btn-danger btn-sm" onclick="deleteCustomItem(${item.id})" ${item.type === 'quran' ? 'disabled title="سیستمی"' : ''}>🗑️</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="editItem('${item.id}')" ${item.type === 'quran' ? 'disabled title="سیستمی"' : ''}>✏️</button>
+<button type="button" class="btn btn-danger btn-sm" onclick="deleteCustomItem('${item.id}')" ${item.type === 'quran' ? 'disabled title="سیستمی"' : ''}>🗑️</button>
         </div>
     </div>
 `;
@@ -1140,15 +1145,15 @@ if (!type) { showToast('نوع آیتم را انتخاب کنید.', 'error'); 
     return;
 }
 
-const oldItem = id ? assessmentItems.find(i => i.id === parseInt(id)) : null;
+const oldItem = id ? assessmentItems.find(i => i.id === id) : null;
 const oldTitle = oldItem ? oldItem.title : null;
 
-    let itemData = { title, type };
-    if (id) {
-        itemData.id = parseInt(id);
-    } else {
-        itemData.id = Date.now();
-    }
+let itemData = { title, type, academicYear: window.activeAcademicYear };
+if (id) {
+    itemData.id = id;
+} else {
+    itemData.id = `${window.activeAcademicYear}_${Date.now()}`;
+}
     
     if (type === 'level') {
         const placeholder = document.getElementById('itemLevelPlaceholder');
@@ -1176,15 +1181,15 @@ const oldTitle = oldItem ? oldItem.title : null;
         await saveData('assessmentItems', itemData);
         
         if (oldTitle && oldTitle !== title) {
-            const allRecords = await getAllData('records');
-            let updatedCount = 0;
-            for (let rec of allRecords) {
-                if (rec.itemName === oldTitle) {
-                    rec.itemName = title;
-                    await saveData('records', rec);
-                    updatedCount++;
-                }
-            }
+    const allRecords = await getAllData('records');
+    let updatedCount = 0;
+    for (let rec of allRecords) {
+        if (rec.itemName === oldTitle && rec.academicYear === window.activeAcademicYear) {
+            rec.itemName = title;
+            await saveData('records', rec);
+            updatedCount++;
+        }
+    }
             if (updatedCount > 0) {
                 showToast(`نام آیتم در ${toPersianNumber(updatedCount)} رکورد قبلی نیز به‌روزرسانی شد.`, 'info');
             }
@@ -1192,9 +1197,9 @@ const oldTitle = oldItem ? oldItem.title : null;
 
         showToast('آیتم با موفقیت ذخیره شد!', 'success');
         
-        const freshItems = await getAllData('assessmentItems');
-        window.allAssessmentItems = freshItems;
-        assessmentItems = freshItems;
+        const freshItems = await getDataByYear('assessmentItems', window.activeAcademicYear);
+window.allAssessmentItems = freshItems;
+assessmentItems = freshItems;
         
         renderItemsList();
         resetItemForm();
@@ -1225,9 +1230,9 @@ async function deleteCustomItem(id) {
     try {
         await deleteData('assessmentItems', id);
         showToast('آیتم حذف شد.', 'success');
-        const freshItems = await getAllData('assessmentItems');
-        window.allAssessmentItems = freshItems;
-        assessmentItems = freshItems;
+        const freshItems = await getDataByYear('assessmentItems', window.activeAcademicYear);
+window.allAssessmentItems = freshItems;
+assessmentItems = freshItems;
         renderItemsList();
         const itemSelect = document.getElementById('recordItem');
         if (itemSelect) itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
