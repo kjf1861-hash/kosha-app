@@ -770,7 +770,7 @@ async function saveExamGrades() {
             examId: currentGradingExamId,
             studentId: studentId,
             score: score,
-            academicYear: window.activeAcademicYear // ✅ سال تحصیلی جاری
+            academicYear: window.activeAcademicYear
         });
     });
     
@@ -783,9 +783,9 @@ async function saveExamGrades() {
         }
         
         for (let i = 0; i < newResults.length; i++) {
-    newResults[i].id = generateUniqueId();
-    await saveData('examResults', newResults[i]);
-}
+            newResults[i].id = generateUniqueId();
+            await saveData('examResults', newResults[i]);
+        }
         
         showToast(`نمرات ${toPersianNumber(newResults.length)} دانش‌آموز ذخیره شد!`, 'success');
         
