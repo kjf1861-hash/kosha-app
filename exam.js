@@ -33,12 +33,12 @@ function renderExamsData() {
 
     if (!window.allExamsData || window.allExamsData.length === 0) {
         container.innerHTML = `
-            <div class="exam-list-actions" style="flex-wrap: wrap;">
-    <button class="btn btn-primary btn-sm" onclick="openExamGradingModal('${exam.id}')" title="ثبت نمرات">📝 ثبت نمرات</button>
-    <button class="btn btn-secondary btn-sm" onclick="generateGameFile('${exam.id}')" title="تولید فایل بازی برای دانش‌آموز" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none;">🎮 تولید بازی</button>
-    <button class="btn btn-secondary btn-sm" onclick="openExamEditorModal('${exam.id}')" title="ویرایش آزمون">✏️ ویرایش</button>
-    <button class="btn btn-danger btn-sm" onclick="deleteExam('${exam.id}')" title="حذف آزمون">🗑️ حذف</button>
-</div>
+            <div class="empty-state">
+                <svg><use href="#empty-exams"/></svg>
+                <div class="empty-title">هنوز آزمونی نساختی!</div>
+                <div class="empty-desc">اولین آزمونت رو بساز تا نمرات رو ثبت کنی و گزارش‌ها رو ببینی.</div>
+                <button class="empty-action" onclick="openExamEditorModal()">➕ ساخت اولین آزمون</button>
+            </div>
         `;
         return;
     }
@@ -65,11 +65,11 @@ function renderExamsData() {
         html += `
             <div class="exam-list-item">
                 <div class="exam-list-header">
-                    <span class="exam-list-title">${exam.title}</span>
+                    <span class="exam-list-title">${escapeHtml(exam.title)}</span>
                     <span class="rank-badge">${toPersianNumber(exam.maxScore)} نمره</span>
                 </div>
                 <div class="exam-list-details">
-                    <span>📚 ${subName}</span>
+                    <span>📚 ${escapeHtml(subName)}</span>
                     <span>📅 ${toPersianNumber(exam.date)}</span>
                 </div>
                 <div class="exam-list-details" style="margin-top: 4px;">
@@ -80,10 +80,10 @@ function renderExamsData() {
                     ${avgHtml}
                 </div>
                 <div class="exam-list-actions" style="flex-wrap: wrap;">
-                    <button class="btn btn-primary btn-sm" onclick="openExamGradingModal(${exam.id})" title="ثبت نمرات">📝 ثبت نمرات</button>
-                    <button class="btn btn-secondary btn-sm" onclick="generateGameFile(${exam.id})" title="تولید فایل بازی برای دانش‌آموز" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none;">🎮 تولید بازی</button>
-                    <button class="btn btn-secondary btn-sm" onclick="openExamEditorModal(${exam.id})" title="ویرایش آزمون">✏️ ویرایش</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteExam(${exam.id})" title="حذف آزمون">🗑️ حذف</button>
+                    <button class="btn btn-primary btn-sm" onclick="openExamGradingModal('${exam.id}')" title="ثبت نمرات">📝 ثبت نمرات</button>
+                    <button class="btn btn-secondary btn-sm" onclick="generateGameFile('${exam.id}')" title="تولید فایل بازی برای دانش‌آموز" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none;">🎮 تولید بازی</button>
+                    <button class="btn btn-secondary btn-sm" onclick="openExamEditorModal('${exam.id}')" title="ویرایش آزمون">✏️ ویرایش</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteExam('${exam.id}')" title="حذف آزمون">🗑️ حذف</button>
                 </div>
             </div>
         `;
