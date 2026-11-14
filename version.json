@@ -1,7 +1,7 @@
 {
-    "version": "v1.0.4",
+    "version": "v1.0.5",
     "releaseDate": "۱۴۰۵/۰۸/۲۳",
-    "releaseNotes": "اعلان آپدیت قبل از اجرا (کنترل کامل کاربر)",
+    "releaseNotes": "اصلاح سیستم به‌روزرسانی و افزودن دکمه رد کردن نسخه",
     "downloadUrl": "",
     "forceUpdate": false
 }
