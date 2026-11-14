@@ -1374,39 +1374,44 @@
         }
     </script>
 
-    <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) — به‌روز شده -->
-    <script>
-        (function() {
-            // ✅ نسخه از version.js خوانده می‌شود، نه hardcode
-            const APP_VERSION = window.APP_VERSION || 'v1.0.0';
-            const storedVersion = localStorage.getItem('kosha-version');
+    <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) — نسخه اصلاح شده برای اعلان به کاربر -->
+<script>
+    (function() {
+        const APP_VERSION = window.APP_VERSION || 'v1.0.0';
+        const storedVersion = localStorage.getItem('kosha-version');
+        
+        if (storedVersion !== APP_VERSION) {
+            console.log('🔄 نسخه جدید شناسایی شد. در حال پاکسازی کش‌های قدیمی...');
             
-            if (storedVersion !== APP_VERSION) {
-                console.log('🔄 در حال به‌روزرسانی کش و سرویس‌ورکر... نسخه: ' + APP_VERSION);
-                
-                localStorage.setItem('kosha-version', APP_VERSION);
-                
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                        for(let registration of registrations) {
-                            registration.unregister();
-                        }
-                        caches.keys().then(function(names) {
-                            for (let name of names) caches.delete(name);
-                            
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 500);
-                        });
+            // ۱. ذخیره نسخه جدید در حافظه (تا این مرحله تکرار نشود)
+            localStorage.setItem('kosha-version', APP_VERSION);
+            
+            // ۲. پاک کردن کش‌ها و سرویس‌ورکر در پس‌زمینه
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) {
+                        registration.unregister();
+                    }
+                    caches.keys().then(function(names) {
+                        for (let name of names) caches.delete(name);
+                        console.log('✅ کش‌های قدیمی پاک شدند.');
+                        
+                        // ✅ تغییر اصلی: به جای رفرش کردن اجباری صفحه، فقط به updater.js اطلاع می‌دهیم
+                        // تا او مودال را به کاربر نشان دهد
+                        console.log('⏳ منتظر تصمیم کاربر برای به‌روزرسانی...');
+                        
+                        // یک رویداد سفارشی می‌فرستیم که updater.js آن را بشنود (اختیاری)
+                        window.dispatchEvent(new CustomEvent('kosha-cache-cleared'));
                     });
-                } else {
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 500);
-                }
+                });
+            } else {
+                // اگر مرورگر سرویس‌ورکر نداشت، باز هم رفرش نمی‌کنیم
+                console.log('⏳ منتظر تصمیم کاربر برای به‌روزرسانی...');
+                window.dispatchEvent(new CustomEvent('kosha-cache-cleared'));
             }
-        })();
-    </script>
+        }
+    })();
+</script>
     
     <!-- 🔥 SVG Sprite: آیکون‌های Toast و Empty State -->
     <svg style="display: none;" aria-hidden="true">
