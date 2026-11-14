@@ -114,6 +114,69 @@
             background: var(--primary);
             border-radius: 50%;
         }
+
+        /* ✅ استایل جدید: بخش نسخه در تنظیمات */
+        .version-info-box {
+            background: var(--primary-light);
+            border: 1px solid var(--primary);
+            border-radius: var(--radius-sm);
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .version-info-box .version-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            font-family: 'IRNumber', monospace;
+            margin: 8px 0;
+        }
+        .version-info-box .version-date {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .update-mode-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .update-mode-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        .update-mode-option:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .update-mode-option input[type="radio"] {
+            accent-color: var(--primary);
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+        .update-mode-option.selected {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            font-weight: 700;
+        }
+        .last-check-display {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 8px;
+            padding: 6px;
+            background: var(--input-bg);
+            border-radius: 6px;
+        }
     </style>
 </head>
 <body>
@@ -203,6 +266,7 @@
 </div>
             </div>
 
+// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
             <!-- تب ۲: دانش‌آموزان -->
             <div id="page-students" class="page-section">
                 <div class="page-header-title">👦 دانش‌آموزان</div>
@@ -369,7 +433,8 @@
                     </div>
                 </div>
             </div>
-            
+
+// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
             <!-- تب ۶: امتیازات -->
             <div id="page-score" class="page-section">
                 <div class="page-header-title">📝 امتیازات</div>
@@ -583,6 +648,7 @@
     </a>
 </nav>
 
+// ⏸️ پایان بخش ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۴ (آخرین بخش) را بفرستم.
 <!-- ===== مودال‌ها ===== -->
 <div id="settings-modal" class="modal-overlay">
     <div class="modal-content" style="max-width: 600px;">
@@ -598,7 +664,44 @@
                 🔄 تغییر
             </button>
         </div>
-        
+
+        <!-- ✅ بخش جدید: نسخه و به‌روزرسانی -->
+        <div class="card" style="border: 2px solid var(--primary); box-shadow: none; padding: 15px; margin-bottom: 20px;">
+            <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">🏷️ نسخه و به‌روزرسانی</h3>
+            
+            <div class="version-info-box">
+                <div style="font-size: 0.85rem; color: var(--text-muted);">نسخه فعلی برنامه</div>
+                <div class="version-value" id="currentVersionDisplay">v1.0.0</div>
+                <div class="version-date" id="currentVersionDate">تاریخ انتشار: --</div>
+            </div>
+            
+            <div style="margin-bottom: 12px;">
+                <label class="form-label" style="font-size: 0.9rem;">حالت به‌روزرسانی خودکار:</label>
+                <div class="update-mode-group" id="updateModeGroup">
+                    <label class="update-mode-option" data-mode="auto">
+                        <input type="radio" name="updateMode" value="auto">
+                        <span>🔄 <strong>خودکار</strong> — بدون اطلاع من، بی‌صدا آپدیت شود</span>
+                    </label>
+                    <label class="update-mode-option" data-mode="notify">
+                        <input type="radio" name="updateMode" value="notify">
+                        <span>🔔 <strong>اعلان بده</strong> — قبل از آپدیت از من بپرس (پیشنهادی)</span>
+                    </label>
+                    <label class="update-mode-option" data-mode="manual">
+                        <input type="radio" name="updateMode" value="manual">
+                        <span>✋ <strong>دستی</strong> — فقط وقتی من دکمه بررسی را زدم</span>
+                    </label>
+                </div>
+            </div>
+            
+            <button type="button" class="btn btn-primary btn-block" onclick="checkForUpdatesManually()" id="checkUpdateBtn" style="margin-bottom: 8px;">
+                🔍 بررسی به‌روزرسانی
+            </button>
+            
+            <div class="last-check-display" id="lastCheckDisplay">
+                ⏱️ آخرین بررسی: هرگز
+            </div>
+        </div>
+
         <div class="card" style="border: none; box-shadow: none; padding: 0; margin-bottom: 20px;">
             <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">🏫 مشخصات کلاس</h3>
             <form id="class-form">
@@ -698,7 +801,7 @@
                 </div>
 
                 <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
-                    <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">?? پاکسازی فنی (کش)</strong>
+                    <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">🧹 پاکسازی فنی (کش)</strong>
                     <p style="font-size: 0.8rem; color: #64748b; margin: 0 0 10px 0;">اگر برنامه باگ زد یا آپدیت نشد، کش مرورگر را پاک کنید.</p>
                     <button type="button" class="btn btn-secondary btn-block" onclick="resetTechnicalCache()" style="background: #fca5a5; color: #7f1d1d;">پاکسازی کش</button>
                 </div>
@@ -1018,22 +1121,54 @@
         </div>
     </div>
 
-    <!-- ===== اسکریپت‌ها ===== -->
-    <script src="jalali-utils.js?v=3"></script>
-    <script src="calendar-data.js?v=6"></script>
-    <script src="calendar.js?v=7"></script>
-    <script src="db.js?v=4"></script>
-    <script src="app.js?v=12"></script>
-    <script src="back-button.js?v=6" defer></script>
-    <script src="class.js?v=4"></script>
-    <script src="students.js?v=4"></script>
-    <script src="lesson.js?v=5"></script>
-    <script src="group.js?v=4"></script>
-    <script src="session.js?v=8"></script>
-    <script src="score.js?v=10"></script>
-    <script src="reset.js?v=3"></script>
-    <script src="game.js?v=3"></script>
-    <script src="exam.js?v=8"></script>
+    <!-- ===== ✅ مودال جدید: اعلان به‌روزرسانی ===== -->
+    <div id="update-available-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 450px; text-align: center;">
+            <div class="modal-header" style="color: #16a34a;">🚀 نسخه جدید در دسترس!</div>
+            <div style="padding: 20px 0;">
+                <div style="font-size: 4rem; margin-bottom: 15px; animation: bounce 1s infinite;">🚀</div>
+                <h3 style="color: var(--primary); margin-bottom: 15px;" id="update-version-text">نسخه جدید آماده است</h3>
+                <div style="background: var(--primary-light); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+                    <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted); line-height: 1.8;" id="update-notes-text">
+                        تغییرات جدید آماده نصب هستند.
+                    </p>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;" id="update-date-text">
+                    تاریخ انتشار: --
+                </p>
+            </div>
+            <div class="modal-footer" style="flex-direction: column; gap: 10px;">
+                <button type="button" class="btn btn-primary" style="width: 100%; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);" onclick="applyUpdateNow()">
+                    ⬇️ همین حالا به‌روزرسانی کن
+                </button>
+                <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="dismissUpdateNotification()">
+                    ⏰ بعداً یادآوری کن
+                </button>
+                <button type="button" class="btn btn-secondary" style="width: 100%; font-size: 0.85rem; background: transparent; color: var(--text-muted);" onclick="openSettingsModal(); closeUpdateModal();">
+                    ⚙️ تنظیمات به‌روزرسانی
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== اسکریپت‌ها (بدون ?v=N + نسخه جدید) ===== -->
+    <script src="version.js"></script>
+    <script src="jalali-utils.js"></script>
+    <script src="calendar-data.js"></script>
+    <script src="calendar.js"></script>
+    <script src="db.js"></script>
+    <script src="app.js"></script>
+    <script src="back-button.js" defer></script>
+    <script src="class.js"></script>
+    <script src="students.js"></script>
+    <script src="lesson.js"></script>
+    <script src="group.js"></script>
+    <script src="session.js"></script>
+    <script src="score.js"></script>
+    <script src="reset.js"></script>
+    <script src="game.js"></script>
+    <script src="exam.js"></script>
+    <script src="updater.js"></script>
     
     <script>
         // *** بخش آیکون‌های SVG برای تم ***
@@ -1079,6 +1214,27 @@
             const yearDisplay = document.getElementById('currentAcademicYearDisplay');
             if (yearDisplay && typeof toPersianNumber === 'function') {
                 yearDisplay.textContent = toPersianNumber(window.activeAcademicYear || '1405-1406');
+            }
+            
+            // ✅ به‌روزرسانی بخش نسخه در تنظیمات
+            const versionDisplay = document.getElementById('currentVersionDisplay');
+            if (versionDisplay && window.APP_VERSION) {
+                versionDisplay.textContent = window.APP_VERSION;
+            }
+            
+            const versionDate = document.getElementById('currentVersionDate');
+            if (versionDate && window.APP_RELEASE_DATE) {
+                versionDate.textContent = 'تاریخ انتشار: ' + window.APP_RELEASE_DATE;
+            }
+            
+            // ✅ به‌روزرسانی وضعیت آخرین بررسی
+            if (typeof updateLastCheckDisplay === 'function') {
+                updateLastCheckDisplay();
+            }
+            
+            // ✅ به‌روزرسانی حالت به‌روزرسانی
+            if (typeof updateUpdateModeUI === 'function') {
+                updateUpdateModeUI();
             }
             
             if (typeof populateResetSelect === 'function') populateResetSelect();
@@ -1132,8 +1288,48 @@
             }
         }
 
+        // ✅ توابع مربوط به مودال به‌روزرسانی
+        function openUpdateModal(versionInfo) {
+            const modal = document.getElementById('update-available-modal');
+            if (!modal) return;
+            
+            const versionText = document.getElementById('update-version-text');
+            if (versionText && versionInfo) {
+                versionText.textContent = 'نسخه ' + versionInfo.version + ' آماده است';
+            }
+            
+            const notesText = document.getElementById('update-notes-text');
+            if (notesText && versionInfo) {
+                notesText.textContent = versionInfo.releaseNotes || 'تغییرات جدید آماده نصب هستند.';
+            }
+            
+            const dateText = document.getElementById('update-date-text');
+            if (dateText && versionInfo) {
+                dateText.textContent = 'تاریخ انتشار: ' + (versionInfo.releaseDate || '--');
+            }
+            
+            modal.classList.add('show');
+        }
+        
+        function closeUpdateModal() {
+            const modal = document.getElementById('update-available-modal');
+            if (modal) modal.classList.remove('show');
+        }
+        
+        function applyUpdateNow() {
+            if (typeof performUpdate === 'function') {
+                performUpdate();
+            }
+        }
+        
+        function dismissUpdateNotification() {
+            if (typeof snoozeUpdateNotification === 'function') {
+                snoozeUpdateNotification();
+            }
+            closeUpdateModal();
+        }
+
         window.addEventListener('load', async () => {
-            // ✅ اصلاح باگ: حذف initDB تکراری (چون درون initApp صدا زده می‌شود)
             try {
                 if (typeof initApp === 'function') await initApp();
             } catch (error) {
@@ -1181,15 +1377,15 @@
         }
     </script>
 
-    <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) -->
+    <!-- کلید کشتار سرویس‌ورکر گیرکرده (Kill Switch) — به‌روز شده -->
     <script>
         (function() {
-            // ✅ آپدیت نسخه اپلیکیشن طبق درخواست شما
-            const APP_VERSION = 'v142';
+            // ✅ نسخه از version.js خوانده می‌شود، نه hardcode
+            const APP_VERSION = window.APP_VERSION || 'v1.0.0';
             const storedVersion = localStorage.getItem('kosha-version');
             
             if (storedVersion !== APP_VERSION) {
-                console.log('🔄 در حال به‌روزرسانی کش و سرویس‌ورکر...');
+                console.log('🔄 در حال به‌روزرسانی کش و سرویس‌ورکر... نسخه: ' + APP_VERSION);
                 
                 localStorage.setItem('kosha-version', APP_VERSION);
                 
