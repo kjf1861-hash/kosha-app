@@ -172,7 +172,6 @@ function changeScoreCalendarMonth(type, delta) {
     renderScoreCalendar(type);
 }
 
-// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 function renderScoreCalendar(type) {
     const state = scoreCalendarState[type];
     
@@ -339,6 +338,7 @@ function resetScoreCalendar(type) {
     renderScoreCalendar(type);
 }
 
+// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 // ==========================================
 // مدیریت انتخاب دانش‌آموزان
 // ==========================================
@@ -402,17 +402,24 @@ function toggleGroupSelection(checkbox, groupId, checkboxClass = 'student-checkb
     });
 }
 
+// ✅ اصلاح باگ بزرگ: انتخاب همه فقط در همان فرم اعمال می‌شود (نه در کل صفحه)
 function toggleAllStudents(checked, checkboxClass = 'student-checkbox') { 
-    document.querySelectorAll(`.${checkboxClass}`).forEach(cb => cb.checked = checked); 
-    const section = checkboxClass === 'student-checkbox' ? null : document.getElementById(`${checkboxClass.replace('-student-checkbox', '')}-students-container`);
-    if (section) {
-        section.querySelectorAll('.group-select-all-checkbox').forEach(cb => cb.checked = checked);
-    } else {
-        document.querySelectorAll('.group-select-all-checkbox').forEach(cb => cb.checked = checked);
+    let containerId = 'students-checkbox-container';
+    if (checkboxClass === 'quran-student-checkbox') containerId = 'quran-students-container';
+    if (checkboxClass === 'special-student-checkbox') containerId = 'special-reward-students-container';
+    if (checkboxClass === 'handwriting-student-checkbox') containerId = 'handwriting-students-container';
+
+    const container = document.getElementById(containerId);
+    if (container) {
+        container.querySelectorAll(`.${checkboxClass}`).forEach(cb => cb.checked = checked);
+        container.querySelectorAll('.group-select-all-checkbox').forEach(cb => cb.checked = checked);
     }
 }
 
-// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
+// ==========================================
+// سایر فرم‌ها (قرآن، تشویق، خوش‌خط)
+// ==========================================
+
 function renderQuranStudentCheckboxes() {
     const container = document.getElementById('quran-students-container');
     if (!container) return;
@@ -506,6 +513,7 @@ function toggleHandwritingGroupSelection(checkbox, groupId, checkboxClass) {
     document.querySelectorAll(`.handwriting-student-checkbox.group-student-${groupId}`).forEach(cb => cb.checked = checkbox.checked);
 }
 
+// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 // ==========================================
 // ثبت ارزشیابی
 // ==========================================
@@ -666,6 +674,7 @@ async function confirmAndSaveRecord() {
     }
 }
 
+// ✅ اصلاح باگ بزرگ: جلوگیری از فریز شدن برنامه (بهینه‌سازی حلقه پویش قرآن)
 async function saveQuranRecord() {
     const studentCheckboxes = document.querySelectorAll('.quran-student-checkbox:checked');
     if (studentCheckboxes.length === 0) { showToast('دانش‌آموز انتخاب کنید.', 'error'); return; }
@@ -704,16 +713,28 @@ async function saveQuranRecord() {
     try {
         await saveData('records', recordData);
 
+        // ✅ بهینه‌سازی: فقط یک بار دیتابیس را می‌خوانیم (به جای خواندن در حلقه برای هر دانش‌آموز)
+        const allRecords = await getAllData('records');
+        
+        // اضافه کردن رکورد جدید به لیست خوانده شده تا محاسبات فوراً آپدیت شوند
+        const quranRecords = allRecords.filter(rec => 
+            rec.itemName === "پویش حفظ جزء سی قرآن کریم" && 
+            rec.academicYear === window.activeAcademicYear
+        );
+        quranRecords.push(recordData); // اضافه کردن رکوردی که الان ذخیره کردیم
+
         for (const studentId of recordData.students) {
-            const allRecords = await getAllData('records'); 
             let totalSurahs = 0, totalAyats = 0;
-            allRecords.forEach(rec => {
-                if (rec.itemName === "پویش حفظ جزء سی قرآن کریم" && rec.students.includes(studentId) && rec.academicYear === window.activeAcademicYear) {
+            
+            // حلقه فوق‌سریع روی داده‌های حافظه (بدون دسترسی به دیتابیس)
+            quranRecords.forEach(rec => {
+                if (rec.students.includes(studentId)) {
                     totalSurahs += 1;
                     const match = rec.title.match(/- (\d+) آیه/); 
                     if (match) totalAyats += parseInt(match[1]);
                 }
             });
+            
             await saveData('badgesSettings', { 
                 id: `quranReward_${studentId}_${generateUniqueId()}`, 
                 studentId: studentId, 
@@ -822,7 +843,7 @@ async function saveHandwritingReward() {
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق خوش‌خط‌نویسی.', 'error'); }
 }
 
-// ⏸️ پایان بخش ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۴ (آخر) را بفرستم.
+// ⏸️ پایان بخش ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۴ (آخرین بخش) را بفرستم.
 // ==========================================
 // سوابق ارزشیابی
 // ==========================================
@@ -1111,7 +1132,7 @@ async function loadQuranRewards() {
         }
         container.innerHTML = html;
     } catch (e) { 
-        container.innerHTML = '<p style="color:red;">خطا</p>'; 
+        container.innerHTML = '<p style="color:red;">خطا در بارگذاری تشویق‌ها.</p>'; 
     }
 }
 
@@ -1140,7 +1161,13 @@ async function exportScoreCSV() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); 
         a.href = url; 
-        a.download = `kosha_records_${new Date().toISOString().slice(0,10)}.csv`; 
+        
+        // ✅ استفاده از تاریخ شمسی برای نام فایل (در صورت وجود تابع)
+        const dateStr = (typeof window.getJalaliDateTimeForFilename === 'function') 
+            ? window.getJalaliDateTimeForFilename().split('-').slice(0, 3).join('-') 
+            : new Date().toISOString().slice(0,10);
+            
+        a.download = `kosha_records_${dateStr}.csv`; 
         a.click();
         URL.revokeObjectURL(url);
         showToast('فایل CSV سوابق دانلود شد!', 'success');
@@ -1149,3 +1176,5 @@ async function exportScoreCSV() {
         showToast('خطا در تولید فایل.', 'error'); 
     }
 }
+
+// ✅ پایان کامل فایل score.js
