@@ -1,6 +1,7 @@
 /**
  * فایل db.js — لایه ارتباط با IndexedDB (نسخه چندساله)
  * نسخه ۱۷ — اصلاح مهاجرت داده‌ها و آیتم‌های پیش‌فرض
+ * ✅ تغییر: appVersion از version.js خوانده می‌شود
  */
 
 const DB_NAME = 'KoshaDB';
@@ -312,6 +313,7 @@ function initDB() {
     });
 }
 
+// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 // ==========================================
 // ✅ تابع مهاجرت داده‌های قدیمی به نسخه ۱۷
 // ==========================================
@@ -517,7 +519,7 @@ function clearStore(storeName) {
     });
 }
 
-// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ (آخرین بخش) را بفرستم.
+// ⏸️ پایان بخش ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۴ (آخرین بخش) را بفرستم.
 // ==========================================
 // خروجی کامل با _meta
 // ==========================================
@@ -532,9 +534,14 @@ async function exportAllData() {
     if (data.classProfile) data.classProfile.forEach(c => c.academicYear && uniqueYears.add(c.academicYear));
     if (data.students) data.students.forEach(s => s.academicYear && uniqueYears.add(s.academicYear));
     
+    // ✅ تغییر اصلی: خواندن نسخه از version.js به جای hardcode
+    const currentVersion = (typeof window !== 'undefined' && window.APP_VERSION) 
+        ? window.APP_VERSION 
+        : 'v1.0.0';
+    
     data._meta = {
         version: DB_VERSION,
-        appVersion: 'v114',
+        appVersion: currentVersion,  // ✅ اصلاح: از version.js خوانده می‌شود
         exportedAt: new Date().toISOString(),
         exportedAtJalali: getJalaliDateTimeForDisplay(),
         totalYears: uniqueYears.size,
