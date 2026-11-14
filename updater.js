@@ -1,6 +1,6 @@
 // ==========================================
 // فایل updater.js — سیستم به‌روزرسانی هوشمند
-// نسخه v1.0.3 — حل قطعی مشکل کش HTTP (بدون نیاز به تغییر index.html)
+// نسخه v1.0.6 — آپدیت قوی (Nuclear Update) برای دور زدن کامل کش
 // ==========================================
 
 (function() {
@@ -14,7 +14,8 @@
         updateMode: 'kosha-update-mode',
         lastCheck: 'kosha-last-update-check',
         lastSnooze: 'kosha-last-snooze',
-        dismissedVersion: 'kosha-dismissed-version'
+        dismissedVersion: 'kosha-dismissed-version',
+        skippedVersion: 'kosha-skipped-version'
     };
     
     const CHECK_INTERVAL = 24 * 60 * 60 * 1000;  // ۲۴ ساعت
@@ -201,6 +202,13 @@
             if (comparison > 0) {
                 console.log('🎉 نسخه جدید پیدا شد:', serverVersion);
                 
+                const skippedVersion = localStorage.getItem(STORAGE_KEYS.skippedVersion);
+                if (skippedVersion === serverVersion) {
+                    console.log('🚫 کاربر این نسخه را قبلاً به طور کامل رد کرده است.');
+                    if (isManual) showToastSafe('نسخه جدید موجود است، ولی شما آن را رد کرده‌اید.', 'info');
+                    return;
+                }
+
                 const dismissedVersion = localStorage.getItem(STORAGE_KEYS.dismissedVersion);
                 const lastSnooze = parseInt(localStorage.getItem(STORAGE_KEYS.lastSnooze) || '0');
                 const snoozeElapsed = Date.now() - lastSnooze;
@@ -218,7 +226,7 @@
                 if (isManual) showToastSafe('برنامه به‌روز است! نسخه ' + currentVersion, 'success');
             } else {
                 console.log('🔧 نسخه فعلی از سرور جدیدتر است.');
-                if (isManual) showToastSafe('نسخه فعلی جدیدتر از سرور است.', 'info');
+                if (isManual) showToastSafe('برنامه به‌روز است! (نسخه ' + currentVersion + ')', 'success');
             }
             
         } catch (error) {
@@ -298,53 +306,50 @@
     }
 
     // ==========================================
-    // 📌 اجرای آپدیت (راه‌حل نهایی)
+    // 📌 اجرای آپدیت (نیروی اتمی - پاکسازی کامل)
     // ==========================================
     
     async function performUpdate() {
-        console.log('🔄 شروع به‌روزرسانی...');
+        console.log('🔄 شروع به‌روزرسانی قدرتمند...');
         
         try {
-            showToastSafe('در حال به‌روزرسانی... لطفاً صبر کنید.', 'info');
+            showToastSafe('در حال به‌روزرسانی کامل... لطفاً صبر کنید.', 'info');
             
             // ۱. پاک کردن وضعیت‌های ذخیره‌شده
             localStorage.removeItem(STORAGE_KEYS.dismissedVersion);
             localStorage.removeItem(STORAGE_KEYS.lastSnooze);
             localStorage.removeItem('kosha-version');
             
-            // ۲. پاک کردن کامل کش‌ها
+            // ۲. پاک کردن کامل و اجباری کش‌ها
             if ('caches' in window) {
                 const cacheNames = await caches.keys();
-                await Promise.all(cacheNames.map(name => caches.delete(name)));
-                console.log('🗑️ ' + cacheNames.length + ' کش پاک شد.');
+                for (let name of cacheNames) {
+                    await caches.delete(name);
+                }
+                console.log('🗑️ همه کش‌ها پاک شدند.');
             }
             
-            // ۳. حذف سرویس‌ورکرها
+            // ۳. حذف و نابودی سرویس‌ورکرها
             if ('serviceWorker' in navigator) {
                 const registrations = await navigator.serviceWorker.getRegistrations();
-                await Promise.all(registrations.map(reg => reg.unregister()));
-                console.log('🗑️ ' + registrations.length + ' سرویس‌ورکر حذف شد.');
+                for (let reg of registrations) {
+                    await reg.unregister();
+                }
+                console.log('🗑️ همه سرویس‌ورکرها حذف شدند.');
             }
             
-            // ۴. ترفند نهایی: باز کردن آدرس جدید با پارامتر زمان
+            // ۴. ترفند نهایی: رفرش سخت با تغییر آدرس برای دور زدن کش مرورگر
             setTimeout(() => {
-                console.log('🔁 در حال بارگذاری مجدد با دور زدن کامل کش مرورگر...');
-                const timestamp = Date.now();
-                // فقط مسیر فایل را نگه می‌داریم و پارامترهای قبلی را دور می‌ریزیم
-                const baseUrl = window.location.pathname;
-                // رفتن به آدرس جدید (مرورگر مجبور می‌شود فایل index.html و اسکریپت‌هایش را از نو بگیرد)
-                window.location.href = baseUrl + '?kosha_update=' + timestamp;
-            }, 800);
+                console.log('🔁 رفرش سخت...');
+                // آدرس را به طور کامل بازنویسی می‌کنیم و یک پارامتر تصادفی می‌دهیم
+                const url = new URL(window.location.href);
+                url.searchParams.set('kosha_update', Date.now());
+                window.location.replace(url.toString());
+            }, 1200);
             
         } catch (error) {
             console.error('خطا در آپدیت:', error);
-            showToastSafe('خطا در به‌روزرسانی. لطفاً صفحه را دستی رفرش کنید.', 'error');
-            
-            setTimeout(() => {
-                const timestamp = Date.now();
-                const baseUrl = window.location.pathname;
-                window.location.href = baseUrl + '?kosha_update=' + timestamp;
-            }, 1500);
+            window.location.reload();
         }
     }
     
@@ -366,6 +371,25 @@
             
         } catch (e) {
             console.error('خطا در snooze:', e);
+        }
+    }
+    
+    function skipThisVersion() {
+        try {
+            fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.version) {
+                        localStorage.setItem(STORAGE_KEYS.skippedVersion, data.version);
+                        localStorage.removeItem(STORAGE_KEYS.dismissedVersion);
+                        localStorage.removeItem(STORAGE_KEYS.lastSnooze);
+                        console.log('🚫 نسخه ' + data.version + ' برای همیشه رد شد.');
+                        showToastSafe('نسخه جدید رد شد. تا نسخه بعدی پیامی نمایش داده نمی‌شود.', 'info');
+                    }
+                })
+                .catch(() => {});
+        } catch (e) {
+            console.error('خطا در skipThisVersion:', e);
         }
     }
     
@@ -482,11 +506,10 @@
     window.checkForUpdatesManually = checkForUpdatesManually;
     window.performUpdate = performUpdate;
     window.snoozeUpdateNotification = snoozeUpdateNotification;
+    window.skipThisVersion = skipThisVersion;
     window.startAutoCheck = startAutoCheck;
     window.getCurrentVersion = getCurrentVersion;
     
     initUpdater();
     
 })();
-
-// ✅ پایان فایل updater.js
