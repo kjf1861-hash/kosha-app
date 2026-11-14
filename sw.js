@@ -1,17 +1,15 @@
 // ==========================================
-// فایل sw.js — سرویس‌ورکر (نسخه جدید: Cache-First کامل)
-// این نسخه از version.js می‌خواند و از آپدیت مخفیانه جلوگیری می‌کند.
+// فایل sw.js — نسخه نهایی (Static Cache)
+// این نسخه هرگز به طور خودکار فایل‌ها را جایگزین نمی‌کند.
+// آپدیت فقط زمانی رخ می‌دهد که updater.js کش را پاک کند.
 // ==========================================
 
-// ✅ بارگذاری version.js برای خواندن نسخه از منبع واحد
+// بارگذاری version.js (فقط برای لاگ کردن در کنسول)
 importScripts('./version.js');
 
-// ✅ نام کش به صورت خودکار از نسخه ساخته می‌شود
-const CACHE_NAME = 'kosha-cache-' + (self.APP_VERSION || 'v1.0.0');
+// ✅ نام کش ثابت است تا با هر آپدیت نسخه، کش جدیدی ساخته نشود
+const CACHE_NAME = 'kosha-cache-static'; 
 
-// ==========================================
-// لیست فایل‌هایی که باید در کش ذخیره شوند
-// ==========================================
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -34,71 +32,60 @@ const ASSETS_TO_CACHE = [
     './jalali-utils.js',
     './back-button.js',
     './version.js',
-    './version.json',
     './updater.js'
 ];
 
 // ==========================================
-// نصب: کش کردن فایل‌های اصلی
+// نصب (Install)
 // ==========================================
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            // ✅ از Promise.all استفاده می‌کنیم تا اگر یک فایل مشکل داشت،
-            // بقیه فایل‌ها کش شوند و کل نصب شکست نخورد.
             return Promise.all(
                 ASSETS_TO_CACHE.map((url) => {
-                    return cache.add(url).catch((err) => {
-                        console.warn('⚠️ کش نشد:', url, err);
+                    // ✅ چک می‌کنیم اگر فایل از قبل در کش هست، دوباره دانلودش نکنیم!
+                    return cache.match(url).then((cachedResponse) => {
+                        if (cachedResponse) {
+                            return; // فایل قبلاً کش شده است، کاری نکن
+                        }
+                        return cache.add(url).catch((err) => {
+                            console.warn('⚠️ کش نشد:', url, err);
+                        });
                     });
                 })
             );
-        }).then(() => self.skipWaiting())
+        })
     );
+    // ❌ هیچ skipWaiting() در اینجا نیست تا نسخه جدید خودسرانه فعال نشود
 });
 
 // ==========================================
-// فعال‌سازی: پاک کردن کش‌های قدیمی
+// فعال‌سازی (Activate)
 // ==========================================
 self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        console.log('🗑️ پاک کردن کش قدیمی:', cacheName);
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        }).then(() => self.clients.claim())
-    );
+    // ✅ ما کش‌ها را اینجا پاک نمی‌کنیم. فقط وقتی updater.js بگوید پاک می‌شوند.
+    event.waitUntil(self.clients.claim());
 });
 
 // ==========================================
-// استراتژی هوشمند Fetch (تغییر یافته به Cache-First)
+// مدیریت درخواست‌ها (Fetch) — استراتژی Cache-First
 // ==========================================
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
-    // فقط درخواست‌های GET را مدیریت می‌کنیم
     if (event.request.method !== 'GET') return;
+    if (url.origin !== self.location.origin) return;
 
-    // فقط درخواست‌های هم‌منبع (خود برنامه) را مدیریت می‌کنیم
-    if (url.origin !== self.location.origin) {
-        return;
+    // ✅ فایل version.json را هرگز کش نمی‌کنیم تا همیشه از سرور تازه خوانده شود
+    if (url.pathname.endsWith('version.json')) {
+        return; 
     }
 
-    // ✅ استراتژی جدید: Cache-First برای تمام فایل‌های برنامه
-    // این کار باعث می‌شود تا زمانی که کاربر دکمه "به‌روزرسانی" را نزند،
-    // برنامه به نسخه قدیمی خود وفادار بماند و آپدیت مخفیانه انجام نشود.
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
             if (cachedResponse) {
-                return cachedResponse;
+                return cachedResponse; // همیشه اول از کش می‌خواند
             }
-
-            // اگر در کش نبود، از اینترنت بگیر
             return fetch(event.request).then((networkResponse) => {
                 if (networkResponse && networkResponse.status === 200) {
                     const responseClone = networkResponse.clone();
@@ -108,56 +95,32 @@ self.addEventListener('fetch', (event) => {
                 }
                 return networkResponse;
             }).catch(() => {
-                // ✅ Fallback: اگر آفلاین بود و فایل در کش نبود (باگ کرش کردن حل شد)
                 if (event.request.mode === 'navigate') {
-                    // اگر کاربر در حال باز کردن صفحه اصلی بود، index.html کش شده را برگردان
                     return caches.match('./index.html');
                 }
-                // برای بقیه فایل‌ها یک پاسخ خالی برگردان تا برنامه کرش نکند
-                return new Response('', { status: 503, statusText: 'Offline and not in cache' });
+                return new Response('', { status: 503, statusText: 'Offline' });
             });
         })
     );
 });
 
 // ==========================================
-// پیام‌ها (برای به‌روزرسانی خودکار و مدیریت کش)
+// پیام‌ها
 // ==========================================
 self.addEventListener('message', (event) => {
     if (!event.data) return;
 
-    // ✅ پیام skipWaiting: به‌روزرسانی فوری
     if (event.data.action === 'skipWaiting') {
         self.skipWaiting();
     }
 
-    // ✅ پیام clearCache: پاک کردن همه کش‌ها (برای دیباگ یا آپدیت دستی)
     if (event.data.action === 'clearCache') {
         event.waitUntil(
             caches.keys().then((cacheNames) => {
                 return Promise.all(
                     cacheNames.map((cacheName) => caches.delete(cacheName))
                 );
-            }).then(() => {
-                if (event.source) {
-                    event.source.postMessage({ action: 'cacheCleared' });
-                }
             })
         );
     }
-
-    // ✅ پیام getVersion: برگرداندن نسخه فعلی سرویس‌ورکر
-    if (event.data.action === 'getVersion') {
-        if (event.source) {
-            event.source.postMessage({
-                action: 'versionInfo',
-                version: self.APP_VERSION || 'unknown'
-            });
-        }
-    }
 });
-
-// ==========================================
-// لاگ نسخه در کنسول (فقط برای دیباگ)
-// ==========================================
-console.log('🛠️ Service Worker فعال شد — کش: ' + CACHE_NAME);
