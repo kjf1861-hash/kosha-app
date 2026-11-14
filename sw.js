@@ -1,6 +1,6 @@
 // ==========================================
-// فایل sw.js — سرویس‌ورکر (نسخه جدید با version.js)
-// این نسخه از version.js می‌خواند، نه از عدد hardcode شده
+// فایل sw.js — سرویس‌ورکر (نسخه جدید: Cache-First کامل)
+// این نسخه از version.js می‌خواند و از آپدیت مخفیانه جلوگیری می‌کند.
 // ==========================================
 
 // ✅ بارگذاری version.js برای خواندن نسخه از منبع واحد
@@ -33,36 +33,9 @@ const ASSETS_TO_CACHE = [
     './calendar.js',
     './jalali-utils.js',
     './back-button.js',
-    './version.js',           // ✅ جدید: منبع نسخه
-    './version.json',         // ✅ جدید: اعلام نسخه روی سرور
-    './updater.js'            // ✅ جدید: منطق به‌روزرسانی (بعداً ساخته می‌شود)
-];
-
-// ==========================================
-// فایل‌هایی که اول از اینترنت گرفته می‌شوند
-// (اگر اینترنت نبود، از کش می‌آیند)
-// ==========================================
-const NETWORK_FIRST_ASSETS = [
-    './index.html',
-    './app.js',
-    './db.js',
-    './class.js',
-    './students.js',
-    './lesson.js',
-    './group.js',
-    './session.js',
-    './score.js',
-    './reset.js',
-    './exam.js',
-    './game.js',
-    './calendar.js',
-    './calendar-data.js',
-    './jalali-utils.js',
-    './back-button.js',
-    './styles.css',
-    './updater.js',           // ✅ جدید
-    './version.js',           // ✅ جدید: باید همیشه تازه باشد
-    './version.json'          // ✅ جدید: باید همیشه تازه باشد
+    './version.js',
+    './version.json',
+    './updater.js'
 ];
 
 // ==========================================
@@ -71,8 +44,8 @@ const NETWORK_FIRST_ASSETS = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            // ✅ از addAll استفاده نمی‌کنیم تا اگر یک فایل نبود،
-            //    بقیه فایل‌ها هم خراب نشوند
+            // ✅ از Promise.all استفاده می‌کنیم تا اگر یک فایل مشکل داشت،
+            // بقیه فایل‌ها کش شوند و کل نصب شکست نخورد.
             return Promise.all(
                 ASSETS_TO_CACHE.map((url) => {
                     return cache.add(url).catch((err) => {
@@ -103,7 +76,7 @@ self.addEventListener('activate', (event) => {
 });
 
 // ==========================================
-// استراتژی هوشمند Fetch
+// استراتژی هوشمند Fetch (تغییر یافته به Cache-First)
 // ==========================================
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
@@ -116,48 +89,35 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // بررسی اینکه این فایل باید Network-First باشد یا Cache-First
-    const isNetworkFirst = NETWORK_FIRST_ASSETS.some((asset) => {
-        return url.pathname.endsWith(asset.replace('./', '').split('?')[0]);
-    });
+    // ✅ استراتژی جدید: Cache-First برای تمام فایل‌های برنامه
+    // این کار باعث می‌شود تا زمانی که کاربر دکمه "به‌روزرسانی" را نزند،
+    // برنامه به نسخه قدیمی خود وفادار بماند و آپدیت مخفیانه انجام نشود.
+    event.respondWith(
+        caches.match(event.request).then((cachedResponse) => {
+            if (cachedResponse) {
+                return cachedResponse;
+            }
 
-    if (isNetworkFirst) {
-        // ✅ Network-First: اول اینترنت، بعد کش
-        event.respondWith(
-            fetch(event.request)
-                .then((response) => {
-                    if (response && response.status === 200) {
-                        const responseClone = response.clone();
-                        caches.open(CACHE_NAME).then((cache) => {
-                            cache.put(event.request, responseClone);
-                        });
-                    }
-                    return response;
-                })
-                .catch(() => {
-                    // اگر اینترنت نبود، از کش بگیر
-                    return caches.match(event.request);
-                })
-        );
-    } else {
-        // Cache-First: اول کش، بعد اینترنت
-        event.respondWith(
-            caches.match(event.request).then((cachedResponse) => {
-                if (cachedResponse) {
-                    return cachedResponse;
+            // اگر در کش نبود، از اینترنت بگیر
+            return fetch(event.request).then((networkResponse) => {
+                if (networkResponse && networkResponse.status === 200) {
+                    const responseClone = networkResponse.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseClone);
+                    });
                 }
-                return fetch(event.request).then((response) => {
-                    if (response && response.status === 200) {
-                        const responseClone = response.clone();
-                        caches.open(CACHE_NAME).then((cache) => {
-                            cache.put(event.request, responseClone);
-                        });
-                    }
-                    return response;
-                });
-            })
-        );
-    }
+                return networkResponse;
+            }).catch(() => {
+                // ✅ Fallback: اگر آفلاین بود و فایل در کش نبود (باگ کرش کردن حل شد)
+                if (event.request.mode === 'navigate') {
+                    // اگر کاربر در حال باز کردن صفحه اصلی بود، index.html کش شده را برگردان
+                    return caches.match('./index.html');
+                }
+                // برای بقیه فایل‌ها یک پاسخ خالی برگردان تا برنامه کرش نکند
+                return new Response('', { status: 503, statusText: 'Offline and not in cache' });
+            });
+        })
+    );
 });
 
 // ==========================================
@@ -171,7 +131,7 @@ self.addEventListener('message', (event) => {
         self.skipWaiting();
     }
 
-    // ✅ پیام clearCache: پاک کردن همه کش‌ها (برای دیباگ)
+    // ✅ پیام clearCache: پاک کردن همه کش‌ها (برای دیباگ یا آپدیت دستی)
     if (event.data.action === 'clearCache') {
         event.waitUntil(
             caches.keys().then((cacheNames) => {
