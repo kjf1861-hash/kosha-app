@@ -6,7 +6,11 @@ let currentLessonDetailsId = null;
 let currentLessonDetailView = 'class';
 
 function initLessonEvents() {
-    document.getElementById('lesson-form').addEventListener('submit', saveLesson);
+    const form = document.getElementById('lesson-form');
+    if (form && !form.dataset.listenerAttached) {
+        form.addEventListener('submit', saveLesson);
+        form.dataset.listenerAttached = 'true';
+    }
 }
 
 async function saveLesson(e) {
@@ -18,24 +22,24 @@ async function saveLesson(e) {
     }
 
     let sanitized;
-try {
-    sanitized = {
-        name: sanitizeInput(document.getElementById('lessonName').value, 80),
-        symbol: sanitizeInput(document.getElementById('lessonSymbol').value, 10),
-        motto: sanitizeInput(document.getElementById('lessonMotto').value, 200)
-    };
-} catch (err) {
-    showToast(err.message, 'error');
-    return;
-}
+    try {
+        sanitized = {
+            name: sanitizeInput(document.getElementById('lessonName').value, 80),
+            symbol: sanitizeInput(document.getElementById('lessonSymbol').value, 10),
+            motto: sanitizeInput(document.getElementById('lessonMotto').value, 200)
+        };
+    } catch (err) {
+        showToast(err.message, 'error');
+        return;
+    }
 
-const data = { 
-    name: sanitized.name,
-    symbol: sanitized.symbol,
-    motto: sanitized.motto,
-    academicYear: window.activeAcademicYear
-};
-    
+    const data = { 
+        name: sanitized.name,
+        symbol: sanitized.symbol,
+        motto: sanitized.motto,
+        academicYear: window.activeAcademicYear
+    };
+        
     await saveData('subjects', data);
     
     document.getElementById('lesson-form').reset();
@@ -71,26 +75,26 @@ async function saveEditedLesson(e) {
     
     const existing = await getDataById('subjects', id);
 
-let sanitized;
-try {
-    sanitized = {
-        name: sanitizeInput(document.getElementById('editLessonNameModal').value, 80),
-        symbol: sanitizeInput(document.getElementById('editLessonSymbolModal').value, 10),
-        motto: sanitizeInput(document.getElementById('editLessonMottoModal').value, 200)
-    };
-} catch (err) {
-    showToast(err.message, 'error');
-    return;
-}
+    let sanitized;
+    try {
+        sanitized = {
+            name: sanitizeInput(document.getElementById('editLessonNameModal').value, 80),
+            symbol: sanitizeInput(document.getElementById('editLessonSymbolModal').value, 10),
+            motto: sanitizeInput(document.getElementById('editLessonMottoModal').value, 200)
+        };
+    } catch (err) {
+        showToast(err.message, 'error');
+        return;
+    }
 
-const data = {
-    id: id,
-    name: sanitized.name,
-    symbol: sanitized.symbol,
-    motto: sanitized.motto,
-    academicYear: existing ? existing.academicYear : window.activeAcademicYear
-};
-    
+    const data = {
+        id: id,
+        name: sanitized.name,
+        symbol: sanitized.symbol,
+        motto: sanitized.motto,
+        academicYear: existing ? existing.academicYear : window.activeAcademicYear
+    };
+        
     await saveData('subjects', data);
     showToast('درس با موفقیت ویرایش شد!', 'success');
     
@@ -101,7 +105,6 @@ const data = {
     loadAllData();
 }
 
-// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 function renderLessonData() {
     const container = document.getElementById('lessons-list');
     if (!container) return;
@@ -147,7 +150,6 @@ async function deleteLesson(id) {
     if (!confirm('آیا از حذف این درس مطمئن هستید؟ تمام سوابق ارزشیابی مرتبط با این درس نیز حذف خواهند شد!')) return;
     
     try {
-        // ✅ بهبود سرعت: استفاده از داده‌های حافظه به جای خواندن مجدد از دیتابیس
         const subjectRecords = window.allRecordsData.filter(r => r.subjectId === id);
         for (const rec of subjectRecords) {
             await deleteData('records', rec.id);
@@ -175,7 +177,6 @@ async function resetAllLessons() {
     if (!confirm2) return;
 
     try {
-        // ✅ بهبود سرعت: پیدا کردن تمام رکوردهای مربوط به دروس در یک مرحله
         const subjectIds = window.allSubjectsData.map(s => s.id);
         const recordsToDelete = window.allRecordsData.filter(r => subjectIds.includes(r.subjectId));
         
@@ -223,7 +224,7 @@ function switchLessonDetailView(view) {
     renderLessonDetails();
 }
 
-// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ (آخرین بخش) را بفرستم.
+// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ (آخرین بخش) را بفرستم.
 function renderLessonDetails() {
     const container = document.getElementById('lesson-details-content');
     if (!container || !currentLessonDetailsId) return;
@@ -259,6 +260,7 @@ function renderLessonDetails() {
             else if (item.totalScore === silverScore) medal = '🥈';
             else if (item.totalScore === bronzeScore) medal = '🥉';
 
+            // ✅ اصلاح امنیتی: escape نام آیتم‌ها
             html += `
                 <div class="list-item" style="padding: 10px 15px;">
                     <div style="display:flex; align-items:center; gap:8px;">
@@ -331,6 +333,7 @@ function renderLessonDetails() {
             else if (g.totalScore === silverG) medal = '🥈';
             else if (g.totalScore === bronzeG) medal = '🥉';
 
+            // ✅ اصلاح امنیتی: escape نام گروه
             finalHtml += `
                 <div class="card" style="margin-bottom: 15px; padding: 15px; background: var(--input-bg); border: 1px solid var(--border-color);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px dashed var(--border-color); padding-bottom:10px;">
@@ -356,4 +359,4 @@ function renderLessonDetails() {
     }
 }
 
-// ✅ پایان فایل lesson.js
+// ✅ پایان کامل فایل lesson.js
