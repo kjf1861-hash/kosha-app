@@ -1,7 +1,7 @@
 {
-    "version": "v1.0.3",
+    "version": "v1.0.4",
     "releaseDate": "۱۴۰۵/۰۸/۲۳",
-    "releaseNotes": "اصلاح نهایی و تضمینی باگ کش مرورگر",
+    "releaseNotes": "اعلان آپدیت قبل از اجرا (کنترل کامل کاربر)",
     "downloadUrl": "",
     "forceUpdate": false
 }
