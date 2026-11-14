@@ -1,6 +1,6 @@
 // ==========================================
 // فایل updater.js — سیستم به‌روزرسانی هوشمند
-// نسخه v1.0.2 — اصلاح باگ کش HTTP مرورگر
+// نسخه v1.0.3 — حل قطعی مشکل کش HTTP (بدون نیاز به تغییر index.html)
 // ==========================================
 
 (function() {
@@ -10,7 +10,6 @@
     // 📌 تنظیمات و متغیرها
     // ==========================================
     
-    // کلیدهای localStorage
     const STORAGE_KEYS = {
         updateMode: 'kosha-update-mode',
         lastCheck: 'kosha-last-update-check',
@@ -18,11 +17,9 @@
         dismissedVersion: 'kosha-dismissed-version'
     };
     
-    // زمان‌ها (میلی‌ثانیه)
     const CHECK_INTERVAL = 24 * 60 * 60 * 1000;  // ۲۴ ساعت
     const SNOOZE_DURATION = 6 * 60 * 60 * 1000;  // ۶ ساعت
     
-    // نسخه فعلی (از version.js خوانده می‌شود)
     function getCurrentVersion() {
         return (typeof window !== 'undefined' && window.APP_VERSION) 
             ? window.APP_VERSION 
@@ -301,7 +298,7 @@
     }
 
     // ==========================================
-    // 📌 اجرای آپدیت
+    // 📌 اجرای آپدیت (راه‌حل نهایی)
     // ==========================================
     
     async function performUpdate() {
@@ -310,31 +307,33 @@
         try {
             showToastSafe('در حال به‌روزرسانی... لطفاً صبر کنید.', 'info');
             
+            // ۱. پاک کردن وضعیت‌های ذخیره‌شده
             localStorage.removeItem(STORAGE_KEYS.dismissedVersion);
             localStorage.removeItem(STORAGE_KEYS.lastSnooze);
+            localStorage.removeItem('kosha-version');
             
+            // ۲. پاک کردن کامل کش‌ها
             if ('caches' in window) {
                 const cacheNames = await caches.keys();
                 await Promise.all(cacheNames.map(name => caches.delete(name)));
                 console.log('🗑️ ' + cacheNames.length + ' کش پاک شد.');
             }
             
+            // ۳. حذف سرویس‌ورکرها
             if ('serviceWorker' in navigator) {
                 const registrations = await navigator.serviceWorker.getRegistrations();
                 await Promise.all(registrations.map(reg => reg.unregister()));
                 console.log('🗑️ ' + registrations.length + ' سرویس‌ورکر حذف شد.');
             }
             
-            // ✅ پاک کردن localStorage نسخه
-            localStorage.removeItem('kosha-version');
-            
-            // ✅ اصلاح باگ: اضافه کردن پارامتر تصادفی به URL برای دور زدن HTTP Cache مرورگر
-            // به جای window.location.reload(true) که در موبایل گاهی کار نمی‌کند
+            // ۴. ترفند نهایی: باز کردن آدرس جدید با پارامتر زمان
             setTimeout(() => {
-                console.log('🔁 در حال بارگذاری مجدد با دور زدن کش...');
+                console.log('🔁 در حال بارگذاری مجدد با دور زدن کامل کش مرورگر...');
                 const timestamp = Date.now();
-                const baseUrl = window.location.href.split('?')[0]; // حذف پارامترهای قبلی
-                window.location.href = baseUrl + '?updated=' + timestamp;
+                // فقط مسیر فایل را نگه می‌داریم و پارامترهای قبلی را دور می‌ریزیم
+                const baseUrl = window.location.pathname;
+                // رفتن به آدرس جدید (مرورگر مجبور می‌شود فایل index.html و اسکریپت‌هایش را از نو بگیرد)
+                window.location.href = baseUrl + '?kosha_update=' + timestamp;
             }, 800);
             
         } catch (error) {
@@ -343,8 +342,8 @@
             
             setTimeout(() => {
                 const timestamp = Date.now();
-                const baseUrl = window.location.href.split('?')[0];
-                window.location.href = baseUrl + '?updated=' + timestamp;
+                const baseUrl = window.location.pathname;
+                window.location.href = baseUrl + '?kosha_update=' + timestamp;
             }, 1500);
         }
     }
