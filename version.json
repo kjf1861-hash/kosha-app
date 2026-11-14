@@ -1,7 +1,7 @@
 {
-    "version": "v1.0.2",
+    "version": "v1.0.3",
     "releaseDate": "۱۴۰۵/۰۸/۲۳",
-    "releaseNotes": "اصلاح باگ کش مرورگر در به‌روزرسانی خودکار",
+    "releaseNotes": "اصلاح نهایی و تضمینی باگ کش مرورگر",
     "downloadUrl": "",
     "forceUpdate": false
 }
