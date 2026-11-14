@@ -55,11 +55,6 @@ function toPersianNumber(num) {
 // ✅ توابع امنیتی — escape و sanitize
 // ==========================================
 
-/**
- * escapeHtml — کاراکترهای خطرناک HTML را امن می‌کند
- * استفاده: فقط برای نمایش در innerHTML
- * مثال: escapeHtml("<script>") → "&lt;script&gt;"
- */
 function escapeHtml(str) {
     if (str === null || str === undefined) return '';
     return String(str).replace(/[&<>"']/g, function(m) {
@@ -73,13 +68,6 @@ function escapeHtml(str) {
     });
 }
 
-/**
- * sanitizeInput — پاک‌سازی و اعتبارسنجی متن ورودی
- * استفاده: قبل از ذخیره در دیتابیس
- * - حذف فاصله‌های ابتدا و انتها
- * - حذف کاراکترهای کنترل‌کننده خطرناک
- * - محدودیت طول
- */
 function sanitizeInput(value, maxLength) {
     maxLength = maxLength || 100;
     if (value === null || value === undefined) return '';
@@ -87,22 +75,19 @@ function sanitizeInput(value, maxLength) {
     if (trimmed.length > maxLength) {
         throw new Error('متن نمی‌تواند بیش از ' + maxLength + ' کاراکتر باشد');
     }
-    // حذف کاراکترهای کنترل‌کننده (به جز newline و tab)
     return trimmed.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
 }
 
-// در دسترس قرار دادن برای همه فایل‌ها
 window.escapeHtml = escapeHtml;
 window.sanitizeInput = sanitizeInput;
 
 // ==========================================
-// ✅ تابع تولید شناسه یکتا (جلوگیری از تداخل)
+// ✅ تابع تولید شناسه یکتا
 // ==========================================
 function generateUniqueId() {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
         return crypto.randomUUID();
     }
-    // روش جایگزین برای مرورگرهای قدیمی
     return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
 }
 window.generateUniqueId = generateUniqueId;
@@ -160,7 +145,6 @@ function showToast(message, type = 'success') {
     };
     const iconSvg = iconMap[type] || iconMap.info;
 
-    // ✅ اصلاح امنیتی: escape پیام قبل از قرار گرفتن در innerHTML
     const toast = document.createElement('div');
     toast.className = `custom-toast-container custom-toast-${type}`;
     toast.innerHTML = `${iconSvg}<span>${escapeHtml(message)}</span>`;
@@ -198,11 +182,9 @@ window.getAvailableAcademicYears = function() {
     return ['1405-1406', '1406-1407', '1407-1408', '1408-1409', '1409-1410', '1410-1411'];
 };
 
-// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 // ==========================================
-// ✅ پشتیبان‌گیری خودکار (کل اپلیکیشن)
+// ✅ پشتیبان‌گیری خودکار
 // ==========================================
-
 window.triggerAutoBackup = function() {
     if (autoBackupTimer) {
         clearTimeout(autoBackupTimer);
@@ -212,7 +194,7 @@ window.triggerAutoBackup = function() {
             const allData = await exportAllData();
             localStorage.setItem('kosha-emergency-backup', JSON.stringify(allData));
             localStorage.setItem('kosha-emergency-backup-time', Date.now().toString());
-            console.log('✅ پشتیبان خودکار کامل (شامل همه سال‌ها) ذخیره شد.');
+            console.log('✅ پشتیبان خودکار کامل ذخیره شد.');
         } catch (e) {
             console.warn('⚠️ پشتیبان‌گیری خودکار با خطا مواجه شد:', e);
         }
@@ -287,6 +269,7 @@ function checkBackupReminder() {
     } catch (e) { console.log(e); }
 }
 
+// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 // ==========================================
 // ✅ توابع تنظیمات پشتیبان‌گیری
 // ==========================================
@@ -606,7 +589,6 @@ async function savePeriod() {
     }
 }
 
-// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 async function checkPeriodReminders() {
     try {
         currentBackupSettings = await getBackupSettings(window.activeAcademicYear);
@@ -767,6 +749,7 @@ function applyEmojiRestriction(inputId) {
     }
 }
 
+// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 // ==========================================
 // توابع مدیریت تغییرات ذخیره‌نشده
 // ==========================================
@@ -831,6 +814,46 @@ function confirmExit() {
     
     if (action) action();
 }
+
+// ==========================================
+// ✅ تابع جدید: چاپ هوشمند محتوا (حل باگ چاپ)
+// ==========================================
+function printHtmlContent(htmlContent) {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+        showToast('برای چاپ، لطفاً پاپ‌آپ (Popup) مرورگر را فعال کنید.', 'error');
+        return;
+    }
+    
+    // استایل‌های اختصاصی برای چاپ (همیشه سفید و تمیز، حتی در حالت شب)
+    const styles = `
+        <style>
+            body { font-family: 'Vazirmatn', Tahoma, sans-serif; direction: rtl; padding: 20px; color: #000; background: #fff; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+            th { background: #f1f5f9; font-weight: bold; }
+            .rc-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4A90E2; padding-bottom: 10px; }
+            .rc-header h2 { margin: 0; color: #4A90E2; }
+            .rc-header p { margin: 5px 0 0; color: #64748b; }
+            .schedule-table th, .schedule-table td { border: 2px solid #333; padding: 10px; }
+            @media print {
+                body { padding: 0; }
+                @page { margin: 10mm; }
+            }
+        </style>
+    `;
+    
+    printWindow.document.write(`<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>چاپ کوشا</title>${styles}</head><body>${htmlContent}</body></html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    
+    setTimeout(() => {
+        printWindow.print();
+        // بعد از بستن پنجره چاپ، خود پنجره بسته می‌شود
+        printWindow.onafterprint = () => printWindow.close();
+    }, 500);
+}
+window.printHtmlContent = printHtmlContent;
 
 function attachDirtyListeners() {
     const formSelectors = [
@@ -956,20 +979,15 @@ async function initApp() {
     } catch (error) { console.error("خطا در بارگذاری آزمون‌ها:", error); }
 }
 
-// ⏸️ پایان بخش ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۴ را بفرستم.
 // ==========================================
 // ✅ محاسبه یک‌باره امتیازات (بهینه‌سازی سرعت)
 // ==========================================
-// این تابع یک بار در loadAllData اجرا می‌شود و مجموع امتیازات
-// هر دانش‌آموز، هر گروه، هر درس و آمار حضور/غیاب را محاسبه می‌کند.
-// تمام تابع‌های نمایشی از این کش استفاده می‌کنند.
 function buildScoreCaches() {
     const studentScores = {};
     const groupScores = {};
     const subjectScores = {};
     const studentAttendance = {};
 
-    // مقدار اولیه
     for (const st of window.allStudentsData) {
         studentScores[st.id] = 0;
         studentAttendance[st.id] = { present: 0, absent: 0, late: 0 };
@@ -981,13 +999,11 @@ function buildScoreCaches() {
         subjectScores[s.id] = 0;
     }
 
-    // نقشه دانش‌آموز → گروه (برای جستجوی سریع)
     const studentGroupMap = {};
     for (const st of window.allStudentsData) {
         studentGroupMap[st.id] = st.groupId;
     }
 
-    // ✅ یک بار روی تمام رکوردها حلقه می‌زنیم (نه برای هر دانش‌آموز)
     for (const rec of window.allRecordsData) {
         if (!rec.students || !Array.isArray(rec.students)) continue;
 
@@ -1008,7 +1024,6 @@ function buildScoreCaches() {
         }
     }
 
-    // ✅ یک بار روی تمام حضور و غیاب‌ها
     for (const att of window.allAttendanceData) {
         const bucket = studentAttendance[att.studentId];
         if (bucket) {
@@ -1018,7 +1033,6 @@ function buildScoreCaches() {
         }
     }
 
-    // ذخیره در window برای دسترسی از همه فایل‌ها
     window._cacheStudentScores = studentScores;
     window._cacheGroupScores = groupScores;
     window._cacheSubjectScores = subjectScores;
@@ -1116,10 +1130,14 @@ function renderUI() {
     }
 }
 
+// ⏸️ پایان بخش ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۴ را بفرستم.
 function jalaliToDateString(jy, jm, jd) {
     return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
 }
 
+// ==========================================
+// مدیریت آیتم‌های ارزشیابی
+// ==========================================
 function openItemManagementModal() {
     const modal = document.getElementById('item-management-modal');
     if (modal) modal.classList.add('show');
@@ -1140,6 +1158,7 @@ function renderItemsList() {
     container.innerHTML = '';
     assessmentItems.forEach(item => {
         let typeName = item.type === 'level' ? 'سطح محور' : item.type === 'count' ? 'شمارشی' : item.type === 'free' ? 'آزاد' : 'ویژه (قرآن)';
+        // ✅ اصلاح امنیتی: escape عنوان آیتم و نوع آن
         container.innerHTML += `
     <div class="item-management-row">
         <div><strong>${escapeHtml(item.title)}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">(${escapeHtml(typeName)})</span></div>
@@ -1255,34 +1274,34 @@ async function saveItem(e) {
     if (!idEl || !titleEl || !typeEl) return;
     
     const id = idEl.value;
-const type = typeEl.value;
+    const type = typeEl.value;
 
-let title;
-try {
-    title = sanitizeInput(titleEl.value, 80);
-} catch (err) {
-    showToast(err.message, 'error');
-    return;
-}
+    let title;
+    try {
+        title = sanitizeInput(titleEl.value, 80);
+    } catch (err) {
+        showToast(err.message, 'error');
+        return;
+    }
 
-if (!title) { showToast('عنوان آیتم را وارد کنید.', 'error'); return; }
-if (!type) { showToast('نوع آیتم را انتخاب کنید.', 'error'); return; }
-    
+    if (!title) { showToast('عنوان آیتم را وارد کنید.', 'error'); return; }
+    if (!type) { showToast('نوع آیتم را انتخاب کنید.', 'error'); return; }
+        
     if (!id && assessmentItems.length >= 16) {
-    showToast('حداکثر تعداد مجاز آیتم ارزشیابی (۱۶ آیتم) تکمیل شده است.', 'error');
-    return;
-}
+        showToast('حداکثر تعداد مجاز آیتم ارزشیابی (۱۶ آیتم) تکمیل شده است.', 'error');
+        return;
+    }
 
-const oldItem = id ? assessmentItems.find(i => i.id === id) : null;
-const oldTitle = oldItem ? oldItem.title : null;
+    const oldItem = id ? assessmentItems.find(i => i.id === id) : null;
+    const oldTitle = oldItem ? oldItem.title : null;
 
-let itemData = { title, type, academicYear: window.activeAcademicYear };
-if (id) {
-    itemData.id = id;
-} else {
-    itemData.id = `${window.activeAcademicYear}_${generateUniqueId()}`;
-}
-    
+    let itemData = { title, type, academicYear: window.activeAcademicYear };
+    if (id) {
+        itemData.id = id;
+    } else {
+        itemData.id = `${window.activeAcademicYear}_${generateUniqueId()}`;
+    }
+        
     if (type === 'level') {
         const placeholder = document.getElementById('itemLevelPlaceholder');
         itemData.placeholder = (placeholder && placeholder.value) || 'انتخاب سطح عملکرد:';
@@ -1319,15 +1338,15 @@ if (id) {
         await saveData('assessmentItems', itemData);
         
         if (oldTitle && oldTitle !== title) {
-    const allRecords = await getAllData('records');
-    let updatedCount = 0;
-    for (let rec of allRecords) {
-        if (rec.itemName === oldTitle && rec.academicYear === window.activeAcademicYear) {
-            rec.itemName = title;
-            await saveData('records', rec);
-            updatedCount++;
-        }
-    }
+            const allRecords = await getAllData('records');
+            let updatedCount = 0;
+            for (let rec of allRecords) {
+                if (rec.itemName === oldTitle && rec.academicYear === window.activeAcademicYear) {
+                    rec.itemName = title;
+                    await saveData('records', rec);
+                    updatedCount++;
+                }
+            }
             if (updatedCount > 0) {
                 showToast(`نام آیتم در ${toPersianNumber(updatedCount)} رکورد قبلی نیز به‌روزرسانی شد.`, 'info');
             }
@@ -1336,8 +1355,8 @@ if (id) {
         showToast('آیتم با موفقیت ذخیره شد!', 'success');
         
         const freshItems = await getDataByYear('assessmentItems', window.activeAcademicYear);
-window.allAssessmentItems = freshItems;
-assessmentItems = freshItems;
+        window.allAssessmentItems = freshItems;
+        assessmentItems = freshItems;
         
         renderItemsList();
         resetItemForm();
@@ -1369,8 +1388,8 @@ async function deleteCustomItem(id) {
         await deleteData('assessmentItems', id);
         showToast('آیتم حذف شد.', 'success');
         const freshItems = await getDataByYear('assessmentItems', window.activeAcademicYear);
-window.allAssessmentItems = freshItems;
-assessmentItems = freshItems;
+        window.allAssessmentItems = freshItems;
+        assessmentItems = freshItems;
         renderItemsList();
         const itemSelect = document.getElementById('recordItem');
         if (itemSelect) itemSelect.innerHTML = '<option value="" disabled selected>روش سنجشی را انتخاب کنید!</option>' + freshItems.map(i => `<option value="${i.id}">${i.title}</option>`).join('');
@@ -1379,9 +1398,8 @@ assessmentItems = freshItems;
     } catch (e) { console.error(e); showToast('خطا در حذف آیتم!', 'error'); }
 }
 
-// ⏸️ پایان بخش ۴ — منتظر پیام «ادامه» شما هستم تا بخش ۵ (آخر) را بفرستم.
 // ==========================================
-// ✅ خروجی داده‌ها با نام فایل شمسی + ساعت
+// ✅ خروجی و بازیابی داده‌ها
 // ==========================================
 async function exportData() {
     try {
@@ -1389,7 +1407,6 @@ async function exportData() {
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         
-        // ✅ استفاده از تابع نام‌گذاری شمسی از db.js
         const filename = (typeof window.generateBackupFilename === 'function') 
             ? window.generateBackupFilename() 
             : `kosha-backup-${new Date().toISOString().slice(0,10)}.json`;
@@ -1411,14 +1428,10 @@ async function exportData() {
     }
 }
 
-// ==========================================
-// ✅ بازیابی داده‌ها با نمایش نام فایل
-// ==========================================
 async function importData(event) {
     const file = event.target.files[0]; 
     if (!file) return;
     
-    // ✅ نمایش نام فایل به کاربر
     const confirmMessage = 
         `⚠️ هشدار مهم:\n\n` +
         `شما در حال بازیابی از فایل زیر هستید:\n` +
@@ -1438,7 +1451,6 @@ async function importData(event) {
         try { 
             const data = JSON.parse(e.target.result); 
             
-            // ✅ نمایش تاریخ بکاپ به کاربر (اگر _meta دارد)
             if (data._meta && data._meta.exportedAtJalali) {
                 console.log(`📦 در حال بازیابی بکاپ: ${data._meta.exportedAtJalali}`);
             }
@@ -1466,6 +1478,9 @@ function changePage(section, direction) {
     else if (section === 'records') { currentPage.records += direction; if(typeof loadAssessmentRecords === 'function') loadAssessmentRecords(); }
 }
 
+// ==========================================
+// ✅ ثبت Service Worker و نمایش پیام به‌روزرسانی
+// ==========================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').then((reg) => {
@@ -1491,4 +1506,60 @@ function showUpdateToast(newWorker) {
     });
 }
 
-// ✅ پایان فایل app.js
+// ⏸️ پایان بخش ۴ — منتظر پیام «ادامه» شما هستم تا بخش ۵ (آخرین بخش) را بفرستم.
+// ==========================================
+// ✅ توابع چاپ برای تب‌های جلسات و امتیازات (باگ شماره ۶)
+// ==========================================
+function printSessionReport() {
+    const container = document.getElementById('attendance-reports-list');
+    if (!container) return;
+    
+    const totalSessionsEl = document.getElementById('total-sessions-count');
+    const totalSessions = totalSessionsEl ? totalSessionsEl.textContent : '0';
+    
+    let html = `
+        <div class="rc-header">
+            <h2>گزارش حضور و غیاب کلاس</h2>
+            <p>سال تحصیلی ${toPersianNumber(window.activeAcademicYear)}</p>
+            <p style="font-weight: bold; margin-top: 10px;">تعداد کل روزهای آموزشی: ${totalSessions}</p>
+        </div>
+        <div>
+            ${container.innerHTML}
+        </div>
+    `;
+    
+    if (typeof window.printHtmlContent === 'function') {
+        window.printHtmlContent(html);
+    } else {
+        window.print();
+    }
+}
+window.printSessionReport = printSessionReport;
+
+function printScoreReport() {
+    const container = document.getElementById('assessment-records-list');
+    if (!container) return;
+    
+    const recordsCountEl = document.getElementById('records-count');
+    const recordsCount = recordsCountEl ? recordsCountEl.textContent : '';
+    
+    let html = `
+        <div class="rc-header">
+            <h2>گزارش سوابق ارزشیابی</h2>
+            <p>سال تحصیلی ${toPersianNumber(window.activeAcademicYear)}</p>
+            <p style="font-weight: bold; margin-top: 10px;">${recordsCount}</p>
+        </div>
+        <div>
+            ${container.innerHTML}
+        </div>
+    `;
+    
+    if (typeof window.printHtmlContent === 'function') {
+        window.printHtmlContent(html);
+    } else {
+        window.print();
+    }
+}
+window.printScoreReport = printScoreReport;
+
+// ✅ پایان کامل فایل app.js
