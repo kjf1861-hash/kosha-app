@@ -173,6 +173,7 @@ async function resetSpecificRecords() {
     }
 }
 
+// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ (حاوی تغییرات اصلی) را بفرستم.
 async function resetFactoryAll() {
     const confirm1 = confirm('⚠️ خطر! آیا می‌خواهید کل اطلاعات برنامه (کلاس، دانش‌آموزان، دروس، سوابق و...) را برای همیشه پاک کنید؟');
     if (!confirm1) return;
@@ -186,7 +187,24 @@ async function resetFactoryAll() {
             await clearStore(store);
         }
         
-        localStorage.clear();
+        // ✅ اصلاح باگ بزرگ: حذف هوشمندانه localStorage
+        // به جای پاک کردن کل حافظه (که تم و تنظیمات آپدیت را نابود می‌کرد)،
+        // فقط کلیدهای داده‌ای را پاک می‌کنیم و کلیدهای تنظیمات شخصی را نگه می‌داریم.
+        const keysToKeep = [
+            'kosha-theme',               // تم شب/روز
+            'kosha-update-mode',         // حالت به‌روزرسانی
+            'kosha-last-update-check',   // زمان آخرین بررسی آپدیت
+            'kosha-last-snooze',         // زمان تعویق آپدیت
+            'kosha-dismissed-version',   // نسخه‌های تعویق افتاده
+            'kosha-skipped-version'      // نسخه‌های رد شده
+        ];
+        
+        const allKeys = Object.keys(localStorage);
+        for (const key of allKeys) {
+            if (!keysToKeep.includes(key)) {
+                localStorage.removeItem(key);
+            }
+        }
         
         showToast('برنامه با موفقیت بازنشانی شد. در حال راه‌اندازی مجدد...', 'info');
         setTimeout(() => window.location.reload(), 2000);
@@ -197,22 +215,29 @@ async function resetFactoryAll() {
 }
 
 async function resetTechnicalCache() {
-    const isConfirmed = confirm('این عملیات فقط حافظه پنهان (کش) برنامه را پاک می‌کند تا آخرین تغییرات بارگذاری شوند. اطلاعات درسی شما دست‌نخورده می‌ماند. ادامه می‌دهید؟');
+    const isConfirmed = confirm('این عملیات فقط حافظه پنهان (کش) برنامه را پاک می‌کند تا آخرین تغییرات بارگذاری شوند. اطلاعات درسی و تنظیمات شما دست‌نخورده می‌ماند. ادامه می‌دهید؟');
     if (!isConfirmed) return;
 
     try {
+        // ۱. پاک کردن کش‌ها
         const cacheNames = await caches.keys();
         for (const name of cacheNames) {
             await caches.delete(name);
         }
         
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const registration of registrations) {
-            await registration.unregister();
+        // ۲. حذف سرویس‌ورکرها
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (const registration of registrations) {
+                await registration.unregister();
+            }
         }
 
+        // ۳. پاک کردن کلید نسخه (تا برنامه مجبور شود فایل‌ها را دوباره از سرور بگیرد)
+        localStorage.removeItem('kosha-version');
+
         showToast('کش پاک شد. در حال بارگذاری مجدد...', 'success');
-        setTimeout(() => window.location.reload(true), 1500);
+        setTimeout(() => window.location.reload(), 1500);
     } catch (e) {
         console.error(e);
         showToast('خطا در پاکسازی کش!', 'error');
@@ -252,4 +277,4 @@ function populateResetSelect() {
     select.innerHTML = html;
 }
 
-// ✅ پایان فایل reset.js
+// ✅ پایان کامل فایل reset.js
