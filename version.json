@@ -1,7 +1,7 @@
 {
-    "version": "v1.0.9",
+    "version": "v1.0.10",
     "releaseDate": "۱۴۰۵/۰۸/۲۳",
-    "releaseNotes": "رفع باگ ثبت تکراری درس‌ها، انتخاب همه و فریز شدن برنامه",
+    "releaseNotes": "رفع باگ حلقه خروج",
     "downloadUrl": "",
     "forceUpdate": false
 }
