@@ -72,7 +72,6 @@ async function saveClassProfile(e) {
     
     if(typeof closeSettingsModal === 'function') closeSettingsModal();
     
-    // ✅ رفع باگ: پاک کردن وضعیت فرم‌های ذخیره‌نشده
     if (typeof clearFormDirty === 'function') clearFormDirty();
     
     await loadAllData();
@@ -126,7 +125,7 @@ function renderDashboardData() {
     renderRecentActivities();
     renderFullClassReport(studentScores);
     
-    renderExamsDashboard();
+    if (typeof renderExamsDashboard === 'function') renderExamsDashboard();
 }
 
 function renderActivityCards() {
@@ -602,8 +601,14 @@ async function exportClassCSV() {
         const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); 
+        
+        // ✅ استفاده از تاریخ شمسی برای نام فایل (در صورت وجود تابع)
+        const dateStr = (typeof window.getJalaliDateTimeForFilename === 'function') 
+            ? window.getJalaliDateTimeForFilename().split('-').slice(0, 3).join('-') 
+            : new Date().toISOString().slice(0,10);
+            
         a.href = url; 
-        a.download = `kosha_class_scores_${new Date().toISOString().slice(0,10)}.csv`; 
+        a.download = `kosha_class_scores_${dateStr}.csv`; 
         a.click();
         URL.revokeObjectURL(url);
         showToast('فایل CSV دانلود شد!', 'success');
@@ -614,9 +619,6 @@ async function exportClassCSV() {
 }
 
 function printClassReport() {
-    const content = document.getElementById('report-card-content');
-    if(!content) return;
-    
     const headerSubtitle = document.getElementById('header-subtitle');
     // ✅ اصلاح امنیتی: escape نام کلاس
     const classData = headerSubtitle ? escapeHtml(headerSubtitle.textContent) : '';
@@ -665,11 +667,20 @@ function printClassReport() {
     });
     
     html += `</tbody></table>`;
-    content.innerHTML = html;
-    
-    const modal = document.getElementById('report-card-modal');
-    if (modal) modal.classList.add('show');
-    setTimeout(() => {
-        window.print();
-    }, 100);
+
+    // ✅ استفاده از تابع چاپ هوشمند (رفع باگ چاپ کل صفحه)
+    if (typeof window.printHtmlContent === 'function') {
+        window.printHtmlContent(html);
+    } else {
+        // پشتیبان در صورت عدم لود شدن app.js
+        const modal = document.getElementById('report-card-modal');
+        const content = document.getElementById('report-card-content');
+        if (content && modal) {
+            content.innerHTML = html;
+            modal.classList.add('show');
+            setTimeout(() => window.print(), 100);
+        }
+    }
 }
+
+// ✅ پایان کامل فایل class.js
