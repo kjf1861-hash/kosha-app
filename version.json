@@ -1,7 +1,7 @@
 {
-    "version": "v1.0.1",
+    "version": "v1.0.2",
     "releaseDate": "۱۴۰۵/۰۸/۲۳",
-    "releaseNotes": "رفع باگ دکمه بازگشت و مودال‌ها",
+    "releaseNotes": "اصلاح باگ کش مرورگر در به‌روزرسانی خودکار",
     "downloadUrl": "",
     "forceUpdate": false
 }
