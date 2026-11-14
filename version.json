@@ -1,7 +1,7 @@
 {
-    "version": "v1.0.0",
+    "version": "v1.0.1",
     "releaseDate": "۱۴۰۵/۰۸/۲۳",
-    "releaseNotes": "راه‌اندازی اولیه با سیستم نسخه‌گذاری Semantic Versioning",
+    "releaseNotes": "رفع باگ دکمه بازگشت و مودال‌ها",
     "downloadUrl": "",
     "forceUpdate": false
 }
