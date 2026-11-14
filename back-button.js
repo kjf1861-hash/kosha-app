@@ -1,17 +1,24 @@
 // ==========================================
 // فایل back-button.js — مدیریت دکمه بازگشت و هشدار خروج در PWA
-// نسخه v6 — هماهنگ با سیستم هشدار تغییرات ذخیره‌نشده (app.js)
+// نسخه v7 — اصلاح باگ لیست مودال‌ها، گارد history، و منطق خروج
 // ==========================================
 
 (function() {
     'use strict';
     
+    // ✅ اصلاح: همه مودال‌های فعلی (شامل مودال‌های جدید)
     const MODAL_IDS = [
         'settings-modal', 'preview-modal', 'edit-record-modal', 'item-management-modal',
         'report-card-modal', 'attendance-details-modal', 'lesson-details-modal',
         'group-details-modal', 'edit-group-modal', 'edit-student-modal',
         'edit-lesson-modal', 'session-details-modal', 'student-details-modal',
-        'exam-editor-modal', 'exam-grading-modal'
+        'exam-editor-modal', 'exam-grading-modal',
+        // ✅ مودال‌های جدید اضافه شده
+        'academic-year-modal',
+        'exit-confirm-modal',
+        'backup-reminder-modal',
+        'period-editor-modal',
+        'update-available-modal'
     ];
     
     let backPressCount = 0;
@@ -20,12 +27,47 @@
     let hasGuardState = false;
     
     function getOpenModal() {
+        // ✅ ترتیب بررسی: مودال‌های مهم‌تر اول بررسی می‌شوند
+        // (مثلاً exit-confirm-modal باید اول بسته شود)
+        const priorityOrder = [
+            'exit-confirm-modal',      // بالاترین اولویت
+            'backup-reminder-modal',
+            'update-available-modal',
+            'period-editor-modal',
+            'academic-year-modal',
+            'settings-modal',
+            'exam-editor-modal',
+            'exam-grading-modal',
+            'item-management-modal',
+            'preview-modal',
+            'edit-record-modal',
+            'edit-group-modal',
+            'edit-student-modal',
+            'edit-lesson-modal',
+            'group-details-modal',
+            'lesson-details-modal',
+            'student-details-modal',
+            'session-details-modal',
+            'report-card-modal',
+            'attendance-details-modal'
+        ];
+        
+        // ابتدا با اولویت بررسی کن
+        for (let i = 0; i < priorityOrder.length; i++) {
+            const modal = document.getElementById(priorityOrder[i]);
+            if (modal && modal.classList.contains('show')) {
+                return priorityOrder[i];
+            }
+        }
+        
+        // اگر در لیست اولویت نبود، در MODAL_IDS بگرد
         for (let i = 0; i < MODAL_IDS.length; i++) {
             const modal = document.getElementById(MODAL_IDS[i]);
             if (modal && modal.classList.contains('show')) {
                 return MODAL_IDS[i];
             }
         }
+        
         return null;
     }
     
@@ -48,14 +90,26 @@
             'exam-grading-modal': 'closeExamGradingModal',
             'preview-modal': 'closePreviewModal',
             'report-card-modal': 'closeReportCard',
-            'attendance-details-modal': 'closeAttendanceDetails'
+            'attendance-details-modal': 'closeAttendanceDetails',
+            // ✅ توابع بستن مودال‌های جدید
+            'academic-year-modal': 'closeAcademicYearModal',
+            'exit-confirm-modal': 'cancelExit',  // ← مهم: cancelExit (نه confirmExit)
+            'backup-reminder-modal': 'closeReminderModal',
+            'period-editor-modal': 'closePeriodEditor',
+            'update-available-modal': 'closeUpdateModal'
         };
         
         const fnName = closeFnMap[modalId];
         if (fnName && typeof window[fnName] === 'function') {
-            try { window[fnName](); return true; } catch (e) { }
+            try { 
+                window[fnName](); 
+                return true; 
+            } catch (e) { 
+                console.warn('خطا در بستن مودال ' + modalId + ':', e);
+            }
         }
         
+        // ✅ fallback: اگر تابع نبود، مستقیماً کلاس را بردار
         modal.classList.remove('show');
         return true;
     }
@@ -99,18 +153,16 @@
         } catch (e) { console.warn('render error:', e); }
     }
     
-    // یک بار pushState برای قرار دادن یک گارد در تاریخچه (بدون تکرار)
+    // ✅ اصلاح باگ: هر بار که گارد ایجاد می‌شود، hasGuardState هم true می‌شود
     function ensureGuardState() {
-        if (!hasGuardState) {
-            try {
-                window.history.pushState(
-                    { koshaGuard: true, ts: Date.now() },
-                    '',
-                    window.location.href
-                );
-                hasGuardState = true;
-            } catch (e) { console.warn('pushState failed:', e); }
-        }
+        try {
+            window.history.pushState(
+                { koshaGuard: true, ts: Date.now() },
+                '',
+                window.location.href
+            );
+            hasGuardState = true;
+        } catch (e) { console.warn('pushState failed:', e); }
     }
     
     // برای فراخوانی از بیرون (وقتی تب عوض می‌شود)
@@ -135,7 +187,9 @@
         
         console.log('✅ Back handler initialized.');
         
+        // ✅ اصلاح باگ: ریست hasGuardState وقتی popstate رخ می‌دهد
         window.addEventListener('popstate', function(event) {
+            hasGuardState = false;  // ← گارد از بین رفت
             handleBackAction();
         });
     }
@@ -145,7 +199,7 @@
         const openModal = getOpenModal();
         if (openModal) {
             closeModal(openModal);
-            ensureGuardState();
+            ensureGuardState();  // ← گارد جدید
             backPressCount = 0;
             if (backPressTimer) { clearTimeout(backPressTimer); backPressTimer = null; }
             return;
@@ -153,7 +207,6 @@
         
         // مرحله ۲: اگر فرم دارای تغییرات ذخیره‌نشده است
         if (window.isFormDirty) {
-            // از تابع هشدار در app.js استفاده می‌کنیم
             if (typeof window.requestExit === 'function') {
                 window.requestExit(function() {
                     // کاربر «خروج» را زد، به تب کلاس برو
@@ -167,8 +220,8 @@
                 if (getActivePageId() !== 'page-class') {
                     goToPage('page-class');
                 }
+                ensureGuardState();
             }
-            ensureGuardState();
             backPressCount = 0;
             if (backPressTimer) { clearTimeout(backPressTimer); backPressTimer = null; }
             return;
@@ -188,9 +241,9 @@
         backPressCount++;
         
         if (backPressCount === 1) {
-            // نمایش پیام هشدار
+            // ✅ نمایش پیام هشدار (فرصت ۵ ثانیه‌ای)
             if (typeof showToast === 'function') {
-                showToast('برای خروج از برنامه، دوباره دکمه بازگشت را بزنید.', 'info');
+                showToast('برای خروج از برنامه، دکمه بازگشت را دوباره بزنید (تا ۵ ثانیه)', 'info');
             }
             ensureGuardState();
             
@@ -198,7 +251,7 @@
             backPressTimer = setTimeout(function() {
                 backPressCount = 0;
                 backPressTimer = null;
-            }, 3000);
+            }, 5000);  // ✅ افزایش از ۳ به ۵ ثانیه
         } else {
             // خروج واقعی
             backPressCount = 0;
@@ -206,21 +259,20 @@
             
             // تلاش برای خروج در PWA
             if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-                // در حالت PWA نصب‌شده
                 try {
                     window.close();
                 } catch (e) {
-                    // اگر مرورگر اجازه نداد
                     if (typeof showToast === 'function') {
                         showToast('برای خروج، برنامه را از گوشی ببندید.', 'info');
                     }
                 }
             } else {
-                // در حالت مرورگر معمولی
+                // ✅ اصلاح: یک بار دیگر back بزن (نه go(-2))
+                // چون popstate خودش یک بار رفته، یک بار دیگر منطقی است
                 try {
-                    window.history.go(-2);
-                } catch (e) {
                     window.history.back();
+                } catch (e) {
+                    console.warn('خروج ناموفق:', e);
                 }
             }
         }
