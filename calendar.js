@@ -90,6 +90,7 @@ function getFormattedEventsForDate(dateStr) {
     return `🎉 مناسبت: ${event}`;
 }
 
+// ⏸️ پایان بخش ۱ از ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 // ==========================================
 // 4. رندر تقویم جامع در تب تقویم
 // ==========================================
@@ -198,10 +199,12 @@ function renderFullCalendarGrid() {
         if (hasEvent) classes += ' has-event-soft';
         if (isSelected) classes += ' selected';
         
-        const tooltipText = hasEvent ? eventsMap[day] : '';
+        // ✅ اصلاح امنیتی: escape متن مناسبت در title (جلوگیری از XSS)
+        const rawTooltipText = hasEvent ? eventsMap[day] : '';
+        const safeTooltipText = escapeHtml(rawTooltipText);
         
         grid.innerHTML += `
-            <div class="${classes}" onclick="selectFullCalendarDay(${day})" title="${tooltipText}">
+            <div class="${classes}" onclick="selectFullCalendarDay(${day})" title="${safeTooltipText}">
                 ${toPersianNumber(day)}
             </div>
         `;
@@ -234,10 +237,11 @@ function renderFullCalendarEventsList() {
     `;
     
     if (fullCalendarSelectedDay && eventsMap[fullCalendarSelectedDay]) {
+        // ✅ اصلاح امنیتی: escape متن مناسبت در highlight
         html += `
             <div class="event-highlight">
                 <div class="event-highlight-day">${toPersianNumber(fullCalendarSelectedDay)} ${monthName}</div>
-                <div class="event-highlight-text">${eventsMap[fullCalendarSelectedDay]}</div>
+                <div class="event-highlight-text">${escapeHtml(eventsMap[fullCalendarSelectedDay])}</div>
             </div>
             <hr style="margin: 15px 0; border-top: 1px dashed var(--border-color);">
         `;
@@ -248,10 +252,11 @@ function renderFullCalendarEventsList() {
     html += '<div class="events-list">';
     sortedDays.forEach(day => {
         const isSelected = fullCalendarSelectedDay === day;
+        // ✅ اصلاح امنیتی: escape متن مناسبت در لیست
         html += `
             <div class="event-item ${isSelected ? 'selected' : ''}" onclick="selectFullCalendarDay(${day})">
                 <div class="event-day-badge">${toPersianNumber(day)}</div>
-                <div class="event-text">${eventsMap[day]}</div>
+                <div class="event-text">${escapeHtml(eventsMap[day])}</div>
             </div>
         `;
     });
@@ -279,3 +284,5 @@ function fullCalendarNextMonth() {
     saveFullCalendarState();
     renderFullCalendar();
 }
+
+// ✅ پایان کامل فایل calendar.js
