@@ -4,7 +4,9 @@
 
 importScripts('./version.js');
 
-const CACHE_NAME = 'kosha-cache-static'; 
+// ✅ اصلاح امنیتی: نام کش از نسخه اپ خوانده می‌شود تا با هر bump، کش جدید ساخته شود
+const APP_VERSION_SAFE = (self.APP_VERSION || 'v0.0.0').replace(/\./g, '-');
+const CACHE_NAME = `kosha-cache-${APP_VERSION_SAFE}`; 
 
 const ASSETS_TO_CACHE = [
     './', './index.html', './styles.css', './app.js', './db.js', './manifest.json', './icon.svg',
@@ -32,8 +34,23 @@ self.addEventListener('install', (event) => {
     self.skipWaiting(); // ✅ فعالسازی فوری سرویس‌ورکر جدید
 });
 
+// ✅ اصلاح امنیتی: پاک کردن کش‌های قدیمی نسخه‌های قبل تا فضای دیسک کاربر آزاد شود
 self.addEventListener('activate', (event) => {
-    event.waitUntil(self.clients.claim());
+    event.waitUntil(
+        Promise.all([
+            self.clients.claim(),
+            caches.keys().then((keys) => {
+                return Promise.all(
+                    keys
+                        .filter(key => key !== CACHE_NAME)
+                        .map(key => {
+                            console.log('🧹 حذف کش قدیمی:', key);
+                            return caches.delete(key);
+                        })
+                );
+            })
+        ])
+    );
 });
 
 self.addEventListener('fetch', (event) => {
