@@ -30,6 +30,16 @@ function fetchWithTimeout(request, timeoutMs) {
     ]);
 }
 
+// ✅ اصلاح: تابع کمکی برای ذخیره در کش با await کامل
+async function putInCache(cacheName, request, response) {
+    try {
+        const cache = await caches.open(cacheName);
+        await cache.put(request, response);
+    } catch (err) {
+        console.warn('⚠️ ذخیره در کش ناموفق:', request.url, err);
+    }
+}
+
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
@@ -78,10 +88,11 @@ self.addEventListener('fetch', (event) => {
         // ✅ فایل‌های ظاهری: اول اینترنت (با timeout)، بعد کش (آفلاین)
         event.respondWith(
             fetchWithTimeout(event.request, FETCH_TIMEOUT_MS)
-                .then((response) => {
+                .then(async (response) => {
+                    // ✅ اصلاح: await کامل روی putInCache
                     if (response && response.status === 200) {
                         const clone = response.clone();
-                        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+                        await putInCache(CACHE_NAME, event.request, clone);
                     }
                     return response;
                 })
@@ -101,10 +112,11 @@ self.addEventListener('fetch', (event) => {
         event.respondWith(
             caches.match(event.request).then((cached) => {
                 if (cached) return cached;
-                return fetch(event.request).then((response) => {
+                return fetch(event.request).then(async (response) => {
+                    // ✅ اصلاح: await کامل روی putInCache
                     if (response && response.status === 200) {
                         const clone = response.clone();
-                        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+                        await putInCache(CACHE_NAME, event.request, clone);
                     }
                     return response;
                 });
