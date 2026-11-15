@@ -124,6 +124,10 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .app-header h1 { margin: 0; font-size: 1.9rem; position: relative; z-index: 1; letter-spacing: -0.5px; font-weight: 800; }
 .app-header p { margin: 6px 0 0 0; font-size: 1rem; opacity: 0.9; position: relative; z-index: 1; }
 
+/* ⏸️ پایان بخش ۱ از ۸ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم. */
+/* =========================================
+   دکمه‌های هدر (تم + تنظیمات)
+   ========================================= */
 .theme-toggle, .settings-toggle {
     position: absolute;
     top: 15px;
@@ -286,6 +290,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .dashboard-accordion[open] summary { border-bottom: 1px dashed var(--border-color); }
 .dashboard-accordion-content { padding: 15px; background: var(--card-bg); }
 
+/* ⏸️ پایان بخش ۲ از ۸ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم. */
 /* =========================================
    فرم‌ها
    ========================================= */
@@ -543,6 +548,8 @@ select.form-control {
 .custom-toast-error svg { color: #ef4444; }
 .custom-toast-info { border-right: 4px solid #3b82f6; }
 .custom-toast-info svg { color: #3b82f6; }
+
+/* ⏸️ پایان بخش ۳ از ۸ — منتظر پیام «ادامه» شما هستم تا بخش ۴ را بفرستم. */
 /* =========================================
    لیست‌ها (بهبود حالت شب)
    ========================================= */
@@ -666,6 +673,7 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .record-details { font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
 .record-actions { display: flex; gap: 8px; margin-top: 5px; justify-content: flex-end; }
 
+/* ⏸️ پایان بخش ۴ از ۸ — منتظر پیام «ادامه» شما هستم تا بخش ۵ را بفرستم. */
 /* =========================================
    Report Card (بهبود حالت شب)
    ========================================= */
@@ -761,6 +769,7 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .session-period-section { background: var(--input-bg); border-radius: var(--radius-sm); padding: 15px; margin-bottom: 15px; border: 1px solid var(--border-color); }
 .session-period-title { font-weight: 700; color: var(--primary); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
 
+/* ⏸️ پایان بخش ۵ از ۸ — منتظر پیام «ادامه» شما هستم تا بخش ۶ را بفرستم. */
 /* =========================================
    Jalali Calendar (بهبود حالت شب)
    ========================================= */
@@ -816,6 +825,7 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .score-archive-item:last-child { border-bottom: none; }
 .score-archive-item strong { color: var(--primary); font-weight: 700; }
 
+/* ⏸️ پایان بخش ۶ از ۸ — منتظر پیام «ادامه» شما هستم تا بخش ۷ را بفرستم. */
 /* =========================================
    Exam Editor (بهبود حالت شب)
    ========================================= */
@@ -885,6 +895,13 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 #exam-grading-stats strong { color: var(--primary); font-size: 1.05rem; }
 .exam-grading-empty { text-align: center; padding: 30px 15px; color: var(--text-muted); font-size: 0.95rem; }
 
+/* ✅ اصلاح فاز ۲ (باگ #۱۵): تعریف keyframes shake که در .exam-grading-score-input.invalid استفاده می‌شود */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+}
+
 /* =========================================
    Full Calendar (بهبود حالت شب)
    ========================================= */
@@ -920,6 +937,7 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .full-calendar-day.has-event-soft { background: rgba(74, 144, 226, 0.06); border: 1px solid rgba(74, 144, 226, 0.15); }
 [data-theme="dark"] .full-calendar-day.has-event-soft { background: rgba(90, 161, 245, 0.15); border: 1px solid rgba(90, 161, 245, 0.25); }
 
+/* ⏸️ پایان بخش ۷ از ۸ — منتظر پیام «ادامه» شما هستم تا بخش ۸ (آخرین بخش، شامل اصلاح #۱۹) را بفرستم. */
 /* =========================================
    Schedule Table (بهبود حالت شب)
    ========================================= */
@@ -1029,11 +1047,57 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 }
 
 /* =========================================
-   Special Cards (بهبود حالت شب)
+   ✅ Special Cards (اصلاح #۱۹)
+   جایگزین انتخابگرهای شکننده [style*=...]
+   با کلاس‌های معنادار و پایدار
    ========================================= */
-[data-theme="dark"] .card[style*="linear-gradient(135deg, #fff8e1"],
-[data-theme="dark"] .card[style*="linear-gradient(135deg, #f0fdf4"],
-[data-theme="dark"] .card[style*="linear-gradient(135deg, #eef2ff"] {
-    background: var(--card-bg) !important;
-    border-color: var(--border-color) !important;
+.card-warning {
+    background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+    border: 1px solid #f59e0b;
 }
+.card-title-warning {
+    color: #b45309;
+    border-bottom-color: #fcd34d;
+}
+[data-theme="dark"] .card-warning {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+}
+[data-theme="dark"] .card-title-warning {
+    color: #fbbf24;
+    border-bottom-color: #f59e0b;
+}
+
+.card-info {
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    border: 2px solid #a5b4fc;
+}
+.card-title-info {
+    color: #4f46e5;
+    border-bottom-color: #c7d2fe;
+}
+[data-theme="dark"] .card-info {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+}
+[data-theme="dark"] .card-title-info {
+    color: #818cf8;
+    border-bottom-color: #6366f1;
+}
+
+.card-quran {
+    background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+}
+.card-title-quran {
+    color: #16a34a;
+    border-bottom-color: #86efac;
+}
+[data-theme="dark"] .card-quran {
+    background: var(--card-bg);
+}
+[data-theme="dark"] .card-title-quran {
+    color: #4ade80;
+    border-bottom-color: #22c55e;
+}
+
+/* ✅ پایان کامل فایل styles.css */
