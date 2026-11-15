@@ -1,7 +1,7 @@
 {
-    "version": "v1.0.11",
-    "releaseDate": "۱۴۰۵/۰۸/۲۳",
-    "releaseNotes": "پاک شدن تنظیمات در بازنشانی کارخانه",
+    "version": "v1.0.12",
+    "releaseDate": "۱۴۰۵/۰۸/۲۴",
+    "releaseNotes": "رفع ۸ باگ بحرانی: آپدیت خودکار، حذف آزمون‌های یتیم، شمارش قرآن، گزارش حضور و غیاب",
     "downloadUrl": "",
     "forceUpdate": false
 }
