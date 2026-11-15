@@ -18,6 +18,18 @@ const ASSETS_TO_CACHE = [
 // ✅ لیست فایل‌هایی که باید همیشه از اینترنت (سرور) خونده بشن تا ظاهر برنامه آپدیت بشه
 const NETWORK_FIRST_PATHS = ['/index.html', '/updater.js', '/version.json'];
 
+// ✅ اصلاح: timeout برای fetch (جلوگیری از انتظار بی‌پایان در صورت سرور کند)
+const FETCH_TIMEOUT_MS = 3000;
+
+function fetchWithTimeout(request, timeoutMs) {
+    return Promise.race([
+        fetch(request),
+        new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Fetch timeout')), timeoutMs)
+        )
+    ]);
+}
+
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
@@ -63,9 +75,9 @@ self.addEventListener('fetch', (event) => {
     const isNetworkFirst = NETWORK_FIRST_PATHS.some(path => url.pathname.endsWith(path)) || url.pathname === '/';
 
     if (isNetworkFirst) {
-        // ✅ فایل‌های ظاهری: اول اینترنت، بعد کش (آفلاین)
+        // ✅ فایل‌های ظاهری: اول اینترنت (با timeout)، بعد کش (آفلاین)
         event.respondWith(
-            fetch(event.request)
+            fetchWithTimeout(event.request, FETCH_TIMEOUT_MS)
                 .then((response) => {
                     if (response && response.status === 200) {
                         const clone = response.clone();
@@ -73,10 +85,16 @@ self.addEventListener('fetch', (event) => {
                     }
                     return response;
                 })
-                .catch(() => caches.match(event.request).then(cached => {
-                    if (cached) return cached;
-                    if (event.request.mode === 'navigate') return caches.match('./index.html');
-                }))
+                .catch(() => {
+                    // ✅ اصلاح: fallback کامل با Response 503 در صورت نبود کش
+                    return caches.match(event.request).then(cached => {
+                        if (cached) return cached;
+                        if (event.request.mode === 'navigate') {
+                            return caches.match('./index.html');
+                        }
+                        return new Response('', { status: 503, statusText: 'Offline' });
+                    });
+                })
         );
     } else {
         // ✅ فایل‌های اصلی (کدها): اول کش، بعد اینترنت (تا آپدیت خودسرانه نشود)
@@ -90,7 +108,7 @@ self.addEventListener('fetch', (event) => {
                     }
                     return response;
                 });
-            }).catch(() => new Response('', { status: 503 }))
+            }).catch(() => new Response('', { status: 503, statusText: 'Offline' }))
         );
     }
 });
