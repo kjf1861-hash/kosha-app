@@ -203,7 +203,7 @@ function renderScheduleEdit() {
     });
 }
 
-// ⏸️ پایان بخش ۱ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
+// ⏸️ پایان بخش ۱ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۲ (شامل اصلاح #۲۴) را بفرستم.
 // ==========================================
 // ✅ ذخیره برنامه هفتگی (چندساله — id یکتا)
 // ==========================================
@@ -411,31 +411,23 @@ function exportScheduleHTML() {
     }
 }
 
+// ✅ اصلاح #۲۴: استفاده از window.printHtmlContent (هماهنگی با بقیه اپ)
 function printSchedule() {
     try {
         const { matrix, maxPeriodToShow } = getScheduleDataMatrix();
         if (matrix.length === 0) { showToast('برنامه‌ای برای چاپ وجود ندارد.', 'error'); return; }
         
+        // ✅ ساخت محتوای HTML (فقط body، نه کل صفحه)
+        // window.printHtmlContent آن را در یک قالب کامل با استایل‌های استاندارد قرار می‌دهد
         let html = `
-        <!DOCTYPE html>
-        <html lang="fa" dir="rtl">
-        <head>
-            <meta charset="UTF-8">
-            <title>چاپ برنامه هفتگی</title>
-            <style>
-                body { font-family: Tahoma, sans-serif; padding: 20px; }
-                h1 { text-align: center; color: #2c3e50; margin-bottom: 25px; }
-                table { width: 100%; border-collapse: collapse; }
-                th, td { border: 2px solid #333; padding: 12px 8px; text-align: center; vertical-align: middle; height: 50px; }
-                thead th { background-color: #ddd; color: #000; border-bottom: 3px solid #333; }
-                tbody th { background-color: #eee; color: #000; border-left: 3px solid #333; width: 100px; }
-                td { font-size: 14px; }
-            </style>
-        </head>
-        <body>
-            <h1>📚 برنامه هفتگی 📚</h1>
-            <table>
-                <thead><tr><th>روز / زنگ</th>`;
+        <div class="rc-header">
+            <h2>📚 برنامه هفتگی کلاس</h2>
+            <p>سال تحصیلی ${toPersianNumber(window.activeAcademicYear || '1405-1406')}</p>
+        </div>
+        <table class="schedule-table" style="width:100%; border-collapse: collapse; margin-top: 15px;">
+            <thead>
+                <tr>
+                    <th>روز / زنگ</th>`;
         for (let i = 1; i <= maxPeriodToShow; i++) {
             html += `<th>زنگ ${toPersianNumber(i)}</th>`;
         }
@@ -451,16 +443,20 @@ function printSchedule() {
             html += `</tr>`;
         });
         
-        html += `</tbody></table></body></html>`;
+        html += `</tbody></table>`;
 
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(html);
-        printWindow.document.close();
-        printWindow.focus();
-        setTimeout(() => {
-            printWindow.print();
-        }, 500);
-        
+        // ✅ استفاده از تابع چاپ مشترک (با fallback به window.print)
+        if (typeof window.printHtmlContent === 'function') {
+            window.printHtmlContent(html);
+        } else {
+            // fallback: اگر printHtmlContent موجود نبود (نباید رخ دهد چون در app.js تعریف شده)
+            console.warn('⚠️ printHtmlContent موجود نیست — استفاده از window.print مستقیم');
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>چاپ برنامه هفتگی</title></head><body>${html}</body></html>`);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => printWindow.print(), 500);
+        }
     } catch (e) {
         console.error(e);
         showToast('خطا در آماده‌سازی برای چاپ.', 'error');
@@ -762,7 +758,7 @@ async function createNewSession() {
     loadAllData();
 }
 
-// ⏸️ پایان بخش ۳ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۴ (شامل مودال جدید تقویم ویرایش تاریخ + deleteSession) را بفرستم.
+// ⏸️ پایان بخش ۳ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۴ (شامل مودال تقویم #۱۳ + deleteSession) را بفرستم.
 // ==========================================
 // 4. ✅ مودال جدید: ویرایش تاریخ جلسه با تقویم شمسی (باگ #۱۳)
 // ==========================================
@@ -820,7 +816,6 @@ function renderEditSessionCalendar() {
     const { currentYear, currentMonth, selectedDate } = editSessionDateModalState;
     
     // عنوان (ماه + سال)
-    const monthName = jalaliMonths[currentMonth - 1] || '';
     titleEl.innerHTML = `
         <select onchange="editSessionDateModalState.currentMonth = parseInt(this.value); renderEditSessionCalendar();">
             ${jalaliMonths.map((m, i) => `<option value="${i + 1}" ${currentMonth === i + 1 ? 'selected' : ''}>${m}</option>`).join('')}
@@ -1052,7 +1047,7 @@ async function deleteSession(sessionId) {
     }
 }
 
-// ⏸️ پایان بخش ۴ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۵ را بفرستم.
+// ⏸️ پایان بخش ۴ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۵ (شامل rollback #۱۲) را بفرستم.
 // ==========================================
 // 5. مشاهده جزئیات جلسه و ثبت حضور و غیاب زنگ‌ها
 // ==========================================
@@ -1241,7 +1236,7 @@ function closeSessionDetails() {
     if (typeof clearFormDirty === 'function') clearFormDirty();
 }
 
-// ⏸️ پایان بخش ۵ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۶ (آخرین بخش) را بفرستم.
+// ⏸️ پایان بخش ۵ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۶ (آخرین بخش — گزارش‌ها) را بفرستم.
 // ==========================================
 // 6. گزارش حضور و غیاب
 // ==========================================
