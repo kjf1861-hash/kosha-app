@@ -135,13 +135,13 @@ function renderScheduleView() {
         for (let i = 0; i < maxPeriodToShow; i++) {
             const subId = periods[i];
             if (subId) {
-    const sub = window.allSubjectsData.find(s => s.id === subId);
-    if (sub) {
-        html += `<td>${escapeHtml(sub.symbol || '')} ${escapeHtml(sub.name)}</td>`;
-    } else {
-        html += `<td class="empty-cell">-</td>`;
-    }
-} else {
+                const sub = window.allSubjectsData.find(s => s.id === subId);
+                if (sub) {
+                    html += `<td>${escapeHtml(sub.symbol || '')} ${escapeHtml(sub.name)}</td>`;
+                } else {
+                    html += `<td class="empty-cell">-</td>`;
+                }
+            } else {
                 html += `<td class="empty-cell">-</td>`;
             }
         }
@@ -194,7 +194,7 @@ function renderScheduleEdit() {
     });
 }
 
-// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
+// ⏸️ پایان بخش ۱ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 // ==========================================
 // ✅ ذخیره برنامه هفتگی (چندساله — id یکتا)
 // ==========================================
@@ -458,6 +458,7 @@ function printSchedule() {
     }
 }
 
+// ⏸️ پایان بخش ۲ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 // ==========================================
 // 2. توابع تقویم شمسی
 // ==========================================
@@ -707,7 +708,6 @@ function selectCalendarDay(day, dateStr) {
     renderCalendarGrid();
 }
 
-// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 // ==========================================
 // 3. ثبت جلسه
 // ==========================================
@@ -840,6 +840,7 @@ async function deleteSession(sessionId) {
     }
 }
 
+// ⏸️ پایان بخش ۳ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۴ را بفرستم.
 // ==========================================
 // 4. مشاهده جزئیات جلسه و ثبت حضور و غیاب زنگ‌ها
 // ==========================================
@@ -950,7 +951,6 @@ function setAllPeriodAttendance(periodNum, status) {
     }
 }
 
-// ⏸️ پایان بخش ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۴ را بفرستم.
 async function saveAllSessionAttendance() {
     if (!currentSessionId) return;
 
@@ -982,6 +982,10 @@ async function saveAllSessionAttendance() {
         // پاک کردن وضعیت فرم‌های ذخیره‌نشده
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
+        // ✅ اصلاح بحرانی: بازسازی کش امتیازات/حضور قبل از رندر گزارش‌ها
+        // بدون این خط، گزارش‌ها و داشبورد اعداد قدیمی را نشان می‌دهند
+        if (typeof buildScoreCaches === 'function') buildScoreCaches();
+        
         generateAttendanceReports();
         if (typeof renderDashboardData === 'function') renderDashboardData();
     } catch (e) {
@@ -1001,6 +1005,7 @@ function closeSessionDetails() {
     if (typeof clearFormDirty === 'function') clearFormDirty();
 }
 
+// ⏸️ پایان بخش ۴ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۵ (آخرین بخش) را بفرستم.
 // ==========================================
 // 5. گزارش حضور و غیاب
 // ==========================================
@@ -1090,7 +1095,6 @@ function generateAttendanceReports() {
     container.innerHTML = html;
 }
 
-// ⏸️ پایان بخش ۴ — منتظر پیام «ادامه» شما هستم تا بخش ۵ (آخرین بخش) را بفرستم.
 async function exportSessionCSV() {
     try {
         // ✅ اصلاح امنیتی: جلوگیری از فرمول تزریقی در اکسل (CSV Injection)
@@ -1130,4 +1134,4 @@ async function exportSessionCSV() {
     }
 }
 
-// ✅ پایان فایل session.js
+// ✅ پایان کامل فایل session.js
