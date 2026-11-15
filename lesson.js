@@ -147,16 +147,34 @@ function renderLessonData() {
 }
 
 async function deleteLesson(id) {
-    if (!confirm('آیا از حذف این درس مطمئن هستید؟ تمام سوابق ارزشیابی مرتبط با این درس نیز حذف خواهند شد!')) return;
+    if (!confirm('آیا از حذف این درس مطمئن هستید؟ تمام سوابق ارزشیابی و آزمون‌های مرتبط با این درس نیز حذف خواهند شد!')) return;
     
     try {
+        // ۱. حذف سوابق ارزشیابی مرتبط با این درس
         const subjectRecords = window.allRecordsData.filter(r => r.subjectId === id);
         for (const rec of subjectRecords) {
             await deleteData('records', rec.id);
         }
 
+        // ✅ اصلاح باگ: حذف آزمون‌های مرتبط با این درس و نتایج آن‌ها
+        const allExams = await getAllData('exams');
+        const relatedExams = allExams.filter(e => e.subjectId === id);
+        const relatedExamIds = relatedExams.map(e => e.id);
+        
+        if (relatedExamIds.length > 0) {
+            const allResults = await getAllData('examResults');
+            const relatedResults = allResults.filter(r => relatedExamIds.includes(r.examId));
+            for (const result of relatedResults) {
+                await deleteData('examResults', result.id);
+            }
+            for (const exam of relatedExams) {
+                await deleteData('exams', exam.id);
+            }
+        }
+
+        // ۲. حذف خود درس
         await deleteData('subjects', id);
-        showToast('درس و سوابق مرتبط حذف شد.', 'success');
+        showToast('درس و سوابق و آزمون‌های مرتبط حذف شد.', 'success');
         loadAllData();
     } catch (e) {
         console.error(e);
@@ -164,13 +182,14 @@ async function deleteLesson(id) {
     }
 }
 
+// ⏸️ پایان بخش ۱ از ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 async function resetAllLessons() {
     if (window.allSubjectsData.length === 0) {
         showToast('هیچ درسی برای حذف وجود ندارد.', 'error');
         return;
     }
 
-    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید تمام دروس این سال تحصیلی را حذف کنید؟ تمام سوابق ارزشیابی مرتبط با دروس نیز پاک خواهد شد.');
+    const confirm1 = confirm('⚠️ هشدار شدید:\n\nآیا مطمئن هستید که می‌خواهید تمام دروس این سال تحصیلی را حذف کنید؟ تمام سوابق ارزشیابی و آزمون‌های مرتبط با دروس نیز پاک خواهند شد.');
     if (!confirm1) return;
 
     const confirm2 = confirm('🚨 آخرین هشدار!\n\nاین عمل غیرقابل بازگشت است و تمام دروس این سال برای همیشه حذف می‌شوند. آیا ۱۰۰٪ مطمئن هستید؟');
@@ -178,17 +197,35 @@ async function resetAllLessons() {
 
     try {
         const subjectIds = window.allSubjectsData.map(s => s.id);
-        const recordsToDelete = window.allRecordsData.filter(r => subjectIds.includes(r.subjectId));
         
+        // ۱. حذف سوابق ارزشیابی مرتبط با دروس
+        const recordsToDelete = window.allRecordsData.filter(r => subjectIds.includes(r.subjectId));
         for (const rec of recordsToDelete) {
             await deleteData('records', rec.id);
         }
 
+        // ✅ اصلاح باگ: حذف آزمون‌های مرتبط با دروس و نتایج آن‌ها
+        const allExams = await getAllData('exams');
+        const relatedExams = allExams.filter(e => subjectIds.includes(e.subjectId));
+        const relatedExamIds = relatedExams.map(e => e.id);
+        
+        if (relatedExamIds.length > 0) {
+            const allResults = await getAllData('examResults');
+            const relatedResults = allResults.filter(r => relatedExamIds.includes(r.examId));
+            for (const result of relatedResults) {
+                await deleteData('examResults', result.id);
+            }
+            for (const exam of relatedExams) {
+                await deleteData('exams', exam.id);
+            }
+        }
+
+        // ۲. حذف خود دروس
         for (const sub of window.allSubjectsData) {
             await deleteData('subjects', sub.id);
         }
         
-        showToast('تمام دروس و سوابق مرتبط این سال تحصیلی حذف شدند.', 'success');
+        showToast('تمام دروس، سوابق و آزمون‌های مرتبط این سال تحصیلی حذف شدند.', 'success');
         loadAllData();
     } catch (e) {
         console.error(e);
@@ -201,7 +238,10 @@ function openLessonDetails(id) {
     currentLessonDetailView = 'class'; 
     
     const sub = window.allSubjectsData.find(s => s.id === id);
-    if(!sub) return;
+    if(!sub) {
+        showToast('درس یافت نشد.', 'error');
+        return;
+    }
 
     document.getElementById('lesson-details-title').textContent = `📊 جزئیات درس: ${sub.symbol || ''} ${sub.name}`;
     
@@ -224,7 +264,7 @@ function switchLessonDetailView(view) {
     renderLessonDetails();
 }
 
-// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ (آخرین بخش) را بفرستم.
+// ⏸️ پایان بخش ۲ از ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۳ (آخرین بخش) را بفرستم.
 function renderLessonDetails() {
     const container = document.getElementById('lesson-details-content');
     if (!container || !currentLessonDetailsId) return;
@@ -312,7 +352,7 @@ function renderLessonDetails() {
                 ? processRanking(studentScores) 
                 : '<p style="font-size:0.8rem; color:#64748b; text-align:center;">دانش‌آموزی ندارد.</p>';
 
-            return { id: g.id, name: `${g.symbol} ${g.name}`, totalScore: groupTotal, studentsHtml: studentsHtml };
+            return { id: g.id, name: `${g.symbol || ''} ${g.name}`, totalScore: groupTotal, studentsHtml: studentsHtml };
         });
 
         const uniqueGroupScores = [...new Set(groupData.map(g => g.totalScore))].filter(s => s > 0).sort((a, b) => b - a);
