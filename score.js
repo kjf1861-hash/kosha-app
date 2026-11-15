@@ -338,7 +338,7 @@ function resetScoreCalendar(type) {
     renderScoreCalendar(type);
 }
 
-// ⏸️ پایان بخش ۱ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
+// ⏸️ پایان بخش ۱ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 // ==========================================
 // مدیریت انتخاب دانش‌آموزان
 // ==========================================
@@ -513,7 +513,7 @@ function toggleHandwritingGroupSelection(checkbox, groupId, checkboxClass) {
     document.querySelectorAll(`.handwriting-student-checkbox.group-student-${groupId}`).forEach(cb => cb.checked = checkbox.checked);
 }
 
-// ⏸️ پایان بخش ۲ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
+// ⏸️ پایان بخش ۲ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 // ==========================================
 // ثبت ارزشیابی
 // ==========================================
@@ -674,7 +674,7 @@ async function confirmAndSaveRecord() {
     }
 }
 
-// ⏸️ پایان بخش ۳ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۴ (شامل اصلاح باگ #۷ در `saveQuranRecord`) را بفرستم.
+// ⏸️ پایان بخش ۳ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۴ را بفرستم.
 // ✅ اصلاح باگ بزرگ: جلوگیری از فریز شدن برنامه (بهینه‌سازی حلقه پویش قرآن)
 // ✅ اصلاح باگ: حذف double-push که باعث شمارش اشتباه سوره‌ها و آیات می‌شد
 async function saveQuranRecord() {
@@ -852,7 +852,7 @@ async function saveHandwritingReward() {
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق خوش‌خط‌نویسی.', 'error'); }
 }
 
-// ⏸️ پایان بخش ۴ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۵ را بفرستم.
+// ⏸️ پایان بخش ۴ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۵ (آخرین بخش، شامل اصلاح #۱۰) را بفرستم.
 // ==========================================
 // سوابق ارزشیابی
 // ==========================================
@@ -950,9 +950,32 @@ function loadAssessmentRecords() {
     }
 }
 
+// ✅ اصلاح باگ: حذف badgeهای یتیم هنگام حذف رکورد قرآن
 async function deleteRecord(id) {
     if (!confirm('آیا از حذف این رکورد مطمئن هستید؟')) return;
     try { 
+        // ✅ خواندن رکورد قبل از حذف (برای بررسی نوع آن)
+        const record = await getDataById('records', id);
+        
+        // ✅ اگر رکورد «پویش قرآن» بود، badgeهای مرتبط هم پاک شوند
+        if (record && record.itemName === "پویش حفظ جزء سی قرآن کریم" && record.students && record.students.length > 0) {
+            const allBadges = await getAllData('badgesSettings');
+            const relatedBadges = allBadges.filter(badge => 
+                badge.id && 
+                badge.id.startsWith('quranReward_') && 
+                record.students.includes(badge.studentId) &&
+                badge.academicYear === (record.academicYear || window.activeAcademicYear)
+            );
+            
+            for (const badge of relatedBadges) {
+                await deleteData('badgesSettings', badge.id);
+            }
+            
+            if (relatedBadges.length > 0) {
+                console.log(`🧹 ${relatedBadges.length} badge قرآن مرتبط با رکورد حذف‌شده پاک شد.`);
+            }
+        }
+        
         await deleteData('records', id); 
         showToast('رکورد حذف شد.', 'success'); 
         loadAllData(); 
@@ -1186,4 +1209,4 @@ async function exportScoreCSV() {
     }
 }
 
-// ⏸️ پایان بخش ۵ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۶ (آخرین بخش) را بفرستم.
+// ✅ پایان کامل فایل score.js
