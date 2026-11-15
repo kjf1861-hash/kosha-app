@@ -80,7 +80,7 @@
     }
     
     let isChecking = false;
-    // ✅ اصلاح: نگهداری نسخه سرور برای استفاده در snooze/skip (بدون fetch تکراری)
+    // ✅ نگهداری نسخه سرور برای استفاده در snooze/skip (بدون fetch تکراری)
     let currentServerVersion = null;
     
     async function checkForUpdates(silent = false, isManual = false) {
@@ -115,7 +115,6 @@
             updateLastCheckDisplay();
             
             const serverVersion = serverInfo.version;
-            // ✅ اصلاح: ذخیره نسخه سرور برای استفاده در snooze/skip
             currentServerVersion = serverVersion;
             
             const comparison = compareVersions(serverVersion, currentVersion);
@@ -214,16 +213,14 @@
         }
     }
     
-    // ✅ اصلاح: بدون fetch تکراری — از currentServerVersion استفاده می‌شود
+    // ✅ بدون fetch تکراری — از currentServerVersion استفاده می‌شود
     function snoozeUpdateNotification() {
         try {
             localStorage.setItem(STORAGE_KEYS.lastSnooze, Date.now().toString());
             
-            // ✅ استفاده از نسخه‌ای که در checkForUpdates خوانده شده (بدون fetch تکراری)
             if (currentServerVersion) {
                 localStorage.setItem(STORAGE_KEYS.dismissedVersion, currentServerVersion);
             } else {
-                // fallback: اگر به هر دلیلی currentServerVersion خالی بود (نباید رخ دهد)
                 fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
                     .then(r => r.json())
                     .then(data => {
@@ -238,17 +235,15 @@
         } catch (e) {}
     }
     
-    // ✅ اصلاح: بدون fetch تکراری — از currentServerVersion استفاده می‌شود
+    // ✅ بدون fetch تکراری — از currentServerVersion استفاده می‌شود
     function skipThisVersion() {
         try {
-            // ✅ استفاده از نسخه‌ای که در checkForUpdates خوانده شده (بدون fetch تکراری)
             if (currentServerVersion) {
                 localStorage.setItem(STORAGE_KEYS.skippedVersion, currentServerVersion);
                 localStorage.removeItem(STORAGE_KEYS.dismissedVersion);
                 localStorage.removeItem(STORAGE_KEYS.lastSnooze);
                 showToastSafe('نسخه جدید رد شد. تا نسخه بعدی پیامی نمایش داده نمی‌شود.', 'info');
             } else {
-                // fallback: اگر به هر دلیلی currentServerVersion خالی بود (نباید رخ دهد)
                 fetch('./version.json?t=' + Date.now(), { cache: 'no-store' })
                     .then(r => r.json())
                     .then(data => {
@@ -289,8 +284,28 @@
         updateUpdateModeUI();
     }
     
+    // ✅ اصلاح: پاکسازی پارامتر ?update= از URL بعد از reload (باگ #۳۰)
+    // جلوگیری از آلودگی URL در bookmark یا share
+    function cleanUpdateQueryFromUrl() {
+        try {
+            const url = new URL(window.location.href);
+            if (url.searchParams.has('update')) {
+                url.searchParams.delete('update');
+                const cleanUrl = url.pathname + (url.search || '') + url.hash;
+                window.history.replaceState({}, document.title, cleanUrl);
+                console.log('🧹 پارامتر ?update از URL پاک شد.');
+            }
+        } catch (e) {
+            console.warn('⚠️ خطا در پاکسازی URL:', e);
+        }
+    }
+    
     function initUpdater() {
         if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initUpdater); return; }
+        
+        // ✅ اصلاح: پاکسازی ?update= از URL (باگ #۳۰)
+        cleanUpdateQueryFromUrl();
+        
         setupUpdateModeListeners();
         updateLastCheckDisplay();
         startAutoCheck();
