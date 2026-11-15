@@ -1,5 +1,5 @@
 {
-    "version": "v1.1.3",
+    "version": "v1.1.4",
     "releaseDate": "۱۴۰۵/۰۸/۲۴",
     "releaseNotes": "🔧 رفع ۱۰ باگ پایین: timeout شبکه، پاکسازی URL، حذف کدهای مرده CSS، سازگاری WCAG (زوم)، splash سریع‌تر، پاکسازی پارامتر update از URL",
     "downloadUrl": "",
