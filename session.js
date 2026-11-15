@@ -9,6 +9,15 @@ let currentAttReportFilter = 'class';
 
 let currentScheduleMode = 'view';
 
+// ✅ متغیرهای جدید برای مودال ویرایش تاریخ جلسه (باگ #۱۳)
+let editSessionDateModalState = {
+    sessionId: null,
+    originalDate: '',
+    currentYear: 1405,
+    currentMonth: 7,
+    selectedDate: ''
+};
+
 const jalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
 
 const officialHolidays = {
@@ -194,7 +203,7 @@ function renderScheduleEdit() {
     });
 }
 
-// ⏸️ پایان بخش ۱ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
+// ⏸️ پایان بخش ۱ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 // ==========================================
 // ✅ ذخیره برنامه هفتگی (چندساله — id یکتا)
 // ==========================================
@@ -458,7 +467,7 @@ function printSchedule() {
     }
 }
 
-// ⏸️ پایان بخش ۲ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
+// ⏸️ پایان بخش ۲ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 // ==========================================
 // 2. توابع تقویم شمسی
 // ==========================================
@@ -524,7 +533,7 @@ function initCalendar() {
                         <div style="text-align:center; margin-bottom:10px; color:#16a34a; font-weight:bold;">✅ جلسه ثبت شده است.</div>
                         <div style="display:flex; gap:5px;">
                             <button type="button" class="btn btn-primary" style="flex:2;" onclick="openSessionDetails(${existingSession.id})">👁️ مشاهده حضور و غیاب</button>
-                            <button type="button" class="btn btn-secondary" style="flex:1;" onclick="editSessionDate(${existingSession.id}, '${existingSession.date}')">✏️</button>
+                            <button type="button" class="btn btn-secondary" style="flex:1;" onclick="openEditSessionDateModal(${existingSession.id}, '${existingSession.date}')">✏️</button>
                             <button type="button" class="btn btn-danger" style="flex:1;" onclick="deleteSession(${existingSession.id})">🗑️</button>
                         </div>
                     `;
@@ -680,7 +689,7 @@ function selectCalendarDay(day, dateStr) {
                 <div style="text-align:center; margin-bottom:10px; color:#16a34a; font-weight:bold;">✅ جلسه ثبت شده است.</div>
                 <div style="display:flex; gap:5px;">
                     <button type="button" class="btn btn-primary" style="flex:2;" onclick="openSessionDetails(${existingSession.id})">👁️ مشاهده حضور و غیاب</button>
-                    <button type="button" class="btn btn-secondary" style="flex:1;" onclick="editSessionDate(${existingSession.id}, '${existingSession.date}')">✏️</button>
+                    <button type="button" class="btn btn-secondary" style="flex:1;" onclick="openEditSessionDateModal(${existingSession.id}, '${existingSession.date}')">✏️</button>
                     <button type="button" class="btn btn-danger" style="flex:1;" onclick="deleteSession(${existingSession.id})">🗑️</button>
                 </div>
             `;
@@ -753,48 +762,251 @@ async function createNewSession() {
     loadAllData();
 }
 
-async function editSessionDate(sessionId, currentDate) {
-    const newDate = prompt('تاریخ جدید (مثلاً 1405/08/20):', currentDate);
-    if (newDate === null) return;
-    const trimmed = newDate.trim();
+// ⏸️ پایان بخش ۳ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۴ (شامل مودال جدید تقویم ویرایش تاریخ + deleteSession) را بفرستم.
+// ==========================================
+// 4. ✅ مودال جدید: ویرایش تاریخ جلسه با تقویم شمسی (باگ #۱۳)
+// ==========================================
+function openEditSessionDateModal(sessionId, currentDate) {
+    const modal = document.getElementById('edit-session-date-modal');
+    if (!modal) return;
     
-    if (!window.isValidJalaliDateString(trimmed)) { 
-        showToast('تاریخ وارد شده معتبر نیست. لطفاً یک تاریخ واقعی وارد کنید.', 'error'); 
-        return; 
+    // ✅ مقداردهی state
+    editSessionDateModalState.sessionId = sessionId;
+    editSessionDateModalState.originalDate = currentDate;
+    editSessionDateModalState.selectedDate = currentDate;
+    
+    // استخراج سال و ماه از تاریخ فعلی
+    const parts = currentDate.split('/');
+    editSessionDateModalState.currentYear = parseInt(parts[0]);
+    editSessionDateModalState.currentMonth = parseInt(parts[1]);
+    
+    // نمایش تاریخ فعلی در بالای مودال
+    const currentDateDisplay = document.getElementById('edit-session-current-date');
+    if (currentDateDisplay) {
+        const dayNames = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+        const firstDay = getJalaliFirstDayOfWeek(editSessionDateModalState.currentYear, editSessionDateModalState.currentMonth);
+        const dayOfWeekIndex = (firstDay + parseInt(parts[2]) - 1) % 7;
+        currentDateDisplay.innerHTML = `📌 تاریخ فعلی: <strong>${toPersianNumber(currentDate)}</strong> (${dayNames[dayOfWeekIndex]})`;
     }
     
-    if (trimmed === currentDate) {
-        showToast('تاریخ جدید با تاریخ فعلی یکسان است.', 'info');
+    // نمایش تاریخ انتخاب‌شده (اولیه = تاریخ فعلی)
+    updateEditSessionSelectedDisplay();
+    
+    // رندر تقویم
+    renderEditSessionCalendar();
+    
+    modal.classList.add('show');
+}
+
+function closeEditSessionDateModal() {
+    const modal = document.getElementById('edit-session-date-modal');
+    if (modal) modal.classList.remove('show');
+    
+    // reset state
+    editSessionDateModalState = {
+        sessionId: null,
+        originalDate: '',
+        currentYear: 1405,
+        currentMonth: 7,
+        selectedDate: ''
+    };
+}
+
+function renderEditSessionCalendar() {
+    const grid = document.getElementById('edit-session-cal-grid');
+    const titleEl = document.getElementById('edit-session-cal-title');
+    if (!grid || !titleEl) return;
+    
+    const { currentYear, currentMonth, selectedDate } = editSessionDateModalState;
+    
+    // عنوان (ماه + سال)
+    const monthName = jalaliMonths[currentMonth - 1] || '';
+    titleEl.innerHTML = `
+        <select onchange="editSessionDateModalState.currentMonth = parseInt(this.value); renderEditSessionCalendar();">
+            ${jalaliMonths.map((m, i) => `<option value="${i + 1}" ${currentMonth === i + 1 ? 'selected' : ''}>${m}</option>`).join('')}
+        </select>
+        <select onchange="editSessionDateModalState.currentYear = parseInt(this.value); renderEditSessionCalendar();">
+            ${(() => {
+                const ay = window.activeAcademicYear || '1405-1406';
+                const [sY, eY] = ay.split('-').map(Number);
+                return [sY, eY].map(y => `<option value="${y}" ${currentYear === y ? 'selected' : ''}>${toPersianNumber(y)}</option>`).join('');
+            })()}
+        </select>
+    `;
+    
+    grid.innerHTML = '';
+    
+    const firstDay = getJalaliFirstDayOfWeek(currentYear, currentMonth);
+    const daysInMonth = getJalaliDaysInMonth(currentYear, currentMonth);
+    
+    const ay = window.activeAcademicYear || '1405-1406';
+    const [startYear, endYear] = ay.split('-');
+    const startBound = `${startYear}/07/01`;
+    const endBound = `${endYear}/06/31`;
+    const dayNames = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+    
+    // خانه‌های خالی ابتدای ماه
+    for (let i = 0; i < firstDay; i++) {
+        grid.innerHTML += `<div class="calendar-day empty"></div>`;
+    }
+    
+    // روزهای ماه
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayOfWeekIndex = (firstDay + day - 1) % 7;
+        const isFriday = dayOfWeekIndex === 6;
+        const dateStr = `${currentYear}/${String(currentMonth).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+        
+        const isHoliday = (officialHolidays[currentYear] || []).includes(dateStr);
+        const inAcademicYear = (dateStr >= startBound && dateStr <= endBound);
+        const isSelected = (selectedDate === dateStr);
+        const isOriginal = (editSessionDateModalState.originalDate === dateStr);
+        const hasOtherSession = window.allSessionsData.some(s => 
+            s.date === dateStr && 
+            s.id !== editSessionDateModalState.sessionId &&
+            s.academicYear === (window.activeAcademicYear || '1405-1406')
+        );
+        const isActiveDay = (window.scheduleActiveDays || []).includes(dayNames[dayOfWeekIndex]);
+        
+        let classes = 'calendar-day';
+        if ((isFriday && !isActiveDay) || isHoliday) classes += ' holiday';
+        if (isSelected) classes += ' selected';
+        if (hasOtherSession) classes += ' has-session';
+        if (!inAcademicYear) classes += ' outside-range';
+        
+        let extraStyle = '';
+        if (isOriginal && !isSelected) extraStyle = 'box-shadow: 0 0 0 2px var(--primary) inset;';
+        
+        let clickHandler;
+        if (!inAcademicYear) {
+            clickHandler = `onclick="showToast('این تاریخ خارج از بازه سال تحصیلی است.', 'error')"`;
+        } else if (hasOtherSession) {
+            clickHandler = `onclick="showToast('این تاریخ قبلاً برای جلسه دیگری ثبت شده است.', 'error')"`;
+        } else {
+            clickHandler = `onclick="selectEditSessionCalendarDay('${dateStr}')"`;
+        }
+        
+        grid.innerHTML += `<div class="${classes}" ${clickHandler} style="${extraStyle}">${toPersianNumber(day)}</div>`;
+    }
+}
+
+function changeEditSessionCalMonth(delta) {
+    const ay = window.activeAcademicYear || '1405-1406';
+    const [startYear, endYear] = ay.split('-').map(Number);
+    
+    let { currentYear, currentMonth } = editSessionDateModalState;
+    
+    // چک محدودیت در ابتدا/انتها
+    if (delta === -1 && currentYear === startYear && currentMonth === 7) {
+        showToast('شما در ابتدای سال تحصیلی هستید.', 'error');
         return;
     }
+    if (delta === 1 && currentYear === endYear && currentMonth === 6) {
+        showToast('شما در انتهای سال تحصیلی هستید.', 'error');
+        return;
+    }
+    
+    currentMonth += delta;
+    if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+    else if (currentMonth > 12) { currentMonth = 1; currentYear++; }
+    
+    if (currentYear < startYear || currentYear > endYear) {
+        showToast('این ماه خارج از بازه سال تحصیلی است.', 'error');
+        return;
+    }
+    
+    editSessionDateModalState.currentYear = currentYear;
+    editSessionDateModalState.currentMonth = currentMonth;
+    renderEditSessionCalendar();
+}
 
-    // ✅ اصلاح باگ ۱: بررسی تکراری نبودن تاریخ جدید
-    const duplicate = window.allSessionsData.find(s => s.date === trimmed && s.id !== sessionId);
+function selectEditSessionCalendarDay(dateStr) {
+    editSessionDateModalState.selectedDate = dateStr;
+    updateEditSessionSelectedDisplay();
+    renderEditSessionCalendar();
+}
+
+function updateEditSessionSelectedDisplay() {
+    const displayEl = document.getElementById('edit-session-selected-display');
+    if (!displayEl) return;
+    
+    const { selectedDate, originalDate } = editSessionDateModalState;
+    
+    if (!selectedDate) {
+        displayEl.textContent = 'تاریخ جدید انتخاب نشده';
+        return;
+    }
+    
+    if (selectedDate === originalDate) {
+        displayEl.innerHTML = `📅 تاریخ انتخاب‌شده: <strong>${toPersianNumber(selectedDate)}</strong> (بدون تغییر)`;
+    } else {
+        displayEl.innerHTML = `📅 تاریخ جدید: <strong style="color: var(--primary);">${toPersianNumber(selectedDate)}</strong>`;
+    }
+}
+
+async function saveEditSessionDate() {
+    const { sessionId, selectedDate, originalDate } = editSessionDateModalState;
+    
+    if (!sessionId) {
+        showToast('خطا: جلسه‌ای انتخاب نشده است.', 'error');
+        return;
+    }
+    
+    if (!selectedDate) {
+        showToast('لطفاً یک تاریخ از تقویم انتخاب کنید.', 'error');
+        return;
+    }
+    
+    // اگر تاریخ تغییر نکرده
+    if (selectedDate === originalDate) {
+        showToast('تاریخ جدید با تاریخ فعلی یکسان است.', 'info');
+        closeEditSessionDateModal();
+        return;
+    }
+    
+    // ✅ چک بازه سال تحصیلی (اصلاح #۱۴)
+    const ay = window.activeAcademicYear || '1405-1406';
+    const [startYearStr, endYearStr] = ay.split('-');
+    const startBound = `${startYearStr}/07/01`;
+    const endBound = `${endYearStr}/06/31`;
+    
+    if (selectedDate < startBound || selectedDate > endBound) {
+        showToast(`تاریخ باید در بازه سال تحصیلی (${toPersianNumber(startBound)} تا ${toPersianNumber(endBound)}) باشد.`, 'error');
+        return;
+    }
+    
+    // ✅ چک تکراری نبودن تاریخ
+    const duplicate = window.allSessionsData.find(s => s.date === selectedDate && s.id !== sessionId);
     if (duplicate) {
         showToast('این تاریخ قبلاً برای جلسه دیگری ثبت شده است.', 'error');
         return;
     }
-
+    
     try {
         const session = await getDataById('sessions', sessionId);
-        if(session) {
-            // ✅ اصلاح باگ ۲: محاسبه مجدد روز هفته بر اساس تاریخ جدید
-            const parts = trimmed.split('/');
-            const y = parseInt(parts[0]);
-            const m = parseInt(parts[1]);
-            const d = parseInt(parts[2]);
-            
-            const firstDay = getJalaliFirstDayOfWeek(y, m);
-            const dayOfWeekIndex = (firstDay + d - 1) % 7;
-            const dayNames = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
-            
-            session.date = trimmed;
-            session.dayOfWeek = dayNames[dayOfWeekIndex];
-            
-            await saveData('sessions', session);
-            showToast('تاریخ جلسه و روز هفته آن با موفقیت ویرایش شد.', 'success');
-            loadAllData();
+        if (!session) {
+            showToast('جلسه یافت نشد.', 'error');
+            closeEditSessionDateModal();
+            return;
         }
+        
+        // ✅ محاسبه مجدد روز هفته بر اساس تاریخ جدید
+        const parts = selectedDate.split('/');
+        const y = parseInt(parts[0]);
+        const m = parseInt(parts[1]);
+        const d = parseInt(parts[2]);
+        
+        const firstDay = getJalaliFirstDayOfWeek(y, m);
+        const dayOfWeekIndex = (firstDay + d - 1) % 7;
+        const dayNames = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+        
+        session.date = selectedDate;
+        session.dayOfWeek = dayNames[dayOfWeekIndex];
+        
+        await saveData('sessions', session);
+        
+        showToast('تاریخ جلسه با موفقیت ویرایش شد.', 'success');
+        closeEditSessionDateModal();
+        loadAllData();
     } catch (e) {
         console.error(e);
         showToast('خطا در ویرایش تاریخ جلسه.', 'error');
@@ -840,9 +1052,9 @@ async function deleteSession(sessionId) {
     }
 }
 
-// ⏸️ پایان بخش ۳ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۴ را بفرستم.
+// ⏸️ پایان بخش ۴ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۵ را بفرستم.
 // ==========================================
-// 4. مشاهده جزئیات جلسه و ثبت حضور و غیاب زنگ‌ها
+// 5. مشاهده جزئیات جلسه و ثبت حضور و غیاب زنگ‌ها
 // ==========================================
 async function openSessionDetails(sessionId) {
     const session = window.allSessionsData.find(s => s.id === sessionId);
@@ -951,6 +1163,7 @@ function setAllPeriodAttendance(periodNum, status) {
     }
 }
 
+// ✅ اصلاح باگ: rollback در صورت خطا (جلوگیری از از دست رفتن داده)
 async function saveAllSessionAttendance() {
     if (!currentSessionId) return;
 
@@ -967,12 +1180,20 @@ async function saveAllSessionAttendance() {
         }
     }
 
+    // ✅ اصلاح بحرانی: backup از رکوردهای موجود قبل از حذف
+    const existing = window.allAttendanceData.filter(a => a.sessionId === currentSessionId);
+    const backup = existing.map(rec => ({ ...rec }));
+
     try {
-        const existing = window.allAttendanceData.filter(a => a.sessionId === currentSessionId);
-        for (const rec of existing) await deleteData('attendance', rec.id);
+        // مرحله ۱: حذف قبلی‌ها
+        for (const rec of existing) {
+            await deleteData('attendance', rec.id);
+        }
         
+        // مرحله ۲: ذخیره جدیدها
         await saveBulkData('attendance', recordsToSave);
         
+        // ✅ موفقیت: به‌روزرسانی حافظه
         window.allAttendanceData = window.allAttendanceData.filter(a => a.sessionId !== currentSessionId);
         const savedAtt = await getAllData('attendance');
         window.allAttendanceData = savedAtt.filter(a => window.allSessionsData.some(s => s.id === a.sessionId));
@@ -982,15 +1203,30 @@ async function saveAllSessionAttendance() {
         // پاک کردن وضعیت فرم‌های ذخیره‌نشده
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
-        // ✅ اصلاح بحرانی: بازسازی کش امتیازات/حضور قبل از رندر گزارش‌ها
-        // بدون این خط، گزارش‌ها و داشبورد اعداد قدیمی را نشان می‌دهند
+        // ✅ اصلاح بحرانی (فاز ۱): بازسازی کش امتیازات/حضور قبل از رندر گزارش‌ها
         if (typeof buildScoreCaches === 'function') buildScoreCaches();
         
         generateAttendanceReports();
         if (typeof renderDashboardData === 'function') renderDashboardData();
+        
     } catch (e) {
-        console.error(e);
-        showToast('خطا در ذخیره حضور و غیاب!', 'error');
+        console.error('❌ خطا در ذخیره حضور و غیاب، بازگردانی داده‌های قبلی:', e);
+        
+        // ✅ اصلاح بحرانی: rollback — بازگردانی داده‌های قبلی
+        try {
+            if (backup.length > 0) {
+                await saveBulkData('attendance', backup);
+                console.log('✅ rollback موفق: ' + backup.length + ' رکورد قبلی بازگردانی شد.');
+            }
+            
+            // بازسازی حافظه با داده‌های بازگردانی‌شده
+            const restoredAtt = await getAllData('attendance');
+            window.allAttendanceData = restoredAtt.filter(a => window.allSessionsData.some(s => s.id === a.sessionId));
+        } catch (rollbackError) {
+            console.error('❌ خطا در rollback:', rollbackError);
+        }
+        
+        showToast('خطا در ذخیره! تغییرات لغو شد و داده‌های قبلی حفظ شدند.', 'error');
     }
 }
 
@@ -1005,9 +1241,9 @@ function closeSessionDetails() {
     if (typeof clearFormDirty === 'function') clearFormDirty();
 }
 
-// ⏸️ پایان بخش ۴ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۵ (آخرین بخش) را بفرستم.
+// ⏸️ پایان بخش ۵ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۶ (آخرین بخش) را بفرستم.
 // ==========================================
-// 5. گزارش حضور و غیاب
+// 6. گزارش حضور و غیاب
 // ==========================================
 function changeAttReportFilter(filter, btn) {
     currentAttReportFilter = filter;
