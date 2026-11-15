@@ -180,7 +180,8 @@
     </style>
 </head>
 
-<!-- // ⏸️ End of Part 1 — Waiting for your 'Continue' message to send the next part. -->
+<!-- ⏸️ پایان بخش ۱ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم. -->
+
 <body>
 
     <div id="splash-screen">
@@ -238,8 +239,9 @@
                     <summary>👥 گروه‌های برتر</summary>
                     <div class="dashboard-accordion-content" id="dashboard-top-groups"></div>
                 </details>
-                <div class="card" style="background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); border: 1px solid #f59e0b;">
-                    <h2 class="card-title" style="color: #b45309; border-bottom-color: #fcd34d;">⚠️ دانش‌آموزان نیازمند توجه</h2>
+                <!-- ✅ اصلاح باگ #۱۹: استفاده از class به جای inline style -->
+                <div class="card card-warning">
+                    <h2 class="card-title card-title-warning">⚠️ دانش‌آموزان نیازمند توجه</h2>
                     <div id="dashboard-needs-attention" class="list-group"></div>
                 </div>
                 <div class="card">
@@ -257,16 +259,19 @@
                     </div>
                 </div>
                 <!-- ===== کارت گزارش جامع آزمون‌ها ===== -->
-<div class="card" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border: 2px solid #a5b4fc;">
-    <h2 class="card-title" style="color: #4f46e5; border-bottom-color: #c7d2fe;">🎓 گزارش جامع آزمون‌ها</h2>
-    <div id="dashboard-exams-report">
-        <!-- توسط JS پر می‌شود -->
-    </div>
-    <button type="button" class="btn btn-secondary btn-block mt-4" onclick="switchPage('page-exams', document.querySelectorAll('.nav-item')[7])">
-        🎓 رفتن به تب آزمون‌ها
-    </button>
-</div>
+                <!-- ✅ اصلاح باگ #۱۹: استفاده از class به جای inline style -->
+                <div class="card card-info">
+                    <h2 class="card-title card-title-info">🎓 گزارش جامع آزمون‌ها</h2>
+                    <div id="dashboard-exams-report">
+                        <!-- توسط JS پر می‌شود -->
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-block mt-4" onclick="switchPage('page-exams', document.querySelectorAll('.nav-item')[7])">
+                        🎓 رفتن به تب آزمون‌ها
+                    </button>
+                </div>
             </div>
+
+<!-- ⏸️ پایان بخش ۲ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم. -->
 
             <!-- تب ۲: دانش‌آموزان -->
             <div id="page-students" class="page-section">
@@ -368,7 +373,6 @@
                 </div>
             </div>
 
-<!-- // ⏸️ End of Part 2 — Waiting for your 'Continue' message to send the next part. -->
             <!-- تب ۵: جلسات -->
             <div id="page-session" class="page-section">
                 <div class="page-header-title">📅 جلسات</div>
@@ -503,8 +507,9 @@
                         <button type="button" class="btn btn-secondary btn-block" onclick="printScoreReport()">🖨️ چاپ</button>
                     </div>
                 </div>
-                <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);">
-                    <h2 class="card-title" style="color: #16a34a; border-bottom-color: #86efac;">🌱 قرآن، عترت و نماز</h2>
+                <!-- ✅ اصلاح باگ #۱۹: استفاده از class به جای inline style -->
+                <div class="card card-quran" style="margin-top: 20px;">
+                    <h2 class="card-title card-title-quran">🌱 قرآن، عترت و نماز</h2>
                     <div class="card" style="border: 2px solid #86efac; background: white;">
                         <h3 style="color: #16a34a; font-size: 1.1rem; margin-bottom: 5px;">🌟 قرآن: ریسمان محکم و نور هدایت</h3>
                         <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 15px;">ثبت پویش حفظ جزء سی قرآن کریم</p>
@@ -621,7 +626,9 @@
             </div>
         </div> 
     </div> 
-    
+
+<!-- ⏸️ پایان بخش ۳ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۴ (منوی پایین + مودال‌ها + مودال جدید تقویم جلسه) را بفرستم. -->
+
     <!-- منوی پایین با آیکون‌های SVG -->
     <nav class="bottom-nav" style="display: none;">
         <a href="javascript:void(0)" class="nav-item active" onclick="switchPage('page-class', this)" title="کلاس">
@@ -650,7 +657,6 @@
         </a>
     </nav>
 
-<!-- // ⏸️ End of Part 3 — Waiting for your 'Continue' message to send the final part. -->
 <!-- ===== مودال‌ها ===== -->
 <div id="settings-modal" class="modal-overlay">
     <div class="modal-content" style="max-width: 600px;">
@@ -902,6 +908,38 @@
 
 <div id="session-details-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header" id="session-details-title">📅 جزئیات جلسه</div><div id="session-details-content"></div><div class="modal-footer" style="flex-direction: column; gap: 10px;"><button type="button" class="btn btn-primary btn-block" onclick="saveAllSessionAttendance()">💾 ذخیره کل حضور و غیاب</button><button type="button" class="btn btn-secondary btn-block" onclick="closeSessionDetails()">بستن</button></div></div></div>
 
+<!-- ✅ مودال جدید (باگ #۱۳): ویرایش تاریخ جلسه با تقویم شمسی -->
+<div id="edit-session-date-modal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">✏️ ویرایش تاریخ جلسه</div>
+        
+        <div id="edit-session-current-date" style="text-align:center; margin-bottom: 15px; padding: 10px; background: var(--input-bg); border-radius: 8px; font-size: 0.9rem;">
+            <!-- توسط JS پر می‌شود -->
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">📅 تاریخ جدید را از تقویم انتخاب کنید:</label>
+            <div class="jalali-calendar-wrapper" style="margin-top: 5px;">
+                <div class="calendar-header">
+                    <button type="button" onclick="changeEditSessionCalMonth(-1)">◀</button>
+                    <div class="calendar-title" id="edit-session-cal-title"></div>
+                    <button type="button" onclick="changeEditSessionCalMonth(1)">▶</button>
+                </div>
+                <div class="calendar-weekdays">
+                    <span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span>
+                </div>
+                <div class="calendar-grid" id="edit-session-cal-grid"></div>
+                <div class="selected-date-display" id="edit-session-selected-display" style="margin-top: 10px;">تاریخ جدید انتخاب نشده</div>
+            </div>
+        </div>
+        
+        <div class="modal-footer" style="margin-top: 20px; display: flex; gap: 10px;">
+            <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeEditSessionDateModal()">انصراف</button>
+            <button type="button" class="btn btn-primary" style="flex: 2;" onclick="saveEditSessionDate()">💾 ذخیره تاریخ</button>
+        </div>
+    </div>
+</div>
+
 <div id="student-details-modal" class="modal-overlay">
     <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header" id="student-details-title">👤 جزئیات دانش‌آموز</div>
@@ -1150,6 +1188,8 @@
         </div>
     </div>
 </div>
+
+<!-- ⏸️ پایان بخش ۴ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۵ (آخرین بخش — اسکریپت‌ها) را بفرستم. -->
 
 <!-- ===== اسکریپت‌ها ===== -->
 <script src="version.js"></script>
