@@ -338,7 +338,7 @@ function resetScoreCalendar(type) {
     renderScoreCalendar(type);
 }
 
-// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
+// ⏸️ پایان بخش ۱ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 // ==========================================
 // مدیریت انتخاب دانش‌آموزان
 // ==========================================
@@ -513,7 +513,7 @@ function toggleHandwritingGroupSelection(checkbox, groupId, checkboxClass) {
     document.querySelectorAll(`.handwriting-student-checkbox.group-student-${groupId}`).forEach(cb => cb.checked = checkbox.checked);
 }
 
-// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
+// ⏸️ پایان بخش ۲ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 // ==========================================
 // ثبت ارزشیابی
 // ==========================================
@@ -674,7 +674,9 @@ async function confirmAndSaveRecord() {
     }
 }
 
+// ⏸️ پایان بخش ۳ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۴ (شامل اصلاح باگ #۷ در `saveQuranRecord`) را بفرستم.
 // ✅ اصلاح باگ بزرگ: جلوگیری از فریز شدن برنامه (بهینه‌سازی حلقه پویش قرآن)
+// ✅ اصلاح باگ: حذف double-push که باعث شمارش اشتباه سوره‌ها و آیات می‌شد
 async function saveQuranRecord() {
     const studentCheckboxes = document.querySelectorAll('.quran-student-checkbox:checked');
     if (studentCheckboxes.length === 0) { showToast('دانش‌آموز انتخاب کنید.', 'error'); return; }
@@ -716,24 +718,31 @@ async function saveQuranRecord() {
         // ✅ بهینه‌سازی: فقط یک بار دیتابیس را می‌خوانیم (به جای خواندن در حلقه برای هر دانش‌آموز)
         const allRecords = await getAllData('records');
         
-        // اضافه کردن رکورد جدید به لیست خوانده شده تا محاسبات فوراً آپدیت شوند
+        // ✅ رکورد جدید همین الان ذخیره شد و در allRecords هست — نیازی به push دستی نیست
+        // (قبلاً push اضافی باعث double-counting می‌شد)
         const quranRecords = allRecords.filter(rec => 
             rec.itemName === "پویش حفظ جزء سی قرآن کریم" && 
             rec.academicYear === window.activeAcademicYear
         );
-        quranRecords.push(recordData); // اضافه کردن رکوردی که الان ذخیره کردیم
 
         for (const studentId of recordData.students) {
-            let totalSurahs = 0, totalAyats = 0;
+            // ✅ بهبود: استفاده از Set برای جلوگیری از شمارش سوره‌های تکراری
+            const surahSet = new Set();
+            let totalAyats = 0;
             
             // حلقه فوق‌سریع روی داده‌های حافظه (بدون دسترسی به دیتابیس)
             quranRecords.forEach(rec => {
                 if (rec.students.includes(studentId)) {
-                    totalSurahs += 1;
-                    const match = rec.title.match(/- (\d+) آیه/); 
-                    if (match) totalAyats += parseInt(match[1]);
+                    // استخراج نام سوره از عنوان (مثل «حفظ سوره ناس - ۵ آیه»)
+                    const surahMatch = rec.title.match(/حفظ سوره (.+?) -/);
+                    if (surahMatch) surahSet.add(surahMatch[1]);
+                    
+                    const ayatMatch = rec.title.match(/- (\d+) آیه/);
+                    if (ayatMatch) totalAyats += parseInt(ayatMatch[1]);
                 }
             });
+            
+            const totalSurahs = surahSet.size;
             
             await saveData('badgesSettings', { 
                 id: `quranReward_${studentId}_${generateUniqueId()}`, 
@@ -843,7 +852,7 @@ async function saveHandwritingReward() {
     } catch (e) { console.error(e); showToast('خطا در ثبت تشویق خوش‌خط‌نویسی.', 'error'); }
 }
 
-// ⏸️ پایان بخش ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۴ (آخرین بخش) را بفرستم.
+// ⏸️ پایان بخش ۴ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۵ را بفرستم.
 // ==========================================
 // سوابق ارزشیابی
 // ==========================================
@@ -1177,4 +1186,4 @@ async function exportScoreCSV() {
     }
 }
 
-// ✅ پایان کامل فایل score.js
+// ⏸️ پایان بخش ۵ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۶ (آخرین بخش) را بفرستم.
