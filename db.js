@@ -1,11 +1,12 @@
 /**
  * فایل db.js — لایه ارتباط با IndexedDB (نسخه چندساله)
- * نسخه ۱۷ — اصلاح مهاجرت داده‌ها و آیتم‌های پیش‌فرض
+ * ✅ IndexedDB Schema v17 — اصلاح مهاجرت داده‌ها و آیتم‌های پیش‌فرض
+ * (توجه: v17 نسخه اسکیمای دیتابیس است، نه نسخه اپلیکیشن — نسخه اپ در version.js)
  * ✅ تغییر: appVersion از version.js خوانده می‌شود
  */
 
 const DB_NAME = 'KoshaDB';
-const DB_VERSION = 17; // ✅ نسخه 17 برای اصلاح مهاجرت داده‌ها
+const DB_VERSION = 17; // ✅ نسخه اسکیمای IndexedDB (نه نسخه اپ)
 
 let db;
 
@@ -122,9 +123,9 @@ async function ensureAssessmentItemsForYear(year) {
 }
 window.ensureAssessmentItemsForYear = ensureAssessmentItemsForYear;
 
-// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
+// ⏸️ پایان بخش ۱ از ۴ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 // ==========================================
-// مقداردهی اولیه دیتابیس (نسخه ۱۷)
+// مقداردهی اولیه دیتابیس (IndexedDB Schema v17)
 // ==========================================
 function initDB() {
     return new Promise((resolve, reject) => {
@@ -313,7 +314,6 @@ function initDB() {
     });
 }
 
-// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 // ==========================================
 // ✅ تابع مهاجرت داده‌های قدیمی به نسخه ۱۷
 // ==========================================
@@ -348,6 +348,7 @@ async function migrateDataToV17() {
     }
 }
 
+// ⏸️ پایان بخش ۲ از ۴ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 // ==========================================
 // ذخیره داده
 // ==========================================
@@ -519,7 +520,7 @@ function clearStore(storeName) {
     });
 }
 
-// ⏸️ پایان بخش ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۴ (آخرین بخش) را بفرستم.
+// ⏸️ پایان بخش ۳ از ۴ — منتظر پیام «ادامه» شما هستم تا بخش ۴ (آخرین بخش — شامل اصلاح #۲۳) را بفرستم.
 // ==========================================
 // خروجی کامل با _meta
 // ==========================================
@@ -534,14 +535,15 @@ async function exportAllData() {
     if (data.classProfile) data.classProfile.forEach(c => c.academicYear && uniqueYears.add(c.academicYear));
     if (data.students) data.students.forEach(s => s.academicYear && uniqueYears.add(s.academicYear));
     
-    // ✅ تغییر اصلی: خواندن نسخه از version.js به جای hardcode
+    // ✅ اصلاح #۲۳: اگر version.js لود نشده، از 'unknown' استفاده کن (نه نسخه قدیمی hardcoded)
+    // این باعث شفافیت می‌شود: اگر بکاپی با appVersion: 'unknown' دیدید، یعنی مشکل داشته
     const currentVersion = (typeof window !== 'undefined' && window.APP_VERSION) 
         ? window.APP_VERSION 
-        : 'v1.0.0';
+        : 'unknown';
     
     data._meta = {
         version: DB_VERSION,
-        appVersion: currentVersion,  // ✅ اصلاح: از version.js خوانده می‌شود
+        appVersion: currentVersion,  // ✅ از version.js خوانده می‌شود (یا 'unknown' اگر نبود)
         exportedAt: new Date().toISOString(),
         exportedAtJalali: getJalaliDateTimeForDisplay(),
         totalYears: uniqueYears.size,
@@ -673,4 +675,4 @@ async function getBackupSettings(year) {
     }
 }
 
-// ✅ پایان فایل db.js
+// ✅ پایان کامل فایل db.js
