@@ -2,7 +2,7 @@
    استفاده از فونت وزیرمتن
    ========================================= */
 body, button, input, select, textarea, .form-control, .btn, .nav-item, .list-item, .app-header h1 {
-    font-family: 'Vazirmatn', Tahoma, sans-serif !important;
+    font-family: 'Vazirmatn', Tahoma, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -62,7 +62,6 @@ body, button, input, select, textarea, .form-control, .btn, .nav-item, .list-ite
     --arf-bg: rgba(245, 158, 11, 0.15);
     --arf-border: #f59e0b;
     
-    /* سایه‌های بهبودیافته برای حالت شب (روشن‌تر + رنگی) */
     --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.40), 0 0 1px rgba(90, 161, 245, 0.10);
     --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 1px rgba(90, 161, 245, 0.15);
 }
@@ -791,7 +790,7 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .calendar-day:hover { background: var(--primary-light); }
 [data-theme="dark"] .calendar-day:hover { background: rgba(90, 161, 245, 0.15); }
 .calendar-day.empty { background: transparent; cursor: default; border: none; pointer-events: none; }
-.calendar-day.today { border-color: var(--primary); }
+/* ✅ اصلاح #۲۷: حذف .calendar-day.today (کلاس امروز در کد استفاده نمی‌شود) */
 .calendar-day.friday, .calendar-day.holiday { color: #ef4444; }
 [data-theme="dark"] .calendar-day.friday, [data-theme="dark"] .calendar-day.holiday { color: #f87171; }
 .calendar-day.has-session { color: #16a34a; border: 1px dashed #16a34a; }
@@ -825,7 +824,7 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .score-archive-item:last-child { border-bottom: none; }
 .score-archive-item strong { color: var(--primary); font-weight: 700; }
 
-/* ⏸️ پایان بخش ۶ از ۸ — منتظر پیام «ادامه» شما هستم تا بخش ۷ را بفرستم. */
+/* ⏸️ پایان بخش ۶ از ۸ — منتظر پیام «ادامه» شما هستم تا بخش ۷ (شامل حذف .has-event و .event-dot) را بفرستم. */
 /* =========================================
    Exam Editor (بهبود حالت شب)
    ========================================= */
@@ -912,12 +911,10 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .full-calendar-day.empty { background: transparent; cursor: default; border: none; pointer-events: none; }
 .full-calendar-day.friday { color: #ef4444; }
 [data-theme="dark"] .full-calendar-day.friday { color: #f87171; }
-.full-calendar-day.has-event { border: 1px dashed var(--primary); background: rgba(74, 144, 226, 0.05); }
-[data-theme="dark"] .full-calendar-day.has-event { background: rgba(90, 161, 245, 0.15); }
+/* ✅ اصلاح #۲۷: حذف .full-calendar-day.has-event (از has-event-soft استفاده می‌شود) */
 .full-calendar-day.selected { background: var(--primary); color: white !important; border: 1px solid var(--primary); box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4); transform: scale(1.05); }
 [data-theme="dark"] .full-calendar-day.selected { box-shadow: 0 4px 12px rgba(90, 161, 245, 0.50); }
-.full-calendar-day .event-dot { width: 6px; height: 6px; background: #ef4444; border-radius: 50%; position: absolute; bottom: 4px; }
-.full-calendar-day.selected .event-dot { background: white; }
+/* ✅ اصلاح #۲۷: حذف .full-calendar-day .event-dot (استفاده نمی‌شود) */
 .events-list { display: flex; flex-direction: column; gap: 8px; }
 .event-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; }
 .event-item:hover { border-color: var(--primary); background: var(--input-bg); }
@@ -937,7 +934,7 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .full-calendar-day.has-event-soft { background: rgba(74, 144, 226, 0.06); border: 1px solid rgba(74, 144, 226, 0.15); }
 [data-theme="dark"] .full-calendar-day.has-event-soft { background: rgba(90, 161, 245, 0.15); border: 1px solid rgba(90, 161, 245, 0.25); }
 
-/* ⏸️ پایان بخش ۷ از ۸ — منتظر پیام «ادامه» شما هستم تا بخش ۸ (آخرین بخش، شامل اصلاح #۱۹) را بفرستم. */
+/* ⏸️ پایان بخش ۷ از ۸ — منتظر پیام «ادامه» شما هستم تا بخش ۸ (آخرین بخش) را بفرستم. */
 /* =========================================
    Schedule Table (بهبود حالت شب)
    ========================================= */
