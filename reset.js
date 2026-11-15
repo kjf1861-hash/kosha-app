@@ -10,6 +10,7 @@ async function resetYearlyRecords() {
         'شما در حال پاک کردن سوابق سال تحصیلی «' + toPersianNumber(currentYear) + '» هستید.\n\n' +
         'با این کار:\n' +
         '❌ تمام سوابق ارزشیابی این سال پاک می‌شوند.\n' +
+        '❌ تمام آزمون‌ها و نتایج آن‌ها پاک می‌شوند.\n' +
         '❌ تمام جلسات و حضور و غیاب‌های این سال پاک می‌شوند.\n' +
         '❌ تمام تشویق‌های این سال پاک می‌شوند.\n\n' +
         'اما موارد زیر حفظ می‌شوند:\n' +
@@ -35,6 +36,22 @@ async function resetYearlyRecords() {
         const currentYearRecords = allRecords.filter(r => r.academicYear === currentYear);
         for (const rec of currentYearRecords) {
             await deleteData('records', rec.id);
+        }
+        
+        // ✅ اصلاح باگ: حذف آزمون‌های سال جاری و نتایج آن‌ها
+        const allExams = await getAllData('exams');
+        const currentYearExams = allExams.filter(e => e.academicYear === currentYear);
+        const currentYearExamIds = currentYearExams.map(e => e.id);
+        
+        if (currentYearExamIds.length > 0) {
+            const allResults = await getAllData('examResults');
+            const currentYearResults = allResults.filter(r => currentYearExamIds.includes(r.examId));
+            for (const result of currentYearResults) {
+                await deleteData('examResults', result.id);
+            }
+            for (const exam of currentYearExams) {
+                await deleteData('exams', exam.id);
+            }
         }
         
         // ۲. حذف جلسات سال تحصیلی جاری
@@ -173,7 +190,7 @@ async function resetSpecificRecords() {
     }
 }
 
-// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ (حاوی تغییرات اصلی) را بفرستم.
+// ⏸️ پایان بخش ۱ از ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۲ (آخرین بخش) را بفرستم.
 async function resetFactoryAll() {
     const confirm1 = confirm('⚠️ خطر! آیا می‌خواهید کل اطلاعات برنامه (کلاس، دانش‌آموزان، دروس، سوابق و...) را برای همیشه پاک کنید؟');
     if (!confirm1) return;
