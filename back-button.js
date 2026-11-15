@@ -1,6 +1,6 @@
 // ==========================================
 // فایل back-button.js — مدیریت دکمه بازگشت و هشدار خروج در PWA
-// نسخه v8 — رفع باگ حلقه خروج و یکپارچه‌سازی مودال‌ها
+// اولویت‌بندی مودال‌ها + یکپارچه‌سازی هشدار خروج
 // ==========================================
 
 (function() {
@@ -23,6 +23,7 @@
         'edit-group-modal',
         'edit-student-modal',
         'edit-lesson-modal',
+        'edit-session-date-modal',    // ✅ جدید (باگ #۱۳): مودال تقویم ویرایش تاریخ جلسه
         'group-details-modal',
         'lesson-details-modal',
         'student-details-modal',
@@ -57,6 +58,7 @@
             'edit-group-modal': 'closeEditGroupModal',
             'edit-student-modal': 'closeEditStudentModal',
             'edit-lesson-modal': 'closeEditLessonModal',
+            'edit-session-date-modal': 'closeEditSessionDateModal',  // ✅ جدید (باگ #۱۳)
             'group-details-modal': 'closeGroupDetails',
             'lesson-details-modal': 'closeLessonDetails',
             'student-details-modal': 'closeStudentDetails',
@@ -89,6 +91,8 @@
         modal.classList.remove('show');
         return true;
     }
+
+// ⏸️ پایان بخش ۱ از ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۲ (آخرین بخش) را بفرستم.
     
     function getActivePageId() {
         const activePage = document.querySelector('.page-section.active');
