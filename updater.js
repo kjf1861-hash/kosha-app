@@ -1,5 +1,6 @@
 // ==========================================
-// فایل updater.js — نسخه v1.0.7
+// فایل updater.js — منطق بررسی و اعمال به‌روزرسانی
+// (نسخه اپ در version.js تعریف شده)
 // ==========================================
 (function() {
     'use strict';
@@ -15,8 +16,14 @@
     const CHECK_INTERVAL = 24 * 60 * 60 * 1000;  
     const SNOOZE_DURATION = 6 * 60 * 60 * 1000;  
     
+    // ✅ اصلاح امنیتی: اگر APP_VERSION تعریف نشده باشد، null برمی‌گردانیم (نه v1.0.0)
+    // این کار از حلقه reload بی‌پایان جلوگیری می‌کند وقتی version.js لود نشود
     function getCurrentVersion() {
-        return (typeof window !== 'undefined' && window.APP_VERSION) ? window.APP_VERSION : 'v1.0.0';
+        if (typeof window === 'undefined' || !window.APP_VERSION) {
+            console.error('❌ APP_VERSION تعریف نشده — بررسی به‌روزرسانی لغو شد.');
+            return null;
+        }
+        return window.APP_VERSION;
     }
     
     function getUpdateMode() {
@@ -83,6 +90,13 @@
             return;
         }
         
+        // ✅ اصلاح امنیتی: بررسی نسخه فعلی قبل از هر کاری
+        const currentVersion = getCurrentVersion();
+        if (!currentVersion) {
+            if (isManual) showToastSafe('خطا: نسخه برنامه قابل خواندن نیست. لطفاً صفحه را رفرش کنید.', 'error');
+            return;
+        }
+        
         isChecking = true;
         if (isManual) {
             const btn = document.getElementById('checkUpdateBtn');
@@ -98,7 +112,6 @@
             setLastCheckTime();
             updateLastCheckDisplay();
             
-            const currentVersion = getCurrentVersion();
             const serverVersion = serverInfo.version;
             const comparison = compareVersions(serverVersion, currentVersion);
             
@@ -153,16 +166,22 @@
         if (typeof window.showToast === 'function') window.showToast(message, type);
     }
 
-    // ==========================================
+    // ⏸️ پایان بخش ۱ از ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
+        // ==========================================
     // 📌 اجرای آپدیت (نیروی اتمی)
     // ==========================================
     async function performUpdate() {
         try {
+            // ✅ اصلاح امنیتی: چک مجدد فرم قبل از شروع
+            if (window.isFormDirty) {
+                showToastSafe('⚠️ ابتدا فرم را ذخیره کنید. به‌روزرسانی به تعویق افتاد.', 'error');
+                return;
+            }
+            
             showToastSafe('در حال به‌روزرسانی کامل... لطفاً صبر کنید.', 'info');
             
             localStorage.removeItem(STORAGE_KEYS.dismissedVersion);
             localStorage.removeItem(STORAGE_KEYS.lastSnooze);
-            localStorage.removeItem('kosha-version');
             
             if ('caches' in window) {
                 const cacheNames = await caches.keys();
@@ -174,8 +193,13 @@
                 await Promise.all(registrations.map(reg => reg.unregister()));
             }
             
-            // ✅ رفرش سخت با یک آدرس کاملاً جدید
+            // ✅ اصلاح امنیتی: چک مجدد فرم دقیقاً قبل از reload
+            // اگر کاربر در ۱ ثانیه شروع به تایپ کرد، داده‌اش از دست نمی‌رود
             setTimeout(() => {
+                if (window.isFormDirty) {
+                    showToastSafe('⚠️ به‌روزرسانی به تعویق افتاد. ابتدا فرم را ذخیره کنید.', 'error');
+                    return;
+                }
                 const newUrl = window.location.origin + window.location.pathname + '?update=' + Date.now();
                 window.location.replace(newUrl);
             }, 1000);
