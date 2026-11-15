@@ -130,23 +130,30 @@ function renderStudentsList() {
         
         const studentPass = st.nationalId ? generateStudentPassword(st.nationalId) : '---';
 
+        // ✅ اصلاح UI (استانداردهای موبایل): استفاده از flex-wrap برای جلوگیری از بیرون‌زدگی دکمه‌ها
         html += `
-            <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                    <div style="display:flex; align-items:center; gap:5px;">
+            <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px; padding: 12px;">
+                <!-- ردیف اول: نام و دکمه‌ها -->
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap: wrap; gap: 10px;">
+                    <!-- بخش نام (flex: 1 1 200px) اجازه می‌دهد در صورت کمبود فضا، فشرده شود -->
+                    <div style="display:flex; align-items:center; gap:5px; flex: 1 1 200px; min-width: 0;">
                         <span style="font-weight:bold; min-width:25px; color:var(--text-muted);">${toPersianNumber(globalRank)}.</span>
                         ${medalHtml}
-                        <span><strong>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</strong></span>
+                        <span style="word-break: break-word;"><strong>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</strong></span>
                         ${groupBadge}
                     </div>
-                    <div style="display:flex; align-items:center; gap:5px;">
+                    <!-- بخش دکمه‌ها و امتیاز (flex-shrink: 0) اجازه نمی‌دهد دکمه‌ها له شوند -->
+                    <div style="display:flex; align-items:center; gap:5px; flex-shrink: 0; margin-right: auto;">
                         <span class="rank-badge">${toPersianNumber(st.totalScore)} امتیاز</span>
-                        <button class="btn btn-secondary btn-sm" onclick="openStudentDetails(${st.id})" title="مشاهده جزئیات">👁️</button>
-                        <button class="btn btn-secondary btn-sm" onclick="editStudent(${st.id})" title="ویرایش">✏️</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteStudent(${st.id})" title="حذف">🗑️</button>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn btn-secondary btn-sm" onclick="openStudentDetails(${st.id})" title="مشاهده جزئیات">👁️</button>
+                            <button class="btn btn-secondary btn-sm" onclick="editStudent(${st.id})" title="ویرایش">✏️</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteStudent(${st.id})" title="حذف">🗑️</button>
+                        </div>
                     </div>
                 </div>
-                <div style="font-size: 0.8rem; color: var(--text-muted); margin-right: 25px; display: flex; gap: 15px;">
+                <!-- ردیف دوم: کد ملی و رمز (با flex-wrap برای جلوگیری از سرریز) -->
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-right: 25px; display: flex; flex-wrap: wrap; gap: 10px;">
                     <span>🆔 کد ملی: <strong style="font-family: 'IRNumber';">${escapeHtml(toPersianNumber(st.nationalId || 'ثبت نشده'))}</strong></span>
                     <span>🔑 رمز: <strong style="font-family: 'IRNumber'; color: var(--primary);">${toPersianNumber(studentPass)}</strong></span>
                 </div>
@@ -168,7 +175,6 @@ function renderStudentsList() {
         }
     }
 }
-
 async function editStudent(id) {
     const student = await getDataById('students', id);
     if (student) {
@@ -189,16 +195,16 @@ async function saveEditedStudent(e) {
     
     const id = parseInt(document.getElementById('editStudentIdModal').value);
 
-let newFirstName, newLastName;
-try {
-    newFirstName = sanitizeInput(document.getElementById('editStudentFirstNameModal').value, 50);
-    newLastName = sanitizeInput(document.getElementById('editStudentLastNameModal').value, 50);
-} catch (err) {
-    showToast(err.message, 'error');
-    return;
-}
+    let newFirstName, newLastName;
+    try {
+        newFirstName = sanitizeInput(document.getElementById('editStudentFirstNameModal').value, 50);
+        newLastName = sanitizeInput(document.getElementById('editStudentLastNameModal').value, 50);
+    } catch (err) {
+        showToast(err.message, 'error');
+        return;
+    }
 
-const newNationalId = document.getElementById('editStudentNationalIdModal').value.trim();
+    const newNationalId = document.getElementById('editStudentNationalIdModal').value.trim();
 
     if (!newFirstName || !newLastName) {
         showToast('نام و نام خانوادگی نمی‌تواند خالی باشد.', 'error');
@@ -269,7 +275,6 @@ const newNationalId = document.getElementById('editStudentNationalIdModal').valu
     }
 }
 
-// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 async function deleteStudent(id) {
     if (!confirm('آیا از حذف این دانش‌آموز مطمئن هستید؟ تمام سوابق ارزشیابی، نمرات آزمون و تشویق‌های این دانش‌آموز نیز حذف خواهد شد!')) return;
     
@@ -360,7 +365,6 @@ async function resetAllStudents() {
         showToast('خطا در حذف دانش‌آموزان!', 'error');
     }
 }
-
 async function openStudentDetails(id) {
     const student = window.allStudentsData.find(s => s.id === id);
     if (!student) return;
@@ -380,8 +384,8 @@ async function openStudentDetails(id) {
 
     let headerHtml = `
     <div style="background: var(--primary-light); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--primary);">
-        <p style="margin: 0 0 5px 0;"><strong>کد ملی:</strong> <span style="font-family: 'IRNumber';">${escapeHtml(toPersianNumber(student.nationalId || 'ثبت نشده'))}</span></p>
-        <p style="margin: 0;"><strong>رمز عبور:</strong> <span style="font-family: 'IRNumber'; color: var(--primary); font-weight: bold; font-size: 1.2rem;">${escapeHtml(toPersianNumber(studentPass))}</span></p>
+        <p style="margin: 0 0 5px 0; display: flex; flex-wrap: wrap; gap: 5px;"><strong>کد ملی:</strong> <span style="font-family: 'IRNumber';">${escapeHtml(toPersianNumber(student.nationalId || 'ثبت نشده'))}</span></p>
+        <p style="margin: 0; display: flex; flex-wrap: wrap; gap: 5px;"><strong>رمز عبور:</strong> <span style="font-family: 'IRNumber'; color: var(--primary); font-weight: bold; font-size: 1.2rem;">${escapeHtml(toPersianNumber(studentPass))}</span></p>
     </div>
 `;
 
@@ -393,8 +397,8 @@ async function openStudentDetails(id) {
         subRecords.forEach(r => total += r.finalScore);
         
         if (subRecords.length > 0) {
-            // ✅ اصلاح امنیتی: escape نام درس
-            subjectHtml += `<div class="details-list-item"><span>${escapeHtml(sub.symbol || '')} ${escapeHtml(sub.name)}</span><strong>${escapeHtml(toPersianNumber(total))} امتیاز</strong></div>`;
+            // ✅ اصلاح UI: استفاده از flex-wrap برای جلوگیری از سرریز نام درس طولانی
+            subjectHtml += `<div class="details-list-item" style="flex-wrap: wrap; gap: 5px;"><span style="word-break: break-word;">${escapeHtml(sub.symbol || '')} ${escapeHtml(sub.name)}</span><strong>${escapeHtml(toPersianNumber(total))} امتیاز</strong></div>`;
             hasSubjects = true;
         }
     });
@@ -411,8 +415,8 @@ async function openStudentDetails(id) {
     });
 
     for (const [itemName, stats] of Object.entries(itemCounts)) {
-        // ✅ اصلاح امنیتی: escape نام آیتم
-        itemHtml += `<div class="details-list-item"><span>${escapeHtml(itemName)}</span><span style="color:var(--text-muted); font-size:0.85rem;">${escapeHtml(toPersianNumber(stats.count))} بار (${escapeHtml(toPersianNumber(stats.totalScore))} امتیاز)</span></div>`;
+        // ✅ اصلاح UI: word-break و flex-wrap برای نام آیتم
+        itemHtml += `<div class="details-list-item" style="flex-wrap: wrap; gap: 5px;"><span style="word-break: break-word;">${escapeHtml(itemName)}</span><span style="color:var(--text-muted); font-size:0.85rem;">${escapeHtml(toPersianNumber(stats.count))} بار (${escapeHtml(toPersianNumber(stats.totalScore))} امتیاز)</span></div>`;
         hasItems = true;
     }
     if (!hasItems) itemHtml += '<p style="color:#64748b; font-size:0.9rem; text-align:center;">هیچ ارزشیابی ثبت نشده است.</p>';
@@ -448,7 +452,6 @@ function switchStudentDetailsTab(tab) {
     }
 }
 
-// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ (آخرین بخش) را بفرستم.
 async function loadStudentExamsForDetails(studentId) {
     const container = document.getElementById('student-exams-content');
     if (!container) return;
@@ -483,6 +486,7 @@ async function loadStudentExamsForDetails(studentId) {
     const totalScores = studentResults.reduce((sum, r) => sum + r.score, 0);
     const avgScore = totalExamsWithScore > 0 ? (totalScores / totalExamsWithScore).toFixed(1) : 0;
     
+    // ✅ اصلاح UI: flex-wrap برای آمار بالای آزمون‌ها
     html += `
         <div style="background: var(--primary-light); padding: 12px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; font-size: 0.85rem;">
             <span>📊 تعداد آزمون: <strong style="color:var(--primary);">${toPersianNumber(totalExamsWithScore)}</strong></span>
@@ -511,19 +515,19 @@ async function loadStudentExamsForDetails(studentId) {
             else if (percent >= 40) badgeColor = '#f59e0b';
             else badgeColor = '#ef4444';
             
-            scoreHtml = `<span class="rank-badge" style="background: ${badgeColor}20; color: ${badgeColor}; font-weight: bold;">${toPersianNumber(result.score)} از ${toPersianNumber(exam.maxScore)} (${toPersianNumber(Math.round(percent))}٪)</span>`;
+            scoreHtml = `<span class="rank-badge" style="background: ${badgeColor}20; color: ${badgeColor}; font-weight: bold; white-space: nowrap;">${toPersianNumber(result.score)} از ${toPersianNumber(exam.maxScore)} (${toPersianNumber(Math.round(percent))}٪)</span>`;
         } else {
-            scoreHtml = `<span class="rank-badge" style="background:#f1f5f9; color:#94a3b8;">ثبت نشده</span>`;
+            scoreHtml = `<span class="rank-badge" style="background:#f1f5f9; color:#94a3b8; white-space: nowrap;">ثبت نشده</span>`;
         }
         
-        // ✅ اصلاح امنیتی: escape عنوان آزمون
+        // ✅ اصلاح UI: استفاده از flex-wrap برای جلوگیری از به‌هم‌ریختگی در موبایل
         html += `
-            <div class="details-list-item" style="flex-direction: column; align-items: stretch; gap: 5px; padding: 10px; background: var(--input-bg); border-radius: 8px; margin-bottom: 8px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <strong style="color:var(--text-main); font-size: 0.95rem;">${escapeHtml(exam.title)}</strong>
+            <div class="details-list-item" style="flex-direction: column; align-items: stretch; gap: 8px; padding: 10px; background: var(--input-bg); border-radius: 8px; margin-bottom: 8px; border-bottom: none;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap: wrap; gap: 8px;">
+                    <strong style="color:var(--text-main); font-size: 0.95rem; flex: 1 1 auto; word-break: break-word;">${escapeHtml(exam.title)}</strong>
                     ${scoreHtml}
                 </div>
-                <div style="display:flex; justify-content:space-between; font-size: 0.8rem; color: var(--text-muted);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-muted); gap: 5px;">
                     <span>📚 ${subName}</span>
                     <span>📅 ${toPersianNumber(exam.date)}</span>
                 </div>
@@ -534,4 +538,4 @@ async function loadStudentExamsForDetails(studentId) {
     container.innerHTML = html;
 }
 
-// ✅ پایان فایل students.js
+// ✅ پایان کامل فایل students.js
