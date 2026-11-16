@@ -284,18 +284,13 @@ function renderLessonDetails() {
             return a.name.localeCompare(b.name, 'fa');
         });
 
-        const uniqueScores = [...new Set(items.map(i => i.totalScore))].filter(s => s > 0).sort((a, b) => b - a);
-        const goldScore = uniqueScores.length > 0 ? uniqueScores[0] : -1;
-        const silverScore = uniqueScores.length > 1 ? uniqueScores[1] : -1;
-        const bronzeScore = uniqueScores.length > 2 ? uniqueScores[2] : -1;
+        // ✅ بهینه‌سازی (اولویت ۳): استفاده از تابع مشترک در app.js
+        const medals = window.calculateMedals(items, 'totalScore');
 
         let html = '';
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
-            let medal = '';
-            if (item.totalScore === goldScore) medal = '🥇';
-            else if (item.totalScore === silverScore) medal = '🥈';
-            else if (item.totalScore === bronzeScore) medal = '🥉';
+            const medal = window.getMedalEmoji(item.totalScore, medals);
 
             // ✅ اصلاح امنیتی و UI: escape نام و استفاده از flex-wrap برای جلوگیری از سرریز
             html += `
@@ -352,10 +347,8 @@ function renderLessonDetails() {
             return { id: g.id, name: `${g.symbol || ''} ${g.name}`, totalScore: groupTotal, studentsHtml: studentsHtml };
         });
 
-        const uniqueGroupScores = [...new Set(groupData.map(g => g.totalScore))].filter(s => s > 0).sort((a, b) => b - a);
-        const goldG = uniqueGroupScores.length > 0 ? uniqueGroupScores[0] : -1;
-        const silverG = uniqueGroupScores.length > 1 ? uniqueGroupScores[1] : -1;
-        const bronzeG = uniqueGroupScores.length > 2 ? uniqueGroupScores[2] : -1;
+        // ✅ بهینه‌سازی (اولویت ۳): استفاده از تابع مشترک برای مدال گروه‌ها
+        const groupMedals = window.calculateMedals(groupData, 'totalScore');
 
         groupData.sort((a, b) => {
             if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
@@ -365,10 +358,7 @@ function renderLessonDetails() {
         let finalHtml = '';
         for (let i = 0; i < groupData.length; i++) {
             const g = groupData[i];
-            let medal = '';
-            if (g.totalScore === goldG) medal = '🥇';
-            else if (g.totalScore === silverG) medal = '🥈';
-            else if (g.totalScore === bronzeG) medal = '🥉';
+            const medal = window.getMedalEmoji(g.totalScore, groupMedals);
 
             // ✅ اصلاح امنیتی و UI: escape نام گروه و استفاده از flex-wrap
             finalHtml += `
