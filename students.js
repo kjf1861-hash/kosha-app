@@ -97,10 +97,8 @@ function renderStudentsList() {
         return a.lastName.localeCompare(b.lastName, 'fa');
     });
 
-    const uniqueScores = [...new Set(studentScores.map(s => s.totalScore))].filter(s => s > 0).sort((a, b) => b - a);
-    const goldScore = uniqueScores.length > 0 ? uniqueScores[0] : -1;
-    const silverScore = uniqueScores.length > 1 ? uniqueScores[1] : -1;
-    const bronzeScore = uniqueScores.length > 2 ? uniqueScores[2] : -1;
+    // ✅ بهینه‌سازی (اولویت ۳): استفاده از تابع مشترک در app.js برای محاسبه مدال‌ها
+    const medals = window.calculateMedals(studentScores, 'totalScore');
 
     const groupMap = {};
     for (const g of window.allGroupsData) groupMap[g.id] = g;
@@ -117,12 +115,9 @@ function renderStudentsList() {
         const st = paginated[i];
         const globalRank = startIndex + i + 1;
         
-        let medalHtml = '';
-        if (st.totalScore > 0) { 
-            if (st.totalScore === goldScore) medalHtml = '<span class="medal-badge">🥇</span>';
-            else if (st.totalScore === silverScore) medalHtml = '<span class="medal-badge">🥈</span>';
-            else if (st.totalScore === bronzeScore) medalHtml = '<span class="medal-badge">🥉</span>';
-        }
+        // ✅ بهینه‌سازی (اولویت ۳): استفاده از تابع مشترک
+        const medal = window.getMedalEmoji(st.totalScore, medals);
+        const medalHtml = medal ? `<span class="medal-badge">${medal}</span>` : '';
 
         const g = groupMap[st.groupId];
         // ✅ اصلاح امنیتی: escape نام و نماد گروه
