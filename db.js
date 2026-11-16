@@ -122,8 +122,6 @@ async function ensureAssessmentItemsForYear(year) {
     }
 }
 window.ensureAssessmentItemsForYear = ensureAssessmentItemsForYear;
-
-// ⏸️ پایان بخش ۱ از ۴ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 // ==========================================
 // مقداردهی اولیه دیتابیس (IndexedDB Schema v17)
 // ==========================================
@@ -347,8 +345,6 @@ async function migrateDataToV17() {
         console.log(`✅ ${migratedCount} رکورد قدیمی به سال تحصیلی جاری منتقل شدند.`);
     }
 }
-
-// ⏸️ پایان بخش ۲ از ۴ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 // ==========================================
 // ذخیره داده
 // ==========================================
@@ -404,6 +400,36 @@ function saveBulkData(storeName, dataArray) {
         transaction.onabort = (event) => reject(new Error('تراکنش لغو شد'));
     });
 }
+
+// ==========================================
+// ✅ تابع جدید (اولویت ۲): حذف دسته‌ای داده‌ها در یک تراکنش
+// ==========================================
+function deleteBulkData(storeName, ids) {
+    return new Promise((resolve, reject) => {
+        if (!ids || ids.length === 0) {
+            resolve();
+            return;
+        }
+        
+        const transaction = db.transaction([storeName], 'readwrite');
+        const store = transaction.objectStore(storeName);
+        
+        ids.forEach(id => {
+            store.delete(id);
+        });
+        
+        transaction.oncomplete = () => {
+            resolve();
+            if (typeof window.triggerAutoBackup === 'function') {
+                window.triggerAutoBackup();
+            }
+        };
+        
+        transaction.onerror = (event) => reject(event.target.error);
+        transaction.onabort = (event) => reject(new Error('تراکنش حذف لغو شد'));
+    });
+}
+window.deleteBulkData = deleteBulkData;
 
 // ==========================================
 // خواندن همه داده‌های یک store
@@ -481,7 +507,7 @@ async function getClassProfile(year) {
 }
 
 // ==========================================
-// حذف داده
+// حذف داده (تکی)
 // ==========================================
 function deleteData(storeName, id) {
     return new Promise((resolve, reject) => {
@@ -519,8 +545,6 @@ function clearStore(storeName) {
         request.onerror = (event) => reject(event.target.error);
     });
 }
-
-// ⏸️ پایان بخش ۳ از ۴ — منتظر پیام «ادامه» شما هستم تا بخش ۴ (آخرین بخش — شامل اصلاح #۲۳) را بفرستم.
 // ==========================================
 // خروجی کامل با _meta
 // ==========================================
