@@ -101,33 +101,28 @@ function renderGroupsList() {
         return a.name.localeCompare(b.name, 'fa');
     });
 
-    const uniqueScores = [...new Set(groupScores.map(g => g.totalScore))].filter(s => s > 0).sort((a, b) => b - a);
-    const goldScore = uniqueScores.length > 0 ? uniqueScores[0] : -1;
-    const silverScore = uniqueScores.length > 1 ? uniqueScores[1] : -1;
-    const bronzeScore = uniqueScores.length > 2 ? uniqueScores[2] : -1;
+    // ✅ بهینه‌سازی (اولویت ۳): استفاده از تابع مشترک در app.js
+    const medals = window.calculateMedals(groupScores, 'totalScore');
 
     let html = '';
     for (let i = 0; i < groupScores.length; i++) {
         const g = groupScores[i];
         const rank = i + 1;
-        let medal = '';
-        if (g.totalScore === goldScore) medal = '🥇';
-        else if (g.totalScore === silverScore) medal = '🥈';
-        else if (g.totalScore === bronzeScore) medal = '🥉';
+        const medal = window.getMedalEmoji(g.totalScore, medals);
 
         html += `
             <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px; padding: 15px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                    <div style="display:flex; align-items:center; gap:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap: wrap; gap: 10px;">
+                    <div style="display:flex; align-items:center; gap:8px; flex: 1 1 200px; min-width: 0;">
                         <span style="font-weight:bold; color:var(--text-muted); min-width:20px;">${toPersianNumber(rank)}.</span>
                         <span class="medal-badge" style="font-size:1.3rem;">${medal}</span>
                         <span style="font-size:1.5rem;">${escapeHtml(g.symbol)}</span>
-                        <div>
+                        <div style="word-break: break-word;">
                             <strong>${escapeHtml(g.name)}</strong>
                             <div style="font-size:0.8rem; color:var(--text-muted);">${toPersianNumber(g.studentCount)} دانش‌آموز</div>
                         </div>
                     </div>
-                    <span class="rank-badge">${toPersianNumber(g.totalScore)} امتیاز</span>
+                    <span class="rank-badge" style="flex-shrink: 0;">${toPersianNumber(g.totalScore)} امتیاز</span>
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:5px; margin-top:5px; border-top:1px dashed var(--border-color); padding-top:10px;">
                     <button class="btn btn-secondary btn-sm" onclick="openGroupDetails(${g.id})" title="مشاهده جزئیات و مدیریت اعضا">👁️</button>
@@ -202,18 +197,23 @@ async function saveEditedGroup(e) {
 async function deleteGroup(id) {
     if (!confirm('آیا از حذف این گروه مطمئن هستید؟ (دانش‌آموزان این گروه بدون گروه خواهند شد)')) return;
     
-    const groupStudents = window.allStudentsData.filter(st => st.groupId === id);
-    for (const st of groupStudents) {
-        st.groupId = null;
-        await saveData('students', st);
+    try {
+        const groupStudents = window.allStudentsData.filter(st => st.groupId === id);
+        
+        // ✅ بهینه‌سازی (اولویت ۲): استفاده از saveBulkData برای به‌روزرسانی یک‌جای دانش‌آموزان
+        if (groupStudents.length > 0) {
+            const updatedStudents = groupStudents.map(st => ({ ...st, groupId: null }));
+            await saveBulkData('students', updatedStudents);
+        }
+
+        await deleteData('groups', id);
+        showToast('گروه حذف شد و دانش‌آموزان آن بدون گروه شدند.', 'success');
+        loadAllData();
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در حذف گروه!', 'error');
     }
-
-    await deleteData('groups', id);
-    showToast('گروه حذف شد و دانش‌آموزان آن بدون گروه شدند.', 'success');
-    loadAllData();
 }
-
-// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ (آخرین بخش) را بفرستم.
 function openGroupDetails(id) {
     const group = window.allGroupsData.find(g => g.id === id);
     if (!group) {
@@ -307,28 +307,23 @@ function renderGroupDetails() {
         return a.lastName.localeCompare(b.lastName, 'fa');
     });
 
-    const uniqueScores = [...new Set(studentScores.map(s => s.totalScore))].filter(s => s > 0).sort((a, b) => b - a);
-    const goldScore = uniqueScores.length > 0 ? uniqueScores[0] : -1;
-    const silverScore = uniqueScores.length > 1 ? uniqueScores[1] : -1;
-    const bronzeScore = uniqueScores.length > 2 ? uniqueScores[2] : -1;
+    // ✅ بهینه‌سازی (اولویت ۳): استفاده از تابع مشترک در app.js
+    const medals = window.calculateMedals(studentScores, 'totalScore');
 
     let html = '';
     for (let i = 0; i < studentScores.length; i++) {
         const st = studentScores[i];
-        let medal = '';
-        if (st.totalScore === goldScore) medal = '🥇';
-        else if (st.totalScore === silverScore) medal = '🥈';
-        else if (st.totalScore === bronzeScore) medal = '🥉';
+        const medal = window.getMedalEmoji(st.totalScore, medals);
 
         html += `
-            <div class="details-list-item" style="background: var(--card-bg); margin-bottom: 5px; border-radius: 8px; border: 1px solid var(--border-color); padding: 10px;">
-                <div style="display:flex; align-items:center; gap:8px;">
+            <div class="details-list-item" style="background: var(--card-bg); margin-bottom: 5px; border-radius: 8px; border: 1px solid var(--border-color); padding: 10px; flex-wrap: wrap; gap: 5px;">
+                <div style="display:flex; align-items:center; gap:8px; flex: 1 1 auto; min-width: 0;">
                     <span style="font-weight:bold; color:var(--text-muted); min-width:25px;">${toPersianNumber(i + 1)}.</span>
                     <span class="medal-badge" style="font-size:1.2rem;">${medal}</span>
-                    <strong>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</strong>
+                    <strong style="word-break: break-word;">${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</strong>
                 </div>
-                <div style="display:flex; align-items:center; gap:5px;">
-                    <span class="rank-badge" style="font-size:0.9rem;">${toPersianNumber(st.totalScore)} امتیاز</span>
+                <div style="display:flex; align-items:center; gap:5px; flex-shrink: 0; margin-right: auto;">
+                    <span class="rank-badge" style="font-size:0.9rem; white-space: nowrap;">${toPersianNumber(st.totalScore)} امتیاز</span>
                     <button class="btn btn-danger btn-sm" onclick="removeStudentFromGroup(${st.id})" title="حذف از گروه">🗑️</button>
                 </div>
             </div>
@@ -357,4 +352,4 @@ async function removeStudentFromGroup(studentId) {
     }
 }
 
-// ✅ پایان فایل group.js
+// ✅ پایان کامل فایل group.js
