@@ -8,12 +8,27 @@ importScripts('./version.js');
 const APP_VERSION_SAFE = (self.APP_VERSION || 'v0.0.0').replace(/\./g, '-');
 const CACHE_NAME = `kosha-cache-${APP_VERSION_SAFE}`; 
 
-const ASSETS_TO_CACHE = [
+// ✅ لیست فایل‌های اصلی برای کش شدن
+const RAW_ASSETS_TO_CACHE = [
     './', './index.html', './styles.css', './app.js', './db.js', './manifest.json', './icon.svg',
     './class.js', './students.js', './lesson.js', './group.js', './session.js', './score.js',
     './reset.js', './exam.js', './game.js', './calendar-data.js', './calendar.js',
     './jalali-utils.js', './back-button.js', './version.js', './updater.js'
 ];
+
+// ✅ اصلاح کش: اضافه کردن نسخه داینامیک به فایل‌های استاتیک (به جز فایل‌های حساس مثل html و version)
+const ASSETS_TO_CACHE = RAW_ASSETS_TO_CACHE.map(url => {
+    if (
+        url === './' || 
+        url === './index.html' || 
+        url === './manifest.json' || 
+        url === './icon.svg' || 
+        url === './version.js'
+    ) {
+        return url; // این فایل‌ها نباید ?v= داشته باشند
+    }
+    return `${url}?v=${self.APP_VERSION || 'v0'}`; // بقیه فایل‌ها با نسخه جدید کش می‌شوند
+});
 
 // ✅ لیست فایل‌هایی که باید همیشه از اینترنت (سرور) خونده بشن تا ظاهر برنامه آپدیت بشه
 const NETWORK_FIRST_PATHS = ['/index.html', '/updater.js', '/version.json'];
@@ -53,7 +68,8 @@ self.addEventListener('install', (event) => {
             );
         })
     );
-    self.skipWaiting(); // ✅ فعالسازی فوری سرویس‌ورکر جدید
+    // ✅ اصلاح بحرانی: self.skipWaiting() حذف شد تا سرویس‌ورکر جدید منتظر بماند
+    // تا زمانی که کاربر از طریق updater.js به آن دستور فعال‌سازی بدهد.
 });
 
 // ✅ اصلاح امنیتی: پاک کردن کش‌های قدیمی نسخه‌های قبل تا فضای دیسک کاربر آزاد شود
@@ -89,7 +105,6 @@ self.addEventListener('fetch', (event) => {
         event.respondWith(
             fetchWithTimeout(event.request, FETCH_TIMEOUT_MS)
                 .then(async (response) => {
-                    // ✅ اصلاح: await کامل روی putInCache
                     if (response && response.status === 200) {
                         const clone = response.clone();
                         await putInCache(CACHE_NAME, event.request, clone);
@@ -97,7 +112,6 @@ self.addEventListener('fetch', (event) => {
                     return response;
                 })
                 .catch(() => {
-                    // ✅ اصلاح: fallback کامل با Response 503 در صورت نبود کش
                     return caches.match(event.request).then(cached => {
                         if (cached) return cached;
                         if (event.request.mode === 'navigate') {
@@ -113,7 +127,6 @@ self.addEventListener('fetch', (event) => {
             caches.match(event.request).then((cached) => {
                 if (cached) return cached;
                 return fetch(event.request).then(async (response) => {
-                    // ✅ اصلاح: await کامل روی putInCache
                     if (response && response.status === 200) {
                         const clone = response.clone();
                         await putInCache(CACHE_NAME, event.request, clone);
@@ -127,6 +140,7 @@ self.addEventListener('fetch', (event) => {
 
 self.addEventListener('message', (event) => {
     if (event.data && event.data.action === 'skipWaiting') {
+        // ✅ فعال‌سازی فقط زمانی که از سمت updater.js دستور برسد
         self.skipWaiting();
     }
 });
