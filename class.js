@@ -278,16 +278,18 @@ function renderTopStudents(studentScores) {
         return;
     }
 
-    const medals = ['🥇', '🥈', '🥉'];
-    container.innerHTML = topStudents.map((st, index) => {
+    // ✅ بهینه‌سازی (اولویت ۳): استفاده از تابع مشترک در app.js
+    const medals = window.calculateMedals(studentScores, 'totalScore');
+
+    container.innerHTML = topStudents.map((st) => {
         const g = window.allGroupsData.find(x => x.id === st.groupId);
-        // ✅ اصلاح امنیتی: escape نام و نماد گروه
         const groupBadge = g ? `<span class="group-label">${escapeHtml(g.symbol)} ${escapeHtml(g.name)}</span>` : '';
-        // ✅ اصلاح امنیتی: escape نام دانش‌آموز
+        const medal = window.getMedalEmoji(st.totalScore, medals);
+        
         return `
             <div class="list-item top-student-row" style="padding: 12px 15px; margin-bottom: 8px;">
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <span class="medal-badge" style="font-size:1.5rem;">${medals[index]}</span>
+                    <span class="medal-badge" style="font-size:1.5rem;">${medal}</span>
                     <span style="font-size: 1.1rem; font-weight: bold;">${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</span>
                     ${groupBadge}
                 </div>
@@ -324,15 +326,18 @@ function renderTopGroups() {
         return;
     }
 
-    const medals = ['🥇', '🥈', '🥉'];
+    // ✅ بهینه‌سازی (اولویت ۳): استفاده از تابع مشترک در app.js
+    const medals = window.calculateMedals(groupData, 'totalScore');
+
     let html = '';
     for (let i = 0; i < topGroups.length; i++) {
         const g = topGroups[i];
-        // ✅ اصلاح امنیتی: escape نام گروه
+        const medal = window.getMedalEmoji(g.totalScore, medals);
+        
         html += `
             <div class="list-item" style="padding: 12px 15px; margin-bottom: 8px; border-right: 4px solid var(--primary);">
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <span class="medal-badge" style="font-size:1.5rem;">${medals[i]}</span>
+                    <span class="medal-badge" style="font-size:1.5rem;">${medal}</span>
                     <span style="font-size: 1.1rem; font-weight: bold;">${escapeHtml(g.name)}</span>
                 </div>
                 <span class="rank-badge">${toPersianNumber(g.totalScore)} امتیاز</span>
@@ -341,8 +346,6 @@ function renderTopGroups() {
     }
     container.innerHTML = html;
 }
-
-// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 function renderNeedsAttention(studentScores) {
     const container = document.getElementById('dashboard-needs-attention');
     if (!container) return;
@@ -373,12 +376,12 @@ function renderNeedsAttention(studentScores) {
     for (const st of needsAttention) {
         // ✅ اصلاح امنیتی: escape نام و نام خانوادگی دانش‌آموز
         html += `
-            <div class="list-item" style="padding: 12px 15px; background: rgba(255,255,255,0.5);">
+            <div class="list-item" style="padding: 12px 15px; background: rgba(255,255,255,0.5); flex-wrap: wrap; gap: 5px;">
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="font-size: 1.2rem;">⚠️</span>
                     <strong>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</strong>
                 </div>
-                <div style="display:flex; gap:8px; font-size: 0.85rem;">
+                <div style="display:flex; gap:8px; font-size: 0.85rem; flex-wrap: wrap;">
                     <span class="rank-badge" style="background:#fee2e2; color:#b91c1c;">${toPersianNumber(st.totalScore)} امتیاز</span>
                     <span class="rank-badge" style="background:#fef3c7; color:#b45309;">${toPersianNumber(st.absences)} غیبت</span>
                 </div>
@@ -413,11 +416,11 @@ function renderRecentActivities() {
         // ✅ اصلاح امنیتی: escape عنوان رکورد و نام آیتم
         html += `
             <div class="list-item" style="padding: 10px 15px; flex-direction: column; align-items: stretch; gap: 5px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <strong style="color: var(--primary); font-size: 0.95rem;">${escapeHtml(rec.title)}</strong>
-                    <span style="font-size: 0.75rem; color: var(--text-muted);">${toPersianNumber(rec.date)}</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 5px;">
+                    <strong style="color: var(--primary); font-size: 0.95rem; word-break: break-word;">${escapeHtml(rec.title)}</strong>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap;">${toPersianNumber(rec.date)}</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; font-size: 0.8rem; color: var(--text-muted);">
+                <div style="display:flex; justify-content:space-between; font-size: 0.8rem; color: var(--text-muted); flex-wrap: wrap; gap: 5px;">
                     <span>📚 ${subjectName} | 🎯 ${escapeHtml(rec.itemName)}</span>
                     <span>👥 ${toPersianNumber(studentCount)} نفر</span>
                 </div>
@@ -451,13 +454,13 @@ function renderFullClassReport(studentScores) {
 
         return `
             <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 5px; margin-bottom: 8px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                    <div style="display:flex; align-items:center; gap:5px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap: wrap; gap: 5px;">
+                    <div style="display:flex; align-items:center; gap:5px; flex: 1 1 auto; min-width: 0;">
                         <span style="font-weight:bold; min-width:25px; color:var(--text-muted);">${toPersianNumber(index + 1)}.</span>
-                        <span><strong>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</strong></span>
+                        <span style="word-break: break-word;"><strong>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</strong></span>
                         ${groupBadge}
                     </div>
-                    <span class="rank-badge">${toPersianNumber(st.totalScore)} امتیاز</span>
+                    <span class="rank-badge" style="white-space: nowrap;">${toPersianNumber(st.totalScore)} امتیاز</span>
                 </div>
                 <div class="score-bar-container">
                     <div class="score-bar-fill ${index === 0 && st.totalScore > 0 ? 'is-first' : ''}" style="width: ${percent}%;"></div>
@@ -564,7 +567,6 @@ function renderExamsDashboard() {
     `;
 }
 
-// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ (آخرین بخش) را بفرستم.
 async function exportClassCSV() {
     try {
         // ✅ اصلاح امنیتی: جلوگیری از فرمول تزریقی در اکسل (CSV Injection)
