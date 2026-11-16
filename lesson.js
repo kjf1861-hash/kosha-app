@@ -150,10 +150,12 @@ async function deleteLesson(id) {
     if (!confirm('آیا از حذف این درس مطمئن هستید؟ تمام سوابق ارزشیابی و آزمون‌های مرتبط با این درس نیز حذف خواهند شد!')) return;
     
     try {
+        // ✅ بهینه‌سازی (اولویت ۲): استفاده از deleteBulkData
+        
         // ۱. حذف سوابق ارزشیابی مرتبط با این درس
         const subjectRecords = window.allRecordsData.filter(r => r.subjectId === id);
-        for (const rec of subjectRecords) {
-            await deleteData('records', rec.id);
+        if (subjectRecords.length > 0) {
+            await deleteBulkData('records', subjectRecords.map(r => r.id));
         }
 
         // ✅ اصلاح باگ: حذف آزمون‌های مرتبط با این درس و نتایج آن‌ها
@@ -164,12 +166,10 @@ async function deleteLesson(id) {
         if (relatedExamIds.length > 0) {
             const allResults = await getAllData('examResults');
             const relatedResults = allResults.filter(r => relatedExamIds.includes(r.examId));
-            for (const result of relatedResults) {
-                await deleteData('examResults', result.id);
+            if (relatedResults.length > 0) {
+                await deleteBulkData('examResults', relatedResults.map(r => r.id));
             }
-            for (const exam of relatedExams) {
-                await deleteData('exams', exam.id);
-            }
+            await deleteBulkData('exams', relatedExamIds);
         }
 
         // ۲. حذف خود درس
@@ -182,7 +182,6 @@ async function deleteLesson(id) {
     }
 }
 
-// ⏸️ پایان بخش ۱ از ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 async function resetAllLessons() {
     if (window.allSubjectsData.length === 0) {
         showToast('هیچ درسی برای حذف وجود ندارد.', 'error');
@@ -198,10 +197,12 @@ async function resetAllLessons() {
     try {
         const subjectIds = window.allSubjectsData.map(s => s.id);
         
+        // ✅ بهینه‌سازی (اولویت ۲): استفاده از deleteBulkData
+        
         // ۱. حذف سوابق ارزشیابی مرتبط با دروس
         const recordsToDelete = window.allRecordsData.filter(r => subjectIds.includes(r.subjectId));
-        for (const rec of recordsToDelete) {
-            await deleteData('records', rec.id);
+        if (recordsToDelete.length > 0) {
+            await deleteBulkData('records', recordsToDelete.map(r => r.id));
         }
 
         // ✅ اصلاح باگ: حذف آزمون‌های مرتبط با دروس و نتایج آن‌ها
@@ -212,17 +213,15 @@ async function resetAllLessons() {
         if (relatedExamIds.length > 0) {
             const allResults = await getAllData('examResults');
             const relatedResults = allResults.filter(r => relatedExamIds.includes(r.examId));
-            for (const result of relatedResults) {
-                await deleteData('examResults', result.id);
+            if (relatedResults.length > 0) {
+                await deleteBulkData('examResults', relatedResults.map(r => r.id));
             }
-            for (const exam of relatedExams) {
-                await deleteData('exams', exam.id);
-            }
+            await deleteBulkData('exams', relatedExamIds);
         }
 
         // ۲. حذف خود دروس
-        for (const sub of window.allSubjectsData) {
-            await deleteData('subjects', sub.id);
+        if (subjectIds.length > 0) {
+            await deleteBulkData('subjects', subjectIds);
         }
         
         showToast('تمام دروس، سوابق و آزمون‌های مرتبط این سال تحصیلی حذف شدند.', 'success');
@@ -232,7 +231,6 @@ async function resetAllLessons() {
         showToast('خطا در حذف دروس!', 'error');
     }
 }
-
 function openLessonDetails(id) {
     currentLessonDetailsId = id;
     currentLessonDetailView = 'class'; 
@@ -264,7 +262,6 @@ function switchLessonDetailView(view) {
     renderLessonDetails();
 }
 
-// ⏸️ پایان بخش ۲ از ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۳ (آخرین بخش) را بفرستم.
 function renderLessonDetails() {
     const container = document.getElementById('lesson-details-content');
     if (!container || !currentLessonDetailsId) return;
@@ -300,16 +297,16 @@ function renderLessonDetails() {
             else if (item.totalScore === silverScore) medal = '🥈';
             else if (item.totalScore === bronzeScore) medal = '🥉';
 
-            // ✅ اصلاح امنیتی: escape نام آیتم‌ها
+            // ✅ اصلاح امنیتی و UI: escape نام و استفاده از flex-wrap برای جلوگیری از سرریز
             html += `
-                <div class="list-item" style="padding: 10px 15px;">
-                    <div style="display:flex; align-items:center; gap:8px;">
+                <div class="list-item" style="padding: 10px 15px; flex-wrap: wrap; gap: 5px;">
+                    <div style="display:flex; align-items:center; gap:8px; word-break: break-word;">
                         <span style="font-weight:bold; color:var(--text-muted); min-width:20px;">${toPersianNumber(i + 1)}.</span>
                         <span class="medal-badge">${medal}</span>
                         <strong>${escapeHtml(item.name)}</strong>
                         ${item.badgeHtml || ''}
                     </div>
-                    <span class="rank-badge">${toPersianNumber(item.totalScore)} امتیاز</span>
+                    <span class="rank-badge" style="white-space: nowrap;">${toPersianNumber(item.totalScore)} امتیاز</span>
                 </div>
             `;
         }
@@ -373,16 +370,16 @@ function renderLessonDetails() {
             else if (g.totalScore === silverG) medal = '🥈';
             else if (g.totalScore === bronzeG) medal = '🥉';
 
-            // ✅ اصلاح امنیتی: escape نام گروه
+            // ✅ اصلاح امنیتی و UI: escape نام گروه و استفاده از flex-wrap
             finalHtml += `
                 <div class="card" style="margin-bottom: 15px; padding: 15px; background: var(--input-bg); border: 1px solid var(--border-color);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px dashed var(--border-color); padding-bottom:10px;">
-                        <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; margin-bottom:10px; border-bottom:1px dashed var(--border-color); padding-bottom:10px; gap: 5px;">
+                        <div style="display:flex; align-items:center; gap:8px; word-break: break-word;">
                             <span style="font-weight:bold; color:var(--text-muted);">${toPersianNumber(i + 1)}.</span>
                             <span class="medal-badge" style="font-size:1.5rem;">${medal}</span>
                             <strong style="color:var(--primary); font-size:1.1rem;">${escapeHtml(g.name)}</strong>
                         </div>
-                        <span class="rank-badge">${toPersianNumber(g.totalScore)} امتیاز کل</span>
+                        <span class="rank-badge" style="white-space: nowrap;">${toPersianNumber(g.totalScore)} امتیاز کل</span>
                     </div>
                     <div style="padding-right: 10px;">
                         ${g.studentsHtml}
