@@ -82,6 +82,26 @@ window.escapeHtml = escapeHtml;
 window.sanitizeInput = sanitizeInput;
 
 // ==========================================
+// ✅ توابع مشترک: محاسبه مدال‌ها (اولویت ۳ - DRY)
+// ==========================================
+window.calculateMedals = function(items, scoreField = 'totalScore') {
+    const uniqueScores = [...new Set(items.map(i => i[scoreField] || 0))].filter(s => s > 0).sort((a, b) => b - a);
+    return {
+        gold: uniqueScores.length > 0 ? uniqueScores[0] : -1,
+        silver: uniqueScores.length > 1 ? uniqueScores[1] : -1,
+        bronze: uniqueScores.length > 2 ? uniqueScores[2] : -1
+    };
+};
+
+window.getMedalEmoji = function(score, medals) {
+    if (score <= 0) return '';
+    if (score === medals.gold) return '🥇';
+    if (score === medals.silver) return '🥈';
+    if (score === medals.bronze) return '🥉';
+    return '';
+};
+
+// ==========================================
 // ✅ تابع تولید شناسه یکتا
 // ==========================================
 function generateUniqueId() {
@@ -1530,17 +1550,20 @@ window.printScoreReport = printScoreReport;
 // ==========================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        // ✅ اصلاح کلیدی کش: ثبت سرویس‌ورکر همراه با نسخه داینامیک
-        // این باعث می‌شود مرورگر به محض تغییر نسخه در version.js متوجه آپدیت شود
+        // ✅ ثبت سرویس‌ورکر همراه با نسخه داینامیک
         const swUrl = './sw.js?v=' + (window.APP_VERSION || 'v0');
         
         navigator.serviceWorker.register(swUrl).then((reg) => {
             reg.addEventListener('updatefound', () => {
                 const newWorker = reg.installing;
                 newWorker.addEventListener('statechange', () => {
-                    // وقتی سرویس‌ورکر جدید نصب شد، به کاربر اطلاع می‌دهیم
                     if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        showUpdateToast(newWorker);
+                        // ✅ انتقال تصمیم‌گیری به updater.js برای اعمال ۳ حالت (اولویت ۱)
+                        if (typeof window.handleNewSW === 'function') {
+                            window.handleNewSW(newWorker);
+                        } else {
+                            showUpdateToast(newWorker); // fallback
+                        }
                     }
                 });
             });
@@ -1550,6 +1573,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// ✅ این تابع فقط به‌عنوان Fallback استفاده می‌شود (اگر updater.js لود نشود)
 function showUpdateToast(newWorker) {
     const toast = document.createElement('div');
     toast.className = 'toast-container';
@@ -1558,7 +1582,6 @@ function showUpdateToast(newWorker) {
     setTimeout(() => toast.classList.add('show'), 100);
     
     document.getElementById('update-btn').addEventListener('click', () => {
-        // ✅ وقتی کاربر دکمه را زد، به سرویس‌ورکر منتظر دستور می‌دهیم که فعال شود
         if (newWorker) newWorker.postMessage({ action: 'skipWaiting' });
         setTimeout(() => window.location.reload(), 500);
     });
