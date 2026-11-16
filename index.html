@@ -11,7 +11,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="styles.css">
+    <!-- ✅ اصلاح سیستم کش: لود کردن version.js در head قبل از استایل‌ها -->
+    <script src="version.js"></script>
+    
+    <!-- ✅ اصلاح سیستم کش: لود داینامیک CSS با نسخه -->
+    <script>
+        document.write('<link rel="stylesheet" href="styles.css?v=' + (window.APP_VERSION || 'v0') + '">');
+    </script>
     
     <style>
         #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.8s ease-out, visibility 0.8s ease-out; }
@@ -258,7 +264,7 @@
                     </button>
                 </div>
             </div>
-            <div id="page-students" class="page-section">
+                        <div id="page-students" class="page-section">
     <div class="page-header-title">👦 دانش‌آموزان</div>
     <div class="card">
         <h2 class="card-title">➕ افزودن دانش‌آموز</h2>
@@ -617,7 +623,6 @@
         <svg viewBox="0 0 24 24"><path d="M22 9 12 4.5 2 9l10 4.5L22 9z"/><path d="M6 11.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5"/><path d="M22 9v5"/></svg>
     </a>
 </nav>
-
 <div id="settings-modal" class="modal-overlay">
     <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header">⚙️ تنظیمات</div>
@@ -634,7 +639,7 @@
             <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">🏷️ نسخه و به‌روزرسانی</h3>
             <div class="version-info-box">
                 <div style="font-size: 0.85rem; color: var(--text-muted);">نسخه فعلی برنامه</div>
-                <div class="version-value" id="currentVersionDisplay">v1.0.0</div>
+                <div class="version-value" id="currentVersionDisplay">—</div>
                 <div class="version-date" id="currentVersionDate">تاریخ انتشار: --</div>
             </div>
             <div style="margin-bottom: 12px;">
@@ -1072,23 +1077,42 @@
         </div>
     </div>
 
-    <script src="version.js"></script>
-    <script src="jalali-utils.js"></script>
-    <script src="calendar-data.js"></script>
-    <script src="calendar.js"></script>
-    <script src="db.js"></script>
-    <script src="app.js"></script>
-    <script src="back-button.js" defer></script>
-    <script src="class.js"></script>
-    <script src="students.js"></script>
-    <script src="lesson.js"></script>
-    <script src="group.js"></script>
-    <script src="session.js"></script>
-    <script src="score.js"></script>
-    <script src="reset.js"></script>
-    <script src="game.js"></script>
-    <script src="exam.js"></script>
-    <script src="updater.js"></script>
+    <!-- ==========================================
+         ✅ بخش حیاتی: لود داینامیک اسکریپت‌ها با نسخه
+         ========================================== -->
+    <script>
+        (function() {
+            // گرفتن نسخه از version.js (که در head لود شده)
+            const currentVersion = window.APP_VERSION || 'v0';
+            
+            // لیست فایل‌های اسکریپت (به ترتیب وابستگی)
+            const scriptsToLoad = [
+                'jalali-utils.js',
+                'calendar-data.js',
+                'calendar.js',
+                'db.js',
+                'app.js',
+                'class.js',
+                'students.js',
+                'lesson.js',
+                'group.js',
+                'session.js',
+                'score.js',
+                'reset.js',
+                'game.js',
+                'exam.js',
+                'updater.js'
+            ];
+
+            // تزریق اسکریپت‌ها با نسخه داینامیک
+            scriptsToLoad.forEach(function(file) {
+                document.write('<script src="' + file + '?v=' + currentVersion + '"><\/script>');
+            });
+
+            // بارگذاری فایل back-button.js با ویژگی defer (چون باید بعد از DOM اجرا شود)
+            document.write('<script src="back-button.js?v=' + currentVersion + '" defer><\/script>');
+        })();
+    </script>
 
     <script>
         const SVG_MOON = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
