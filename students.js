@@ -130,19 +130,16 @@ function renderStudentsList() {
         
         const studentPass = st.nationalId ? generateStudentPassword(st.nationalId) : '---';
 
-        // ✅ اصلاح UI (استانداردهای موبایل): استفاده از flex-wrap برای جلوگیری از بیرون‌زدگی دکمه‌ها
+        // ✅ اصلاح UI: استفاده از flex-wrap برای جلوگیری از بیرون‌زدگی دکمه‌ها
         html += `
             <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px; padding: 12px;">
-                <!-- ردیف اول: نام و دکمه‌ها -->
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap: wrap; gap: 10px;">
-                    <!-- بخش نام (flex: 1 1 200px) اجازه می‌دهد در صورت کمبود فضا، فشرده شود -->
                     <div style="display:flex; align-items:center; gap:5px; flex: 1 1 200px; min-width: 0;">
                         <span style="font-weight:bold; min-width:25px; color:var(--text-muted);">${toPersianNumber(globalRank)}.</span>
                         ${medalHtml}
                         <span style="word-break: break-word;"><strong>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</strong></span>
                         ${groupBadge}
                     </div>
-                    <!-- بخش دکمه‌ها و امتیاز (flex-shrink: 0) اجازه نمی‌دهد دکمه‌ها له شوند -->
                     <div style="display:flex; align-items:center; gap:5px; flex-shrink: 0; margin-right: auto;">
                         <span class="rank-badge">${toPersianNumber(st.totalScore)} امتیاز</span>
                         <div style="display:flex; gap:5px;">
@@ -152,7 +149,6 @@ function renderStudentsList() {
                         </div>
                     </div>
                 </div>
-                <!-- ردیف دوم: کد ملی و رمز (با flex-wrap برای جلوگیری از سرریز) -->
                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-right: 25px; display: flex; flex-wrap: wrap; gap: 10px;">
                     <span>🆔 کد ملی: <strong style="font-family: 'IRNumber';">${escapeHtml(toPersianNumber(st.nationalId || 'ثبت نشده'))}</strong></span>
                     <span>🔑 رمز: <strong style="font-family: 'IRNumber'; color: var(--primary);">${toPersianNumber(studentPass)}</strong></span>
@@ -279,30 +275,38 @@ async function deleteStudent(id) {
     if (!confirm('آیا از حذف این دانش‌آموز مطمئن هستید؟ تمام سوابق ارزشیابی، نمرات آزمون و تشویق‌های این دانش‌آموز نیز حذف خواهد شد!')) return;
     
     try {
-        // ۱. حذف رکوردهای ارزشیابی
+        // ✅ بهینه‌سازی (اولویت ۲): استفاده از deleteBulkData و saveBulkData
+        // ۱. حذف/به‌روزرسانی رکوردهای ارزشیابی
         const allRecords = await getAllData('records');
         const studentRecords = allRecords.filter(r => r.students && r.students.includes(id));
+        
+        const recordsToUpdate = [];
+        const recordsToDeleteIds = [];
+        
         for (const rec of studentRecords) {
             rec.students = rec.students.filter(sid => sid !== id);
             if (rec.students.length === 0) {
-                await deleteData('records', rec.id);
+                recordsToDeleteIds.push(rec.id);
             } else {
-                await saveData('records', rec);
+                recordsToUpdate.push(rec);
             }
         }
+        
+        if (recordsToUpdate.length > 0) await saveBulkData('records', recordsToUpdate);
+        if (recordsToDeleteIds.length > 0) await deleteBulkData('records', recordsToDeleteIds);
 
-        // ✅ اصلاح باگ: حذف نتایج آزمون دانش‌آموز
+        // ۲. حذف نتایج آزمون دانش‌آموز
         const allResults = await getAllData('examResults');
         const studentResults = allResults.filter(r => r.studentId === id);
-        for (const res of studentResults) {
-            await deleteData('examResults', res.id);
+        if (studentResults.length > 0) {
+            await deleteBulkData('examResults', studentResults.map(r => r.id));
         }
 
-        // ✅ اصلاح باگ: حذف تشویق‌های قرآن دانش‌آموز
+        // ۳. حذف تشویق‌های قرآن دانش‌آموز
         const allBadges = await getAllData('badgesSettings');
         const studentBadges = allBadges.filter(b => b.studentId === id);
-        for (const badge of studentBadges) {
-            await deleteData('badgesSettings', badge.id);
+        if (studentBadges.length > 0) {
+            await deleteBulkData('badgesSettings', studentBadges.map(b => b.id));
         }
 
         // ۴. حذف خود دانش‌آموز
@@ -331,31 +335,38 @@ async function resetAllStudents() {
     try {
         const currentYear = window.activeAcademicYear;
         
+        // ✅ بهینه‌سازی (اولویت ۲): حذف دسته‌ای همه داده‌ها با deleteBulkData
+        
         // ۱. حذف دانش‌آموزان
-        for (const st of window.allStudentsData) {
-            await deleteData('students', st.id);
-        }
-        // ۲. حذف رکوردهای ارزشیابی
-        for (const rec of window.allRecordsData) {
-            await deleteData('records', rec.id);
-        }
-        // ۳. حذف حضور و غیاب
-        for (const att of window.allAttendanceData) {
-            await deleteData('attendance', att.id);
+        const studentIds = window.allStudentsData.map(st => st.id);
+        if (studentIds.length > 0) {
+            await deleteBulkData('students', studentIds);
         }
         
-        // ✅ اصلاح باگ: حذف تمام نتایج آزمون سال جاری
+        // ۲. حذف رکوردهای ارزشیابی
+        const recordIds = window.allRecordsData.map(rec => rec.id);
+        if (recordIds.length > 0) {
+            await deleteBulkData('records', recordIds);
+        }
+        
+        // ۳. حذف حضور و غیاب
+        const attendanceIds = window.allAttendanceData.map(att => att.id);
+        if (attendanceIds.length > 0) {
+            await deleteBulkData('attendance', attendanceIds);
+        }
+        
+        // ۴. حذف تمام نتایج آزمون سال جاری
         const allResults = await getAllData('examResults');
         const yearResults = allResults.filter(r => r.academicYear === currentYear);
-        for (const res of yearResults) {
-            await deleteData('examResults', res.id);
+        if (yearResults.length > 0) {
+            await deleteBulkData('examResults', yearResults.map(r => r.id));
         }
         
-        // ✅ اصلاح باگ: حذف تمام تشویق‌های قرآن سال جاری
+        // ۵. حذف تمام تشویق‌های قرآن سال جاری
         const allBadges = await getAllData('badgesSettings');
         const yearBadges = allBadges.filter(b => b.academicYear === currentYear);
-        for (const badge of yearBadges) {
-            await deleteData('badgesSettings', badge.id);
+        if (yearBadges.length > 0) {
+            await deleteBulkData('badgesSettings', yearBadges.map(b => b.id));
         }
         
         showToast('تمام دانش‌آموزان و سوابق مرتبط این سال تحصیلی حذف شدند.', 'success');
