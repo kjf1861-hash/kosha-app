@@ -268,8 +268,6 @@ function checkBackupReminder() {
         }
     } catch (e) { console.log(e); }
 }
-
-// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 // ==========================================
 // ✅ توابع تنظیمات پشتیبان‌گیری
 // ==========================================
@@ -748,8 +746,6 @@ function applyEmojiRestriction(inputId) {
         });
     }
 }
-
-// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 // ==========================================
 // توابع مدیریت تغییرات ذخیره‌نشده
 // ==========================================
@@ -816,7 +812,7 @@ function confirmExit() {
 }
 
 // ==========================================
-// ✅ تابع جدید: چاپ هوشمند محتوا (حل باگ چاپ)
+// ✅ تابع چاپ هوشمند محتوا (حل باگ چاپ)
 // ==========================================
 function printHtmlContent(htmlContent) {
     const printWindow = window.open('', '_blank');
@@ -849,7 +845,6 @@ function printHtmlContent(htmlContent) {
     
     setTimeout(() => {
         printWindow.print();
-        // بعد از بستن پنجره چاپ، خود پنجره بسته می‌شود
         printWindow.onafterprint = () => printWindow.close();
     }, 500);
 }
@@ -1129,8 +1124,6 @@ function renderUI() {
         console.error('خطا در رندر UI:', e);
     }
 }
-
-// ⏸️ پایان بخش ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۴ را بفرستم.
 function jalaliToDateString(jy, jm, jd) {
     return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
 }
@@ -1477,38 +1470,8 @@ function changePage(section, direction) {
     if (section === 'students') { currentPage.students += direction; if(typeof renderStudentsList === 'function') renderStudentsList(); }
     else if (section === 'records') { currentPage.records += direction; if(typeof loadAssessmentRecords === 'function') loadAssessmentRecords(); }
 }
-
 // ==========================================
-// ✅ ثبت Service Worker و نمایش پیام به‌روزرسانی
-// ==========================================
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').then((reg) => {
-            reg.addEventListener('updatefound', () => {
-                const newWorker = reg.installing;
-                newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) showUpdateToast(newWorker);
-                });
-            });
-        });
-    });
-}
-
-function showUpdateToast(newWorker) {
-    const toast = document.createElement('div');
-    toast.className = 'toast-container';
-    toast.innerHTML = `<span>🚀 نسخه جدید!</span><button class="toast-btn" id="update-btn">به‌روزرسانی</button>`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.classList.add('show'), 100);
-    document.getElementById('update-btn').addEventListener('click', () => {
-        if (newWorker) newWorker.postMessage({ action: 'skipWaiting' });
-        setTimeout(() => window.location.reload(), 500);
-    });
-}
-
-// ⏸️ پایان بخش ۴ — منتظر پیام «ادامه» شما هستم تا بخش ۵ (آخرین بخش) را بفرستم.
-// ==========================================
-// ✅ توابع چاپ برای تب‌های جلسات و امتیازات (باگ شماره ۶)
+// ✅ توابع چاپ برای تب‌های جلسات و امتیازات
 // ==========================================
 function printSessionReport() {
     const container = document.getElementById('attendance-reports-list');
@@ -1561,5 +1524,44 @@ function printScoreReport() {
     }
 }
 window.printScoreReport = printScoreReport;
+
+// ==========================================
+// ✅ ثبت Service Worker و نمایش پیام به‌روزرسانی
+// ==========================================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        // ✅ اصلاح کلیدی کش: ثبت سرویس‌ورکر همراه با نسخه داینامیک
+        // این باعث می‌شود مرورگر به محض تغییر نسخه در version.js متوجه آپدیت شود
+        const swUrl = './sw.js?v=' + (window.APP_VERSION || 'v0');
+        
+        navigator.serviceWorker.register(swUrl).then((reg) => {
+            reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                newWorker.addEventListener('statechange', () => {
+                    // وقتی سرویس‌ورکر جدید نصب شد، به کاربر اطلاع می‌دهیم
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        showUpdateToast(newWorker);
+                    }
+                });
+            });
+        }).catch(err => {
+            console.warn('⚠️ خطا در ثبت سرویس‌ورکر:', err);
+        });
+    });
+}
+
+function showUpdateToast(newWorker) {
+    const toast = document.createElement('div');
+    toast.className = 'toast-container';
+    toast.innerHTML = `<span>🚀 نسخه جدید!</span><button class="toast-btn" id="update-btn">به‌روزرسانی</button>`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 100);
+    
+    document.getElementById('update-btn').addEventListener('click', () => {
+        // ✅ وقتی کاربر دکمه را زد، به سرویس‌ورکر منتظر دستور می‌دهیم که فعال شود
+        if (newWorker) newWorker.postMessage({ action: 'skipWaiting' });
+        setTimeout(() => window.location.reload(), 500);
+    });
+}
 
 // ✅ پایان کامل فایل app.js
