@@ -34,8 +34,8 @@ async function resetYearlyRecords() {
         // ۱. حذف سوابق ارزشیابی سال تحصیلی جاری
         const allRecords = await getAllData('records');
         const currentYearRecords = allRecords.filter(r => r.academicYear === currentYear);
-        for (const rec of currentYearRecords) {
-            await deleteData('records', rec.id);
+        if (currentYearRecords.length > 0) {
+            await deleteBulkData('records', currentYearRecords.map(r => r.id));
         }
         
         // ✅ اصلاح باگ: حذف آزمون‌های سال جاری و نتایج آن‌ها
@@ -46,34 +46,33 @@ async function resetYearlyRecords() {
         if (currentYearExamIds.length > 0) {
             const allResults = await getAllData('examResults');
             const currentYearResults = allResults.filter(r => currentYearExamIds.includes(r.examId));
-            for (const result of currentYearResults) {
-                await deleteData('examResults', result.id);
+            if (currentYearResults.length > 0) {
+                await deleteBulkData('examResults', currentYearResults.map(r => r.id));
             }
-            for (const exam of currentYearExams) {
-                await deleteData('exams', exam.id);
-            }
+            await deleteBulkData('exams', currentYearExamIds);
         }
         
         // ۲. حذف جلسات سال تحصیلی جاری
         const allSessions = await getAllData('sessions');
         const currentYearSessions = allSessions.filter(s => s.academicYear === currentYear);
-        for (const sess of currentYearSessions) {
-            await deleteData('sessions', sess.id);
-        }
-        
-        // ۳. حذف حضور و غیاب‌های مربوط به این جلسات
-        const allAttendance = await getAllData('attendance');
         const currentYearSessionIds = currentYearSessions.map(s => s.id);
-        const currentYearAttendance = allAttendance.filter(a => currentYearSessionIds.includes(a.sessionId));
-        for (const att of currentYearAttendance) {
-            await deleteData('attendance', att.id);
+        
+        if (currentYearSessionIds.length > 0) {
+            await deleteBulkData('sessions', currentYearSessionIds);
+            
+            // ۳. حذف حضور و غیاب‌های مربوط به این جلسات
+            const allAttendance = await getAllData('attendance');
+            const currentYearAttendance = allAttendance.filter(a => currentYearSessionIds.includes(a.sessionId));
+            if (currentYearAttendance.length > 0) {
+                await deleteBulkData('attendance', currentYearAttendance.map(a => a.id));
+            }
         }
         
         // ۴. حذف تشویق‌های سال تحصیلی جاری
         const allBadges = await getAllData('badgesSettings');
         const currentYearBadges = allBadges.filter(b => b.academicYear === currentYear);
-        for (const badge of currentYearBadges) {
-            await deleteData('badgesSettings', badge.id);
+        if (currentYearBadges.length > 0) {
+            await deleteBulkData('badgesSettings', currentYearBadges.map(b => b.id));
         }
         
         // پاک کردن وضعیت تقویم‌ها تا به حالت اولیه برگردند
@@ -122,7 +121,7 @@ async function resetGroupAssignments() {
 
     try {
         const allStudents = await getAllData('students');
-        let unassignedCount = 0;
+        let unassignedStudents = [];
         
         for (const student of allStudents) {
             const belongsToCurrentYear = 
@@ -130,14 +129,14 @@ async function resetGroupAssignments() {
             
             if (student.groupId && belongsToCurrentYear) {
                 student.groupId = null;
-                await saveData('students', student);
-                unassignedCount++;
+                unassignedStudents.push(student);
             }
         }
         
-        if (unassignedCount > 0) {
+        if (unassignedStudents.length > 0) {
+            await saveBulkData('students', unassignedStudents);
             showToast(
-                `${toPersianNumber(unassignedCount)} دانش‌آموز از گروه‌ها خارج شدند. (سال تحصیلی ${toPersianNumber(currentYear)})`, 
+                `${toPersianNumber(unassignedStudents.length)} دانش‌آموز از گروه‌ها خارج شدند. (سال تحصیلی ${toPersianNumber(currentYear)})`, 
                 'success'
             );
         } else {
@@ -150,7 +149,6 @@ async function resetGroupAssignments() {
         showToast('خطا در پاک کردن گروه‌بندی!', 'error');
     }
 }
-
 async function resetSpecificRecords() {
     const selectedValue = document.getElementById('resetRecordSelect').value;
     if (!selectedValue) {
@@ -178,8 +176,10 @@ async function resetSpecificRecords() {
             recordsToDelete = allRecords.filter(r => r.itemName === target && r.academicYear === currentYear);
         }
         
-        for (const rec of recordsToDelete) {
-            await deleteData('records', rec.id);
+        // ✅ بهینه‌سازی: حذف دسته‌ای با استفاده از تابع جدید در db.js
+        if (recordsToDelete.length > 0) {
+            const idsToDelete = recordsToDelete.map(r => r.id);
+            await deleteBulkData('records', idsToDelete);
         }
         
         showToast('سوابق مورد نظر با موفقیت حذف شدند.', 'success');
@@ -190,7 +190,6 @@ async function resetSpecificRecords() {
     }
 }
 
-// ⏸️ پایان بخش ۱ از ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۲ (آخرین بخش) را بفرستم.
 async function resetFactoryAll() {
     const confirm1 = confirm('⚠️ خطر! آیا می‌خواهید کل اطلاعات برنامه (کلاس، دانش‌آموزان، دروس، سوابق و...) را برای همیشه پاک کنید؟');
     if (!confirm1) return;
@@ -200,6 +199,7 @@ async function resetFactoryAll() {
 
     try {
         const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
+        // ✅ clearStore خودش از یک تراکنش واحد استفاده می‌کند و بهینه است
         for (const store of stores) {
             await clearStore(store);
         }
