@@ -202,8 +202,6 @@ function renderScheduleEdit() {
         container.innerHTML += html;
     });
 }
-
-// ⏸️ پایان بخش ۱ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۲ (شامل اصلاح #۲۴) را بفرستم.
 // ==========================================
 // ✅ ذخیره برنامه هفتگی (چندساله — id یکتا)
 // ==========================================
@@ -230,9 +228,12 @@ async function saveAllWeeklySchedules() {
             s => !s.academicYear || s.academicYear === currentYear
         );
         
-        for (const sched of schedulesToDelete) {
-            const idToDelete = sched.id || `${sched.academicYear || currentYear}_${sched.day}`;
-            await deleteData('weeklySchedule', idToDelete);
+        // ✅ بهینه‌سازی (اولویت ۲): حذف یک‌جای برنامه‌های قبلی با deleteBulkData
+        if (schedulesToDelete.length > 0) {
+            const idsToDelete = schedulesToDelete.map(sched => 
+                sched.id || `${sched.academicYear || currentYear}_${sched.day}`
+            );
+            await deleteBulkData('weeklySchedule', idsToDelete);
         }
         
         // ✅ ذخیره با id یکتا: "سال_روز"
@@ -277,9 +278,12 @@ async function resetAllWeeklySchedules() {
             s => !s.academicYear || s.academicYear === currentYear
         );
         
-        for (const sched of schedulesToDelete) {
-            const idToDelete = sched.id || `${sched.academicYear || currentYear}_${sched.day}`;
-            await deleteData('weeklySchedule', idToDelete);
+        // ✅ بهینه‌سازی (اولویت ۲): حذف یک‌جای تمام برنامه‌ها
+        if (schedulesToDelete.length > 0) {
+            const idsToDelete = schedulesToDelete.map(sched => 
+                sched.id || `${sched.academicYear || currentYear}_${sched.day}`
+            );
+            await deleteBulkData('weeklySchedule', idsToDelete);
         }
         
         showToast('کل برنامه هفتگی این سال تحصیلی حذف شد.', 'success');
@@ -411,14 +415,11 @@ function exportScheduleHTML() {
     }
 }
 
-// ✅ اصلاح #۲۴: استفاده از window.printHtmlContent (هماهنگی با بقیه اپ)
 function printSchedule() {
     try {
         const { matrix, maxPeriodToShow } = getScheduleDataMatrix();
         if (matrix.length === 0) { showToast('برنامه‌ای برای چاپ وجود ندارد.', 'error'); return; }
         
-        // ✅ ساخت محتوای HTML (فقط body، نه کل صفحه)
-        // window.printHtmlContent آن را در یک قالب کامل با استایل‌های استاندارد قرار می‌دهد
         let html = `
         <div class="rc-header">
             <h2>📚 برنامه هفتگی کلاس</h2>
@@ -445,11 +446,9 @@ function printSchedule() {
         
         html += `</tbody></table>`;
 
-        // ✅ استفاده از تابع چاپ مشترک (با fallback به window.print)
         if (typeof window.printHtmlContent === 'function') {
             window.printHtmlContent(html);
         } else {
-            // fallback: اگر printHtmlContent موجود نبود (نباید رخ دهد چون در app.js تعریف شده)
             console.warn('⚠️ printHtmlContent موجود نیست — استفاده از window.print مستقیم');
             const printWindow = window.open('', '_blank');
             printWindow.document.write(`<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>چاپ برنامه هفتگی</title></head><body>${html}</body></html>`);
@@ -463,7 +462,6 @@ function printSchedule() {
     }
 }
 
-// ⏸️ پایان بخش ۲ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 // ==========================================
 // 2. توابع تقویم شمسی
 // ==========================================
@@ -712,7 +710,6 @@ function selectCalendarDay(day, dateStr) {
 
     renderCalendarGrid();
 }
-
 // ==========================================
 // 3. ثبت جلسه
 // ==========================================
@@ -758,7 +755,6 @@ async function createNewSession() {
     loadAllData();
 }
 
-// ⏸️ پایان بخش ۳ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۴ (شامل مودال تقویم #۱۳ + deleteSession) را بفرستم.
 // ==========================================
 // 4. ✅ مودال جدید: ویرایش تاریخ جلسه با تقویم شمسی (باگ #۱۳)
 // ==========================================
@@ -1016,8 +1012,10 @@ async function deleteSession(sessionId) {
         
         const allAtt = await getAllData('attendance');
         const sessionAtt = allAtt.filter(a => a.sessionId === sessionId);
-        for (const att of sessionAtt) {
-            await deleteData('attendance', att.id);
+        
+        // ✅ بهینه‌سازی (اولویت ۲): حذف دسته‌ای حضور و غیاب‌ها با deleteBulkData
+        if (sessionAtt.length > 0) {
+            await deleteBulkData('attendance', sessionAtt.map(a => a.id));
         }
 
         await deleteData('sessions', sessionId);
@@ -1046,8 +1044,6 @@ async function deleteSession(sessionId) {
         showToast('خطا در حذف جلسه!', 'error');
     }
 }
-
-// ⏸️ پایان بخش ۴ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۵ (شامل rollback #۱۲) را بفرستم.
 // ==========================================
 // 5. مشاهده جزئیات جلسه و ثبت حضور و غیاب زنگ‌ها
 // ==========================================
@@ -1181,8 +1177,8 @@ async function saveAllSessionAttendance() {
 
     try {
         // مرحله ۱: حذف قبلی‌ها
-        for (const rec of existing) {
-            await deleteData('attendance', rec.id);
+        if (existing.length > 0) {
+            await deleteBulkData('attendance', existing.map(r => r.id));
         }
         
         // مرحله ۲: ذخیره جدیدها
@@ -1236,7 +1232,6 @@ function closeSessionDetails() {
     if (typeof clearFormDirty === 'function') clearFormDirty();
 }
 
-// ⏸️ پایان بخش ۵ از ۶ — منتظر پیام «ادامه» شما هستم تا بخش ۶ (آخرین بخش — گزارش‌ها) را بفرستم.
 // ==========================================
 // 6. گزارش حضور و غیاب
 // ==========================================
