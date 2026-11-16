@@ -16,8 +16,6 @@
     const CHECK_INTERVAL = 24 * 60 * 60 * 1000;  
     const SNOOZE_DURATION = 6 * 60 * 60 * 1000;  
     
-    // ✅ اصلاح امنیتی: اگر APP_VERSION تعریف نشده باشد، null برمی‌گردانیم (نه v1.0.0)
-    // این کار از حلقه reload بی‌پایان جلوگیری می‌کند وقتی version.js لود نشود
     function getCurrentVersion() {
         if (typeof window === 'undefined' || !window.APP_VERSION) {
             console.error('❌ APP_VERSION تعریف نشده — بررسی به‌روزرسانی لغو شد.');
@@ -31,7 +29,7 @@
             const mode = localStorage.getItem(STORAGE_KEYS.updateMode);
             if (mode && ['auto', 'notify', 'manual'].includes(mode)) return mode;
         } catch (e) {}
-        return 'notify';
+        return 'notify'; // پیش‌فرض: اعلان
     }
     
     function setUpdateMode(mode) {
@@ -80,9 +78,32 @@
     }
     
     let isChecking = false;
-    // ✅ نگهداری نسخه سرور برای استفاده در snooze/skip (بدون fetch تکراری)
     let currentServerVersion = null;
+    let waitingWorker = null; // ✅ نگهداری سرویس‌ورکر در حالت انتظار
+
+    // ✅ تابع اصلی مدیریت سرویس‌ورکر جدید (بر اساس ۳ حالت)
+    function handleNewSW(worker) {
+        waitingWorker = worker; // ذخیره برای استفاده در حالت دستی
+        const mode = getUpdateMode();
+
+        if (mode === 'auto' && !window.isFormDirty) {
+            console.log('🚀 حالت خودکار: در حال نصب به‌روزرسانی...');
+            performUpdate();
+        } else if (mode === 'notify') {
+            console.log('🔔 حالت اعلان: نمایش پیام به کاربر.');
+            if (currentServerVersion) {
+                showUpdateNotification({ version: currentServerVersion });
+            } else {
+                showUpdateToast({ version: 'جدید' });
+            }
+        } else {
+            console.log('✋ حالت دستی: سرویس‌ورکر در انتظار می‌ماند تا کاربر دکمه بررسی را بزند.');
+        }
+    }
     
+    // ✅ در دسترس قرار دادن برای app.js
+    window.handleNewSW = handleNewSW;
+
     async function checkForUpdates(silent = false, isManual = false) {
         if (isChecking) return;
         const mode = getUpdateMode();
@@ -92,10 +113,9 @@
             return;
         }
         
-        // ✅ اصلاح امنیتی: بررسی نسخه فعلی قبل از هر کاری
         const currentVersion = getCurrentVersion();
         if (!currentVersion) {
-            if (isManual) showToastSafe('خطا: نسخه برنامه قابل خواندن نیست. لطفاً صفحه را رفرش کنید.', 'error');
+            if (isManual) showToastSafe('خطا: نسخه برنامه قابل خواندن نیست.', 'error');
             return;
         }
         
@@ -131,9 +151,20 @@
                     if (isManual) showToastSafe('نسخه جدید موجود است، ولی قبلاً «بعداً» زده‌اید.', 'info');
                     return;
                 }
-                showUpdateNotification(serverInfo);
+                
+                // اگر در حالت manual و کاربر دکمه را زده، و SW در انتظار است، آن را فعال کن
+                if (isManual && waitingWorker) {
+                    performUpdate();
+                } else if (!waitingWorker) {
+                    showUpdateNotification(serverInfo);
+                }
             } else {
-                if (isManual) showToastSafe('برنامه به‌روز است! (نسخه ' + currentVersion + ')', 'success');
+                // حتی اگر version.json جدید نبود، ممکن است SW جدید در پس‌زمینه نصب شده باشد
+                if (isManual && waitingWorker) {
+                    performUpdate();
+                } else if (isManual) {
+                    showToastSafe('برنامه به‌روز است! (نسخه ' + currentVersion + ')', 'success');
+                }
             }
         } catch (error) {
             if (!silent && isManual) showToastSafe('خطا در بررسی به‌روزرسانی.', 'error');
@@ -145,8 +176,7 @@
             }
         }
     }
-    
-    function showUpdateNotification(versionInfo) {
+        function showUpdateNotification(versionInfo) {
         if (getUpdateMode() === 'auto' && !window.isFormDirty) {
             performUpdate();
         } else {
@@ -161,7 +191,7 @@
         const toast = document.createElement('div');
         toast.id = 'update-toast';
         toast.style.cssText = `position: fixed; top: 10px; left: 50%; transform: translateX(-50%); background: #16a34a; color: white; padding: 12px 20px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); z-index: 4000; display: flex; gap: 12px; direction: rtl;`;
-        toast.innerHTML = `<span>🚀 نسخه جدید ${versionInfo.version} آماده است</span><button id="update-toast-btn" style="background: white; color: #16a34a; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">آپدیت</button>`;
+        toast.innerHTML = `<span>🚀 نسخه جدید ${versionInfo.version || ''} آماده است</span><button id="update-toast-btn" style="background: white; color: #16a34a; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">آپدیت</button>`;
         document.body.appendChild(toast);
         document.getElementById('update-toast-btn').addEventListener('click', () => { toast.remove(); performUpdate(); });
     }
@@ -170,13 +200,11 @@
         if (typeof window.showToast === 'function') window.showToast(message, type);
     }
 
-    // ⏸️ پایان بخش ۱ از ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
-        // ==========================================
+    // ==========================================
     // 📌 اجرای آپدیت (نیروی اتمی)
     // ==========================================
     async function performUpdate() {
         try {
-            // ✅ اصلاح امنیتی: چک مجدد فرم قبل از شروع
             if (window.isFormDirty) {
                 showToastSafe('⚠️ ابتدا فرم را ذخیره کنید. به‌روزرسانی به تعویق افتاد.', 'error');
                 return;
@@ -187,18 +215,23 @@
             localStorage.removeItem(STORAGE_KEYS.dismissedVersion);
             localStorage.removeItem(STORAGE_KEYS.lastSnooze);
             
+            // ✅ پاک کردن تمام کش‌ها
             if ('caches' in window) {
                 const cacheNames = await caches.keys();
                 await Promise.all(cacheNames.map(name => caches.delete(name)));
             }
             
+            // ✅ اگر سرویس‌ورکر در حالت انتظار داریم، به آن اجازه فعال شدن بدهیم
+            if (waitingWorker) {
+                waitingWorker.postMessage({ action: 'skipWaiting' });
+            }
+            
+            // ✅ حذف سرویس‌ورکرهای قدیمی
             if ('serviceWorker' in navigator) {
                 const registrations = await navigator.serviceWorker.getRegistrations();
                 await Promise.all(registrations.map(reg => reg.unregister()));
             }
             
-            // ✅ اصلاح امنیتی: چک مجدد فرم دقیقاً قبل از reload
-            // اگر کاربر در ۱ ثانیه شروع به تایپ کرد، داده‌اش از دست نمی‌رود
             setTimeout(() => {
                 if (window.isFormDirty) {
                     showToastSafe('⚠️ به‌روزرسانی به تعویق افتاد. ابتدا فرم را ذخیره کنید.', 'error');
@@ -213,7 +246,6 @@
         }
     }
     
-    // ✅ بدون fetch تکراری — از currentServerVersion استفاده می‌شود
     function snoozeUpdateNotification() {
         try {
             localStorage.setItem(STORAGE_KEYS.lastSnooze, Date.now().toString());
@@ -235,7 +267,6 @@
         } catch (e) {}
     }
     
-    // ✅ بدون fetch تکراری — از currentServerVersion استفاده می‌شود
     function skipThisVersion() {
         try {
             if (currentServerVersion) {
@@ -284,8 +315,6 @@
         updateUpdateModeUI();
     }
     
-    // ✅ اصلاح: پاکسازی پارامتر ?update= از URL بعد از reload (باگ #۳۰)
-    // جلوگیری از آلودگی URL در bookmark یا share
     function cleanUpdateQueryFromUrl() {
         try {
             const url = new URL(window.location.href);
@@ -302,10 +331,7 @@
     
     function initUpdater() {
         if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initUpdater); return; }
-        
-        // ✅ اصلاح: پاکسازی ?update= از URL (باگ #۳۰)
         cleanUpdateQueryFromUrl();
-        
         setupUpdateModeListeners();
         updateLastCheckDisplay();
         startAutoCheck();
