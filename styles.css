@@ -943,9 +943,6 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .event-highlight-day { background: var(--primary); color: white; padding: 8px 15px; border-radius: var(--radius-sm); font-weight: 700; white-space: nowrap; font-size: 0.95rem; }
 .event-highlight-text { font-size: 0.95rem; color: var(--text-main); line-height: 1.6; word-break: break-word; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-.calendar-title { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-.calendar-title select { padding: 8px 15px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-size: 1rem; font-weight: 700; font-family: inherit; outline: none; cursor: pointer; transition: all 0.2s; }
-.calendar-title select:hover { border-color: var(--primary); }
 .full-calendar-day.has-event-soft { background: rgba(74, 144, 226, 0.06); border: 1px solid rgba(74, 144, 226, 0.15); }
 [data-theme="dark"] .full-calendar-day.has-event-soft { background: rgba(90, 161, 245, 0.15); border: 1px solid rgba(90, 161, 245, 0.25); }
 
