@@ -20,7 +20,13 @@ const scoreJalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "
 let _lastStudentsHash = '';
 
 function getStudentsHash() {
-    return window.allStudentsData.map(s => s.id).join(',') + '|' + window.allGroupsData.map(g => g.id).join(',');
+    const studentsPart = window.allStudentsData.map(s => 
+        `${s.id}:${s.firstName || ''}:${s.lastName || ''}:${s.groupId || ''}`
+    ).join(',');
+    const groupsPart = window.allGroupsData.map(g => 
+        `${g.id}:${g.name || ''}:${g.symbol || ''}`
+    ).join(',');
+    return studentsPart + '|' + groupsPart;
 }
 
 function saveScoreCalendarState(type) {
@@ -950,33 +956,94 @@ function loadAssessmentRecords() {
     }
 }
 
-// ✅ اصلاح باگ: حذف badgeهای یتیم هنگام حذف رکورد قرآن
+// ✅ اصلاح باگ: بازمحاسبه هوشمند badgeهای قرآن هنگام حذف رکورد (به جای حذف کامل)
 async function deleteRecord(id) {
     if (!confirm('آیا از حذف این رکورد مطمئن هستید؟')) return;
     try { 
-        // ✅ خواندن رکورد قبل از حذف (برای بررسی نوع آن)
+        // ✅ خواندن رکورد قبل از حذف (برای بررسی نوع آن و دانش‌آموزان مرتبط)
         const record = await getDataById('records', id);
+        if (!record) {
+            showToast('رکورد یافت نشد.', 'error');
+            return;
+        }
         
-        // ✅ اگر رکورد «پویش قرآن» بود، badgeهای مرتبط هم پاک شوند
-        if (record && record.itemName === "پویش حفظ جزء سی قرآن کریم" && record.students && record.students.length > 0) {
-            const allBadges = await getAllData('badgesSettings');
-            const relatedBadges = allBadges.filter(badge => 
-                badge.id && 
-                badge.id.startsWith('quranReward_') && 
-                record.students.includes(badge.studentId) &&
-                badge.academicYear === (record.academicYear || window.activeAcademicYear)
+        const recordYear = record.academicYear || window.activeAcademicYear;
+        const isQuranRecord = record.itemName === "پویش حفظ جزء سی قرآن کریم";
+        const affectedStudentIds = (isQuranRecord && record.students && Array.isArray(record.students))
+            ? [...record.students]
+            : [];
+        
+        // ۱. حذف خود رکورد
+        await deleteData('records', id);
+        
+        // ۲. اگر رکورد «پویش قرآن» بود، badgeهای مرتبط را بازمحاسبه کن
+        if (isQuranRecord && affectedStudentIds.length > 0) {
+            // تمام رکوردهای قرآن باقی‌مانده در این سال تحصیلی
+            const allRecords = await getAllData('records');
+            const remainingQuranRecords = allRecords.filter(rec => 
+                rec.itemName === "پویش حفظ جزء سی قرآن کریم" && 
+                rec.academicYear === recordYear
             );
             
-            for (const badge of relatedBadges) {
-                await deleteData('badgesSettings', badge.id);
+            // تمام badgeهای قرآن این سال تحصیلی (برای حذف نسخه‌های قدیمی)
+            const allBadges = await getAllData('badgesSettings');
+            const quranBadges = allBadges.filter(b => 
+                b.id && 
+                b.id.startsWith('quranReward_') && 
+                b.academicYear === recordYear
+            );
+            
+            let recalculatedCount = 0;
+            let removedCount = 0;
+            
+            for (const studentId of affectedStudentIds) {
+                // ✅ بازمحاسبه آمار این دانش‌آموز از روی رکوردهای باقی‌مانده
+                const surahSet = new Set();
+                let totalAyats = 0;
+                let latestDate = '';
+                let hasAnyRemainingRecord = false;
+                
+                remainingQuranRecords.forEach(rec => {
+                    if (rec.students && rec.students.includes(studentId)) {
+                        hasAnyRemainingRecord = true;
+                        
+                        const surahMatch = rec.title ? rec.title.match(/حفظ سوره (.+?) -/) : null;
+                        if (surahMatch) surahSet.add(surahMatch[1]);
+                        
+                        const ayatMatch = rec.title ? rec.title.match(/- (\d+) آیه/) : null;
+                        if (ayatMatch) totalAyats += parseInt(ayatMatch[1]);
+                        
+                        if (rec.date && rec.date > latestDate) latestDate = rec.date;
+                    }
+                });
+                
+                // ✅ حذف badgeهای قبلی این دانش‌آموز (در این سال تحصیلی)
+                const studentBadges = quranBadges.filter(b => b.studentId === studentId);
+                if (studentBadges.length > 0) {
+                    await deleteBulkData('badgesSettings', studentBadges.map(b => b.id));
+                    removedCount += studentBadges.length;
+                }
+                
+                // ✅ اگر دانش‌آموز هنوز رکورد قرآن دارد، badge جدید با آمار صحیح بساز
+                if (hasAnyRemainingRecord) {
+                    await saveData('badgesSettings', { 
+                        id: `quranReward_${studentId}_${generateUniqueId()}`, 
+                        studentId: studentId, 
+                        title: "تشویق شرکت در پویش حفظ جزء سی قرآن کریم", 
+                        totalSurahs: surahSet.size, 
+                        totalAyats: totalAyats, 
+                        date: latestDate || record.date,
+                        academicYear: recordYear
+                    });
+                    recalculatedCount++;
+                }
             }
             
-            if (relatedBadges.length > 0) {
-                console.log(`🧹 ${relatedBadges.length} badge قرآن مرتبط با رکورد حذف‌شده پاک شد.`);
+            if (recalculatedCount > 0 || removedCount > 0) {
+                console.log(`♻️ بازمحاسبه badge قرآن: ${recalculatedCount} بازسازی شد، ${removedCount} حذف شد.`);
             }
         }
         
-        await deleteData('records', id); 
         showToast('رکورد حذف شد.', 'success'); 
         loadAllData(); 
     }
