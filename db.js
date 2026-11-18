@@ -591,13 +591,46 @@ async function exportYearData(year) {
 }
 
 // ==========================================
+// ✅ تابع اعتبارسنجی ساختار فایل بکاپ ورودی
+// ==========================================
+function validateImportDataStructure(data) {
+    // ۱. بررسی نوع پایه داده
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+        throw new Error('فایل انتخاب‌شده معتبر نیست. لطفاً یک فایل بکاپ صحیح (JSON) انتخاب کنید.');
+    }
+
+    const validStores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
+    let totalRecords = 0;
+    let hasAtLeastOneStore = false;
+
+    for (const store of validStores) {
+        if (data[store] !== undefined) {
+            // ۲. بررسی آرایه بودن جداول
+            if (!Array.isArray(data[store])) {
+                throw new Error(`ساختار فایل بکاپ خراب است. جدول "${store}" باید لیستی از داده‌ها باشد.`);
+            }
+            hasAtLeastOneStore = true;
+            totalRecords += data[store].length;
+        }
+    }
+
+    // ۳. بررسی خالی نبودن کل فایل
+    if (!hasAtLeastOneStore) {
+        throw new Error('فایل بکاپ هیچ داده‌ای برای بازیابی ندارد یا ساختار آن کاملاً ناشناخته است.');
+    }
+
+    // ۴. محدودیت حجم (برای جلوگیری از فریز شدن مرورگر در فایل‌های مخرب یا بسیار حجیم)
+    if (totalRecords > 50000) {
+        throw new Error('حجم داده‌های فایل بکاپ بیش از حد مجاز است (بیش از ۵۰,۰۰۰ رکورد). لطفاً فایل معتبرتری انتخاب کنید.');
+    }
+}
+
+// ==========================================
 // بازیابی داده‌ها (با تراکنش اتمی — بدون ریسک از دست رفتن داده)
 // ==========================================
 async function importAllData(data) {
-    // ✅ مرحله ۱: اعتبارسنجی ساختار پایه فایل ورودی
-    if (!data || typeof data !== 'object') {
-        throw new Error('داده‌های نامعتبر: فایل معتبر نیست.');
-    }
+    // ✅ مرحله ۱: اعتبارسنجی جامع ساختار فایل ورودی (قبل از هرگونه تغییر در دیتابیس)
+    validateImportDataStructure(data);
     
     if (data._meta && data._meta.version) {
         if (data._meta.version > DB_VERSION) {
