@@ -7,6 +7,7 @@ window.allExamResultsData = [];
 
 let examQuestionCounter = 0;
 let currentGradingExamId = null;
+let gradingStatsTimer = null; // ✅ این خط را اینجا اضافه کنید (زیر خط ۹)
 
 let examCalendarState = {
     year: 1405,
@@ -709,17 +710,17 @@ async function openExamGradingModal(examId) {
                         ${groupBadge}
                     </div>
                     <div class="exam-grading-score-wrapper">
-                        <input type="number" 
-                               class="exam-grading-score-input ${currentScore !== '' ? 'has-value' : ''}" 
-                               data-student-id="${st.id}"
-                               min="0" 
-                               max="${exam.maxScore}" 
-                               step="0.25" 
-                               value="${currentScore}"
-                               placeholder="نمره"
-                               oninput="updateGradingStats()">
-                        <span class="exam-grading-score-max">از ${toPersianNumber(exam.maxScore)}</span>
-                    </div>
+    <input type="number" 
+           class="exam-grading-score-input ${currentScore !== '' ? 'has-value' : ''}" 
+           data-student-id="${st.id}"
+           min="0" 
+           max="${exam.maxScore}" 
+           step="0.25" 
+           value="${currentScore}"
+           placeholder="نمره"
+           oninput="scheduleGradingStatsUpdate()">
+    <span class="exam-grading-score-max">از ${toPersianNumber(exam.maxScore)}</span>
+</div>
                 </div>
             `;
         });
@@ -738,6 +739,14 @@ function closeExamGradingModal() {
 }
 
 // ⏸️ پایان بخش ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۴ را بفرستم.
+// ✅ بهینه‌سازی: تابع debounce برای جلوگیری از محاسبات مکرر هنگام تایپ
+function scheduleGradingStatsUpdate() {
+    if (gradingStatsTimer) clearTimeout(gradingStatsTimer);
+    gradingStatsTimer = setTimeout(() => {
+        updateGradingStats();
+    }, 150);
+}
+
 function updateGradingStats() {
     const inputs = document.querySelectorAll('.exam-grading-score-input');
     const scores = [];
@@ -776,15 +785,20 @@ function setAllExamScores(value) {
     if (!exam) return;
     
     const inputs = document.querySelectorAll('.exam-grading-score-input');
-    inputs.forEach(input => {
+        inputs.forEach(input => {
         if (value === 'clear') {
             input.value = '';
+            input.classList.remove('has-value');
         } else if (value === 'max') {
             input.value = exam.maxScore;
+            input.classList.add('has-value');
         } else {
             input.value = value;
+            input.classList.add('has-value');
         }
     });
+    // ✅ اینجا بدون debounce استفاده می‌کنیم تا نتیجه فوری باشد
+    if (gradingStatsTimer) clearTimeout(gradingStatsTimer);
     updateGradingStats();
 }
 
