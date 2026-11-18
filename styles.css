@@ -153,7 +153,9 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .settings-toggle { right: 15px; }
 
 .theme-toggle:active, .settings-toggle:active { transform: scale(0.9); }
-.theme-toggle:hover, .settings-toggle:hover { background: rgba(255, 255, 255, 0.30); }
+@media (hover: hover) and (pointer: fine) {
+    .theme-toggle:hover, .settings-toggle:hover { background: rgba(255, 255, 255, 0.30); }
+}
 
 .theme-toggle svg, .settings-toggle svg {
     width: 21px;
@@ -371,7 +373,8 @@ select.form-control {
 @keyframes ripple { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(60); opacity: 0; } }
 .btn:active { transform: scale(0.97); }
 .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3); }
-.btn-primary:hover { box-shadow: 0 6px 18px rgba(74, 144, 226, 0.45); }
+@media (hover: hover) and (pointer: fine) {
+    .btn-primary:hover { box-shadow: 0 6px 18px rgba(74, 144, 226, 0.45); }
 .btn-secondary { background: var(--input-bg); color: var(--text-main); }
 .btn-secondary:hover { opacity: 0.8; }
 .btn-danger { background: rgba(254, 226, 226, 0.8); color: #dc2626; }
@@ -504,8 +507,9 @@ select.form-control {
     justify-content: center;
 }
 .empty-state .empty-action:hover {
-    filter: brightness(1.05);
-    box-shadow: 0 6px 18px rgba(74, 144, 226, 0.4);
+        filter: brightness(1.05);
+        box-shadow: 0 6px 18px rgba(74, 144, 226, 0.4);
+    }
 }
 .empty-state .empty-action:active {
     transform: scale(0.97);
@@ -578,7 +582,9 @@ select.form-control {
     box-sizing: border-box;
     word-break: break-word;
 }
-.list-item:hover { box-shadow: var(--shadow-sm); }
+@media (hover: hover) and (pointer: fine) {
+    .list-item:hover { box-shadow: var(--shadow-sm); }
+}
 
 .group-label {
     background: var(--primary-light);
@@ -644,8 +650,10 @@ select.form-control {
    ========================================= */
 .student-checkbox-list { max-height: 300px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px; background: var(--input-bg); width: 100%; box-sizing: border-box; }
 .student-checkbox-item { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid var(--border-color); cursor: pointer; border-radius: 6px; transition: background 0.15s; flex-wrap: wrap; word-break: break-word; }
-.student-checkbox-item:hover { background: var(--primary-light); }
-[data-theme="dark"] .student-checkbox-item:hover { background: rgba(90, 161, 245, 0.15); }
+@media (hover: hover) and (pointer: fine) {
+    .student-checkbox-item:hover { background: var(--primary-light); }
+    [data-theme="dark"] .student-checkbox-item:hover { background: rgba(90, 161, 245, 0.15); }
+}
 .student-checkbox-item:last-child { border-bottom: none; }
 .student-checkbox-item input { accent-color: var(--primary); width: 18px; height: 18px; flex-shrink: 0; }
 .student-checkbox-item-content { display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 5px; }
@@ -795,7 +803,8 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .jalali-calendar-wrapper { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 15px; box-shadow: var(--shadow-sm); direction: rtl; margin-top: 10px; width: 100%; box-sizing: border-box; overflow-x: auto; }
 .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color); flex-wrap: wrap; gap: 5px; }
 .calendar-header button { background: var(--input-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 0.85rem; font-weight: 700; color: var(--text-main); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px; }
-.calendar-header button:hover { background: var(--primary-light); }
+@media (hover: hover) and (pointer: fine) {
+    .calendar-header button:hover { background: var(--primary-light); }
 .calendar-header button:active { transform: scale(0.95); }
 .calendar-title { display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; color: var(--primary); font-size: 1.1rem; flex-wrap: wrap; margin-bottom: 15px; }
 .calendar-title select { padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-size: 1rem; font-weight: 700; outline: none; cursor: pointer; max-width: 100%; }
@@ -809,6 +818,7 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .calendar-day { display: flex; justify-content: center; align-items: center; height: 40px; border-radius: var(--radius-sm); background: var(--input-bg); border: 1px solid transparent; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; user-select: none; position: relative; }
 .calendar-day:hover { background: var(--primary-light); }
 [data-theme="dark"] .calendar-day:hover { background: rgba(90, 161, 245, 0.15); }
+}
 .calendar-day.empty { background: transparent; cursor: default; border: none; pointer-events: none; }
 .calendar-day.friday, .calendar-day.holiday { color: #ef4444; }
 [data-theme="dark"] .calendar-day.friday, [data-theme="dark"] .calendar-day.holiday { color: #f87171; }
@@ -853,14 +863,18 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 #exam-questions-container { display: flex; flex-direction: column; gap: 15px; min-height: 100px; padding: 5px 0; }
 #exam-questions-container:empty::before { content: 'هنوز سوالی اضافه نشده است. روی دکمه زیر کلیک کنید.'; display: block; text-align: center; color: var(--text-muted); font-size: 0.9rem; padding: 25px 10px; background: var(--input-bg); border-radius: var(--radius-sm); border: 1px dashed var(--border-color); }
 .exam-question-item { background: var(--input-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 15px; position: relative; transition: all 0.2s ease; }
-.exam-question-item:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
+@media (hover: hover) and (pointer: fine) {
+    .exam-question-item:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
+}
 .exam-question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color); flex-wrap: wrap; gap: 10px; }
 .exam-question-number { font-weight: 700; color: var(--primary); background: var(--primary-light); padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; }
 [data-theme="dark"] .exam-question-number { background: rgba(90, 161, 245, 0.20); }
 .exam-question-delete-btn { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-.exam-question-delete-btn:hover { background: rgba(239, 68, 68, 0.2); transform: scale(1.1); }
+@media (hover: hover) and (pointer: fine) {
+    .exam-question-delete-btn:hover { background: rgba(239, 68, 68, 0.2); transform: scale(1.1); }
+    [data-theme="dark"] .exam-question-delete-btn:hover { background: rgba(239, 68, 68, 0.30); }
+}
 [data-theme="dark"] .exam-question-delete-btn { background: rgba(239, 68, 68, 0.20); color: #f87171; }
-[data-theme="dark"] .exam-question-delete-btn:hover { background: rgba(239, 68, 68, 0.30); }
 .exam-question-body { display: flex; flex-direction: column; gap: 12px; }
 .exam-question-field { display: flex; flex-direction: column; gap: 5px; }
 .exam-question-field label { font-size: 0.85rem; color: var(--text-muted); font-weight: 700; }
@@ -872,10 +886,14 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .exam-option-row input[type="radio"] { accent-color: var(--primary); width: 18px; height: 18px; flex-shrink: 0; }
 .exam-option-row input[type="text"] { flex: 1 1 150px; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--input-bg); color: var(--text-main); font-size: 0.9rem; font-family: inherit; min-width: 0; }
 .exam-option-row .exam-option-delete { background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 1.1rem; padding: 4px; transition: transform 0.2s; }
-.exam-option-row .exam-option-delete:hover { transform: scale(1.2); }
+@media (hover: hover) and (pointer: fine) {
+    .exam-option-row .exam-option-delete:hover { transform: scale(1.2); }
+}
 .exam-add-option-btn { background: transparent; border: 1px dashed var(--primary); color: var(--primary); padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-family: inherit; transition: all 0.2s; margin-top: 5px; }
-.exam-add-option-btn:hover { background: var(--primary-light); }
-[data-theme="dark"] .exam-add-option-btn:hover { background: rgba(90, 161, 245, 0.15); }
+@media (hover: hover) and (pointer: fine) {
+    .exam-add-option-btn:hover { background: var(--primary-light); }
+    [data-theme="dark"] .exam-add-option-btn:hover { background: rgba(90, 161, 245, 0.15); }
+}
 .exam-question-score-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .exam-question-score-row label { font-size: 0.85rem; color: var(--text-muted); font-weight: 700; white-space: nowrap; }
 .exam-question-score-row input { flex: 1 1 100px; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--card-bg); color: var(--text-main); font-family: inherit; font-size: 0.9rem; min-width: 0; }
@@ -884,7 +902,9 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
    Exam List (بهبود حالت شب)
    ========================================= */
 .exam-list-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 15px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; transition: all 0.2s; }
-.exam-list-item:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
+@media (hover: hover) and (pointer: fine) {
+    .exam-list-item:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
+}
 .exam-list-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px; }
 .exam-list-title { font-weight: 700; color: var(--primary); font-size: 1.05rem; word-break: break-word; }
 .exam-list-details { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); flex-wrap: wrap; gap: 5px; }
@@ -892,8 +912,10 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 
 #exam-grading-modal .modal-content { max-width: 700px; width: 95%; }
 .exam-grading-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); margin-bottom: 8px; transition: all 0.2s; flex-wrap: wrap; /* ✅ اصلاح UI: اجازه شکستن خط */ }
-.exam-grading-row:hover { border-color: var(--primary); background: var(--input-bg); }
-[data-theme="dark"] .exam-grading-row:hover { background: rgba(90, 161, 245, 0.08); }
+@media (hover: hover) and (pointer: fine) {
+    .exam-grading-row:hover { border-color: var(--primary); background: var(--input-bg); }
+    [data-theme="dark"] .exam-grading-row:hover { background: rgba(90, 161, 245, 0.08); }
+}
 .exam-grading-student-info { display: flex; align-items: center; gap: 8px; flex: 1 1 150px; min-width: 0; flex-wrap: wrap; }
 .exam-grading-student-rank { font-weight: 700; color: var(--text-muted); min-width: 25px; text-align: center; font-size: 0.9rem; }
 .exam-grading-student-name { font-weight: 700; font-size: 0.95rem; white-space: normal; word-break: break-word; }
@@ -923,8 +945,10 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
    ========================================= */
 .full-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
 .full-calendar-day { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 45px; border-radius: var(--radius-sm); background: var(--input-bg); border: 1px solid transparent; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; user-select: none; position: relative; color: var(--text-main); }
-.full-calendar-day:hover { background: var(--primary-light); transform: scale(1.05); }
-[data-theme="dark"] .full-calendar-day:hover { background: rgba(90, 161, 245, 0.15); }
+@media (hover: hover) and (pointer: fine) {
+    .full-calendar-day:hover { background: var(--primary-light); transform: scale(1.05); }
+    [data-theme="dark"] .full-calendar-day:hover { background: rgba(90, 161, 245, 0.15); }
+}
 .full-calendar-day.empty { background: transparent; cursor: default; border: none; pointer-events: none; }
 .full-calendar-day.friday { color: #ef4444; }
 [data-theme="dark"] .full-calendar-day.friday { color: #f87171; }
@@ -934,8 +958,10 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .event-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; flex-wrap: wrap; }
 .event-item:hover { border-color: var(--primary); background: var(--input-bg); }
 [data-theme="dark"] .event-item:hover { background: rgba(90, 161, 245, 0.08); }
-.event-item.selected { border-color: var(--primary); background: var(--primary-light); box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2); }
-[data-theme="dark"] .event-item.selected { background: rgba(90, 161, 245, 0.20); }
+@media (hover: hover) and (pointer: fine) {
+    .event-item:hover { border-color: var(--primary); background: var(--input-bg); }
+    [data-theme="dark"] .event-item:hover { background: rgba(90, 161, 245, 0.08); }
+}
 .event-day-badge { background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
 .event-text { flex: 1 1 150px; font-size: 0.9rem; line-height: 1.5; color: var(--text-main); word-break: break-word; }
 .event-highlight { background: linear-gradient(135deg, var(--primary-light) 0%, rgba(74, 144, 226, 0.1) 100%); border: 2px solid var(--primary); border-radius: var(--radius-md); padding: 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 12px; animation: fadeIn 0.3s ease; flex-wrap: wrap; }
