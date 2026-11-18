@@ -290,17 +290,30 @@ let currentUpdateIsForced = false;   // ✅ پرچم آپدیت اجباری
             }
             
             // ✅ اگر سرویس‌ورکر در حالت انتظار داریم، به آن اجازه فعال شدن بدهیم
-            if (waitingWorker) {
-                waitingWorker.postMessage({ action: 'skipWaiting' });
-            }
-            
-            // ✅ حذف سرویس‌ورکرهای قدیمی
-            if ('serviceWorker' in navigator) {
-                const registrations = await navigator.serviceWorker.getRegistrations();
-                await Promise.all(registrations.map(reg => reg.unregister()));
-            }
-            
-            setTimeout(() => {
+if (waitingWorker) {
+    waitingWorker.postMessage({ action: 'skipWaiting' });
+}
+
+// ✅ حذف سرویس‌ورکرهای قدیمی
+if ('serviceWorker' in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map(reg => reg.unregister()));
+}
+
+// ✅ همگام‌سازی نسخه: ذخیره نسخه جدید در localStorage قبل از رفرش
+// این کار مانع از آن می‌شود که اگر version.js دستی آپدیت نشده باشد،
+// برنامه دچار باگ نسخه (نسخه قدیمی) شود.
+try {
+    if (currentServerVersionInfo) {
+        localStorage.setItem('kosha-synced-version', currentServerVersionInfo.version || currentServerVersion || '');
+        localStorage.setItem('kosha-synced-date', currentServerVersionInfo.releaseDate || '');
+        localStorage.setItem('kosha-synced-notes', currentServerVersionInfo.releaseNotes || '');
+    }
+} catch (e) {
+    console.warn('⚠️ خطا در ذخیره نسخه همگام‌شده:', e);
+}
+
+setTimeout(() => {
                 if (window.isFormDirty) {
                     showToastSafe('⚠️ به‌روزرسانی به تعویق افتاد. ابتدا فرم را ذخیره کنید.', 'error');
                     return;
