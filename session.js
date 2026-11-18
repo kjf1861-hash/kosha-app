@@ -1154,10 +1154,11 @@ function setAllPeriodAttendance(periodNum, status) {
     }
 }
 
-// ✅ اصلاح باگ: rollback در صورت خطا (جلوگیری از از دست رفتن داده)
+// ✅ اصلاح بحرانی: استفاده از تراکنش اتمی IndexedDB (بدون ریسک از دست رفتن داده)
 async function saveAllSessionAttendance() {
     if (!currentSessionId) return;
 
+    // ۱. آماده‌سازی رکوردهای جدید
     const recordsToSave = [];
     for (const periodNum in currentSessionAttendanceState) {
         for (const studentId in currentSessionAttendanceState[periodNum]) {
@@ -1171,52 +1172,51 @@ async function saveAllSessionAttendance() {
         }
     }
 
-    // ✅ اصلاح بحرانی: backup از رکوردهای موجود قبل از حذف
-    const existing = window.allAttendanceData.filter(a => a.sessionId === currentSessionId);
-    const backup = existing.map(rec => ({ ...rec }));
-
     try {
-        // مرحله ۱: حذف قبلی‌ها
-        if (existing.length > 0) {
-            await deleteBulkData('attendance', existing.map(r => r.id));
-        }
-        
-        // مرحله ۲: ذخیره جدیدها
-        await saveBulkData('attendance', recordsToSave);
-        
-        // ✅ موفقیت: به‌روزرسانی حافظه
-        window.allAttendanceData = window.allAttendanceData.filter(a => a.sessionId !== currentSessionId);
-        const savedAtt = await getAllData('attendance');
-        window.allAttendanceData = savedAtt.filter(a => window.allSessionsData.some(s => s.id === a.sessionId));
-        
+        // ۲. اجرای تراکنش اتمی (همه یا هیچ)
+        await new Promise((resolve, reject) => {
+            const transaction = db.transaction(['attendance'], 'readwrite');
+            const store = transaction.objectStore('attendance');
+            const index = store.index('sessionId');
+
+            // مرحله الف: حذف تمام رکوردهای قبلی این جلسه با استفاده از Index
+            const deleteRequest = index.openKeyCursor(IDBKeyRange.only(currentSessionId));
+            
+            deleteRequest.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    store.delete(cursor.primaryKey);
+                    cursor.continue();
+                } else {
+                    // مرحله ب: وقتی حذف تمام شد، رکوردهای جدید را اضافه کن
+                    for (const record of recordsToSave) {
+                        store.add(record);
+                    }
+                }
+            };
+
+            deleteRequest.onerror = () => reject(deleteRequest.error);
+
+            transaction.oncomplete = () => resolve();
+            transaction.onerror = (e) => reject(e.target.error);
+            transaction.onabort = (e) => reject(e.target.error || new Error('تراکنش لغو شد'));
+        });
+
+        // ۳. موفقیت: به‌روزرسانی حافظه و کش‌ها
         showToast('حضور و غیاب کل جلسه ذخیره شد!', 'success');
         
-        // پاک کردن وضعیت فرم‌های ذخیره‌نشده
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
-        // ✅ اصلاح بحرانی (فاز ۱): بازسازی کش امتیازات/حضور قبل از رندر گزارش‌ها
-        if (typeof buildScoreCaches === 'function') buildScoreCaches();
+        // ✅ بارگذاری مجدد کل داده‌ها (همگام‌سازی کامل حافظه با دیتابیس + بازسازی کش)
+        await loadAllData();
         
+        // ✅ به‌روزرسانی گزارش‌ها و داشبورد
         generateAttendanceReports();
         if (typeof renderDashboardData === 'function') renderDashboardData();
         
     } catch (e) {
-        console.error('❌ خطا در ذخیره حضور و غیاب، بازگردانی داده‌های قبلی:', e);
-        
-        // ✅ اصلاح بحرانی: rollback — بازگردانی داده‌های قبلی
-        try {
-            if (backup.length > 0) {
-                await saveBulkData('attendance', backup);
-                console.log('✅ rollback موفق: ' + backup.length + ' رکورد قبلی بازگردانی شد.');
-            }
-            
-            // بازسازی حافظه با داده‌های بازگردانی‌شده
-            const restoredAtt = await getAllData('attendance');
-            window.allAttendanceData = restoredAtt.filter(a => window.allSessionsData.some(s => s.id === a.sessionId));
-        } catch (rollbackError) {
-            console.error('❌ خطا در rollback:', rollbackError);
-        }
-        
+        // ۴. خطا: IndexedDB به‌طور خودکار همه تغییرات را لغو کرده و داده‌های قبلی حفظ شده‌اند
+        console.error('❌ خطا در ذخیره حضور و غیاب، تراکنش لغو شد:', e);
         showToast('خطا در ذخیره! تغییرات لغو شد و داده‌های قبلی حفظ شدند.', 'error');
     }
 }
