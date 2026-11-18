@@ -267,13 +267,20 @@ async function saveEditedStudent(e) {
 }
 
 async function deleteStudent(id) {
-    if (!confirm('آیا از حذف این دانش‌آموز مطمئن هستید؟ تمام سوابق ارزشیابی، نمرات آزمون و تشویق‌های این دانش‌آموز نیز حذف خواهد شد!')) return;
+    if (!confirm('آیا از حذف این دانش‌آموز مطمئن هستید؟ تمام سوابق ارزشیابی، نمرات آزمون و تشویق‌های این دانش‌آموز (فقط برای سال تحصیلی جاری) نیز حذف خواهد شد!')) return;
+    
+    const currentYear = window.activeAcademicYear;
     
     try {
         // ✅ بهینه‌سازی (اولویت ۲): استفاده از deleteBulkData و saveBulkData
-        // ۱. حذف/به‌روزرسانی رکوردهای ارزشیابی
+        
+        // ۱. حذف/به‌روزرسانی رکوردهای ارزشیابی — فقط سال جاری
         const allRecords = await getAllData('records');
-        const studentRecords = allRecords.filter(r => r.students && r.students.includes(id));
+        const studentRecords = allRecords.filter(r => 
+            r.students && 
+            r.students.includes(id) && 
+            r.academicYear === currentYear
+        );
         
         const recordsToUpdate = [];
         const recordsToDeleteIds = [];
@@ -290,24 +297,40 @@ async function deleteStudent(id) {
         if (recordsToUpdate.length > 0) await saveBulkData('records', recordsToUpdate);
         if (recordsToDeleteIds.length > 0) await deleteBulkData('records', recordsToDeleteIds);
 
-        // ۲. حذف نتایج آزمون دانش‌آموز
+        // ۲. حذف نتایج آزمون دانش‌آموز — فقط سال جاری
         const allResults = await getAllData('examResults');
-        const studentResults = allResults.filter(r => r.studentId === id);
+        const studentResults = allResults.filter(r => 
+            r.studentId === id && 
+            r.academicYear === currentYear
+        );
         if (studentResults.length > 0) {
             await deleteBulkData('examResults', studentResults.map(r => r.id));
         }
 
-        // ۳. حذف تشویق‌های قرآن دانش‌آموز
+        // ۳. حذف تشویق‌های قرآن دانش‌آموز — فقط سال جاری
         const allBadges = await getAllData('badgesSettings');
-        const studentBadges = allBadges.filter(b => b.studentId === id);
+        const studentBadges = allBadges.filter(b => 
+            b.studentId === id && 
+            b.academicYear === currentYear
+        );
         if (studentBadges.length > 0) {
             await deleteBulkData('badgesSettings', studentBadges.map(b => b.id));
         }
 
-        // ۴. حذف خود دانش‌آموز
+        // ۴. ✅ جدید: حذف حضور و غیاب‌های دانش‌آموز — فقط سال جاری
+        const allAttendance = await getAllData('attendance');
+        const studentAttendance = allAttendance.filter(a => 
+            a.studentId === id && 
+            a.academicYear === currentYear
+        );
+        if (studentAttendance.length > 0) {
+            await deleteBulkData('attendance', studentAttendance.map(a => a.id));
+        }
+
+        // ۵. حذف خود دانش‌آموز (id آن در کل دیتابیس یکتاست — نیازی به فیلتر ندارد)
         await deleteData('students', id);
         
-        showToast('دانش‌آموز و تمام سوابق مرتبط حذف شد.', 'success');
+        showToast('دانش‌آموز و تمام سوابق مرتبط (در سال تحصیلی جاری) حذف شد.', 'success');
         loadAllData();
     } catch (e) {
         console.error(e);
