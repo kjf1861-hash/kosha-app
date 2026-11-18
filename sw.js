@@ -2,7 +2,8 @@
 // فایل sw.js — نسخه نهایی (ترکیب هوشمند Network-First و Cache-First)
 // ==========================================
 
-importScripts('./version.js');
+// ✅ اصلاح: استفاده از ?t= برای دور زدن کش مرورگر و دریافت حتمی آخرین نسخه
+importScripts('./version.js?t=' + Date.now());
 
 // ✅ اصلاح امنیتی: نام کش از نسخه اپ خوانده می‌شود تا با هر bump، کش جدید ساخته شود
 const APP_VERSION_SAFE = (self.APP_VERSION || 'v0.0.0').replace(/\./g, '-');
@@ -31,7 +32,8 @@ const ASSETS_TO_CACHE = RAW_ASSETS_TO_CACHE.map(url => {
 });
 
 // ✅ لیست فایل‌هایی که باید همیشه از اینترنت (سرور) خونده بشن تا ظاهر برنامه آپدیت بشه
-const NETWORK_FIRST_PATHS = ['/index.html', '/updater.js', '/version.json'];
+// ✅ اصلاح: اضافه شدن /version.js برای اطمینان از همگام‌سازی نسخه
+const NETWORK_FIRST_PATHS = ['/index.html', '/updater.js', '/version.json', '/version.js'];
 
 // ✅ اصلاح: محاسبه مسیر ریشه برنامه به‌صورت داینامیک (پشتیبانی از ریشه و زیرمسیر)
 // برای ریشه: '/'
