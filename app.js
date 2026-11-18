@@ -75,7 +75,9 @@ function sanitizeInput(value, maxLength) {
     if (trimmed.length > maxLength) {
         throw new Error('متن نمی‌تواند بیش از ' + maxLength + ' کاراکتر باشد');
     }
-    return trimmed.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    // ✅ اصلاح امنیتی: حذف کاراکترهای کنترلی ASCII و یونیکد (جلوگیری از Direction Spoofing)
+    // توجه: نیم‌فاصله فارسی (U+200C و U+200D) عمداً حفظ می‌شود.
+    return trimmed.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\u200B\u200E\u200F\u202A-\u202E\u2060\uFEFF\u2028\u2029]/g, '');
 }
 
 window.escapeHtml = escapeHtml;
@@ -1134,12 +1136,31 @@ async function loadAllData() {
 
 function renderUI() {
     try {
-        if (typeof renderDashboardData === 'function') renderDashboardData();
-        if (typeof renderStudentsList === 'function') renderStudentsList();
-        if (typeof renderLessonData === 'function') renderLessonData();
-        if (typeof renderGroupData === 'function') renderGroupData();
-        if (typeof renderSessionData === 'function') renderSessionData();
-        if (typeof renderScoreData === 'function') renderScoreData();
+        // ✅ بهینه‌سازی: فقط تب فعال را رندر کن (برای افزایش سرعت)
+        const activePage = document.querySelector('.page-section.active');
+        const activePageId = activePage ? activePage.id : 'page-class'; // پیش‌فرض: تب کلاس
+
+        if (activePageId === 'page-class' && typeof renderDashboardData === 'function') {
+            renderDashboardData();
+        }
+        if (activePageId === 'page-students' && typeof renderStudentsList === 'function') {
+            renderStudentsList();
+        }
+        if (activePageId === 'page-lesson' && typeof renderLessonData === 'function') {
+            renderLessonData();
+        }
+        if (activePageId === 'page-group' && typeof renderGroupData === 'function') {
+            renderGroupData();
+        }
+        if (activePageId === 'page-session' && typeof renderSessionData === 'function') {
+            renderSessionData();
+        }
+        if (activePageId === 'page-score' && typeof renderScoreData === 'function') {
+            renderScoreData();
+        }
+        if (activePageId === 'page-exams' && typeof renderExamsData === 'function') {
+            renderExamsData();
+        }
     } catch (e) {
         console.error('خطا در رندر UI:', e);
     }
