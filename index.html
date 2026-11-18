@@ -1055,28 +1055,31 @@
     </div>
 
     <div id="update-available-modal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 450px; text-align: center;">
-            <div class="modal-header" style="color: #16a34a;">🚀 نسخه جدید در دسترس!</div>
-            <div style="padding: 20px 0;">
-                <div style="font-size: 4rem; margin-bottom: 15px; animation: bounce 1s infinite;">🚀</div>
-                <h3 style="color: var(--primary); margin-bottom: 15px;" id="update-version-text">نسخه جدید آماده است</h3>
-                <div style="background: var(--primary-light); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 20px;">
-                    <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted); line-height: 1.8;" id="update-notes-text">
-                        تغییرات جدید آماده نصب هستند.
-                    </p>
-                </div>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;" id="update-date-text">
-                    تاریخ انتشار: --
+    <div class="modal-content" style="max-width: 450px; text-align: center;">
+        <div class="modal-header" style="color: #16a34a;">🚀 نسخه جدید در دسترس!</div>
+        <div style="padding: 20px 0;">
+            <div style="font-size: 4rem; margin-bottom: 15px; animation: bounce 1s infinite;">🚀</div>
+            <h3 style="color: var(--primary); margin-bottom: 15px;" id="update-version-text">نسخه جدید آماده است</h3>
+            <div id="update-force-warning" style="display: none; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 2px solid #ef4444; border-radius: var(--radius-sm); padding: 12px; margin-bottom: 15px; font-size: 0.85rem; color: #b91c1c; font-weight: 700; line-height: 1.7;">
+                ⚠️ این به‌روزرسانی اجباری است و امکان رد کردن ندارد.
+            </div>
+            <div style="background: var(--primary-light); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+                <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted); line-height: 1.8;" id="update-notes-text">
+                    تغییرات جدید آماده نصب هستند.
                 </p>
             </div>
-            <div class="modal-footer" style="flex-direction: column; gap: 10px;">
-                <button type="button" class="btn btn-primary" style="width: 100%; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);" onclick="applyUpdateNow()">⬇️ همین حالا به‌روزرسانی کن</button>
-                <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="dismissUpdateNotification()">⏰ بعداً یادآوری کن</button>
-                <button type="button" class="btn btn-secondary" style="width: 100%; color: #dc2626; border: 1px solid #fca5a5; background: #fef2f2;" onclick="skipThisVersion(); closeUpdateModal();">❌ این نسخه را رد کن (تا نسخه بعدی مزاحم نشو)</button>
-                <button type="button" class="btn btn-secondary" style="width: 100%; font-size: 0.85rem; background: transparent; color: var(--text-muted);" onclick="openSettingsModal(); closeUpdateModal();">⚙️ تنظیمات به‌روزرسانی</button>
-            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;" id="update-date-text">
+                تاریخ انتشار: --
+            </p>
+        </div>
+        <div class="modal-footer" style="flex-direction: column; gap: 10px;">
+            <button type="button" class="btn btn-primary" style="width: 100%; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);" onclick="applyUpdateNow()">⬇️ همین حالا به‌روزرسانی کن</button>
+            <button type="button" class="btn btn-secondary" id="update-snooze-btn" style="width: 100%;" onclick="dismissUpdateNotification()">⏰ بعداً یادآوری کن</button>
+            <button type="button" class="btn btn-secondary" id="update-skip-btn" style="width: 100%; color: #dc2626; border: 1px solid #fca5a5; background: #fef2f2;" onclick="skipThisVersion(); closeUpdateModal();">❌ این نسخه را رد کن (تا نسخه بعدی مزاحم نشو)</button>
+            <button type="button" class="btn btn-secondary" id="update-settings-btn" style="width: 100%; font-size: 0.85rem; background: transparent; color: var(--text-muted);" onclick="openSettingsModal(); closeUpdateModal();">⚙️ تنظیمات به‌روزرسانی</button>
         </div>
     </div>
+</div>
 
     <!-- ==========================================
          ✅ بخش حیاتی: لود داینامیک اسکریپت‌ها با نسخه
@@ -1222,55 +1225,97 @@
             }
         }
 
-        function openUpdateModal(versionInfo) {
-            const modal = document.getElementById('update-available-modal');
-            if (!modal) return;
-            
-            const versionText = document.getElementById('update-version-text');
-            if (versionText && versionInfo) versionText.textContent = 'نسخه ' + versionInfo.version + ' آماده است';
-            
-            const notesText = document.getElementById('update-notes-text');
-            if (notesText && versionInfo) notesText.textContent = versionInfo.releaseNotes || 'تغییرات جدید آماده نصب هستند.';
-            
-            const dateText = document.getElementById('update-date-text');
-            if (dateText && versionInfo) dateText.textContent = 'تاریخ انتشار: ' + (versionInfo.releaseDate || '--');
-            
-            modal.classList.add('show');
-        }
-        
-        function closeUpdateModal() {
-            const modal = document.getElementById('update-available-modal');
-            if (modal) modal.classList.remove('show');
-        }
-        
-        function applyUpdateNow() {
-            if (typeof performUpdate === 'function') performUpdate();
-        }
-        
-        function dismissUpdateNotification() {
-            if (typeof snoozeUpdateNotification === 'function') snoozeUpdateNotification();
-            closeUpdateModal();
-        }
+        function openUpdateModal(versionInfo, force) {
+    const modal = document.getElementById('update-available-modal');
+    if (!modal) return;
+    
+    const isForced = force === true || (versionInfo && versionInfo.forceUpdate === true);
+    
+    const versionText = document.getElementById('update-version-text');
+    if (versionText && versionInfo) {
+        versionText.textContent = isForced
+            ? '⚠️ به‌روزرسانی اجباری — نسخه ' + versionInfo.version
+            : 'نسخه ' + versionInfo.version + ' آماده است';
+    }
+    
+    const notesText = document.getElementById('update-notes-text');
+    if (notesText && versionInfo) notesText.textContent = versionInfo.releaseNotes || 'تغییرات جدید آماده نصب هستند.';
+    
+    const dateText = document.getElementById('update-date-text');
+    if (dateText && versionInfo) dateText.textContent = 'تاریخ انتشار: ' + (versionInfo.releaseDate || '--');
+    
+    // ✅ نمایش/مخفی کردن دکمه‌ها بر اساس اجباری بودن
+    const snoozeBtn = document.getElementById('update-snooze-btn');
+    const skipBtn = document.getElementById('update-skip-btn');
+    const settingsBtn = document.getElementById('update-settings-btn');
+    const forceWarning = document.getElementById('update-force-warning');
+    
+    if (isForced) {
+        if (snoozeBtn) snoozeBtn.style.display = 'none';
+        if (skipBtn) skipBtn.style.display = 'none';
+        if (settingsBtn) settingsBtn.style.display = 'none';
+        if (forceWarning) forceWarning.style.display = 'block';
+    } else {
+        if (snoozeBtn) snoozeBtn.style.display = '';
+        if (skipBtn) skipBtn.style.display = '';
+        if (settingsBtn) settingsBtn.style.display = '';
+        if (forceWarning) forceWarning.style.display = 'none';
+    }
+    
+    modal.classList.add('show');
+}
+
+function closeUpdateModal() {
+    const modal = document.getElementById('update-available-modal');
+    if (modal) modal.classList.remove('show');
+}
+
+function applyUpdateNow() {
+    // ✅ performUpdate خودش currentUpdateIsForced را چک می‌کند
+    if (typeof performUpdate === 'function') performUpdate();
+}
+
+function dismissUpdateNotification() {
+    // ✅ آپدیت اجباری قابل رد کردن نیست (دکمه مخفی است، اما دفاعی)
+    if (typeof window.getCurrentUpdateIsForced === 'function' && window.getCurrentUpdateIsForced()) {
+        return;
+    }
+    if (typeof snoozeUpdateNotification === 'function') snoozeUpdateNotification();
+    closeUpdateModal();
+}
 
         window.addEventListener('load', async () => {
-            try {
-                if (typeof initApp === 'function') await initApp();
-            } catch (error) {
-                console.error("Init Error:", error);
-            }
-        });
+    // ✅ ایجاد یک تایمر ۱۲۰۰ میلی‌ثانیه‌ای برای حداقل زمان نمایش اسپلش
+    const minSplashTime = new Promise(resolve => setTimeout(resolve, 1200));
 
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                const splash = document.getElementById('splash-screen');
-                const app = document.getElementById('app-container');
-                const nav = document.querySelector('.bottom-nav');
-                if(splash) splash.classList.add('splash-hidden');
-                if(app) app.style.display = 'block';
-                if(nav) nav.style.display = 'flex';
-                setTimeout(() => { if(splash) splash.remove(); }, 800);
-            }, 1200);
-        });
+    // ✅ اجرای initApp به صورت مستقل (اگر خطا بدهد، برنامه کرش نمی‌کند)
+    const initPromise = (async () => {
+        try {
+            if (typeof initApp === 'function') await initApp();
+        } catch (error) {
+            console.error("Init Error:", error);
+        }
+    })();
+
+    // ✅ انتظار برای هر دو: هم لود شدن داده‌ها، هم تمام شدن تایمر ۱۲۰۰ms
+    await Promise.all([minSplashTime, initPromise]);
+
+    // حالا هر دو تمام شده‌اند: اسپلش را مخفی کن و اپ را نشان بده
+    const splash = document.getElementById('splash-screen');
+    const app = document.getElementById('app-container');
+    const nav = document.querySelector('.bottom-nav');
+    
+    if (splash) splash.classList.add('splash-hidden');
+    if (app) app.style.display = 'block';
+    if (nav) nav.style.display = 'flex';
+    
+    // حذف کامل اسپلش از DOM پس از اتمام انیمیشن محو شدن (۸۰۰ms)
+    if (splash) {
+        setTimeout(() => { 
+            if (splash.parentElement) splash.remove(); 
+        }, 800);
+    }
+});
 
         function switchPage(pageId, navElement) {
             if (window.isFormDirty) {
