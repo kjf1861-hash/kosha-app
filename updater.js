@@ -78,28 +78,66 @@
     }
     
     let isChecking = false;
-    let currentServerVersion = null;
-    let waitingWorker = null; // ✅ نگهداری سرویس‌ورکر در حالت انتظار
+let currentServerVersion = null;
+let currentServerVersionInfo = null; // ✅ نگهداری کامل اطلاعات نسخه سرور (شامل forceUpdate)
+let waitingWorker = null;
+let currentUpdateIsForced = false;   // ✅ پرچم آپدیت اجباری
 
     // ✅ تابع اصلی مدیریت سرویس‌ورکر جدید (بر اساس ۳ حالت)
-    function handleNewSW(worker) {
-        waitingWorker = worker; // ذخیره برای استفاده در حالت دستی
-        const mode = getUpdateMode();
-
-        if (mode === 'auto' && !window.isFormDirty) {
-            console.log('🚀 حالت خودکار: در حال نصب به‌روزرسانی...');
-            performUpdate();
-        } else if (mode === 'notify') {
-            console.log('🔔 حالت اعلان: نمایش پیام به کاربر.');
-            if (currentServerVersion) {
-                showUpdateNotification({ version: currentServerVersion });
+    async function handleNewSW(worker) {
+    waitingWorker = worker;
+    
+    // ✅ جدید: خواندن version.json برای بررسی forceUpdate
+    let forceUpdate = false;
+    try {
+        const resp = await fetch('./version.json?t=' + Date.now(), { cache: 'no-store' });
+        if (resp.ok) {
+            const info = await resp.json();
+            currentServerVersionInfo = info;
+            if (info.version) currentServerVersion = info.version;
+            forceUpdate = info.forceUpdate === true;
+        }
+    } catch (e) {
+        console.warn('⚠️ خطا در خواندن version.json در handleNewSW:', e);
+    }
+    
+    currentUpdateIsForced = forceUpdate;
+    const mode = getUpdateMode();
+    
+    // ✅ آپدیت اجباری بر همه حالت‌ها اولویت دارد
+    if (forceUpdate) {
+        console.log('⚠️ به‌روزرسانی اجباری: نمایش مودال بدون امکان رد');
+        if (currentServerVersionInfo) {
+            showUpdateNotification(currentServerVersionInfo);
+        } else {
+            // اطلاعات نسخه موجود نیست، ولی forceUpdate=true است
+            currentUpdateIsForced = true;
+            if (typeof window.openUpdateModal === 'function') {
+                window.openUpdateModal({ version: 'جدید', forceUpdate: true }, true);
             } else {
                 showUpdateToast({ version: 'جدید' });
             }
-        } else {
-            console.log('✋ حالت دستی: سرویس‌ورکر در انتظار می‌ماند تا کاربر دکمه بررسی را بزند.');
         }
+        return;
     }
+    
+    // رفتار عادی حالت‌ها
+    if (mode === 'auto' && !window.isFormDirty) {
+        console.log('🚀 حالت خودکار: در حال نصب به‌روزرسانی...');
+        performUpdate();
+    } else if (mode === 'notify') {
+        console.log('🔔 حالت اعلان: نمایش پیام به کاربر.');
+        if (currentServerVersionInfo) {
+            showUpdateNotification(currentServerVersionInfo);
+        } else if (currentServerVersion) {
+            showUpdateNotification({ version: currentServerVersion });
+        } else {
+            showUpdateToast({ version: 'جدید' });
+        }
+    } else {
+        console.log('✋ حالت دستی: سرویس‌ورکر در انتظار می‌ماند تا کاربر دکمه بررسی را بزند.');
+    }
+}
     
     // ✅ در دسترس قرار دادن برای app.js
     window.handleNewSW = handleNewSW;
@@ -140,25 +178,32 @@
             const comparison = compareVersions(serverVersion, currentVersion);
             
             if (comparison > 0) {
-                const skippedVersion = localStorage.getItem(STORAGE_KEYS.skippedVersion);
-                if (skippedVersion === serverVersion) {
-                    if (isManual) showToastSafe('شما این نسخه را قبلاً رد کرده‌اید.', 'info');
-                    return;
-                }
-                const dismissedVersion = localStorage.getItem(STORAGE_KEYS.dismissedVersion);
-                const lastSnooze = parseInt(localStorage.getItem(STORAGE_KEYS.lastSnooze) || '0');
-                if (dismissedVersion === serverVersion && (Date.now() - lastSnooze < SNOOZE_DURATION)) {
-                    if (isManual) showToastSafe('نسخه جدید موجود است، ولی قبلاً «بعداً» زده‌اید.', 'info');
-                    return;
-                }
-                
-                // اگر در حالت manual و کاربر دکمه را زده، و SW در انتظار است، آن را فعال کن
-                if (isManual && waitingWorker) {
-                    performUpdate();
-                } else if (!waitingWorker) {
-                    showUpdateNotification(serverInfo);
-                }
-            } else {
+    const isForced = serverInfo.forceUpdate === true;
+    currentUpdateIsForced = isForced;
+    currentServerVersionInfo = serverInfo;
+    
+    // ✅ آپدیت اجباری: چک‌های skip و snooze را نادیده بگیر
+    if (!isForced) {
+        const skippedVersion = localStorage.getItem(STORAGE_KEYS.skippedVersion);
+        if (skippedVersion === serverVersion) {
+            if (isManual) showToastSafe('شما این نسخه را قبلاً رد کرده‌اید.', 'info');
+            return;
+        }
+        const dismissedVersion = localStorage.getItem(STORAGE_KEYS.dismissedVersion);
+        const lastSnooze = parseInt(localStorage.getItem(STORAGE_KEYS.lastSnooze) || '0');
+        if (dismissedVersion === serverVersion && (Date.now() - lastSnooze < SNOOZE_DURATION)) {
+            if (isManual) showToastSafe('نسخه جدید موجود است، ولی قبلاً «بعداً» زده‌اید.', 'info');
+            return;
+        }
+    }
+    
+    // اگر در حالت manual و کاربر دکمه را زده، و SW در انتظار است، آن را فعال کن
+    if (isManual && waitingWorker) {
+        performUpdate();
+    } else if (!waitingWorker) {
+        showUpdateNotification(serverInfo);
+    }
+} else {
                 // حتی اگر version.json جدید نبود، ممکن است SW جدید در پس‌زمینه نصب شده باشد
                 if (isManual && waitingWorker) {
                     performUpdate();
@@ -177,13 +222,27 @@
         }
     }
         function showUpdateNotification(versionInfo) {
-        if (getUpdateMode() === 'auto' && !window.isFormDirty) {
-            performUpdate();
+    const isForced = (versionInfo && versionInfo.forceUpdate === true) || currentUpdateIsForced;
+    currentUpdateIsForced = isForced;
+    
+    // ✅ آپدیت اجباری: مودال اجباری، بدون توجه به حالت
+    if (isForced) {
+        if (typeof window.openUpdateModal === 'function') {
+            window.openUpdateModal(versionInfo, true);
         } else {
-            if (typeof window.openUpdateModal === 'function') window.openUpdateModal(versionInfo);
-            else showUpdateToast(versionInfo);
+            showUpdateToast(versionInfo);
         }
+        return;
     }
+    
+    // رفتار عادی
+    if (getUpdateMode() === 'auto' && !window.isFormDirty) {
+        performUpdate();
+    } else {
+        if (typeof window.openUpdateModal === 'function') window.openUpdateModal(versionInfo, false);
+        else showUpdateToast(versionInfo);
+    }
+}
     
     function showUpdateToast(versionInfo) {
         const existing = document.getElementById('update-toast');
@@ -204,13 +263,22 @@
     // 📌 اجرای آپدیت (نیروی اتمی)
     // ==========================================
     async function performUpdate() {
-        try {
-            if (window.isFormDirty) {
+    try {
+        const isForced = currentUpdateIsForced;
+        
+        // ✅ آپدیت اجباری: اگر فرم dirty است، تأیید بگیر (نه مسدود کردن)
+        if (window.isFormDirty) {
+            if (isForced) {
+                if (!confirm('⚠️ به‌روزرسانی اجباری:\n\nشما تغییرات ذخیره‌نشده دارید. با ادامه، این تغییرات از دست خواهند رفت.\n\nآیا مطمئنید؟')) {
+                    return; // کاربر انصراف داد — مودال باز می‌ماند
+                }
+            } else {
                 showToastSafe('⚠️ ابتدا فرم را ذخیره کنید. به‌روزرسانی به تعویق افتاد.', 'error');
                 return;
             }
-            
-            showToastSafe('در حال به‌روزرسانی کامل... لطفاً صبر کنید.', 'info');
+        }
+        
+        showToastSafe('در حال به‌روزرسانی کامل... لطفاً صبر کنید.', 'info');
             
             localStorage.removeItem(STORAGE_KEYS.dismissedVersion);
             localStorage.removeItem(STORAGE_KEYS.lastSnooze);
@@ -247,7 +315,8 @@
     }
     
     function snoozeUpdateNotification() {
-        try {
+    if (currentUpdateIsForced) return; // ✅ آپدیت اجباری قابل تعویق نیست
+    try {
             localStorage.setItem(STORAGE_KEYS.lastSnooze, Date.now().toString());
             
             if (currentServerVersion) {
@@ -268,7 +337,8 @@
     }
     
     function skipThisVersion() {
-        try {
+    if (currentUpdateIsForced) return; // ✅ آپدیت اجباری قابل رد کردن نیست
+    try {
             if (currentServerVersion) {
                 localStorage.setItem(STORAGE_KEYS.skippedVersion, currentServerVersion);
                 localStorage.removeItem(STORAGE_KEYS.dismissedVersion);
@@ -343,9 +413,11 @@
     window.updateUpdateModeUI = updateUpdateModeUI;
     window.updateLastCheckDisplay = updateLastCheckDisplay;
     window.checkForUpdatesManually = checkForUpdatesManually;
-    window.performUpdate = performUpdate;
-    window.snoozeUpdateNotification = snoozeUpdateNotification;
-    window.skipThisVersion = skipThisVersion;
+window.performUpdate = performUpdate;
+window.snoozeUpdateNotification = snoozeUpdateNotification;
+window.skipThisVersion = skipThisVersion;
+// ✅ getter برای دسترسی index.html به وضعیت اجباری
+window.getCurrentUpdateIsForced = function() { return currentUpdateIsForced; };
     
     initUpdater();
 })();
