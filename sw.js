@@ -33,6 +33,11 @@ const ASSETS_TO_CACHE = RAW_ASSETS_TO_CACHE.map(url => {
 // ✅ لیست فایل‌هایی که باید همیشه از اینترنت (سرور) خونده بشن تا ظاهر برنامه آپدیت بشه
 const NETWORK_FIRST_PATHS = ['/index.html', '/updater.js', '/version.json'];
 
+// ✅ اصلاح: محاسبه مسیر ریشه برنامه به‌صورت داینامیک (پشتیبانی از ریشه و زیرمسیر)
+// برای ریشه: '/'
+// برای زیرمسیر (مثل /kosha/): '/kosha/'
+const APP_ROOT_PATH = new URL('./', self.location.href).pathname;
+
 // ✅ اصلاح: timeout برای fetch (جلوگیری از انتظار بی‌پایان در صورت سرور کند)
 const FETCH_TIMEOUT_MS = 3000;
 
@@ -97,8 +102,10 @@ self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
     if (url.origin !== self.location.origin) return;
 
-    // تشخیص اینکه آیا این فایل باید از اینترنت خونده بشه یا از کش
-    const isNetworkFirst = NETWORK_FIRST_PATHS.some(path => url.pathname.endsWith(path)) || url.pathname === '/';
+    // ✅ اصلاح: تشخیص اینکه آیا این فایل باید از اینترنت خونده بشه یا از کش
+// (حالا با APP_ROOT_PATH، هم ریشه و هم زیرمسیر را پشتیبانی می‌کند)
+const isNetworkFirst = NETWORK_FIRST_PATHS.some(path => url.pathname.endsWith(path)) 
+    || url.pathname === APP_ROOT_PATH;
 
     if (isNetworkFirst) {
         // ✅ فایل‌های ظاهری: اول اینترنت (با timeout)، بعد کش (آفلاین)
