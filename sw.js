@@ -44,12 +44,18 @@ const APP_ROOT_PATH = new URL('./', self.location.href).pathname;
 const FETCH_TIMEOUT_MS = 3000;
 
 function fetchWithTimeout(request, timeoutMs) {
-    return Promise.race([
-        fetch(request),
-        new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Fetch timeout')), timeoutMs)
-        )
-    ]);
+    let timeoutId = null;
+    
+    const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('Fetch timeout')), timeoutMs);
+    });
+    
+    return Promise.race([fetch(request), timeoutPromise]).finally(() => {
+        // ✅ اصلاح: لغو تایمر در هر حالت (موفق، خطا، یا timeout)
+        if (timeoutId !== null) {
+            clearTimeout(timeoutId);
+        }
+    });
 }
 
 // ✅ اصلاح: تابع کمکی برای ذخیره در کش با await کامل
