@@ -392,16 +392,20 @@ async function migrateDataToV17() {
 // ==========================================
 function saveData(storeName, data) {
     return new Promise((resolve, reject) => {
-        if (storeName === 'classProfile' && data) {
-            if (!data.academicYear) {
-                data.academicYear = window.activeAcademicYear || '1405-1406';
+        // ✅ اصلاح: ساخت یک کپی سطحی (Shallow Copy) برای جلوگیری از تغییر شیء اصلی در حافظه (Mutation)
+        const dataToSave = { ...data };
+        
+        if (storeName === 'classProfile' && dataToSave) {
+            if (!dataToSave.academicYear) {
+                dataToSave.academicYear = window.activeAcademicYear || '1405-1406';
             }
-            data.id = data.academicYear;
+            dataToSave.id = dataToSave.academicYear;
         }
         
         const transaction = db.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
-        const request = store.put(data);
+        // ✅ از کپی ساخته‌شده برای ذخیره استفاده می‌کنیم
+        const request = store.put(dataToSave);
         
         request.onsuccess = () => {
             resolve(request.result);
