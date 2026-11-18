@@ -59,9 +59,8 @@ const data = {
         if (studentForm) studentForm.scrollIntoView({ behavior: 'smooth' });
         
     } catch (err) {
-        console.error(err);
-        showToast('خطا در ثبت دانش‌آموز.', 'error');
-    }
+    window.handleError(err, 'خطا در ثبت دانش‌آموز. لطفاً دوباره تلاش کنید.');
+}
 }
 
 function renderStudentsList() {
@@ -256,8 +255,7 @@ async function saveEditedStudent(e) {
         closeEditStudentModal();
         loadAllData();
     } catch (err) {
-    console.error('خطا در ویرایش دانش‌آموز:', err);
-    showToast('خطا در ذخیره تغییرات. لطفاً دوباره تلاش کنید.', 'error');
+    window.handleError(err, 'خطا در ذخیره تغییرات. لطفاً دوباره تلاش کنید.');
 }
 }
 
@@ -328,9 +326,8 @@ async function deleteStudent(id) {
         showToast('دانش‌آموز و تمام سوابق مرتبط (در سال تحصیلی جاری) حذف شد.', 'success');
         loadAllData();
     } catch (e) {
-        console.error(e);
-        showToast('خطا در حذف دانش‌آموز!', 'error');
-    }
+    window.handleError(e, 'خطا در حذف دانش‌آموز! لطفاً دوباره تلاش کنید.');
+}
 }
 
 async function resetAllStudents() {
