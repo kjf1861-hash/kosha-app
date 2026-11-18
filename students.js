@@ -256,14 +256,9 @@ async function saveEditedStudent(e) {
         closeEditStudentModal();
         loadAllData();
     } catch (err) {
-        console.error('خطا در ویرایش دانش‌آموز:', err);
-        
-        if (err && err.name === 'ConstraintError') {
-            showToast('خطای دیتابیس: این کد ملی قبلاً ثبت شده است.', 'error');
-        } else {
-            showToast('خطا در ذخیره تغییرات. لطفاً دوباره تلاش کنید.', 'error');
-        }
-    }
+    console.error('خطا در ویرایش دانش‌آموز:', err);
+    showToast('خطا در ذخیره تغییرات. لطفاً دوباره تلاش کنید.', 'error');
+}
 }
 
 async function deleteStudent(id) {
