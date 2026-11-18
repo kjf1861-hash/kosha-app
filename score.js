@@ -674,13 +674,26 @@ async function confirmAndSaveRecord() {
     const currentItem = recordItemEl ? recordItemEl.value : '';
     
     try {
-        await saveData('records', window.tempRecordData);
+        // ✅ ۱. ذخیره رکورد جدید و دریافت id از دیتابیس
+        const newId = await saveData('records', window.tempRecordData);
+        window.tempRecordData.id = newId; // اضافه کردن id به رکورد در حافظه
+        
+        // ✅ ۲. بهینه‌سازی: به‌روزرسانی افزایشی کش‌ها (بدون محاسبه مجدد کل)
+        if (typeof window.updateScoreCachesForNewRecord === 'function') {
+            window.updateScoreCachesForNewRecord(window.tempRecordData);
+        }
+        
+        // ✅ ۳. به‌روزرسانی داده‌های حافظه (allRecordsData)
+        if (window.allRecordsData) {
+            window.allRecordsData.push(window.tempRecordData);
+        }
         
         showToast('امتیاز با موفقیت ثبت شد!', 'success');
         closePreviewModal();
         
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
+        // ✅ ۴. منطق قبلی (بدون تغییر)
         if (isSaveAndNext) {
             document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = false);
             document.querySelectorAll('.group-select-all-checkbox').forEach(cb => cb.checked = false);
@@ -688,7 +701,10 @@ async function confirmAndSaveRecord() {
             const scoreInput = document.getElementById('dynamicLevelInput') || document.getElementById('dynamicCountInput') || document.getElementById('dynamicFreeInput');
             if (scoreInput) scoreInput.value = '';
             
-            await loadAllData(); 
+            // ✅ رندر مجدد هدفمند (به جای loadAllData سنگین)
+            if (typeof loadAssessmentRecords === 'function') loadAssessmentRecords();
+            if (typeof renderDashboardData === 'function') renderDashboardData();
+            if (typeof renderStudentsList === 'function') renderStudentsList();
             
             setTimeout(() => {
                 if (currentSubject && recordSubjectEl) recordSubjectEl.value = currentSubject;
@@ -708,14 +724,18 @@ async function confirmAndSaveRecord() {
             resetScoreCalendar('record');
             const dynSection = document.getElementById('dynamic-score-section');
             if (dynSection) dynSection.style.display = 'none'; 
-            await loadAllData();
+            
+            // ✅ رندر مجدد هدفمند (به جای loadAllData سنگین)
+            if (typeof loadAssessmentRecords === 'function') loadAssessmentRecords();
+            if (typeof renderDashboardData === 'function') renderDashboardData();
+            if (typeof renderStudentsList === 'function') renderStudentsList();
             
             if (recordForm) recordForm.scrollIntoView({ behavior: 'smooth' });
         }
     } catch (error) { 
-        showToast('خطا در ذخیره!', 'error'); 
-        closePreviewModal(); 
-    }
+    window.handleError(error, 'خطا در ذخیره امتیاز. لطفاً دوباره تلاش کنید.');
+    closePreviewModal(); 
+}
 }
 
 // ⏸️ پایان بخش ۳ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۴ را بفرستم.
@@ -743,7 +763,12 @@ async function saveQuranRecord() {
     }
 
     const dateStr = document.getElementById('quranDateHidden').value;
-    if (!dateStr) { showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return; }
+if (!dateStr) { showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return; }
+// ✅ اصلاح امنیتی: اعتبارسنجی ساختار تاریخ (جلوگیری از ورود تاریخ نامعتبر)
+if (!window.isValidJalaliDateString(dateStr)) {
+    showToast('تاریخ وارد شده معتبر نیست.', 'error');
+    return;
+}
 
     const recordData = {
         subjectId: null,
@@ -833,7 +858,12 @@ async function saveSpecialReward() {
     if (isNaN(score) || score <= 0) { showToast('امتیاز معتبر وارد کنید.', 'error'); return; }
 
     const dateStr = document.getElementById('specialDateHidden').value;
-    if (!dateStr) { showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return; }
+if (!dateStr) { showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return; }
+// ✅ اصلاح امنیتی: اعتبارسنجی ساختار تاریخ
+if (!window.isValidJalaliDateString(dateStr)) {
+    showToast('تاریخ وارد شده معتبر نیست.', 'error');
+    return;
+}
 
     const recordData = {
         subjectId: null,
@@ -867,7 +897,12 @@ async function saveHandwritingReward() {
     if (studentCheckboxes.length === 0) { showToast('دانش‌آموز انتخاب کنید.', 'error'); return; }
 
     const dateStr = document.getElementById('handwritingDateHidden').value;
-    if (!dateStr) { showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return; }
+if (!dateStr) { showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return; }
+// ✅ اصلاح امنیتی: اعتبارسنجی ساختار تاریخ
+if (!window.isValidJalaliDateString(dateStr)) {
+    showToast('تاریخ وارد شده معتبر نیست.', 'error');
+    return;
+}
 
     const recordData = {
         subjectId: null,
