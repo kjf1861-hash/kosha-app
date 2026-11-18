@@ -38,7 +38,7 @@ async function resetYearlyRecords() {
             await deleteBulkData('records', currentYearRecords.map(r => r.id));
         }
         
-        // ✅ اصلاح باگ: حذف آزمون‌های سال جاری و نتایج آن‌ها
+        // ✅ حذف آزمون‌های سال جاری و نتایج آن‌ها
         const allExams = await getAllData('exams');
         const currentYearExams = allExams.filter(e => e.academicYear === currentYear);
         const currentYearExamIds = currentYearExams.map(e => e.id);
@@ -81,6 +81,9 @@ async function resetYearlyRecords() {
         localStorage.removeItem('kosha-score-cal-quran');
         localStorage.removeItem('kosha-score-cal-special');
         localStorage.removeItem('kosha-score-cal-handwriting');
+        // ✅ جدید: پاک کردن کش تقویم جامع و تقویم آزمون
+        localStorage.removeItem('kosha-full-calendar');
+        localStorage.removeItem('kosha-exam-cal');
         
         showToast(
             `سوابق سال تحصیلی ${toPersianNumber(currentYear)} پاک شد. ` +
@@ -252,6 +255,9 @@ async function resetTechnicalCache() {
 
         // ۳. پاک کردن کلید نسخه (تا برنامه مجبور شود فایل‌ها را دوباره از سرور بگیرد)
         localStorage.removeItem('kosha-version');
+        // ✅ جدید: پاک کردن پرچم‌های مهاجرت (برای سازگاری آینده)
+        localStorage.removeItem('kosha-db-migrated-v16');
+        localStorage.removeItem('kosha-db-migrated-v17');
 
         showToast('کش پاک شد. در حال بارگذاری مجدد...', 'success');
         setTimeout(() => window.location.reload(), 1500);
