@@ -90,10 +90,12 @@
             font-size: 1.1rem;
             font-weight: bold;
         }
-        .year-option-item:hover {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
+        @media (hover: hover) and (pointer: fine) {
+    .year-option-item:hover {
+        border-color: var(--primary);
+        background: var(--primary-light);
+    }
+}
         .year-option-item.selected {
             border-color: var(--primary);
             background: var(--primary-light);
@@ -156,10 +158,12 @@
             transition: all 0.2s;
             font-size: 0.9rem;
         }
-        .update-mode-option:hover {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
+        @media (hover: hover) and (pointer: fine) {
+    .update-mode-option:hover {
+        border-color: var(--primary);
+        background: var(--primary-light);
+    }
+}
         .update-mode-option input[type="radio"] {
             accent-color: var(--primary);
             width: 18px;
@@ -1219,11 +1223,19 @@
         }
         
         async function selectAcademicYear(year) {
+    if (window.switchAcademicYear) {
+        // ✅ انتظار برای نتیجه تابع (true یا false)
+        const isSuccess = await window.switchAcademicYear(year);
+        
+        // ✅ بستن مودال فقط در صورت موفقیت‌آمیز بودن تغییر
+        if (isSuccess) {
             closeAcademicYearModal();
-            if (window.switchAcademicYear) {
-                await window.switchAcademicYear(year);
-            }
         }
+    } else {
+        // پشتیبان (Fallback) در صورتی که تابع لود نشده باشد
+        closeAcademicYearModal();
+    }
+}
 
         function openUpdateModal(versionInfo, force) {
     const modal = document.getElementById('update-available-modal');
