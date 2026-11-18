@@ -68,6 +68,16 @@ function escapeHtml(str) {
     });
 }
 
+// ==========================================
+// ✅ تابع تبدیل اعداد فارسی و عربی به انگلیسی
+// ==========================================
+function convertToEnglishDigits(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+    .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+    .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+}
+
 function sanitizeInput(value, maxLength) {
     maxLength = maxLength || 100;
     if (value === null || value === undefined) return '';
@@ -156,6 +166,25 @@ const quranSurahs = {
     "مطففین": 36, "انفطار": 19, "تکویر": 29, "عبس": 42, "نازعات": 46, "نبأ": 40
 };
 
+// ==========================================
+// ✅ تابع استاندارد مدیریت خطا (لاگ + نمایش به کاربر)
+// ==========================================
+window.handleError = function(error, userMessage) {
+    // ۱. لاگ کامل برای دیباگ (در کنسول مرورگر)
+    console.error('❌ خطا:', error);
+    
+    // ۲. نمایش پیام واضح به کاربر
+    const defaultMessage = 'خطایی رخ داد. لطفاً دوباره تلاش کنید.';
+    const finalMessage = userMessage || defaultMessage;
+    
+    if (typeof showToast === 'function') {
+        showToast(finalMessage, 'error');
+    }
+    
+    // ۳. در صورت نیاز به بررسی دقیق‌تر در آینده، می‌توان اینجا به سرویس لاگ ارسال کرد
+    // اما فعلاً فقط در کنسول نگه می‌داریم.
+};
+
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast-container');
     if (existingToast) existingToast.remove();
@@ -181,11 +210,11 @@ function showToast(message, type = 'success') {
 window.switchAcademicYear = async function(newYear) {
     if (newYear === window.activeAcademicYear) {
         showToast('شما در حال حاضر در این سال تحصیلی هستید.', 'info');
-        return;
+        return false; // ✅ برگرداندن false
     }
     
     if (!confirm(`آیا می‌خواهید به سال تحصیلی ${toPersianNumber(newYear)} سوئیچ کنید؟\n\nتمام داده‌های فعلی ذخیره شده و محیط کاری به سال جدید تغییر می‌کند.`)) {
-        return;
+        return false; // ✅ اگر کاربر انصراف داد، false برگردان
     }
     
     try {
@@ -193,15 +222,12 @@ window.switchAcademicYear = async function(newYear) {
         window.activeAcademicYear = newYear;
         showToast('در حال سوئیچ به سال جدید...', 'success');
         setTimeout(() => window.location.reload(), 1000);
-        
+        return true; // ✅ اگر موفق شد، true برگردان
     } catch (e) {
         console.error('خطا در سوئیچ سال تحصیلی:', e);
         showToast('خطا در سوئیچ سال تحصیلی.', 'error');
+        return false; // ✅ در صورت خطا، false برگردان
     }
-};
-
-window.getAvailableAcademicYears = function() {
-    return ['1405-1406', '1406-1407', '1407-1408', '1408-1409', '1409-1410', '1410-1411'];
 };
 
 // ==========================================
@@ -267,13 +293,31 @@ function checkBackupReminder() {
         const lastBackup = localStorage.getItem('kosha-last-backup');
         const statusEl = document.getElementById('backup-status');
         
+        // ✅ اصلاح: بررسی اینکه آیا Toast در این جلسه نمایش داده شده است یا نه
+        let toastAlreadyShown = false;
+        try {
+            toastAlreadyShown = sessionStorage.getItem('kosha-backup-toast-shown') === 'true';
+        } catch (e) {}
+
         if (!lastBackup) {
             if (statusEl) statusEl.innerHTML = 'آخرین پشتیبان‌گیری دستی: <strong style="color:red;">هرگز!</strong>';
-            setTimeout(() => showToast('لطفاً از داده‌های خود نسخه پشتیبان تهیه کنید.', 'info'), 4000);
+            
+            if (!toastAlreadyShown) {
+                setTimeout(() => {
+                    showToast('لطفاً از داده‌های خود نسخه پشتیبان تهیه کنید.', 'info');
+                    try { sessionStorage.setItem('kosha-backup-toast-shown', 'true'); } catch (e) {}
+                }, 4000);
+            }
         } else {
             const daysDiff = Math.floor((Date.now() - parseInt(lastBackup)) / (1000 * 60 * 60 * 24));
             if (statusEl) statusEl.innerHTML = `آخرین پشتیبان‌گیری دستی: <strong>${toPersianNumber(daysDiff)} روز پیش</strong>`;
-            if (daysDiff >= 7) setTimeout(() => showToast('یک هفته از آخرین پشتیبان‌گیری گذشته است. لطفاً نسخه پشتیبان بگیرید.', 'info'), 4000);
+            
+            if (daysDiff >= 7 && !toastAlreadyShown) {
+                setTimeout(() => {
+                    showToast('یک هفته از آخرین پشتیبان‌گیری گذشته است. لطفاً نسخه پشتیبان بگیرید.', 'info');
+                    try { sessionStorage.setItem('kosha-backup-toast-shown', 'true'); } catch (e) {}
+                }, 4000);
+            }
         }
         
         const emergencyBackupTime = localStorage.getItem('kosha-emergency-backup-time');
@@ -290,6 +334,7 @@ function checkBackupReminder() {
         }
     } catch (e) { console.log(e); }
 }
+
 // ==========================================
 // ✅ توابع تنظیمات پشتیبان‌گیری
 // ==========================================
@@ -611,7 +656,11 @@ async function savePeriod() {
 
 async function checkPeriodReminders() {
     try {
-        currentBackupSettings = await getBackupSettings(window.activeAcademicYear);
+        // ✅ اصلاح: جلوگیری از درخواست تکراری به دیتابیس
+        // (چون loadAllData قبلاً این تنظیمات را لود کرده است)
+        if (!currentBackupSettings) {
+            currentBackupSettings = await getBackupSettings(window.activeAcademicYear);
+        }
         const now = Date.now();
         
         const reminderType = currentBackupSettings.reminderType;
@@ -736,9 +785,11 @@ async function handleReminderDownload() {
         URL.revokeObjectURL(url);
         
         localStorage.setItem('kosha-last-backup', Date.now());
-        checkBackupReminder();
-        closeReminderModal();
-        showToast('فایل پشتیبان کامل (شامل همه سال‌ها) دانلود شد.', 'success');
+// ✅ پاک کردن پرچم Toast تا در جلسه بعدی دوباره بررسی شود
+try { sessionStorage.removeItem('kosha-backup-toast-shown'); } catch (e) {}
+checkBackupReminder();
+closeReminderModal();
+showToast('فایل پشتیبان کامل (شامل همه سال‌ها) دانلود شد.', 'success');
     } catch (e) {
         console.error(e);
         showToast('خطا در تولید پشتیبان.', 'error');
@@ -937,8 +988,22 @@ function initAppEvents() {
     const editLessonForm = document.getElementById('edit-lesson-form');
     if (editLessonForm) editLessonForm.addEventListener('submit', saveEditedLesson);
     
-    const editStudentForm = document.getElementById('edit-student-form');
+        const editStudentForm = document.getElementById('edit-student-form');
     if (editStudentForm) editStudentForm.addEventListener('submit', saveEditedStudent);
+
+    // ✅ شنونده سراسری برای تبدیل خودکار اعداد فارسی/عربی به انگلیسی
+    document.addEventListener('input', function(e) {
+        const target = e.target;
+        // فقط فیلدهای عددی و تلفن (کد ملی) را هدف قرار می‌دهیم
+        if (target && (target.type === 'number' || target.type === 'tel')) {
+            const originalValue = target.value;
+            // اگر مقدار جدید شامل اعداد فارسی یا عربی بود، تبدیل کن
+            if (/[۰-۹٠-٩]/.test(originalValue)) {
+                const convertedValue = convertToEnglishDigits(originalValue);
+                target.value = convertedValue;
+            }
+        }
+    });
 }
 
 async function initApp() {
@@ -958,9 +1023,12 @@ async function initApp() {
             console.log("دیتابیس با موفقیت در initApp باز شد.");
         }
     } catch (dbError) {
-        console.error("خطا در باز کردن دیتابیس:", dbError);
-        showToast('خطا در ارتباط با دیتابیس. لطفاً صفحه را رفرش کنید.', 'error');
-        return;
+        // ✅ استفاده از تابع استاندارد با پیام دقیق برای خطای دیتابیس
+        const errorMsg = dbError && dbError.name === 'QuotaExceededError' 
+            ? 'حافظه دستگاه شما پر شده است. لطفاً فایل‌های اضافی را پاک کنید.' 
+            : 'خطای بحرانی در ارتباط با دیتابیس. لطفاً صفحه را رفرش کنید.';
+        window.handleError(dbError, errorMsg);
+        return; // توقف لود برنامه در صورت خطای دیتابیس
     }
 
     try {
@@ -981,7 +1049,10 @@ async function initApp() {
 
     try {
         await loadAllData();
-    } catch (error) { console.error("خطا در بارگذاری داده‌ها:", error); }
+    } catch (error) { 
+        // ✅ استفاده از تابع استاندارد در صورت خطای بارگذاری داده‌ها
+        window.handleError(error, 'خطا در بارگذاری داده‌ها. لطفاً صفحه را رفرش کنید.'); 
+    }
     
     checkBackupReminder();
     checkEmergencyBackup();
@@ -1059,6 +1130,43 @@ function buildScoreCaches() {
 }
 window.buildScoreCaches = buildScoreCaches;
 
+// ==========================================
+// ✅ بهینه‌سازی: به‌روزرسانی افزایشی کش‌ها هنگام افزودن یک رکورد جدید
+// ==========================================
+window.updateScoreCachesForNewRecord = function(record) {
+    if (!record || !record.students || !Array.isArray(record.students)) return;
+
+    // اگر کش‌ها وجود ندارند، ابتدا یک‌بار محاسبه کامل انجام بده
+    if (!window._cacheStudentScores || !window._cacheGroupScores || !window._cacheSubjectScores) {
+        buildScoreCaches();
+        return;
+    }
+
+    const score = Number(record.finalScore) || 0;
+
+    // ۱. به‌روزرسانی امتیاز درس
+    if (record.subjectId && window._cacheSubjectScores[record.subjectId] !== undefined) {
+        window._cacheSubjectScores[record.subjectId] += score;
+    }
+
+    // ۲. به‌روزرسانی امتیاز دانش‌آموزان و گروه‌ها
+    for (const stId of record.students) {
+        if (window._cacheStudentScores[stId] !== undefined) {
+            window._cacheStudentScores[stId] += score;
+        }
+
+        // پیدا کردن گروه دانش‌آموز
+        const student = window.allStudentsData.find(s => s.id === stId);
+        if (student && student.groupId) {
+            if (window._cacheGroupScores[student.groupId] !== undefined) {
+                window._cacheGroupScores[student.groupId] += score;
+            }
+        }
+    }
+    
+    console.log('⚡ کش امتیازات به‌صورت افزایشی به‌روزرسانی شد.');
+};
+
 async function loadAllData() {
     try {
         const currentYear = window.activeAcademicYear;
@@ -1129,8 +1237,12 @@ async function loadAllData() {
         renderUI();
         
     } catch (e) { 
-        console.error('خطا در بارگذاری داده‌ها:', e); 
-        showToast('خطا در بارگذاری داده‌ها.', 'error');
+        // ✅ استخراج پیام دقیق خطا برای نمایش به کاربر
+        const exactError = e && e.message ? e.message : 'خطای ناشناخته';
+        window.handleError(
+            e, 
+            `خطا در بارگذاری داده‌ها. لطفاً صفحه را رفرش کنید. (جزئیات: ${exactError})`
+        );
     }
 }
 
@@ -1411,9 +1523,8 @@ async function saveItem(e) {
         if (typeof clearFormDirty === 'function') clearFormDirty();
 
     } catch (error) { 
-        console.error(error); 
-        showToast('خطا در ذخیره آیتم!', 'error'); 
-    }
+    window.handleError(error, 'خطا در ذخیره آیتم! لطفاً دوباره تلاش کنید.'); 
+}
 }
 
 async function deleteCustomItem(id) {
@@ -1454,8 +1565,10 @@ async function exportData() {
         URL.revokeObjectURL(url);
         
         localStorage.setItem('kosha-last-backup', Date.now());
-        checkBackupReminder(); 
-        showToast(`فایل پشتیبان با موفقیت ذخیره شد: ${filename}`, 'success');
+// ✅ پاک کردن پرچم Toast تا در جلسه بعدی دوباره بررسی شود
+try { sessionStorage.removeItem('kosha-backup-toast-shown'); } catch (e) {}
+checkBackupReminder(); 
+showToast(`فایل پشتیبان با موفقیت ذخیره شد: ${filename}`, 'success');
     } catch (e) { 
         console.error(e);
         showToast('خطا در تولید فایل پشتیبان!', 'error'); 
@@ -1499,9 +1612,8 @@ async function importData(event) {
 
         }
         catch (err) { 
-            console.error(err);
-            showToast(err.message || 'فایل نامعتبر! تغییرات لغو شد.', 'error'); 
-        }
+    window.handleError(err, err.message || 'فایل نامعتبر! تغییرات لغو شد.'); 
+}
         event.target.value = ''; 
     };
     reader.readAsText(file);
