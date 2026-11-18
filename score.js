@@ -97,9 +97,47 @@ function renderScoreData() {
         }
     }
 
-    if (window.allRecordsData && Array.isArray(window.allRecordsData)) {
+        if (window.allRecordsData && Array.isArray(window.allRecordsData)) {
         initScoreCalendars();
     }
+    
+    // ✅ اصلاح: بررسی اینکه آیا اصلاً دانش‌آموزی گروه‌بندی شده است یا خیر
+    const hasAnyGroupedStudent = window.allStudentsData.some(st => st.groupId !== null && st.groupId !== undefined);
+    
+    // لیست تمام دکمه‌های نمای گروهی در فرم‌های مختلف
+    const groupedViewButtons = [
+        'btnGroupView',           // فرم ارزشیابی
+        'btnQuranGroupView',      // فرم قرآن
+        'btnSpecialGroupView',    // فرم تشویق ویژه
+        'btnHandwritingGroupView' // فرم خوش‌خط‌نویسی
+    ];
+
+    groupedViewButtons.forEach(btnId => {
+        const btn = document.getElementById(btnId);
+        if (btn) {
+            if (!hasAnyGroupedStudent) {
+                // اگر هیچ گروه‌بندی وجود ندارد، دکمه را غیرفعال و شفاف کن
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+                btn.title = 'هیچ دانش‌آموزی گروه‌بندی نشده است. ابتدا از تب گروه‌ها اقدام کنید.';
+                
+                // اگر کاربر روی نمای گروهی بود، به زور به نمای کلاسی برگردان
+                if (btn.classList.contains('active')) {
+                    if (btnId === 'btnGroupView') switchStudentView('flat');
+                    if (btnId === 'btnQuranGroupView') switchQuranStudentView('flat');
+                    if (btnId === 'btnSpecialGroupView') switchSpecialStudentView('flat');
+                    if (btnId === 'btnHandwritingGroupView') switchHandwritingStudentView('flat');
+                }
+            } else {
+                // اگر گروه‌بندی وجود دارد، دکمه را فعال کن
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.title = 'نمای گروهی';
+            }
+        }
+    });
     
     const currentHash = getStudentsHash();
     if (currentHash !== _lastStudentsHash) {
