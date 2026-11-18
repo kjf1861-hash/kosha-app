@@ -1296,7 +1296,7 @@ function dismissUpdateNotification() {
     closeUpdateModal();
 }
 
-        window.addEventListener('load', async () => {
+                window.addEventListener('load', async () => {
     const minSplashTime = new Promise(resolve => setTimeout(resolve, 1200));
     const initPromise = (async () => {
         try {
@@ -1306,14 +1306,14 @@ function dismissUpdateNotification() {
         }
     })();
 
-    // ✅ منتظر پایان هر دو می‌مانیم
+    // ✅ همیشه منتظر پایان initApp و تایمر می‌مانیم (حتی اگر خطا بدهد)
     await Promise.allSettled([minSplashTime, initPromise]);
 
     const splash = document.getElementById('splash-screen');
     const app = document.getElementById('app-container');
     const nav = document.querySelector('.bottom-nav');
     
-    // ✅ نمایش اپ و منو
+    // ✅ نمایش اپ و منو در هر شرایطی
     if (splash) splash.classList.add('splash-hidden');
     if (app) app.style.display = 'block';
     if (nav) nav.style.display = 'flex';
@@ -1324,6 +1324,24 @@ function dismissUpdateNotification() {
         }, 800);
     }
 });
+
+// ✅ تایمر ایمن: اگر بعد از ۳ ثانیه منو ظاهر نشد، به زور نمایش بده
+setTimeout(() => {
+    const nav = document.querySelector('.bottom-nav');
+    const app = document.getElementById('app-container');
+    const splash = document.getElementById('splash-screen');
+    
+    if (nav && nav.style.display === 'none') {
+        nav.style.display = 'flex';
+    }
+    if (app && app.style.display === 'none') {
+        app.style.display = 'block';
+    }
+    if (splash && !splash.classList.contains('splash-hidden')) {
+        splash.classList.add('splash-hidden');
+        setTimeout(() => { if (splash.parentElement) splash.remove(); }, 800);
+    }
+}, 3000);
 
 // ✅ تایمر ایمن: اگر بعد از ۳ ثانیه منو ظاهر نشد، به زور نمایش بده
 setTimeout(() => {
