@@ -44,18 +44,21 @@ async function saveGroup(e) {
         academicYear: window.activeAcademicYear
     };
         
-    await saveData('groups', data);
-    
-    const form = document.getElementById('group-form');
-    if (form) form.reset();
-    showToast('گروه جدید با موفقیت ثبت شد!', 'success');
-    
-    // ✅ رفع باگ: پاک کردن وضعیت فرم‌های ذخیره‌نشده
-    if (typeof clearFormDirty === 'function') clearFormDirty();
-    
-    loadAllData();
-    
-    if (form) form.scrollIntoView({ behavior: 'smooth' });
+    try {
+        await saveData('groups', data);
+        
+        const form = document.getElementById('group-form');
+        if (form) form.reset();
+        showToast('گروه جدید با موفقیت ثبت شد!', 'success');
+        
+        if (typeof clearFormDirty === 'function') clearFormDirty();
+        
+        loadAllData();
+        
+        if (form) form.scrollIntoView({ behavior: 'smooth' });
+    } catch (err) {
+        window.handleError(err, 'خطا در ثبت گروه! لطفاً دوباره تلاش کنید.');
+    }
 }
 
 function renderGroupData() {
@@ -184,14 +187,17 @@ async function saveEditedGroup(e) {
         academicYear: existing ? existing.academicYear : window.activeAcademicYear
     };
         
-    await saveData('groups', data);
-    showToast('گروه با موفقیت ویرایش شد!', 'success');
-    
-    // ✅ رفع باگ: پاک کردن وضعیت فرم‌های ذخیره‌نشده
-    if (typeof clearFormDirty === 'function') clearFormDirty();
-    
-    closeEditGroupModal();
-    loadAllData();
+    try {
+        await saveData('groups', data);
+        showToast('گروه با موفقیت ویرایش شد!', 'success');
+        
+        if (typeof clearFormDirty === 'function') clearFormDirty();
+        
+        closeEditGroupModal();
+        loadAllData();
+    } catch (err) {
+        window.handleError(err, 'خطا در ویرایش گروه! لطفاً دوباره تلاش کنید.');
+    }
 }
 
 async function deleteGroup(id) {
