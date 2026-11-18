@@ -243,14 +243,24 @@ function populateModalStudentSelect() {
     const select = document.getElementById('assignStudentSelectModal');
     if (!select) return;
     
+    // همه دانش‌آموزان به جز کسانی که در همین گروه هستند
     const availableStudents = window.allStudentsData.filter(st => st.groupId !== currentGroupDetailsId);
     
     if (availableStudents.length === 0) {
         select.innerHTML = '<option value="" disabled selected>همه دانش‌آموزان در این گروه هستند.</option>';
     } else {
-        // ✅ اصلاح امنیتی: escape نام و نام خانوادگی دانش‌آموز در منوی کشویی
+        // ✅ اصلاح: نمایش وضعیت گروه فعلی برای دانش‌آموزانی که در گروه دیگری هستند
         select.innerHTML = '<option value="" disabled selected>انتخاب دانش‌آموز...</option>' + 
-            availableStudents.map(st => `<option value="${st.id}">${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</option>`).join('');
+            availableStudents.map(st => {
+                let groupInfo = '';
+                if (st.groupId) {
+                    const otherGroup = window.allGroupsData.find(g => g.id === st.groupId);
+                    if (otherGroup) {
+                        groupInfo = ` (عضو گروه: ${otherGroup.name})`;
+                    }
+                }
+                return `<option value="${st.id}">${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}${escapeHtml(groupInfo)}</option>`;
+            }).join('');
     }
 }
 
@@ -263,15 +273,40 @@ async function assignStudentFromModal() {
         return;
     }
 
+    // ۱. محاسبه ظرفیت مجاز برای هر گروه
+    const totalStudents = window.allStudentsData.length;
+    const totalGroups = window.allGroupsData.length;
+    
+    // فرمول: سقف(تعداد کل / تعداد گروه‌ها) + ۲ (انعطاف برای اعداد فرد و جلوگیری از عدم تعادل شدید)
+    const maxCapacity = totalGroups > 0 ? Math.ceil(totalStudents / totalGroups) + 2 : totalStudents;
+    
+    // محاسبه تعداد فعلی اعضای این گروه
+    const currentGroupMembersCount = window.allStudentsData.filter(st => st.groupId === currentGroupDetailsId).length;
+
+    // ۲. بررسی محدودیت ظرفیت
+    if (currentGroupMembersCount >= maxCapacity) {
+        showToast(`ظرفیت این گروه تکمیل شده است. (حداکثر مجاز برای این گروه: ${toPersianNumber(maxCapacity)} نفر)`, 'error');
+        return;
+    }
+
     try {
         const student = await getDataById('students', parseInt(studentId));
         if (student) {
+            // ۳. بررسی اینکه آیا دانش‌آموز در گروه دیگری است؟
+            if (student.groupId && student.groupId !== currentGroupDetailsId) {
+                const oldGroup = window.allGroupsData.find(g => g.id === student.groupId);
+                const oldGroupName = oldGroup ? oldGroup.name : 'دیگر';
+                if (!confirm(`این دانش‌آموز در حال حاضر در گروه «${oldGroupName}» است.\nآیا مایلید او را به این گروه منتقل کنید؟`)) {
+                    return;
+                }
+            }
+
+            // ۴. ذخیره تغییرات
             student.groupId = currentGroupDetailsId;
             await saveData('students', student);
-            showToast('دانش‌آموز با موفقیت به گروه اضافه شد.', 'success');
+            showToast('دانش‌آموز با موفقیت به گروه اضافه/منتقل شد.', 'success');
             
             await loadAllData(); 
-
             populateModalStudentSelect(); 
             renderGroupDetails(); 
         }
