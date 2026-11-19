@@ -1086,42 +1086,43 @@
     </div>
 </div>
 
-    <!-- ==========================================
-         ✅ بخش حیاتی: لود داینامیک اسکریپت‌ها با نسخه
-         ========================================== -->
-    <script>
-        (function() {
-            // گرفتن نسخه از version.js (که در head لود شده)
-            const currentVersion = window.APP_VERSION || 'v0';
-            
-            // لیست فایل‌های اسکریپت (به ترتیب وابستگی)
-            const scriptsToLoad = [
-                'jalali-utils.js',
-                'calendar-data.js',
-                'calendar.js',
-                'db.js',
-                'app.js',
-                'class.js',
-                'students.js',
-                'lesson.js',
-                'group.js',
-                'session.js',
-                'score.js',
-                'reset.js',
-                'game.js',
-                'exam.js',
-                'updater.js'
-            ];
+    <!-- ✅ بخش حیاتی: لود داینامیک اسکریپت‌ها با نسخه (اصلاح شده برای PWA) -->
+<script>
+    (function() {
+        const currentVersion = window.APP_VERSION || 'v0';
+        
+        const scriptsToLoad = [
+            'jalali-utils.js',
+            'calendar-data.js',
+            'calendar.js',
+            'db.js',
+            'app.js',
+            'class.js',
+            'students.js',
+            'lesson.js',
+            'group.js',
+            'session.js',
+            'score.js',
+            'reset.js',
+            'game.js',
+            'exam.js',
+            'updater.js'
+        ];
 
-            // تزریق اسکریپت‌ها با نسخه داینامیک
-            scriptsToLoad.forEach(function(file) {
-                document.write('<script src="' + file + '?v=' + currentVersion + '"><\/script>');
-            });
+        // ✅ استفاده از روش استاندارد به جای document.write
+        scriptsToLoad.forEach(function(file) {
+            const script = document.createElement('script');
+            script.src = file + '?v=' + currentVersion;
+            document.head.appendChild(script);
+        });
 
-            // بارگذاری فایل back-button.js با ویژگی defer (چون باید بعد از DOM اجرا شود)
-            document.write('<script src="back-button.js?v=' + currentVersion + '" defer><\/script>');
-        })();
-    </script>
+        // بارگذاری back-button.js با ویژگی defer
+        const backBtnScript = document.createElement('script');
+        backBtnScript.src = 'back-button.js?v=' + currentVersion;
+        backBtnScript.defer = true;
+        document.head.appendChild(backBtnScript);
+    })();
+</script>
 
     <script>
         const SVG_MOON = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
