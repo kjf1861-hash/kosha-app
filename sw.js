@@ -2,9 +2,11 @@
 // فایل sw.js — نسخه نهایی (ترکیب هوشمند Network-First و Cache-First)
 // ==========================================
 
-// ✅ اصلاح بحرانی: حذف importScripts برای جلوگیری از خطای NetworkError در سرویس‌ورکر
-// نسخه را مستقیماً اینجا (هم‌راستا با version.js) قرار می‌دهیم
-const APP_VERSION_SAFE = 'v1-3-3'; // ← این مقدار باید با version.js هماهنگ باشد
+// ✅ اصلاح: استفاده از ?t= برای دور زدن کش مرورگر و دریافت حتمی آخرین نسخه
+importScripts('./version.js?t=' + Date.now());
+
+// ✅ اصلاح امنیتی: نام کش از نسخه اپ خوانده می‌شود تا با هر bump، کش جدید ساخته شود
+const APP_VERSION_SAFE = (self.APP_VERSION || 'v0.0.0').replace(/\./g, '-');
 const CACHE_NAME = `kosha-cache-${APP_VERSION_SAFE}`; 
 
 // ✅ لیست فایل‌های اصلی برای کش شدن
