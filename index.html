@@ -601,7 +601,8 @@
     </div> 
 </div> 
 
-<nav class="bottom-nav" style="display: none;">
+<!-- ✅ اصلاح: حذف style="display: none;" از نوار پایین تا همیشه در پس‌زمینه بارگذاری شود و با محو شدن اسپلش نمایان گردد -->
+<nav class="bottom-nav">
     <a href="javascript:void(0)" class="nav-item active" onclick="switchPage('page-class', this)" title="کلاس">
         <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></svg>
     </a>
@@ -1315,12 +1316,12 @@ function dismissUpdateNotification() {
     // حالا هر دو تمام شده‌اند: اسپلش را مخفی کن و اپ را نشان بده
     const splash = document.getElementById('splash-screen');
     const app = document.getElementById('app-container');
-    const nav = document.querySelector('.bottom-nav');
     
     if (splash) splash.classList.add('splash-hidden');
     if (app) app.style.display = 'block';
-    if (nav) nav.style.display = 'flex';
     
+    // ✅ خط مربوط به nav.style.display = 'flex' حذف شد چون نوار پایین از ابتدا در پس‌زمینه لود می‌شود و اسپلش روی آن است.
+
     // حذف کامل اسپلش از DOM پس از اتمام انیمیشن محو شدن (۸۰۰ms)
     if (splash) {
         setTimeout(() => { 
@@ -1343,7 +1344,7 @@ function dismissUpdateNotification() {
             document.querySelectorAll('.page-section').forEach(page => page.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            navElement.classList.add('active');
+            if(navElement) navElement.classList.add('active');
             
             if (pageId === 'page-class' && typeof renderDashboardData === 'function') renderDashboardData();
             if (pageId === 'page-students' && typeof renderStudentsList === 'function') renderStudentsList();
