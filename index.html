@@ -4,15 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, viewport-fit=cover">
     <title>کوشا — همیار پرتلاش معلم</title>
-    <link rel="manifest" href="manifest.json">
+    
     <meta name="theme-color" content="#4A90E2">
     
+    <!-- ✅ اصلاح ریشه‌ای: لود کردن version.js اول از همه -->
+    <script src="version.js"></script>
+    
+    <!-- ✅ اصلاح حرفه‌ای: تزریق داینامیک مانیفست با استفاده از نسخه (بدون هاردکد کردن در HTML) -->
+    <script>
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = `manifest.json?v=${window.APP_VERSION || '0'}`;
+        document.head.appendChild(manifestLink);
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <!-- ✅ اصلاح سیستم کش: لود کردن version.js در head قبل از استایل‌ها -->
-    <script src="version.js"></script>
     
     <!-- ✅ اصلاح سیستم کش: لود داینامیک CSS با نسخه -->
     <script>
@@ -21,7 +29,11 @@
     
     <style>
         #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.8s ease-out, visibility 0.8s ease-out; }
+        
+        /* ✅ اصلاح: استفاده از آیکون استاندارد PNG به جای کدهای هاردکد SVG */
         .splash-logo { margin-bottom: 10px; animation: bounce 2s infinite ease-in-out; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3)); }
+        .splash-logo img { width: 120px; height: 120px; border-radius: 25px; background: white; padding: 5px; }
+        
         .splash-title { color: white; font-size: 2rem; font-weight: 800; margin-top: 20px; opacity: 0; animation: fadeIn 1.5s forwards 0.5s; }
         .splash-subtitle { color: rgba(255, 255, 255, 0.8); font-size: 1rem; margin-top: 10px; opacity: 0; animation: fadeIn 1.5s forwards 1s; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
@@ -188,16 +200,10 @@
 </head>
 <body>
 
+    <!-- ✅ اصلاح: اسپلش حالا از تصویر استاندارد استفاده می‌کند، نه SVG هاردکد شده -->
     <div id="splash-screen">
         <div class="splash-logo">
-            <svg width="120" height="120" viewBox="0 0 512 512">
-                <defs><linearGradient id="splash-bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4A90E2"/><stop offset="100%" stop-color="#357ABD"/></linearGradient></defs>
-                <rect width="512" height="512" rx="115" fill="url(#splash-bg)"/><circle cx="420" cy="90" r="60" fill="#ffffff" opacity="0.15"/><circle cx="90" cy="420" r="80" fill="#ffffff" opacity="0.1"/>
-                <path d="M 256 130 L 140 185 L 256 240 L 372 185 Z" fill="#ffffff" stroke="#ffffff" stroke-width="8" stroke-linejoin="round"/>
-                <path d="M 140 185 L 140 250 C 140 250 170 280 256 280 C 342 280 372 250 372 250 L 372 185" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
-                <path d="M 372 185 L 372 260" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/><circle cx="372" cy="270" r="14" fill="#ffffff"/>
-                <path d="M 190 320 L 322 320 L 322 360 C 322 360 280 380 256 380 C 232 380 190 360 190 360 Z" fill="#ffffff" opacity="0.9"/>
-            </svg>
+            <img src="icon-192.png" alt="کوشا">
         </div>
         <div class="splash-title">کوشا</div>
         <div class="splash-subtitle">همیار پرتلاش معلم</div>
@@ -214,8 +220,7 @@
             <h1>کوشا</h1>
             <p id="header-subtitle">همیار پرتلاش معلم</p>
         </header>
-
-        <div class="container">
+                <div class="container">
             
             <div id="page-class" class="page-section active">
                 <div class="page-header-title">کلاس</div>
@@ -601,7 +606,6 @@
     </div> 
 </div> 
 
-<!-- ✅ اصلاح: حذف style="display: none;" از نوار پایین تا همیشه در پس‌زمینه بارگذاری شود و با محو شدن اسپلش نمایان گردد -->
 <nav class="bottom-nav">
     <a href="javascript:void(0)" class="nav-item active" onclick="switchPage('page-class', this)" title="کلاس">
         <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></svg>
@@ -644,7 +648,6 @@
             <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">🏷️ نسخه و به‌روزرسانی</h3>
             <div class="version-info-box">
                 <div style="font-size: 0.85rem; color: var(--text-muted);">نسخه فعلی برنامه</div>
-                <!-- ✅ اصلاح اولویت ۳: حذف نسخه هاردکد شده v1.0.0 -->
                 <div class="version-value" id="currentVersionDisplay">—</div>
                 <div class="version-date" id="currentVersionDate">تاریخ انتشار: --</div>
             </div>
@@ -1086,8 +1089,7 @@
     </div>
 </div>
 
-    <!-- ✅ بخش حیاتی: لود داینامیک اسکریپت‌ها با نسخه (اصلاح شده برای PWA) -->
-<script>
+    <script>
     (function() {
         const currentVersion = window.APP_VERSION || 'v0';
         
@@ -1109,14 +1111,12 @@
             'updater.js'
         ];
 
-        // ✅ استفاده از روش استاندارد به جای document.write
         scriptsToLoad.forEach(function(file) {
             const script = document.createElement('script');
             script.src = file + '?v=' + currentVersion;
             document.head.appendChild(script);
         });
 
-        // بارگذاری back-button.js با ویژگی defer
         const backBtnScript = document.createElement('script');
         backBtnScript.src = 'back-button.js?v=' + currentVersion;
         backBtnScript.defer = true;
@@ -1226,15 +1226,11 @@
         
         async function selectAcademicYear(year) {
     if (window.switchAcademicYear) {
-        // ✅ انتظار برای نتیجه تابع (true یا false)
         const isSuccess = await window.switchAcademicYear(year);
-        
-        // ✅ بستن مودال فقط در صورت موفقیت‌آمیز بودن تغییر
         if (isSuccess) {
             closeAcademicYearModal();
         }
     } else {
-        // پشتیبان (Fallback) در صورتی که تابع لود نشده باشد
         closeAcademicYearModal();
     }
 }
@@ -1258,7 +1254,6 @@
     const dateText = document.getElementById('update-date-text');
     if (dateText && versionInfo) dateText.textContent = 'تاریخ انتشار: ' + (versionInfo.releaseDate || '--');
     
-    // ✅ نمایش/مخفی کردن دکمه‌ها بر اساس اجباری بودن
     const snoozeBtn = document.getElementById('update-snooze-btn');
     const skipBtn = document.getElementById('update-skip-btn');
     const settingsBtn = document.getElementById('update-settings-btn');
@@ -1285,12 +1280,10 @@ function closeUpdateModal() {
 }
 
 function applyUpdateNow() {
-    // ✅ performUpdate خودش currentUpdateIsForced را چک می‌کند
     if (typeof performUpdate === 'function') performUpdate();
 }
 
 function dismissUpdateNotification() {
-    // ✅ آپدیت اجباری قابل رد کردن نیست (دکمه مخفی است، اما دفاعی)
     if (typeof window.getCurrentUpdateIsForced === 'function' && window.getCurrentUpdateIsForced()) {
         return;
     }
@@ -1299,10 +1292,8 @@ function dismissUpdateNotification() {
 }
 
         window.addEventListener('load', async () => {
-    // ✅ ایجاد یک تایمر ۱۲۰۰ میلی‌ثانیه‌ای برای حداقل زمان نمایش اسپلش
     const minSplashTime = new Promise(resolve => setTimeout(resolve, 1200));
 
-    // ✅ اجرای initApp به صورت مستقل (اگر خطا بدهد، برنامه کرش نمی‌کند)
     const initPromise = (async () => {
         try {
             if (typeof initApp === 'function') await initApp();
@@ -1311,19 +1302,14 @@ function dismissUpdateNotification() {
         }
     })();
 
-    // ✅ انتظار برای هر دو: هم لود شدن داده‌ها، هم تمام شدن تایمر ۱۲۰۰ms
     await Promise.all([minSplashTime, initPromise]);
 
-    // حالا هر دو تمام شده‌اند: اسپلش را مخفی کن و اپ را نشان بده
     const splash = document.getElementById('splash-screen');
     const app = document.getElementById('app-container');
     
     if (splash) splash.classList.add('splash-hidden');
     if (app) app.style.display = 'block';
-    
-    // ✅ خط مربوط به nav.style.display = 'flex' حذف شد چون نوار پایین از ابتدا در پس‌زمینه لود می‌شود و اسپلش روی آن است.
 
-    // حذف کامل اسپلش از DOM پس از اتمام انیمیشن محو شدن (۸۰۰ms)
     if (splash) {
         setTimeout(() => { 
             if (splash.parentElement) splash.remove(); 
