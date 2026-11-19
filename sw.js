@@ -11,20 +11,38 @@ const CACHE_NAME = `kosha-cache-${APP_VERSION_SAFE}`;
 
 // ✅ لیست فایل‌های اصلی برای کش شدن
 const RAW_ASSETS_TO_CACHE = [
-    './', './index.html', './styles.css', './app.js', './db.js', './manifest.json', './icon.svg',
-    './class.js', './students.js', './lesson.js', './group.js', './session.js', './score.js',
-    './reset.js', './exam.js', './game.js', './calendar-data.js', './calendar.js',
-    './jalali-utils.js', './back-button.js', './version.js', './updater.js'
+    './', 
+    './index.html', 
+    './styles.css', 
+    './app.js', 
+    './db.js', 
+    './class.js', 
+    './students.js', 
+    './lesson.js', 
+    './group.js', 
+    './session.js', 
+    './score.js',
+    './reset.js', 
+    './exam.js', 
+    './game.js', 
+    './calendar-data.js', 
+    './calendar.js',
+    './jalali-utils.js', 
+    './back-button.js', 
+    './version.js', 
+    './updater.js',
+    './icon-192.png',  // ✅ آیکون جدید ۱۹۲
+    './icon-512.png'   // ✅ آیکون جدید ۵۱۲
 ];
 
-// ✅ اصلاح کش: اضافه کردن نسخه داینامیک به فایل‌های استاتیک (به جز فایل‌های حساس مثل html و version)
+// ✅ اصلاح کش: اضافه کردن نسخه داینامیک به فایل‌های استاتیک (به جز فایل‌های حساس)
 const ASSETS_TO_CACHE = RAW_ASSETS_TO_CACHE.map(url => {
     if (
         url === './' || 
         url === './index.html' || 
-        url === './manifest.json' || 
-        url === './icon.svg' || 
-        url === './version.js'
+        url === './version.js' ||
+        url === './icon-192.png' ||
+        url === './icon-512.png'
     ) {
         return url; // این فایل‌ها نباید ?v= داشته باشند
     }
@@ -32,15 +50,13 @@ const ASSETS_TO_CACHE = RAW_ASSETS_TO_CACHE.map(url => {
 });
 
 // ✅ لیست فایل‌هایی که باید همیشه از اینترنت (سرور) خونده بشن تا ظاهر برنامه آپدیت بشه
-// ✅ اصلاح: اضافه شدن /version.js برای اطمینان از همگام‌سازی نسخه
-const NETWORK_FIRST_PATHS = ['/index.html', '/updater.js', '/version.json', '/version.js'];
+// ✅ اضافه شدن manifest.json برای اعمال سریع تغییرات مانیفست
+const NETWORK_FIRST_PATHS = ['/index.html', '/updater.js', '/version.json', '/version.js', '/manifest.json'];
 
-// ✅ اصلاح: محاسبه مسیر ریشه برنامه به‌صورت داینامیک (پشتیبانی از ریشه و زیرمسیر)
-// برای ریشه: '/'
-// برای زیرمسیر (مثل /kosha/): '/kosha/'
+// ✅ محاسبه مسیر ریشه برنامه به‌صورت داینامیک (پشتیبانی از ریشه و زیرمسیر)
 const APP_ROOT_PATH = new URL('./', self.location.href).pathname;
 
-// ✅ اصلاح: timeout برای fetch (جلوگیری از انتظار بی‌پایان در صورت سرور کند)
+// ✅ timeout برای fetch (جلوگیری از انتظار بی‌پایان در صورت سرور کند)
 const FETCH_TIMEOUT_MS = 3000;
 
 function fetchWithTimeout(request, timeoutMs) {
@@ -51,14 +67,13 @@ function fetchWithTimeout(request, timeoutMs) {
     });
     
     return Promise.race([fetch(request), timeoutPromise]).finally(() => {
-        // ✅ اصلاح: لغو تایمر در هر حالت (موفق، خطا، یا timeout)
         if (timeoutId !== null) {
             clearTimeout(timeoutId);
         }
     });
 }
 
-// ✅ اصلاح: تابع کمکی برای ذخیره در کش با await کامل
+// ✅ تابع کمکی برای ذخیره در کش با await کامل
 async function putInCache(cacheName, request, response) {
     try {
         const cache = await caches.open(cacheName);
@@ -81,11 +96,10 @@ self.addEventListener('install', (event) => {
             );
         })
     );
-    // ✅ اصلاح بحرانی: self.skipWaiting() حذف شد تا سرویس‌ورکر جدید منتظر بماند
-    // تا زمانی که کاربر از طریق updater.js به آن دستور فعال‌سازی بدهد.
+    // ✅ self.skipWaiting() حذف شده تا سرویس‌ورکر جدید منتظر بماند
 });
 
-// ✅ اصلاح امنیتی: پاک کردن کش‌های قدیمی نسخه‌های قبل تا فضای دیسک کاربر آزاد شود
+// ✅ پاک کردن کش‌های قدیمی نسخه‌های قبل
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         Promise.all([
@@ -110,10 +124,9 @@ self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
     if (url.origin !== self.location.origin) return;
 
-    // ✅ اصلاح: تشخیص اینکه آیا این فایل باید از اینترنت خونده بشه یا از کش
-// (حالا با APP_ROOT_PATH، هم ریشه و هم زیرمسیر را پشتیبانی می‌کند)
-const isNetworkFirst = NETWORK_FIRST_PATHS.some(path => url.pathname.endsWith(path)) 
-    || url.pathname === APP_ROOT_PATH;
+    // ✅ تشخیص اینکه آیا این فایل باید از اینترنت خونده بشه یا از کش
+    const isNetworkFirst = NETWORK_FIRST_PATHS.some(path => url.pathname.endsWith(path)) 
+        || url.pathname === APP_ROOT_PATH;
 
     if (isNetworkFirst) {
         // ✅ فایل‌های ظاهری: اول اینترنت (با timeout)، بعد کش (آفلاین)
@@ -137,7 +150,7 @@ const isNetworkFirst = NETWORK_FIRST_PATHS.some(path => url.pathname.endsWith(pa
                 })
         );
     } else {
-        // ✅ فایل‌های اصلی (کدها): اول کش، بعد اینترنت (تا آپدیت خودسرانه نشود)
+        // ✅ فایل‌های اصلی (کدها و آیکون‌ها): اول کش، بعد اینترنت
         event.respondWith(
             caches.match(event.request).then((cached) => {
                 if (cached) return cached;
@@ -155,7 +168,6 @@ const isNetworkFirst = NETWORK_FIRST_PATHS.some(path => url.pathname.endsWith(pa
 
 self.addEventListener('message', (event) => {
     if (event.data && event.data.action === 'skipWaiting') {
-        // ✅ فعال‌سازی فقط زمانی که از سمت updater.js دستور برسد
         self.skipWaiting();
     }
 });
