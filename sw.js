@@ -9,7 +9,7 @@ importScripts('./version.js?t=' + Date.now());
 const APP_VERSION_SAFE = (self.APP_VERSION || 'v0.0.0').replace(/\./g, '-');
 const CACHE_NAME = `kosha-cache-${APP_VERSION_SAFE}`; 
 
-// ✅ لیست فایل‌های اصلی برای کش شدن (فایل icon.svg جایگزین pngها شد)
+// ✅ لیست فایل‌های اصلی برای کش شدن
 const RAW_ASSETS_TO_CACHE = [
     './', 
     './index.html', 
@@ -31,7 +31,10 @@ const RAW_ASSETS_TO_CACHE = [
     './back-button.js', 
     './version.js', 
     './updater.js',
-    './icon.svg' // ✅ استفاده از آیکون SVG
+    './icon-192.png',
+    './icon-512.png',
+    './icon-maskable-512.png',
+    './icon.svg' 
 ];
 
 // ✅ اضافه کردن نسخه داینامیک به فایل‌های استاتیک (به جز فایل‌های حساس)
@@ -40,6 +43,7 @@ const ASSETS_TO_CACHE = RAW_ASSETS_TO_CACHE.map(url => {
         url === './' || 
         url === './index.html' || 
         url === './version.js' ||
+        url.endsWith('.png') ||
         url === './icon.svg'
     ) {
         return url; // این فایل‌ها نباید ?v= داشته باشند
