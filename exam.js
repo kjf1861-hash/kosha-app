@@ -84,7 +84,7 @@ function renderExamsData() {
                     <button class="btn btn-primary btn-sm" onclick="openExamGradingModal('${exam.id}')" title="ثبت نمرات">📝 ثبت نمرات</button>
                     <button class="btn btn-secondary btn-sm" onclick="generateGameFile('${exam.id}')" title="تولید فایل بازی" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none;">🎮 بازی</button>
                     <button class="btn btn-secondary btn-sm" onclick="exportExamCSV('${exam.id}')" title="خروجی اکسل">📗</button>
-                    <button class="btn btn-secondary btn-sm" onclick="exportExamHTML('${exam.id}')" title="خروجی HTML">🌐</button>
+                    <button class="btn btn-secondary btn-sm" onclick="exportExamHTML('${exam.id}')" title="خروجی HTML تعاملی">🌐</button>
                     <button class="btn btn-secondary btn-sm" onclick="printExam('${exam.id}')" title="چاپ / PDF">🖨️</button>
                     <button class="btn btn-secondary btn-sm" onclick="exportExamJSON('${exam.id}')" title="خروجی JSON">📄</button>
                     <button class="btn btn-secondary btn-sm" onclick="openExamEditorModal('${exam.id}')" title="ویرایش آزمون">✏️</button>
@@ -897,7 +897,7 @@ async function saveExamGrades() {
 }
 
 // ==========================================
-// ✅ توابع جدید: خروجی CSV، HTML، چاپ و JSON آزمون
+// ✅ توابع جدید: خروجی CSV، HTML تعاملی، چاپ و JSON آزمون
 // ==========================================
 
 async function exportExamCSV(examId) {
@@ -979,6 +979,7 @@ async function exportExamCSV(examId) {
     }
 }
 
+// ۲. خروجی فایل HTML تعاملی (برگه امتحان هوشمند)
 async function exportExamHTML(examId) {
     const exam = await getDataById('exams', examId);
     if (!exam || !exam.questions || exam.questions.length === 0) {
@@ -989,10 +990,33 @@ async function exportExamHTML(examId) {
     const sub = window.allSubjectsData.find(s => s.id === exam.subjectId);
     const subName = sub ? `${sub.symbol || ''} ${sub.name}` : 'بدون درس';
 
+    // تبدیل سوالات تطبیقی به چندگزینه‌ای برای فایل HTML (مانند بازی)
+    const htmlQuestions = [];
+    exam.questions.forEach((q, index) => {
+        if (q.type === 'matching' && q.pairs) {
+            q.pairs.forEach((pair, pIndex) => {
+                let options = [pair.b, ...q.pairs.filter((_, i) => i !== pIndex).map(p => p.b)];
+                options = options.sort(() => Math.random() - 0.5);
+                const correctIndex = options.indexOf(pair.b);
+                const distributedScore = Math.round((q.score / q.pairs.length) * 100) / 100;
+                htmlQuestions.push({
+                    id: `q_${index}_${pIndex}`,
+                    type: 'multiple-choice',
+                    text: `مفهوم «${pair.a}» با کدام گزینه تطبیق دارد؟`,
+                    options: options,
+                    correctIndex: correctIndex,
+                    score: distributedScore
+                });
+            });
+        } else {
+            htmlQuestions.push({ ...q, id: `q_${index}` });
+        }
+    });
+
     let questionsHtml = '';
-    exam.questions.forEach((q, i) => {
+    htmlQuestions.forEach((q, i) => {
         questionsHtml += `
-            <div class="question-item">
+            <div class="question-item" id="question_${i}" data-qindex="${i}">
                 <div class="question-header">
                     <span class="question-number">سوال ${i + 1}</span>
                     <span class="question-score">${q.score} نمره</span>
@@ -1004,39 +1028,36 @@ async function exportExamHTML(examId) {
             questionsHtml += `<div class="options-list">`;
             q.options.forEach((opt, optIdx) => {
                 questionsHtml += `
-                    <div class="option-item">
-                        <span class="option-letter">${optIdx + 1})</span>
-                        <span>${escapeHtml(opt)}</span>
-                    </div>
+                    <label class="option-item">
+                        <input type="radio" name="q_${i}" value="${optIdx}">
+                        <span class="option-text">${escapeHtml(opt)}</span>
+                    </label>
                 `;
             });
             questionsHtml += `</div>`;
         } else if (q.type === 'true-false') {
             questionsHtml += `
                 <div class="options-list" style="flex-direction: row; gap: 30px; margin-top: 15px;">
-                    <div class="option-item"><span class="option-letter">1)</span><span>درست</span></div>
-                    <div class="option-item"><span class="option-letter">2)</span><span>غلط</span></div>
+                    <label class="option-item">
+                        <input type="radio" name="q_${i}" value="true">
+                        <span class="option-text">درست</span>
+                    </label>
+                    <label class="option-item">
+                        <input type="radio" name="q_${i}" value="false">
+                        <span class="option-text">غلط</span>
+                    </label>
                 </div>
             `;
-        } else if (q.type === 'fill-blank' || q.type === 'essay') {
+        } else if (q.type === 'fill-blank') {
             questionsHtml += `
-                <div class="essay-space" style="margin-top: 15px; min-height: 80px; border-bottom: 1px dashed #ccc;"></div>
+                <div style="margin-top: 15px;">
+                    <input type="text" class="answer-input" id="input_q_${i}" placeholder="پاسخ خود را بنویسید...">
+                </div>
             `;
-        } else if (q.type === 'matching' && q.pairs) {
+        } else if (q.type === 'essay') {
             questionsHtml += `
-                <div style="margin-top: 15px; display: flex; gap: 20px;">
-                    <div style="flex: 1;">
-                        <strong>ستون ۱ (مفاهیم):</strong>
-                        <ul style="padding-right: 20px; margin-top: 10px;">
-                            ${q.pairs.map(p => `<li>${escapeHtml(p.a)}</li>`).join('')}
-                        </ul>
-                    </div>
-                    <div style="flex: 1;">
-                        <strong>ستون ۲ (مصادیق):</strong>
-                        <ul style="padding-right: 20px; margin-top: 10px;">
-                            ${q.pairs.map(p => `<li>${escapeHtml(p.b)}</li>`).join('')}
-                        </ul>
-                    </div>
+                <div style="margin-top: 15px;">
+                    <textarea class="answer-input" id="input_q_${i}" rows="4" placeholder="پاسخ خود را بنویسید..."></textarea>
                 </div>
             `;
         }
@@ -1044,27 +1065,52 @@ async function exportExamHTML(examId) {
         questionsHtml += `</div>`;
     });
 
+    const jsonData = JSON.stringify(htmlQuestions).replace(/</g, '\\u003c');
+
     const html = `<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>آزمون: ${escapeHtml(exam.title)}</title>
+    <title>آزمون تعاملی: ${escapeHtml(exam.title)}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Tahoma, 'Vazirmatn', sans-serif; background: #f1f5f9; color: #1e293b; padding: 20px; line-height: 1.8; }
+        body { font-family: 'Vazirmatn', Tahoma, sans-serif; background: #f1f5f9; color: #1e293b; padding: 20px; line-height: 1.8; }
         .paper { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         .header { text-align: center; border-bottom: 2px solid #4A90E2; padding-bottom: 20px; margin-bottom: 30px; }
         .header h1 { color: #4A90E2; margin: 0 0 10px 0; font-size: 1.8rem; }
         .header p { margin: 0; color: #64748b; font-size: 0.95rem; }
         .info-bar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 25px; font-size: 0.9rem; }
-        .question-item { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px dashed #e2e8f0; page-break-inside: avoid; }
+        
+        .question-item { margin-bottom: 30px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; page-break-inside: avoid; transition: all 0.3s; }
+        .question-item.correct-border { border-color: #22c55e; background: #f0fdf4; }
+        .question-item.wrong-border { border-color: #ef4444; background: #fef2f2; }
         .question-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
         .question-number { font-weight: bold; color: #4A90E2; }
         .question-score { background: #eef2ff; color: #4A90E2; padding: 2px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
         .question-text { font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; }
-        .options-list { display: flex; flex-direction: column; gap: 10px; padding-right: 10px; }
-        .option-item { display: flex; gap: 10px; align-items: flex-start; }
-        .option-letter { font-weight: bold; color: #64748b; }
+        
+        .options-list { display: flex; flex-direction: column; gap: 10px; }
+        .option-item { display: flex; gap: 10px; align-items: center; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+        .option-item:hover { background: #f8fafc; }
+        .option-item input[type="radio"] { width: 18px; height: 18px; accent-color: #4A90E2; }
+        .option-item.correct-answer { background: #dcfce7; border-color: #22c55e; color: #166534; font-weight: bold; }
+        .option-item.wrong-answer { background: #fee2e2; border-color: #ef4444; color: #991b1b; text-decoration: line-through; }
+        
+        .answer-input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 1rem; box-sizing: border-box; }
+        .answer-input:focus { outline: none; border-color: #4A90E2; box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2); }
+        .answer-input.correct-input { border-color: #22c55e; background: #f0fdf4; }
+        .answer-input.wrong-input { border-color: #ef4444; background: #fef2f2; }
+        
+        .correct-answer-text { display: none; margin-top: 10px; padding: 10px; background: #e0f2fe; color: #0369a1; border-radius: 8px; font-size: 0.9rem; border-right: 4px solid #0ea5e9; }
+        
+        .result-box { display: none; text-align: center; margin-top: 30px; padding: 25px; border-radius: 12px; background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); color: white; box-shadow: 0 10px 25px rgba(74, 144, 226, 0.3); }
+        .result-box h2 { margin: 0 0 10px 0; font-size: 2rem; }
+        .result-box p { margin: 0; font-size: 1.2rem; opacity: 0.9; }
+        
+        .submit-btn { display: block; width: 100%; max-width: 300px; margin: 30px auto 0; padding: 15px; background: #22c55e; color: white; border: none; border-radius: 12px; font-size: 1.2rem; font-weight: bold; cursor: pointer; font-family: inherit; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3); transition: transform 0.2s; }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(34, 197, 94, 0.4); }
+        .submit-btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; }
     </style>
 </head>
 <body>
@@ -1075,11 +1121,162 @@ async function exportExamHTML(examId) {
         </div>
         <div class="info-bar">
             <span><strong>تاریخ:</strong> ${toPersianNumber(exam.date)}</span>
-            <span><strong>تعداد سوالات:</strong> ${toPersianNumber(exam.questions.length)}</span>
+            <span><strong>تعداد سوالات:</strong> ${toPersianNumber(htmlQuestions.length)}</span>
             <span><strong>نمره کل:</strong> ${toPersianNumber(exam.maxScore)}</span>
         </div>
-        ${questionsHtml}
+        
+        <div id="questions-container">
+            ${questionsHtml}
+        </div>
+        
+        <button class="submit-btn" id="submitBtn" onclick="submitExam()">✅ پایان و مشاهده نتیجه</button>
+        
+        <div class="result-box" id="resultBox">
+            <h2 id="scoreText"></h2>
+            <p id="percentText"></p>
+        </div>
     </div>
+
+    <script>
+        const EXAM_QUESTIONS = ${jsonData};
+        const MAX_SCORE = ${exam.maxScore};
+        
+        function normalizeText(str) {
+            if (!str) return '';
+            return str.toString()
+                .trim()
+                .toLowerCase()
+                .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+                .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+                .replace(/ي/g, 'ی')
+                .replace(/ك/g, 'ک')
+                .replace(/\s+/g, ' ');
+        }
+        
+        function submitExam() {
+            let totalEarned = 0;
+            let hasEssay = false;
+            
+            EXAM_QUESTIONS.forEach((q, i) => {
+                const qItem = document.getElementById('question_' + i);
+                let isCorrect = false;
+                let isAnswered = false;
+                
+                if (q.type === 'multiple-choice') {
+                    const selected = document.querySelector('input[name="q_' + i + '"]:checked');
+                    if (selected) isAnswered = true;
+                    const selectedVal = selected ? parseInt(selected.value) : -1;
+                    
+                    if (selectedVal === q.correctIndex) {
+                        isCorrect = true;
+                        totalEarned += q.score;
+                    }
+                    
+                    qItem.querySelectorAll('.option-item').forEach((label, optIdx) => {
+                        const radio = label.querySelector('input[type="radio"]');
+                        if (optIdx === q.correctIndex) {
+                            label.classList.add('correct-answer');
+                        } else if (radio.checked) {
+                            label.classList.add('wrong-answer');
+                        }
+                        radio.disabled = true;
+                    });
+                    
+                } else if (q.type === 'true-false') {
+                    const selected = document.querySelector('input[name="q_' + i + '"]:checked');
+                    if (selected) isAnswered = true;
+                    const selectedVal = selected ? (selected.value === 'true') : null;
+                    
+                    if (selectedVal === q.correctAnswer) {
+                        isCorrect = true;
+                        totalEarned += q.score;
+                    }
+                    
+                    qItem.querySelectorAll('.option-item').forEach((label, optIdx) => {
+                        const radio = label.querySelector('input[type="radio"]');
+                        const val = radio.value === 'true';
+                        if (val === q.correctAnswer) {
+                            label.classList.add('correct-answer');
+                        } else if (radio.checked) {
+                            label.classList.add('wrong-answer');
+                        }
+                        radio.disabled = true;
+                    });
+                    
+                } else if (q.type === 'fill-blank') {
+                    const input = document.getElementById('input_q_' + i);
+                    const userAns = normalizeText(input.value);
+                    const correctAns = normalizeText(q.answer);
+                    if (userAns) isAnswered = true;
+                    
+                    if (userAns && userAns === correctAns) {
+                        isCorrect = true;
+                        totalEarned += q.score;
+                        input.classList.add('correct-input');
+                    } else {
+                        input.classList.add('wrong-input');
+                        // نمایش پاسخ صحیح
+                        const correctDiv = document.createElement('div');
+                        correctDiv.className = 'correct-answer-text';
+                        correctDiv.style.display = 'block';
+                        correctDiv.innerHTML = '✍️ پاسخ صحیح: ' + escapeHtml(q.answer);
+                        input.parentElement.appendChild(correctDiv);
+                    }
+                    input.disabled = true;
+                    
+                } else if (q.type === 'essay') {
+                    hasEssay = true;
+                    const input = document.getElementById('input_q_' + i);
+                    if (input.value.trim()) isAnswered = true;
+                    input.disabled = true;
+                    
+                    // برای تشریحی نمره خودکار نمی‌دهیم، فقط پاسخ صحیح را نشان می‌دهیم
+                    if (q.answer) {
+                        const correctDiv = document.createElement('div');
+                        correctDiv.className = 'correct-answer-text';
+                        correctDiv.style.display = 'block';
+                        correctDiv.innerHTML = '📝 پاسخ پیشنهادی: ' + escapeHtml(q.answer);
+                        input.parentElement.appendChild(correctDiv);
+                    }
+                }
+                
+                if (isCorrect || (q.type === 'essay' && isAnswered)) {
+                    qItem.classList.add('correct-border');
+                    if (q.type === 'essay') {
+                        qItem.classList.remove('correct-border');
+                        qItem.style.borderColor = '#4A90E2';
+                    }
+                } else if (!isCorrect && q.type !== 'essay') {
+                    qItem.classList.add('wrong-border');
+                }
+            });
+            
+            const percent = Math.round((totalEarned / MAX_SCORE) * 100);
+            
+            const resultBox = document.getElementById('resultBox');
+            const scoreText = document.getElementById('scoreText');
+            const percentText = document.getElementById('percentText');
+            
+            resultBox.style.display = 'block';
+            if (percent >= 50) resultBox.style.background = 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)';
+            else resultBox.style.background = 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)';
+            
+            scoreText.innerHTML = 'نمره شما: ' + totalEarned + ' از ' + MAX_SCORE;
+            percentText.innerHTML = 'درصد موفقیت: ' + percent + '٪' + (hasEssay ? ' (سوالات تشریحی نیاز به تصحیح دستی دارند)' : '');
+            
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').innerHTML = 'آزمون تصحیح شد';
+            
+            resultBox.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+            });
+        }
+    </script>
 </body>
 </html>`;
 
@@ -1087,12 +1284,13 @@ async function exportExamHTML(examId) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `exam_${exam.title.replace(/\s+/g, '_')}.html`;
+    a.download = `exam_${exam.title.replace(/\s+/g, '_')}_interactive.html`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast('فایل HTML دانلود شد.', 'success');
+    showToast('فایل HTML تعاملی دانلود شد.', 'success');
 }
 
+// ۳. چاپ / خروجی PDF
 async function printExam(examId) {
     const exam = await getDataById('exams', examId);
     if (!exam || !exam.questions || exam.questions.length === 0) {
@@ -1176,6 +1374,7 @@ async function printExam(examId) {
     }
 }
 
+// ۴. خروجی JSON
 async function exportExamJSON(examId) {
     const exam = await getDataById('exams', examId);
     if (!exam || !exam.questions || exam.questions.length === 0) {
