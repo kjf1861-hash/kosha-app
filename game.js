@@ -51,13 +51,21 @@ async function generateGameFile(examId) {
             if (q.type === 'multiple-choice') {
                 safeQuestion.options = q.options;
                 safeQuestion.correctIndex = q.correctIndex;
+            } else if (q.type === 'true-false') {
+                safeQuestion.correctAnswer = q.correctAnswer;
+            } else {
+                safeQuestion.answer = q.answer || '';
             }
             
             gameQuestions.push(safeQuestion);
         }
     });
     
-    const gameHtml = buildGameHtml(exam, subName, gameQuestions);
+    // ✅ محاسبه دقیق نمره کل بر اساس سوالات تبدیل‌شده
+    let totalMaxScore = 0;
+    gameQuestions.forEach(q => totalMaxScore += q.score);
+    
+    const gameHtml = buildGameHtml(exam, subName, gameQuestions, totalMaxScore);
     
     const blob = new Blob([gameHtml], { type: 'text/html;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -72,7 +80,7 @@ async function generateGameFile(examId) {
     showToast('فایل بازی با موفقیت تولید و دانلود شد! 🎮', 'success');
 }
 
-function buildGameHtml(exam, subName, questions) {
+function buildGameHtml(exam, subName, questions, maxScore) {
     const jsonSafe = (obj) => JSON.stringify(obj).replace(/</g, '\\u003c');
     
     const questionsJson = jsonSafe(questions);
@@ -208,14 +216,6 @@ function buildGameHtml(exam, subName, questions) {
             background: #dbeafe;
             box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
         }
-        .option-btn.correct {
-            border-color: #22c55e;
-            background: #dcfce7;
-        }
-        .option-btn.wrong {
-            border-color: #ef4444;
-            background: #fee2e2;
-        }
         .option-letter {
             width: 30px;
             height: 30px;
@@ -276,53 +276,65 @@ function buildGameHtml(exam, subName, questions) {
             cursor: not-allowed;
             transform: none;
         }
+        
         .finish-screen {
             text-align: center;
-            padding: 20px;
+            padding: 10px;
         }
-        .finish-icon { font-size: 4rem; margin-bottom: 15px; animation: bounce 1s ease; }
+        .finish-icon { font-size: 4rem; margin-bottom: 10px; animation: bounce 1s ease; }
         @keyframes bounce {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.2); }
         }
-        .finish-title { font-size: 1.4rem; color: #16a34a; margin-bottom: 10px; }
-        .finish-subtitle { color: #64748b; margin-bottom: 20px; }
-        .code-box {
+        .finish-title { font-size: 1.5rem; margin-bottom: 15px; font-weight: bold; }
+        .finish-subtitle { color: #64748b; margin-bottom: 20px; font-size: 1.1rem; }
+        
+        .score-box {
             background: #f8fafc;
             border: 2px dashed #4A90E2;
             border-radius: 12px;
-            padding: 15px;
+            padding: 20px;
             margin: 20px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 1.1rem;
             font-weight: bold;
-            color: #4A90E2;
-            word-break: break-all;
-            letter-spacing: 1px;
         }
-        .code-label { font-size: 0.85rem; color: #64748b; margin-bottom: 10px; }
-        .copy-btn {
+        .score-number { font-size: 2.5rem; display: block; margin-bottom: 5px; }
+        
+        .review-list {
+            text-align: right;
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+        .review-item {
+            background: #fee2e2;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            border-right: 4px solid #ef4444;
+            line-height: 1.6;
+        }
+        .review-item strong { color: #1e293b; display: block; margin-bottom: 5px; }
+        .review-user-ans { color: #ef4444; text-decoration: line-through; }
+        .review-correct-ans { color: #16a34a; font-weight: bold; }
+        
+        .restart-btn {
             background: #4A90E2;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
+            padding: 15px 40px;
+            border-radius: 12px;
             cursor: pointer;
             font-family: inherit;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.2s;
         }
-        .copy-btn:hover { background: #357ABD; }
-        .restart-btn {
-            background: #f1f5f9;
-            color: #64748b;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 0.95rem;
-        }
+        .restart-btn:hover { background: #357ABD; transform: translateY(-2px); }
     </style>
 </head>
 <body>
@@ -333,7 +345,7 @@ function buildGameHtml(exam, subName, questions) {
             <div class="game-info-bar">
                 <span>📅 ${safeDateHtml}</span>
                 <span>❓ ${questions.length} سوال</span>
-                <span>🎯 ${exam.maxScore} نمره</span>
+                <span>🎯 ${maxScore} نمره</span>
             </div>
         </div>
         <div class="game-body" id="gameBody">
@@ -354,10 +366,20 @@ function buildGameHtml(exam, subName, questions) {
                 }[m];
             });
         }
+        
+        function normalizeText(str) {
+            if (!str) return '';
+            return str.toString().trim().toLowerCase()
+                .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+                .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+                .replace(/ي/g, 'ی')
+                .replace(/ك/g, 'ک')
+                .replace(/\s+/g, ' ');
+        }
 
         const EXAM_DATA = {
             title: ${safeTitleJs},
-            maxScore: ${exam.maxScore},
+            maxScore: ${maxScore},
             questions: ${questionsJson}
         };
         
@@ -470,49 +492,88 @@ function buildGameHtml(exam, subName, questions) {
         }
         
         function showFinishScreen() {
-            const answersString = userAnswers.map(a => {
-                if (a === null) return 'null';
-                if (typeof a === 'string') return a.trim();
-                return a;
-            }).join('|');
+            let totalEarned = 0;
+            let reviewHtml = '';
+
+            EXAM_DATA.questions.forEach((q, index) => {
+                const userAns = userAnswers[index];
+                let isCorrect = false;
+                let correctAnswerText = '';
+                let userAnswerText = '';
+                let hasAnswer = false;
+
+                if (q.type === 'multiple-choice') {
+                    hasAnswer = userAns >= 0;
+                    isCorrect = userAns === q.correctIndex;
+                    correctAnswerText = q.options[q.correctIndex];
+                    userAnswerText = hasAnswer ? q.options[userAns] : 'بدون پاسخ';
+                } else if (q.type === 'true-false') {
+                    hasAnswer = userAns !== null;
+                    isCorrect = userAns === q.correctAnswer;
+                    correctAnswerText = q.correctAnswer ? 'درست' : 'غلط';
+                    userAnswerText = hasAnswer ? (userAns ? 'درست' : 'غلط') : 'بدون پاسخ';
+                } else {
+                    hasAnswer = userAns.trim() !== '';
+                    const normUser = normalizeText(userAns);
+                    const normCorrect = normalizeText(q.answer);
+                    isCorrect = normUser === normCorrect;
+                    correctAnswerText = q.answer;
+                    userAnswerText = hasAnswer ? userAns : 'بدون پاسخ';
+                }
+
+                if (isCorrect) {
+                    totalEarned += q.score;
+                } else {
+                    // اضافه کردن به لیست مرور
+                    reviewHtml += \`
+                        <div class="review-item">
+                            <strong>سوال \${index + 1}: \${escapeHtml(q.text)}</strong>
+                            <div>پاسخ شما: <span class="review-user-ans">\${escapeHtml(userAnswerText)}</span></div>
+                            <div>پاسخ صحیح: <span class="review-correct-ans">\${escapeHtml(correctAnswerText)}</span></div>
+                        </div>
+                    \`;
+                }
+            });
+
+            // گرد کردن نمره برای جلوگیری از اعشار طولانی
+            totalEarned = Math.round(totalEarned * 100) / 100;
+            const percent = Math.round((totalEarned / EXAM_DATA.maxScore) * 100);
             
-            let hash = 0;
-            const combined = EXAM_DATA.title + '|' + answersString;
-            for (let i = 0; i < combined.length; i++) {
-                const char = combined.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
+            let resultColor = percent >= 85 ? '#22c55e' : percent >= 50 ? '#f59e0b' : '#ef4444';
+            let resultIcon = percent >= 85 ? '🏆' : percent >= 50 ? '👍' : '💪';
+            let resultText = percent >= 85 ? 'عالی بود! تو یک قهرمان هستی.' : percent >= 50 ? 'خوب بود، اما می‌توانی بهتر باشی.' : 'نیاز به تمرین بیشتر داری. ناامید نشو!';
+
+            let reviewSection = '';
+            if (reviewHtml) {
+                reviewSection = \`
+                    <h3 style="color: #ef4444; margin-top: 25px; margin-bottom: 10px; text-align: center;">🔍 مرور اشتباهات</h3>
+                    <div class="review-list">
+                        \${reviewHtml}
+                    </div>
+                \`;
+            } else {
+                reviewSection = \`
+                    <div style="background: #dcfce7; color: #16a34a; padding: 15px; border-radius: 12px; font-weight: bold; margin-bottom: 20px;">
+                        🎉 تبریک! به تمام سوالات درست پاسخ دادی.
+                    </div>
+                \`;
             }
-            const code = Math.abs(hash).toString(36).toUpperCase().substring(0, 8).padStart(8, '0');
-            
+
             document.getElementById('gameBody').innerHTML = \`
                 <div class="finish-screen">
-                    <div class="finish-icon">🎉</div>
-                    <div class="finish-title">آفرین! آزمون را به پایان رساندی.</div>
-                    <div class="finish-subtitle">کد زیر را برای معلم خود بفرست تا نمره‌ات را ثبت کند.</div>
-                    <div class="code-box" id="outputCode">\${code}</div>
-                    <div class="code-label">کد خروجی (این کد را کپی کنید)</div>
-                    <button class="copy-btn" onclick="copyCode('\${code}')">📋 کپی کد</button>
-                    <br>
-                    <button class="restart-btn" onclick="restartGame()">🔄 شروع مجدد</button>
+                    <div class="finish-icon">\${resultIcon}</div>
+                    <div class="finish-title" style="color: \${resultColor};">\${resultText}</div>
+                    
+                    <div class="score-box" style="border-color: \${resultColor}; color: \${resultColor};">
+                        <span class="score-number">\${totalEarned} از \${EXAM_DATA.maxScore}</span>
+                        <span>درصد موفقیت: \${percent}٪</span>
+                    </div>
+                    
+                    \${reviewSection}
+                    
+                    <button class="restart-btn" onclick="restartGame()">🔄 شروع مجدد آزمون</button>
                 </div>
             \`;
-        }
-        
-        function copyCode(code) {
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(code).then(() => {
-                    alert('✅ کد کپی شد!');
-                });
-            } else {
-                const ta = document.createElement('textarea');
-                ta.value = code;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-                alert('✅ کد کپی شد!');
-            }
         }
         
         function restartGame() {
