@@ -4,23 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, viewport-fit=cover">
     <title>کوشا — همیار پرتلاش معلم</title>
-    
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4A90E2">
     
-    <!-- ✅ اصلاح ریشه‌ای: لود کردن version.js اول از همه -->
-    <script src="version.js"></script>
-    
-    <!-- ✅ اصلاح حرفه‌ای: تزریق داینامیک مانیفست با استفاده از نسخه (بدون هاردکد کردن در HTML) -->
-    <script>
-        const manifestLink = document.createElement('link');
-        manifestLink.rel = 'manifest';
-        manifestLink.href = `manifest.json?v=${window.APP_VERSION || '0'}`;
-        document.head.appendChild(manifestLink);
-    </script>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- ✅ اصلاح سیستم کش: لود کردن version.js در head قبل از استایل‌ها -->
+    <script src="version.js"></script>
     
     <!-- ✅ اصلاح سیستم کش: لود داینامیک CSS با نسخه -->
     <script>
@@ -29,11 +21,7 @@
     
     <style>
         #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.8s ease-out, visibility 0.8s ease-out; }
-        
-        /* ✅ اصلاح: استفاده از آیکون استاندارد PNG به جای کدهای هاردکد SVG */
         .splash-logo { margin-bottom: 10px; animation: bounce 2s infinite ease-in-out; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3)); }
-        .splash-logo img { width: 120px; height: 120px; border-radius: 25px; background: white; padding: 5px; }
-        
         .splash-title { color: white; font-size: 2rem; font-weight: 800; margin-top: 20px; opacity: 0; animation: fadeIn 1.5s forwards 0.5s; }
         .splash-subtitle { color: rgba(255, 255, 255, 0.8); font-size: 1rem; margin-top: 10px; opacity: 0; animation: fadeIn 1.5s forwards 1s; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
@@ -102,12 +90,10 @@
             font-size: 1.1rem;
             font-weight: bold;
         }
-        @media (hover: hover) and (pointer: fine) {
-    .year-option-item:hover {
-        border-color: var(--primary);
-        background: var(--primary-light);
-    }
-}
+        .year-option-item:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
         .year-option-item.selected {
             border-color: var(--primary);
             background: var(--primary-light);
@@ -170,12 +156,10 @@
             transition: all 0.2s;
             font-size: 0.9rem;
         }
-        @media (hover: hover) and (pointer: fine) {
-    .update-mode-option:hover {
-        border-color: var(--primary);
-        background: var(--primary-light);
-    }
-}
+        .update-mode-option:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
         .update-mode-option input[type="radio"] {
             accent-color: var(--primary);
             width: 18px;
@@ -200,10 +184,16 @@
 </head>
 <body>
 
-    <!-- ✅ اصلاح: اسپلش حالا از تصویر استاندارد استفاده می‌کند، نه SVG هاردکد شده -->
     <div id="splash-screen">
         <div class="splash-logo">
-            <img src="icon-192.png" alt="کوشا">
+            <svg width="120" height="120" viewBox="0 0 512 512">
+                <defs><linearGradient id="splash-bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4A90E2"/><stop offset="100%" stop-color="#357ABD"/></linearGradient></defs>
+                <rect width="512" height="512" rx="115" fill="url(#splash-bg)"/><circle cx="420" cy="90" r="60" fill="#ffffff" opacity="0.15"/><circle cx="90" cy="420" r="80" fill="#ffffff" opacity="0.1"/>
+                <path d="M 256 130 L 140 185 L 256 240 L 372 185 Z" fill="#ffffff" stroke="#ffffff" stroke-width="8" stroke-linejoin="round"/>
+                <path d="M 140 185 L 140 250 C 140 250 170 280 256 280 C 342 280 372 250 372 250 L 372 185" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+                <path d="M 372 185 L 372 260" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/><circle cx="372" cy="270" r="14" fill="#ffffff"/>
+                <path d="M 190 320 L 322 320 L 322 360 C 322 360 280 380 256 380 C 232 380 190 360 190 360 Z" fill="#ffffff" opacity="0.9"/>
+            </svg>
         </div>
         <div class="splash-title">کوشا</div>
         <div class="splash-subtitle">همیار پرتلاش معلم</div>
@@ -220,7 +210,8 @@
             <h1>کوشا</h1>
             <p id="header-subtitle">همیار پرتلاش معلم</p>
         </header>
-                <div class="container">
+
+        <div class="container">
             
             <div id="page-class" class="page-section active">
                 <div class="page-header-title">کلاس</div>
@@ -606,7 +597,7 @@
     </div> 
 </div> 
 
-<nav class="bottom-nav">
+<nav class="bottom-nav" style="display: none;">
     <a href="javascript:void(0)" class="nav-item active" onclick="switchPage('page-class', this)" title="کلاس">
         <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></svg>
     </a>
@@ -648,6 +639,7 @@
             <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">🏷️ نسخه و به‌روزرسانی</h3>
             <div class="version-info-box">
                 <div style="font-size: 0.85rem; color: var(--text-muted);">نسخه فعلی برنامه</div>
+                <!-- ✅ اصلاح اولویت ۳: حذف نسخه هاردکد شده v1.0.0 -->
                 <div class="version-value" id="currentVersionDisplay">—</div>
                 <div class="version-date" id="currentVersionDate">تاریخ انتشار: --</div>
             </div>
@@ -1063,66 +1055,65 @@
     </div>
 
     <div id="update-available-modal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 450px; text-align: center;">
-        <div class="modal-header" style="color: #16a34a;">🚀 نسخه جدید در دسترس!</div>
-        <div style="padding: 20px 0;">
-            <div style="font-size: 4rem; margin-bottom: 15px; animation: bounce 1s infinite;">🚀</div>
-            <h3 style="color: var(--primary); margin-bottom: 15px;" id="update-version-text">نسخه جدید آماده است</h3>
-            <div id="update-force-warning" style="display: none; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 2px solid #ef4444; border-radius: var(--radius-sm); padding: 12px; margin-bottom: 15px; font-size: 0.85rem; color: #b91c1c; font-weight: 700; line-height: 1.7;">
-                ⚠️ این به‌روزرسانی اجباری است و امکان رد کردن ندارد.
-            </div>
-            <div style="background: var(--primary-light); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 20px;">
-                <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted); line-height: 1.8;" id="update-notes-text">
-                    تغییرات جدید آماده نصب هستند.
+        <div class="modal-content" style="max-width: 450px; text-align: center;">
+            <div class="modal-header" style="color: #16a34a;">🚀 نسخه جدید در دسترس!</div>
+            <div style="padding: 20px 0;">
+                <div style="font-size: 4rem; margin-bottom: 15px; animation: bounce 1s infinite;">🚀</div>
+                <h3 style="color: var(--primary); margin-bottom: 15px;" id="update-version-text">نسخه جدید آماده است</h3>
+                <div style="background: var(--primary-light); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+                    <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted); line-height: 1.8;" id="update-notes-text">
+                        تغییرات جدید آماده نصب هستند.
+                    </p>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;" id="update-date-text">
+                    تاریخ انتشار: --
                 </p>
             </div>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;" id="update-date-text">
-                تاریخ انتشار: --
-            </p>
-        </div>
-        <div class="modal-footer" style="flex-direction: column; gap: 10px;">
-            <button type="button" class="btn btn-primary" style="width: 100%; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);" onclick="applyUpdateNow()">⬇️ همین حالا به‌روزرسانی کن</button>
-            <button type="button" class="btn btn-secondary" id="update-snooze-btn" style="width: 100%;" onclick="dismissUpdateNotification()">⏰ بعداً یادآوری کن</button>
-            <button type="button" class="btn btn-secondary" id="update-skip-btn" style="width: 100%; color: #dc2626; border: 1px solid #fca5a5; background: #fef2f2;" onclick="skipThisVersion(); closeUpdateModal();">❌ این نسخه را رد کن (تا نسخه بعدی مزاحم نشو)</button>
-            <button type="button" class="btn btn-secondary" id="update-settings-btn" style="width: 100%; font-size: 0.85rem; background: transparent; color: var(--text-muted);" onclick="openSettingsModal(); closeUpdateModal();">⚙️ تنظیمات به‌روزرسانی</button>
+            <div class="modal-footer" style="flex-direction: column; gap: 10px;">
+                <button type="button" class="btn btn-primary" style="width: 100%; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);" onclick="applyUpdateNow()">⬇️ همین حالا به‌روزرسانی کن</button>
+                <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="dismissUpdateNotification()">⏰ بعداً یادآوری کن</button>
+                <button type="button" class="btn btn-secondary" style="width: 100%; color: #dc2626; border: 1px solid #fca5a5; background: #fef2f2;" onclick="skipThisVersion(); closeUpdateModal();">❌ این نسخه را رد کن (تا نسخه بعدی مزاحم نشو)</button>
+                <button type="button" class="btn btn-secondary" style="width: 100%; font-size: 0.85rem; background: transparent; color: var(--text-muted);" onclick="openSettingsModal(); closeUpdateModal();">⚙️ تنظیمات به‌روزرسانی</button>
+            </div>
         </div>
     </div>
-</div>
 
+    <!-- ==========================================
+         ✅ بخش حیاتی: لود داینامیک اسکریپت‌ها با نسخه
+         ========================================== -->
     <script>
-    (function() {
-        const currentVersion = window.APP_VERSION || 'v0';
-        
-        const scriptsToLoad = [
-            'jalali-utils.js',
-            'calendar-data.js',
-            'calendar.js',
-            'db.js',
-            'app.js',
-            'class.js',
-            'students.js',
-            'lesson.js',
-            'group.js',
-            'session.js',
-            'score.js',
-            'reset.js',
-            'game.js',
-            'exam.js',
-            'updater.js'
-        ];
+        (function() {
+            // گرفتن نسخه از version.js (که در head لود شده)
+            const currentVersion = window.APP_VERSION || 'v0';
+            
+            // لیست فایل‌های اسکریپت (به ترتیب وابستگی)
+            const scriptsToLoad = [
+                'jalali-utils.js',
+                'calendar-data.js',
+                'calendar.js',
+                'db.js',
+                'app.js',
+                'class.js',
+                'students.js',
+                'lesson.js',
+                'group.js',
+                'session.js',
+                'score.js',
+                'reset.js',
+                'game.js',
+                'exam.js',
+                'updater.js'
+            ];
 
-        scriptsToLoad.forEach(function(file) {
-            const script = document.createElement('script');
-            script.src = file + '?v=' + currentVersion;
-            document.head.appendChild(script);
-        });
+            // تزریق اسکریپت‌ها با نسخه داینامیک
+            scriptsToLoad.forEach(function(file) {
+                document.write('<script src="' + file + '?v=' + currentVersion + '"><\/script>');
+            });
 
-        const backBtnScript = document.createElement('script');
-        backBtnScript.src = 'back-button.js?v=' + currentVersion;
-        backBtnScript.defer = true;
-        document.head.appendChild(backBtnScript);
-    })();
-</script>
+            // بارگذاری فایل back-button.js با ویژگی defer (چون باید بعد از DOM اجرا شود)
+            document.write('<script src="back-button.js?v=' + currentVersion + '" defer><\/script>');
+        })();
+    </script>
 
     <script>
         const SVG_MOON = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
@@ -1225,97 +1216,61 @@
         }
         
         async function selectAcademicYear(year) {
-    if (window.switchAcademicYear) {
-        const isSuccess = await window.switchAcademicYear(year);
-        if (isSuccess) {
             closeAcademicYearModal();
+            if (window.switchAcademicYear) {
+                await window.switchAcademicYear(year);
+            }
         }
-    } else {
-        closeAcademicYearModal();
-    }
-}
 
-        function openUpdateModal(versionInfo, force) {
-    const modal = document.getElementById('update-available-modal');
-    if (!modal) return;
-    
-    const isForced = force === true || (versionInfo && versionInfo.forceUpdate === true);
-    
-    const versionText = document.getElementById('update-version-text');
-    if (versionText && versionInfo) {
-        versionText.textContent = isForced
-            ? '⚠️ به‌روزرسانی اجباری — نسخه ' + versionInfo.version
-            : 'نسخه ' + versionInfo.version + ' آماده است';
-    }
-    
-    const notesText = document.getElementById('update-notes-text');
-    if (notesText && versionInfo) notesText.textContent = versionInfo.releaseNotes || 'تغییرات جدید آماده نصب هستند.';
-    
-    const dateText = document.getElementById('update-date-text');
-    if (dateText && versionInfo) dateText.textContent = 'تاریخ انتشار: ' + (versionInfo.releaseDate || '--');
-    
-    const snoozeBtn = document.getElementById('update-snooze-btn');
-    const skipBtn = document.getElementById('update-skip-btn');
-    const settingsBtn = document.getElementById('update-settings-btn');
-    const forceWarning = document.getElementById('update-force-warning');
-    
-    if (isForced) {
-        if (snoozeBtn) snoozeBtn.style.display = 'none';
-        if (skipBtn) skipBtn.style.display = 'none';
-        if (settingsBtn) settingsBtn.style.display = 'none';
-        if (forceWarning) forceWarning.style.display = 'block';
-    } else {
-        if (snoozeBtn) snoozeBtn.style.display = '';
-        if (skipBtn) skipBtn.style.display = '';
-        if (settingsBtn) settingsBtn.style.display = '';
-        if (forceWarning) forceWarning.style.display = 'none';
-    }
-    
-    modal.classList.add('show');
-}
-
-function closeUpdateModal() {
-    const modal = document.getElementById('update-available-modal');
-    if (modal) modal.classList.remove('show');
-}
-
-function applyUpdateNow() {
-    if (typeof performUpdate === 'function') performUpdate();
-}
-
-function dismissUpdateNotification() {
-    if (typeof window.getCurrentUpdateIsForced === 'function' && window.getCurrentUpdateIsForced()) {
-        return;
-    }
-    if (typeof snoozeUpdateNotification === 'function') snoozeUpdateNotification();
-    closeUpdateModal();
-}
+        function openUpdateModal(versionInfo) {
+            const modal = document.getElementById('update-available-modal');
+            if (!modal) return;
+            
+            const versionText = document.getElementById('update-version-text');
+            if (versionText && versionInfo) versionText.textContent = 'نسخه ' + versionInfo.version + ' آماده است';
+            
+            const notesText = document.getElementById('update-notes-text');
+            if (notesText && versionInfo) notesText.textContent = versionInfo.releaseNotes || 'تغییرات جدید آماده نصب هستند.';
+            
+            const dateText = document.getElementById('update-date-text');
+            if (dateText && versionInfo) dateText.textContent = 'تاریخ انتشار: ' + (versionInfo.releaseDate || '--');
+            
+            modal.classList.add('show');
+        }
+        
+        function closeUpdateModal() {
+            const modal = document.getElementById('update-available-modal');
+            if (modal) modal.classList.remove('show');
+        }
+        
+        function applyUpdateNow() {
+            if (typeof performUpdate === 'function') performUpdate();
+        }
+        
+        function dismissUpdateNotification() {
+            if (typeof snoozeUpdateNotification === 'function') snoozeUpdateNotification();
+            closeUpdateModal();
+        }
 
         window.addEventListener('load', async () => {
-    const minSplashTime = new Promise(resolve => setTimeout(resolve, 1200));
+            try {
+                if (typeof initApp === 'function') await initApp();
+            } catch (error) {
+                console.error("Init Error:", error);
+            }
+        });
 
-    const initPromise = (async () => {
-        try {
-            if (typeof initApp === 'function') await initApp();
-        } catch (error) {
-            console.error("Init Error:", error);
-        }
-    })();
-
-    await Promise.all([minSplashTime, initPromise]);
-
-    const splash = document.getElementById('splash-screen');
-    const app = document.getElementById('app-container');
-    
-    if (splash) splash.classList.add('splash-hidden');
-    if (app) app.style.display = 'block';
-
-    if (splash) {
-        setTimeout(() => { 
-            if (splash.parentElement) splash.remove(); 
-        }, 800);
-    }
-});
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                const app = document.getElementById('app-container');
+                const nav = document.querySelector('.bottom-nav');
+                if(splash) splash.classList.add('splash-hidden');
+                if(app) app.style.display = 'block';
+                if(nav) nav.style.display = 'flex';
+                setTimeout(() => { if(splash) splash.remove(); }, 800);
+            }, 1200);
+        });
 
         function switchPage(pageId, navElement) {
             if (window.isFormDirty) {
@@ -1331,7 +1286,7 @@ function dismissUpdateNotification() {
             document.querySelectorAll('.page-section').forEach(page => page.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            if(navElement) navElement.classList.add('active');
+            navElement.classList.add('active');
             
             if (pageId === 'page-class' && typeof renderDashboardData === 'function') renderDashboardData();
             if (pageId === 'page-students' && typeof renderStudentsList === 'function') renderStudentsList();
