@@ -1,6 +1,6 @@
 // ==========================================
 // فایل game.js — منطق تولید فایل بازی آزمون (آفلاین)
-// نسخه ارتقاء یافته با قابلیت‌های صدا، افکت بصری، هشدار ریاضی و قفل مراحل
+// نسخه بازنویسی شده بر اساس الگوی ۳ فایل برتر (با قابلیت‌های کامل)
 // ==========================================
 
 async function generateGameFile(examId) {
@@ -18,7 +18,7 @@ async function generateGameFile(examId) {
     const sub = window.allSubjectsData.find(s => s.id === exam.subjectId);
     const subName = sub ? `${sub.symbol || ''} ${sub.name}` : 'بدون درس';
     
-    // ۱. تبدیل سوالات تطبیقی به چهارگزینه‌ای
+    // تبدیل سوالات به فرمت استاندارد بازی
     const gameQuestions = [];
     exam.questions.forEach((q, index) => {
         if (q.type === 'matching' && q.pairs && q.pairs.length > 0) {
@@ -29,7 +29,6 @@ async function generateGameFile(examId) {
                 const distributedScore = Math.round((q.score / q.pairs.length) * 100) / 100;
 
                 gameQuestions.push({
-                    originalIndex: gameQuestions.length + 1,
                     type: 'multiple-choice',
                     text: `مفهوم «${pair.a}» با کدام گزینه تطبیق دارد؟ ${q.text ? '(' + q.text + ')' : ''}`,
                     options: options,
@@ -39,8 +38,7 @@ async function generateGameFile(examId) {
             });
         } else {
             const safeQuestion = {
-                originalIndex: gameQuestions.length + 1,
-                type: q.type,
+                type: q.type === 'essay' ? 'fill-blank' : q.type, // تبدیل تشریحی به جای خالی برای بازی
                 text: q.text,
                 score: q.score
             };
@@ -58,37 +56,11 @@ async function generateGameFile(examId) {
         }
     });
     
-    // ۲. تقسیم سوالات به مراحل (حداکثر ۳ مرحله)
-    const MAX_LEVELS = 3;
-    let levelsData = [];
-    
-    if (gameQuestions.length <= 4) {
-        // اگر سوالات کم بود، همه در یک مرحله
-        levelsData.push({ name: 'مرحله ۱', questions: gameQuestions });
-    } else {
-        const chunkSize = Math.ceil(gameQuestions.length / MAX_LEVELS);
-        for (let i = 0; i < MAX_LEVELS; i++) {
-            const start = i * chunkSize;
-            const end = Math.min(start + chunkSize, gameQuestions.length);
-            if (start < gameQuestions.length) {
-                const levelQuestions = gameQuestions.slice(start, end);
-                // محاسبه نمره کل این مرحله
-                let levelMaxScore = 0;
-                levelQuestions.forEach(q => levelMaxScore += q.score);
-                levelsData.push({
-                    name: 'مرحله ' + (i + 1),
-                    questions: levelQuestions,
-                    maxScore: Math.round(levelMaxScore * 100) / 100
-                });
-            }
-        }
-    }
-    
-    // محاسبه نمره کل آزمون (برای نمایش در هدر)
+    // محاسبه نمره کل
     let totalMaxScore = 0;
     gameQuestions.forEach(q => totalMaxScore += q.score);
     
-    const gameHtml = buildGameHtml(exam, subName, levelsData, totalMaxScore);
+    const gameHtml = buildGameHtml(exam, subName, gameQuestions, totalMaxScore);
     
     const blob = new Blob([gameHtml], { type: 'text/html;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -103,623 +75,698 @@ async function generateGameFile(examId) {
     showToast('فایل بازی با موفقیت تولید و دانلود شد! 🎮', 'success');
 }
 
-function buildGameHtml(exam, subName, levelsData, totalMaxScore) {
+function buildGameHtml(exam, subName, gameQuestions, totalMaxScore) {
     const jsonSafe = (obj) => JSON.stringify(obj).replace(/</g, '\\u003c');
-    
-    const levelsJson = jsonSafe(levelsData);
+    const questionsJson = jsonSafe(gameQuestions);
     const safeTitleJs = jsonSafe(exam.title);
     
     const safeExamTitleHtml = escapeHtml(exam.title);
     const safeSubNameHtml = escapeHtml(subName);
     const safeDateHtml = escapeHtml(exam.date);
-    
+
     return `<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🎮 بازی آزمون: ${safeExamTitleHtml}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            margin: 0; padding: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            font-family: 'Vazirmatn', Tahoma, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 15px;
-            direction: rtl;
-        }
-        .game-container {
-            width: 100%;
-            max-width: 600px;
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-            animation: slideUp 0.5s ease-out;
-            position: relative;
-        }
-        @keyframes slideUp {
-            from { transform: translateY(30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .game-header {
-            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
-            color: white;
-            padding: 25px 20px;
-            text-align: center;
-            position: relative;
-        }
-        .game-header h1 { margin: 0 0 5px 0; font-size: 1.4rem; }
-        .game-header p { margin: 0; font-size: 0.9rem; opacity: 0.9; }
-        .game-info-bar {
-            display: flex;
-            justify-content: space-around;
-            background: rgba(255,255,255,0.15);
-            padding: 10px;
-            border-radius: 12px;
-            margin-top: 15px;
-            font-size: 0.85rem;
-        }
-        .game-body { padding: 25px 20px; min-height: 400px; }
-        
-        /* Screens */
-        .screen { display: none; }
-        .screen.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* Level Menu */
-        .level-btn {
-            display: block; width: 100%; padding: 15px; margin-bottom: 10px;
-            background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px;
-            font-size: 1.1rem; font-weight: bold; color: #1e293b; cursor: pointer;
-            text-align: right; transition: all 0.2s; font-family: inherit;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .level-btn:hover:not(:disabled) { border-color: #4A90E2; background: #eff6ff; }
-        .level-btn:disabled { opacity: 0.6; cursor: not-allowed; background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; }
-        .level-btn .level-status { font-size: 0.85rem; padding: 4px 10px; border-radius: 20px; background: #e2e8f0; color: #64748b; }
-        .level-btn.passed { border-color: #22c55e; background: #f0fdf4; }
-        .level-btn.passed .level-status { background: #dcfce7; color: #15803d; }
-
-        /* Stats Bar */
-        .stats-bar {
-            display: flex; justify-content: space-between; flex-wrap: wrap;
-            background: #f8f9fa; padding: 8px; border-radius: 8px; font-size: 0.8rem;
-            font-weight: bold; color: #555; margin-bottom: 15px; border: 1px solid #e9ecef;
-        }
-        .stats-bar span { margin: 2px; }
-        .sc-score { color: #2980b9; } .sc-correct { color: #27ae60; } .sc-wrong { color: #e74c3c; }
-
-        .progress-bar-outer { width: 100%; height: 10px; background: #e2e8f0; border-radius: 5px; margin-bottom: 20px; overflow: hidden; }
-        .progress-bar-inner { height: 100%; background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%); border-radius: 5px; transition: width 0.4s ease; }
-        
-        .question-counter { text-align: center; font-size: 0.9rem; color: #64748b; margin-bottom: 15px; font-weight: bold; }
-        .question-text {
-            font-size: 1.15rem; font-weight: bold; color: #1e293b; margin-bottom: 20px;
-            line-height: 1.8; padding: 15px; background: #f8fafc; border-radius: 12px;
-            border-right: 4px solid #4A90E2; word-wrap: break-word;
-        }
-        .question-score-badge { display: inline-block; background: #fef3c7; color: #b45309; padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; margin-bottom: 10px; }
-        
-        .options-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
-        .option-btn {
-            background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 15px;
-            font-size: 1rem; font-family: inherit; color: #1e293b; cursor: pointer;
-            text-align: right; transition: all 0.2s; display: flex; align-items: center;
-            gap: 10px; word-wrap: break-word;
-        }
-        .option-btn:hover:not(:disabled) { border-color: #4A90E2; background: #eff6ff; transform: translateX(-4px); }
-        .option-btn.selected { border-color: #4A90E2; background: #dbeafe; box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2); }
-        .option-btn.correct { border-color: #22c55e; background: #dcfce7; }
-        .option-btn.wrong { border-color: #ef4444; background: #fee2e2; }
-        .option-letter { width: 30px; height: 30px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; color: #4A90E2; }
-        
-        .text-answer-input {
-            width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px;
-            font-size: 1rem; font-family: inherit; color: #1e293b; outline: none;
-            transition: border-color 0.2s; margin-bottom: 15px;
-        }
-        .text-answer-input:focus { border-color: #4A90E2; box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15); }
-        
-        .feedback-box { font-size: 0.95rem; font-weight: bold; margin-top: 15px; line-height: 1.6; padding: 10px; border-radius: 8px; display: none; }
-        .feedback-box.show { display: block; animation: fadeIn 0.3s; }
-        .feedback-correct { background: #dcfce7; color: #166534; border-right: 4px solid #22c55e; }
-        .feedback-wrong { background: #fee2e2; color: #991b1b; border-right: 4px solid #ef4444; }
-        
-        .math-alert { display: none; background: #fef2f2; color: #b91c1c; padding: 10px; border-radius: 8px; margin-top: 15px; font-size: 0.85rem; border: 1px solid #fecaca; font-weight: bold; text-align: center; }
-        .math-alert.show { display: block; }
-
-        .nav-buttons { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-nav { flex: 1; padding: 15px; border-radius: 12px; border: none; font-size: 1rem; font-weight: bold; font-family: inherit; cursor: pointer; transition: all 0.2s; }
-        .btn-next { background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); color: white; box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3); }
-        .btn-next:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(74, 144, 226, 0.4); }
-        .btn-prev { background: #f1f5f9; color: #64748b; }
-        .btn-prev:hover { background: #e2e8f0; }
-        .btn-prev:disabled, .btn-next:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .btn-retry { background: #f59e0b; color: white; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); }
-
-        /* Result Screens */
-        .finish-screen { text-align: center; padding: 10px; }
-        .finish-icon { font-size: 4rem; margin-bottom: 10px; animation: bounce 1s ease; }
-        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
-        .finish-title { font-size: 1.5rem; margin-bottom: 15px; font-weight: bold; }
-        .finish-subtitle { color: #64748b; margin-bottom: 20px; font-size: 1rem; }
-        
-        .score-box { background: #f8fafc; border: 2px dashed #4A90E2; border-radius: 12px; padding: 20px; margin: 20px 0; font-weight: bold; }
-        .score-number { font-size: 2.5rem; display: block; margin-bottom: 5px; }
-        
-        .result-actions { display: flex; flex-direction: column; gap: 10px; }
-        .btn-action { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; font-family: inherit; cursor: pointer; transition: all 0.2s; }
-        .btn-primary { background: #4A90E2; color: white; }
-        .btn-secondary { background: #f1f5f9; color: #64748b; }
-        
-        /* Confetti */
-        .flower { position: fixed; top: -50px; font-size: 24px; z-index: 999; pointer-events: none; animation: fall 2.5s linear forwards; }
-        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎮 بازی آزمون: ${safeExamTitleHtml}</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;font-family:'Vazirmatn',Tahoma,sans-serif}
+body{background:#f0f4f8;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:15px;overflow-x:hidden;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);}
+.c{background:#fff;padding:20px;border-radius:15px;box-shadow:0 5px 15px rgba(0,0,0,.2);width:100%;max-width:600px;text-align:center;position:relative;z-index:10}
+h1{color:#2c3e50;font-size:22px;margin-bottom:10px}
+h2{color:#34495e;font-size:18px;margin-bottom:15px}
+.info{background:#e8f4f8;padding:10px;border-radius:8px;font-size:13px;color:#2980b9;margin-bottom:15px;line-height:1.6}
+.date-box{background:#fff;border:1px solid #bdc3c7;border-radius:8px;padding:5px 15px;font-size:12px;color:#7f8c8d;margin-bottom:15px;display:inline-block;}
+.input-group { margin-bottom: 5px; text-align: right; }
+input{width:100%;padding:10px;border:2px solid #bdc3c7;border-radius:8px;font-size:14px;text-align:center;outline:none; transition: 0.3s; background: #fff; font-family: inherit;}
+input:focus{border-color:#3498db}
+.filled{border-color:#2ecc71 !important; background: #f0fff4;}
+.error{border-color:#e74c3c !important; background: #fff5f5;}
+.field-msg { font-size: 12px; font-weight: bold; height: 18px; display: block; padding-right: 5px; margin-top: 2px;}
+.msg-green { color: #27ae60; }
+.msg-red { color: #e74c3c; }
+.b{display:block;width:100%;padding:12px;margin:10px 0;background:#3498db;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;transition:.2s;font-family:inherit}
+.b:hover:not(.btn-disabled){background:#2980b9}
+.btn-disabled{background:#bdc3c7 !important; cursor: pointer; opacity: 0.8;} 
+.o{display:block;width:100%;padding:12px;margin:10px 0;background:#ecf0f1;border:2px solid #ecf0f1;border-radius:8px;font-size:16px;cursor:pointer;transition:.2s;color:#333;text-align:right;font-family:inherit}
+.o:hover:not(:disabled){background:#e0e6ed;border-color:#bdc3c7}
+.correct{background:#2ecc71!important;border-color:#27ae60!important;color:#fff!important}
+.wrong{background:#e74c3c!important;border-color:#c0392b!important;color:#fff!important}
+#q{font-size:18px;font-weight:bold;color:#e67e22;margin:15px 0;line-height:1.6;}
+#f{font-size:14px;margin-top:15px;line-height:1.6;font-weight:bold}
+#n{display:none;background:#2ecc71;margin-top:15px}
+#n:hover{background:#27ae60}
+.score-badge{background:#f1c40f;color:#333;padding:5px 15px;border-radius:20px;font-weight:bold;display:inline-block;margin-bottom:15px}
+.report{background:#f9f9f9;padding:15px;border-radius:10px;border:2px dashed #3498db;margin-bottom:15px}
+.report p{font-size:15px;line-height:1.8;color:#2c3e50;margin:5px 0}
+.hidden{display:none!important}
+.stats-bar{display:flex;justify-content:space-between;flex-wrap:wrap;background:#f8f9fa;padding:8px;border-radius:8px;font-size:12px;font-weight:bold;color:#555;margin-bottom:15px;border:1px solid #e9ecef}
+.stats-bar span{display:inline-block;margin:2px}
+.sc-score{color:#2980b9}.sc-correct{color:#27ae60}.sc-wrong{color:#e74c3c}
+.instruction-box { background: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; margin-bottom: 15px; border: 1px solid #ffeeba; text-align: right; line-height: 1.5; }
+.table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; border: 1px solid #ddd; border-radius: 5px;}
+table{width:100%; border-collapse:collapse; font-size:12px; text-align:center; white-space:nowrap;}
+th,td{border:1px solid #ddd;padding:6px;}
+th{background:#f2f2f2;color:#333;font-weight:bold;}
+.pass-msg{color:#27ae60;font-weight:bold}
+.fail-msg{color:#e74c3c;font-weight:bold}
+.math-alert{color:#e74c3c;background:#fdeaea;padding:8px;border-radius:5px;margin-top:10px;font-size:13px;border:1px solid #e74c3c; display: none;}
+.flower{position:fixed;top:-50px;font-size:24px;z-index:999;pointer-events:none;animation:fall 2.5s linear forwards}
+@keyframes fall{to{transform:translateY(100vh) rotate(360deg);opacity:0}}
+.pdf-btn{background:#e74c3c !important;}
+.pdf-btn:hover{background:#c0392b !important;}
+</style>
 </head>
 <body>
-    <div class="game-container">
-        <div class="game-header">
-            <h1>🎮 ${safeExamTitleHtml}</h1>
-            <p>${safeSubNameHtml}</p>
-            <div class="game-info-bar">
-                <span>📅 ${safeDateHtml}</span>
-                <span>🎯 ${totalMaxScore} نمره کل</span>
-            </div>
-        </div>
-        <div class="game-body">
-            
-            <!-- صفحه انتخاب مرحله -->
-            <div id="screen-menu" class="screen active">
-                <h2 style="text-align:center; color:#1e293b; margin-bottom: 20px; font-size: 1.2rem;">مسیر خود را انتخاب کن:</h2>
-                <div id="levels-container"></div>
-            </div>
+<div class="c">
+    <!-- صفحه خوش‌آمدگویی -->
+    <div id="sc-welcome">
+        <div style="font-size:50px">🎮</div>
+        <h1>${safeExamTitleHtml}</h1>
+        <p style="color:#7f8c8d;font-size:14px">سلام قهرمان! آماده‌ای این آزمون رو با موفقیت پشت سر بذاری؟</p>
+        <div class="info">📚 <b>درس:</b> ${safeSubNameHtml} | 📅 <b>تاریخ:</b> ${safeDateHtml}</div>
+        <div class="date-box" id="welcomeDate"></div>
 
-            <!-- صفحه بازی -->
-            <div id="screen-game" class="screen">
-                <div class="stats-bar">
-                    <span id="gameLevelName" style="color:#4A90E2;">مرحله ۱</span>
-                    <span id="gameQNum">سوال 1/1</span>
-                    <span id="gameCorrect" class="sc-correct">✅ 0</span>
-                    <span id="gameWrong" class="sc-wrong">❌ 0</span>
-                </div>
-                <div class="progress-bar-outer">
-                    <div class="progress-bar-inner" id="progressBar" style="width: 0%;"></div>
-                </div>
-                <div class="question-counter" id="questionCounter">سوال 1 از 1</div>
-                <div class="question-text" id="questionText">...</div>
-                <div id="optionsContainer"></div>
-                <div id="feedbackBox" class="feedback-box"></div>
-                <div id="mathAlert" class="math-alert"></div>
-                <div class="nav-buttons">
-                    <button class="btn-nav btn-next" id="btnNext" onclick="handleNextClick()">سوال بعدی ⏭️</button>
-                </div>
+        <form onsubmit="event.preventDefault(); handleStartClick();">
+            <div class="input-group">
+                <input type="text" id="fName" placeholder="نام..." oninput="checkField('fName')" onblur="checkField('fName')">
+                <span id="msg-fName" class="field-msg"></span>
             </div>
-
-            <!-- صفحه پایان مرحله -->
-            <div id="screen-level-result" class="screen">
-                <div class="finish-screen">
-                    <div class="finish-icon" id="levelResultIcon">🎉</div>
-                    <div class="finish-title" id="levelResultTitle"></div>
-                    <div class="score-box" id="levelScoreBox"></div>
-                    <div class="result-actions">
-                        <button class="btn-action btn-primary" id="btnNextLevel" onclick="goToNextLevel()">رفتن به مرحله بعد 🚀</button>
-                        <button class="btn-action btn-secondary" id="btnRetryLevel" onclick="retryLevel()">تلاش مجدد این مرحله 🔄</button>
-                        <button class="btn-action btn-secondary" onclick="goToMenu()">بازگشت به منو 🔙</button>
-                    </div>
-                </div>
+            <div class="input-group">
+                <input type="text" id="lName" placeholder="نام خانوادگی..." oninput="checkField('lName')" onblur="checkField('lName')">
+                <span id="msg-lName" class="field-msg"></span>
             </div>
-
-            <!-- صفحه پایان کل بازی -->
-            <div id="screen-final-result" class="screen">
-                <div class="finish-screen">
-                    <div class="finish-icon">🏆</div>
-                    <div class="finish-title" style="color:#4A90E2;">پایان آزمون</div>
-                    <div class="score-box" id="finalScoreBox"></div>
-                    <div class="result-actions">
-                        <button class="btn-action btn-secondary" onclick="location.reload()">شروع مجدد از ابتدا 🔄</button>
-                    </div>
-                </div>
+            <div class="input-group">
+                <input type="text" id="classNum" placeholder="کلاس..." oninput="checkField('classNum')" onblur="checkField('classNum')">
+                <span id="msg-classNum" class="field-msg"></span>
             </div>
-
-        </div>
+            <div class="input-group">
+                <input type="text" id="school" placeholder="مدرسه..." oninput="checkField('school')" onblur="checkField('school')">
+                <span id="msg-school" class="field-msg"></span>
+            </div>
+            <button type="submit" class="b btn-disabled" id="startBtn">شروع آزمون 🚀</button>
+        </form>
     </div>
 
-    <script>
-        function escapeHtml(str) {
-            if (str === null || str === undefined) return '';
-            return String(str).replace(/[&<>"']/g, function(m) {
-                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
-            });
+    <!-- صفحه منو -->
+    <div id="sc-menu" class="hidden">
+        <h2>مسیر خود را انتخاب کن:</h2>
+        <div class="score-badge" id="menuScore">امتیاز کل: 0</div>
+        <div id="levelButtonsContainer"></div>
+        <button class="b" style="background:#e67e22" onclick="showFinalReport()">مشاهده کارنامه کل 📜</button>
+        <button class="b" style="background:#95a5a6" onclick="goWelcome()">بازگشت به صفحه اول 🔙</button>
+    </div>
+
+    <!-- صفحه بازی -->
+    <div id="sc-game" class="hidden">
+        <button class="b" style="background:#95a5a6; padding:8px; font-size:14px; margin-bottom:10px" onclick="goMenu()">🔙 بازگشت به منو</button>
+        <div class="stats-bar">
+            <span id="gameLevel">...</span>
+            <span id="gameQNum">سوال 1/1</span>
+            <span id="gameScore" class="sc-score">امتیاز: 0</span>
+            <span id="gameCorrect" class="sc-correct">✅ 0</span>
+            <span id="gameWrong" class="sc-wrong">❌ 0</span>
+        </div>
+        
+        <div id="instructionBox" class="instruction-box hidden"></div>
+
+        <div id="q">...</div>
+        <div id="options"></div>
+        <div id="f"></div>
+        <div id="math-alert" class="math-alert"></div>
+        <button id="n" class="b" onclick="nextQ()">سؤال بعدی ⏭️</button>
+    </div>
+
+    <!-- صفحه پایان مرحله -->
+    <div id="sc-level-end" class="hidden">
+        <div style="font-size:50px">🎉</div>
+        <h2>پایان مرحله <span id="endLevelNum"></span></h2>
+        <div class="report">
+            <p style="font-size:12px;color:#7f8c8d;margin-bottom:10px" id="levelEndDate"></p>
+            <p id="levelEncouragement"></p>
+            <p>✅ صحیح: <span id="endCorrect"></span> | ❌ غلط: <span id="endWrong"></span></p>
+            <p>از کل <span id="endTotalQ"></span> سوال | درصد موفقیت: <b><span id="endPercent"></span>%</b></p>
+            <p>امتیاز این مرحله: <b id="endScore"></b></p>
+            <div id="global-alert" class="math-alert" style="display:none;"></div>
+        </div>
+        <button class="b" id="btn-next-level" onclick="goNextLevel()">رفتن به مرحله بعد 🚀</button>
+        <button class="b" id="btn-replay" style="background:#95a5a6" onclick="replayLevel()">بازی مجدد این مرحله 🔄</button>
+        <button class="b" style="background:#95a5a6" onclick="goMenu()">بازگشت به منو 🔙</button>
+        <button class="b pdf-btn" id="btn-pdf-level" onclick="printPDF('level')">دریافت کارنامه مرحله 📄</button>
+        <button class="b" style="background:#e67e22" id="btn-final-report" onclick="showFinalReport()">مشاهده کارنامه کل 📜</button>
+    </div>
+
+    <!-- صفحه کارنامه کل -->
+    <div id="sc-report" class="hidden">
+        <div style="font-size:50px">🏆</div>
+        <h2>کارنامه نهایی</h2>
+        <div class="report" id="reportText"></div>
+        <button class="b pdf-btn" onclick="printPDF('final')">دریافت کارنامه نهایی 📄</button>
+        <button class="b" style="background:#95a5a6" onclick="goMenu()">بازگشت به منو 🔙</button>
+        <button class="b" onclick="location.reload()">بازی مجدد از ابتدا 🔄</button>
+    </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = ${questionsJson};
+const EXAM_TITLE = ${safeTitleJs};
+const TOTAL_MAX_SCORE = ${totalMaxScore};
+
+// پیام‌های تشویقی
+const encCorrect = ["آفرین! ادامه بده 💪", "عالی بود! تو نابغه‌ای 🌟", "چه هوش بالایی داری 🧠", "دقیق و درست! 👏", "همینطور ادامه بده 🚀", "تو می‌تونی! 🎯", "پاسخ درست بود! ✨", "کارت درسته! 🏆", "محشر بود! 🌈", "عالی جواب دادی! 🎉"];
+const encWrong = ["اشکالی نداره، یاد می‌گیری 🌸", "نزدیک بود! دوباره تلاش کن 💪", "مهم نیست، از اشتباهات یاد می‌گیریم 🌟", "تلاشت قابل تحسینه، ادامه بده 🚀", "کمی دقت کن، دفعه بعد درستش می‌کنی ✨", "پاسخ درست رو بخون و یاد بگیر 📖", "نگران نباش، تمرین باعث پیشرفت میشه 🧩", "دفعه بعد حتماً می‌تونی! 🎯"];
+
+const alertMsgs = {
+    missingFields: ["🌸 قهرمان کوچک! برای ورود، ابتدا باید تمام مشخصات خود را کامل بنویسی.", "🌟 عزیزم، لطفاً نام، نام خانوادگی، کلاس و مدرسه‌ات را بنویس.", "📝 برای شروع، ابتدا فرم مشخصات را به طور کامل پر کن."],
+    lockedLevel: ["🔒 این مرحله هنوز قفل است! ابتدا باید مرحله قبلی را با موفقیت پشت سر بگذاری.", "🚧 برای باز کردن این مرحله، باید مرحله قبل رو پاس کنی."],
+    alreadyPassed: ["✅ شما این مرحله را با نمره کامل پاس کرده‌اید و نیازی به بازی مجدد نیست.", "🏆 تو این مرحله رو عالی تموم کردی! نیازی به تکرارش نیست."],
+    noReport: ["📜 شما هنوز هیچ مرحله‌ای را بازی نکرده‌اید! ابتدا باید حداقل یک مرحله را بازی کنید.", "📝 کارنامه‌ای وجود ندارد! برای دیدن کارنامه، ابتدا باید بازی کنی."],
+    levelPassed: ["🎉 تبریک! تو این مرحله رو با موفقیت پشت سر گذاشتی!", "🏆 عالی بود! مرحله با موفقیت تموم شد."],
+    gamePassed: ["🏆 تبریک! تو کل بازی رو با موفقیت پشت سر گذاشتی!", "🎉 آفرین! تونستی تمام مراحل رو پاس کنی."]
+};
+
+function getRandomAlert(type) {
+    let arr = alertMsgs[type];
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+const msgs = {
+    fName: { ok: ["چه اسم زیبایی داری 🌟", "اسمت مثل گل می‌مونه 🌸"], err: ["نامت را ننوشتی گلم 🌸", "اسم زیبایت را اینجا بنویس ✍️"] },
+    lName: { ok: ["چه نام خانوادگی قشنگی 🥰", "چه نام خانوادگی باکلاسی 👑"], err: ["نام خانوادگی تو ننوشتی گلم 🌸", "نام خانوادگی‌ات را بنویس لطفاً 🖊️"] },
+    classNum: { ok: ["چه کلاس فعالی داری 🎒", "چه کلاس باحالی داری 🏫"], err: ["کلاس چندمی؟ بنویس 🌸", "داخل کدام کلاس می‌نشینی؟ 🏫"] },
+    school: { ok: ["چه مدرسه خوبی 🏫", "چه مدرسه باحالی 🏰"], err: ["اسم مدرسه‌ات را بنویس 🌸", "در کدام مدرسه درس می‌خوانی؟ 🏫"] }
+};
+
+// متغیرهای وضعیت
+let levelsData = [];
+let state = { fName:"", lName:"", classNum:"", school:"", totalScore: 0, unlocked: 1, level: 0, idx: 0, qs: [], answered: false, levelScore: 0, levelCorrect: 0, levelWrong: 0 };
+let levelStats = {}; 
+
+const $ = id => document.getElementById(id);
+const show = id => $(id).classList.remove("hidden");
+const hide = id => $(id).classList.add("hidden");
+
+function getRandomMsg(type, id) {
+    let arr = msgs[id][type];
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function getPersianDate() {
+    let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date().toLocaleDateString('fa-IR', options);
+}
+
+// تقسیم سوالات به مراحل
+function prepareLevels() {
+    const MAX_LEVELS = 3;
+    if (ALL_QUESTIONS.length <= 4) {
+        levelsData = [{ name: "۱. مرحله اصلی", questions: ALL_QUESTIONS }];
+    } else {
+        const chunkSize = Math.ceil(ALL_QUESTIONS.length / MAX_LEVELS);
+        let lvlNum = 1;
+        for (let i = 0; i < MAX_LEVELS; i++) {
+            const start = i * chunkSize;
+            const end = Math.min(start + chunkSize, ALL_QUESTIONS.length);
+            if (start < ALL_QUESTIONS.length) {
+                levelsData.push({ name: "مرحله " + lvlNum++, questions: ALL_QUESTIONS.slice(start, end) });
+            }
+        }
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => { 
+    $("welcomeDate").innerText = getPersianDate(); 
+    prepareLevels();
+});
+
+// فرم و اعتبارسنجی
+function checkField(id) {
+    let el = $(id);
+    let val = el.value.trim();
+    let msgEl = $("msg-" + id);
+    if (val.length > 0) {
+        el.classList.remove("error"); el.classList.add("filled");
+        msgEl.className = "field-msg msg-green"; msgEl.innerText = getRandomMsg('ok', id);
+    } else {
+        el.classList.remove("filled"); el.classList.add("error");
+        msgEl.className = "field-msg msg-red"; msgEl.innerText = getRandomMsg('err', id);
+    }
+    checkAllFilled();
+}
+
+function checkAllFilled() {
+    let isAllFilled = $("fName").value.trim().length > 0 && $("lName").value.trim().length > 0 && $("classNum").value.trim().length > 0 && $("school").value.trim().length > 0;
+    if (isAllFilled) { $("startBtn").classList.remove("btn-disabled"); } 
+    else { $("startBtn").classList.add("btn-disabled"); }
+}
+
+function handleStartClick() {
+    let isAllFilled = $("fName").value.trim().length > 0 && $("lName").value.trim().length > 0 && $("classNum").value.trim().length > 0 && $("school").value.trim().length > 0;
+    if (!isAllFilled) {
+        alert(getRandomAlert('missingFields'));
+        ['fName', 'lName', 'classNum', 'school'].forEach(id => checkField(id));
+        playSound('wrong');
+    } else { startGame(); }
+}
+
+function goWelcome() { hide("sc-menu"); show("sc-welcome"); }
+
+// سیستم صدا و افکت
+let audioCtx;
+function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+function playTone(freq, type, duration) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
+}
+function playSound(type) {
+    initAudio();
+    if (type === 'correct') { playTone(600, 'sine', 0.1); setTimeout(() => playTone(800, 'sine', 0.15), 100); }
+    else if (type === 'wrong') { playTone(200, 'sawtooth', 0.3); }
+    else if (type === 'welcome') { playTone(400, 'sine', 0.1); setTimeout(() => playTone(600, 'sine', 0.15), 100); setTimeout(() => playTone(800, 'sine', 0.2), 200); }
+    else if (type === 'win') { playTone(400, 'sine', 0.1); setTimeout(() => playTone(500, 'sine', 0.1), 100); setTimeout(() => playTone(600, 'sine', 0.1), 200); setTimeout(() => playTone(800, 'sine', 0.4), 300); }
+    else if (type === 'fail') { playTone(300, 'sawtooth', 0.2); setTimeout(() => playTone(200, 'sawtooth', 0.3), 200); }
+}
+function showConfetti(isFail = false) {
+    const emojis = isFail ? ['❌','💔','⚠️','💥'] : ['🌸','🌺','🌟','🎉','✨'];
+    for(let i=0; i<30; i++) {
+        let el = document.createElement('div');
+        el.className = 'flower';
+        el.innerText = emojis[Math.floor(Math.random()*emojis.length)];
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.animationDuration = (Math.random() * 1.5 + 1.5) + 's';
+        el.style.fontSize = (Math.random() * 20 + 15) + 'px';
+        if(isFail) el.style.filter = "grayscale(80%)";
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
+    }
+}
+
+function startGame() {
+    state.fName = $("fName").value.trim(); state.lName = $("lName").value.trim();
+    state.classNum = $("classNum").value.trim(); state.school = $("school").value.trim();
+    playSound('welcome'); showConfetti(); 
+    updateMenu(); hide("sc-welcome"); show("sc-menu");
+}
+
+function updateMenu() {
+    $("menuScore").innerText = "امتیاز کل: " + state.totalScore;
+    const container = $("levelButtonsContainer");
+    container.innerHTML = "";
+    
+    levelsData.forEach((lvl, index) => {
+        const lvlNum = index + 1;
+        let btn = document.createElement("button");
+        btn.className = "b";
+        
+        let statusText = "";
+        let isLocked = false;
+        
+        if (levelStats[lvlNum] && levelStats[lvlNum].percent === 100) {
+            statusText = "✅ " + lvl.name;
+        } else if (index > 0 && (!levelStats[index] || !levelStats[index].passed)) {
+            statusText = "🔒 " + lvl.name;
+            isLocked = true;
+        } else {
+            statusText = "🔓 " + lvl.name;
         }
         
-        function normalizeText(str) {
-            if (!str) return '';
-            return str.toString().trim().toLowerCase()
-                .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
-                .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
-                .replace(/ي/g, 'ی').replace(/ك/g, 'ک').replace(/\\s+/g, ' ');
+        btn.innerText = statusText;
+        btn.onclick = () => startLevel(lvlNum);
+        if (isLocked) {
+            btn.style.background = "#bdc3c7";
+            btn.style.cursor = "not-allowed";
         }
+        container.appendChild(btn);
+    });
+}
 
-        const LEVELS = ${levelsJson};
+function goMenu() {
+    $("menuScore").innerText = "امتیاز کل: " + state.totalScore;
+    updateMenu(); 
+    hide("sc-game"); hide("sc-level-end"); hide("sc-report"); show("sc-menu");
+}
+
+function updateLiveStats() {
+    $("gameLevel").innerText = levelsData[state.level - 1].name;
+    $("gameQNum").innerText = "سوال " + (state.idx + 1) + "/" + state.qs.length;
+    $("gameScore").innerText = "امتیاز: " + state.totalScore;
+    $("gameCorrect").innerText = "✅ " + state.levelCorrect;
+    $("gameWrong").innerText = "❌ " + state.levelWrong;
+}
+
+function startLevel(lvl) {
+    const lvlIndex = lvl - 1;
+    
+    // بررسی قفل بودن
+    if (lvlIndex > 0 && (!levelStats[lvlIndex] || !levelStats[lvlIndex].passed)) {
+        alert(getRandomAlert('lockedLevel'));
+        playSound('wrong');
+        return;
+    }
+    
+    // بررسی پاس شدن کامل
+    if (levelStats[lvl] && levelStats[lvl].percent === 100) {
+        alert(getRandomAlert('alreadyPassed'));
+        return;
+    }
+
+    if (levelStats[lvl]) {
+        state.totalScore -= levelStats[lvl].score;
+    }
+
+    state.level = lvl; state.idx = 0; state.levelScore = 0; state.levelCorrect = 0; state.levelWrong = 0;
+    state.qs = [...levelsData[lvlIndex].questions].sort(() => Math.random() - 0.5);
+    
+    hide("sc-menu"); hide("sc-level-end"); show("sc-game");
+    $("math-alert").style.display = "none";
+    
+    // نمایش راهنما (اختیاری)
+    $("instructionBox").innerText = "به مرحله " + lvl + " خوش آمدی! به سوالات با دقت پاسخ بده.";
+    $("instructionBox").classList.remove("hidden");
+
+    updateLiveStats(); loadQ();
+}
+
+function loadQ() {
+    state.answered = false; 
+    $("f").innerText = ""; 
+    $("n").style.display = "none";
+    $("n").innerText = (state.idx === state.qs.length - 1) ? "پایان مرحله 🏁" : "سؤال بعدی ⏭️";
+    $("n").onclick = nextQ; // اتصال مجدد رویداد کلیک برای اطمینان
+    
+    const q = state.qs[state.idx];
+    $("q").innerText = q.text; 
+    $("options").innerHTML = "";
+    updateLiveStats();
+    
+    if (q.type === 'multiple-choice') {
+        let opts = [...q.options].sort(() => Math.random() - 0.5);
+        opts.forEach(opt => {
+            let btn = document.createElement("button");
+            btn.className = "o"; btn.innerText = opt; 
+            btn.onclick = () => checkAns(btn, opt, q.options[q.correctIndex], q.text);
+            $("options").appendChild(btn);
+        });
+    } else if (q.type === 'true-false') {
+        let trueBtn = document.createElement("button");
+        trueBtn.className = "o"; trueBtn.innerText = "درست ✅"; 
+        trueBtn.onclick = () => checkAns(trueBtn, true, q.correctAnswer, q.text);
         
-        const encCorrect = ["آفرین! ادامه بده 💪", "عالی بود! تو نابغه‌ای 🌟", "چه هوش بالایی داری 🧠", "دقیق و درست! 👏", "همینطور ادامه بده 🚀", "تو می‌تونی! 🎯", "پاسخ درست بود! ✨", "کارت درسته! 🏆", "محشر بود! 🌈", "عالی جواب دادی! 🎉"];
-        const encWrong = ["اشکالی نداره، یاد می‌گیری 🌸", "نزدیک بود! دوباره تلاش کن 💪", "مهم نیست، از اشتباهات یاد می‌گیریم 🌟", "تلاشت قابل تحسینه، ادامه بده 🚀", "کمی دقت کن، دفعه بعد درستش می‌کنی ✨", "پاسخ درست رو بخون و یاد بگیر 📖", "نگران نباش، تمرین باعث پیشرفت میشه 🧩", "دفعه بعد حتماً می‌تونی! 🎯"];
+        let falseBtn = document.createElement("button");
+        falseBtn.className = "o"; falseBtn.innerText = "غلط ❌"; 
+        falseBtn.onclick = () => checkAns(falseBtn, false, q.correctAnswer, q.text);
+        
+        $("options").appendChild(trueBtn);
+        $("options").appendChild(falseBtn);
+    } else {
+        // جای خالی
+        let input = document.createElement("input");
+        input.type = "text"; input.className = "o"; input.placeholder = "پاسخ خود را بنویسید..."; input.style.textAlign = "center";
+        input.id = "textInput";
+        let submitBtn = document.createElement("button");
+        submitBtn.className = "b"; submitBtn.innerText = "ثبت پاسخ"; submitBtn.style.marginTop = "10px";
+        submitBtn.onclick = () => checkAns(input, input.value, q.answer, q.text);
+        
+        $("options").appendChild(input);
+        $("options").appendChild(submitBtn);
+    }
+}
 
-        let state = {
-            currentLevelIndex: 0,
-            currentQuestionIndex: 0,
-            userAnswers: [],
-            levelCorrect: 0,
-            levelWrong: 0,
-            levelEarnedScore: 0,
-            levelStats: {}, // { 0: { passed: true, correct: 3, wrong: 1 } }
-            isAnswered: false
-        };
+function normalizeText(str) {
+    if (!str) return '';
+    return str.toString().trim().toLowerCase()
+        .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+        .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+        .replace(/ي/g, 'ی').replace(/ك/g, 'ک').replace(/\s+/g, ' ');
+}
 
-        // ==========================================
-        // سیستم صدا
-        // ==========================================
-        let audioCtx;
-        function initAudio() { 
-            if (!audioCtx) {
-                try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
-            } 
-        }
-        function playTone(freq, type, duration) {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator(); 
-            const gain = audioCtx.createGain();
-            osc.type = type; 
-            osc.frequency.value = freq;
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-            osc.connect(gain); 
-            gain.connect(audioCtx.destination);
-            osc.start(); 
-            osc.stop(audioCtx.currentTime + duration);
-        }
-        function playSound(type) {
-            initAudio();
-            if (type === 'correct') { playTone(600, 'sine', 0.1); setTimeout(() => playTone(800, 'sine', 0.15), 100); }
-            else if (type === 'wrong') { playTone(200, 'sawtooth', 0.3); }
-            else if (type === 'win') { playTone(400, 'sine', 0.1); setTimeout(() => playTone(500, 'sine', 0.1), 100); setTimeout(() => playTone(600, 'sine', 0.1), 200); setTimeout(() => playTone(800, 'sine', 0.4), 300); }
-            else if (type === 'fail') { playTone(300, 'sawtooth', 0.2); setTimeout(() => playTone(200, 'sawtooth', 0.3), 200); }
-        }
+function checkAns(btnElement, chosen, correct, qText) {
+    if (state.answered) return;
+    state.answered = true;
+    
+    // غیرفعال کردن دکمه‌ها
+    $("options").querySelectorAll(".o").forEach(b => {
+        if (b.tagName === 'BUTTON') b.disabled = true;
+        else b.disabled = true;
+    });
+    let submitBtn = $("options").querySelector("button.b");
+    if (submitBtn) submitBtn.disabled = true;
 
-        // ==========================================
-        // افکت بصری (گل و ستاره)
-        // ==========================================
-        function showConfetti(isFail = false) {
-            const emojis = isFail ? ['❌','💔','⚠️','💥'] : ['🌸','🌺','🌟','🎉','✨'];
-            for(let i=0; i<25; i++) {
-                let el = document.createElement('div');
-                el.className = 'flower';
-                el.innerText = emojis[Math.floor(Math.random()*emojis.length)];
-                el.style.left = Math.random() * 100 + 'vw';
-                el.style.animationDuration = (Math.random() * 1.5 + 1.5) + 's';
-                el.style.fontSize = (Math.random() * 20 + 15) + 'px';
-                if(isFail) el.style.filter = "grayscale(80%)";
-                document.body.appendChild(el);
-                setTimeout(() => el.remove(), 3000);
+    let isCorrect = false;
+    let correctText = correct;
+
+    if (typeof chosen === 'boolean') {
+        isCorrect = (chosen === correct);
+        correctText = correct ? 'درست' : 'غلط';
+    } else if (typeof chosen === 'number' || !isNaN(chosen)) {
+        // این حالت برای چهارگزینه‌ای استفاده نمی‌شود چون متن پاس می‌دهیم
+    } else {
+        let normChosen = normalizeText(chosen);
+        let normCorrect = normalizeText(correct);
+        isCorrect = (normChosen !== '' && normChosen === normCorrect);
+    }
+    
+    // اگر چهارگزینه‌ای است، چک کنیم آیا متن کلیک شده با پاسخ صحیح یکی است؟
+    if (btnElement && btnElement.tagName === 'BUTTON' && correctText !== 'درست' && correctText !== 'غلط') {
+        isCorrect = (chosen === correct);
+    }
+
+    if (isCorrect) {
+        btnElement.classList.add("correct"); 
+        state.levelScore += 10; state.totalScore += 10; state.levelCorrect++;
+        playSound('correct'); showConfetti(false);
+        $("f").style.color = "#27ae60"; 
+        $("f").innerText = encCorrect[Math.floor(Math.random() * encCorrect.length)];
+    } else {
+        if (btnElement && btnElement.classList.contains("o")) btnElement.classList.add("wrong"); 
+        state.levelWrong++;
+        playSound('wrong');
+        
+        // پیدا کردن و رنگ کردن گزینه صحیح
+        $("options").querySelectorAll(".o").forEach(b => { 
+            if (b.innerText === correct || b.value === correct) b.classList.add("correct"); 
+        });
+        
+        let wrongMsg = encWrong[Math.floor(Math.random() * encWrong.length)];
+        $("f").style.color = "#e74c3c";
+        $("f").innerHTML = `<span style="color:#e74c3c">${wrongMsg}</span><br>پاسخ صحیح: <span style="color:#27ae60">${correctText}</span>`;
+    }
+    
+    updateLiveStats(); 
+    $("n").style.display = "block";
+
+    // بررسی هشدار ریاضی
+    if (state.idx === state.qs.length - 1) {
+        $("n").style.display = "none"; 
+        setTimeout(() => { nextQ(); }, 1500);
+    } else {
+        let remaining = state.qs.length - (state.idx + 1);
+        let passMark = Math.floor(state.qs.length / 2) + 1;
+        if (state.levelCorrect + remaining < passMark) {
+            let mathAlert = $("math-alert");
+            mathAlert.innerHTML = `❌ متاسفانه از نظر ریاضی امکان قبولی در این مرحله وجود ندارد. باید دوباره تلاش کنید.`;
+            mathAlert.style.display = "block";
+            $("n").innerText = "تلاش مجدد 🔄";
+            $("n").onclick = replayLevel;
+        }
+    }
+}
+
+function nextQ() {
+    state.idx++;
+    if (state.idx < state.qs.length) loadQ(); else endLevel();
+}
+
+function endLevel() {
+    hide("sc-game"); show("sc-level-end");
+    let qCount = state.qs.length;
+    let percent = Math.round((state.levelCorrect / qCount) * 100);
+    let passMark = Math.floor(qCount / 2) + 1;
+    let isPassed = state.levelCorrect >= passMark;
+    
+    levelStats[state.level] = { name: levelsData[state.level - 1].name, qCount: qCount, correct: state.levelCorrect, wrong: state.levelWrong, score: state.levelScore, percent: percent, passed: isPassed };
+
+    $("endLevelNum").innerText = levelsData[state.level - 1].name;
+    $("levelEndDate").innerText = "تاریخ: " + getPersianDate();
+    $("endCorrect").innerText = state.levelCorrect;
+    $("endWrong").innerText = state.levelWrong;
+    $("endTotalQ").innerText = qCount;
+    $("endPercent").innerText = percent;
+    $("endScore").innerText = state.levelScore;
+    
+    $("btn-pdf-level").innerText = "دریافت کارنامه مرحله " + state.level + " 📄";
+
+    if (isPassed) {
+        playSound('win'); showConfetti(); 
+        $("levelEncouragement").innerHTML = `<span class="pass-msg">🎉 تبریک! شما در این مرحله قبول شدید.</span>`;
+        $("btn-pdf-level").style.display = "block"; 
+        setTimeout(() => {
+            if (state.level === levelsData.length) { alert(getRandomAlert('gamePassed')); } 
+            else { alert(getRandomAlert('levelPassed')); }
+        }, 500);
+    } else {
+        playSound('fail'); showConfetti(true); 
+        $("levelEncouragement").innerHTML = `<span class="fail-msg">❌ متاسفانه شرط قبولی رو نتونستی کسب کنی.<br><span style="font-size:12px;color:#555">(حداقل پاسخ صحیح: ${passMark} سوال)</span></span>`;
+        $("btn-pdf-level").style.display = "none"; 
+    }
+    
+    $("btn-replay").style.display = (state.levelCorrect === qCount) ? "none" : "block";
+    $("btn-next-level").style.display = (isPassed && state.level < levelsData.length) ? "block" : "none";
+    $("btn-final-report").style.display = (state.level === levelsData.length) ? "block" : "none";
+}
+
+function replayLevel() { startLevel(state.level); }
+function goNextLevel() { startLevel(state.level + 1); }
+
+function showFinalReport() {
+    let hasProgress = Object.keys(levelStats).length > 0;
+    if (!hasProgress) {
+        alert(getRandomAlert('noReport'));
+        playSound('wrong');
+        return;
+    }
+
+    hide("sc-menu"); hide("sc-level-end"); show("sc-report");
+    let tScore = 0, tCorrect = 0, tWrong = 0, tQ = 0;
+    let table = `<div class="table-wrap"><table><tr><th>مرحله</th><th>امتیاز</th><th>درست</th><th>غلط</th><th>کل سوال</th><th>درصد</th><th>وضعیت</th></tr>`;
+    
+    for(let i = 1; i <= levelsData.length; i++) {
+        let s = levelStats[i];
+        if (s) {
+            tScore += s.score; tCorrect += s.correct; tWrong += s.wrong; tQ += s.qCount;
+            let status = s.passed ? `<span style="color:#27ae60">قبول</span>` : `<span style="color:#e74c3c">نیاز به تلاش</span>`;
+            table += `<tr><td>${s.name}</td><td>${s.score}</td><td>${s.correct}</td><td>${s.wrong}</td><td>${s.qCount}</td><td>${s.percent}%</td><td>${status}</td></tr>`;
+        } else {
+            table += `<tr><td>${levelsData[i-1].name}</td><td colspan="6" style="color:#999">انجام نشده</td></tr>`;
+        }
+    }
+    table += `</table></div>`;
+    
+    let tPercent = tQ > 0 ? Math.round((tCorrect / tQ) * 100) : 0;
+    let tPassMark = Math.floor(ALL_QUESTIONS.length / 2) + 1;
+    
+    let allLevelsPassed = Object.values(levelStats).length === levelsData.length && Object.values(levelStats).every(s => s.passed);
+    let tPassed = allLevelsPassed && (tCorrect >= tPassMark);
+    
+    let finalMsg = "";
+    if (tQ === 0) { finalMsg = "شما هنوز هیچ مرحله‌ای را بازی نکرده‌اید."; } 
+    else if (tPassed) {
+        playSound('win'); showConfetti(); 
+        finalMsg = `<span class="pass-msg">🏆 تبریک! شما در کل بازی قبول شدید.</span>`;
+    } else {
+        playSound('fail'); showConfetti(true); 
+        finalMsg = `<span class="fail-msg">❌ متاسفانه شرط قبولی کل بازی رو نتونستی کسب کنی.<br><span style="font-size:12px;color:#555">(برای قبولی باید تمام مراحل را پاس کنی)</span></span>`;
+    }
+
+    $("reportText").innerHTML = `
+        <p style="font-size:18px;color:#2980b9;text-align:center"><b>${state.fName} ${state.lName} عزیز</b> 🌺</p>
+        <p style="font-size:12px;color:#7f8c8d;margin-bottom:10px;text-align:center">تاریخ: ${getPersianDate()}</p>
+        ${table}
+        <div style="margin-top:15px;padding-top:10px;border-top:2px solid #bdc3c7;font-weight:bold">
+            <p>مجموع امتیاز: ${tScore}</p>
+            <p>مجموع پاسخ صحیح: <span style="color:#27ae60">${tCorrect}</span> | مجموع پاسخ غلط: <span style="color:#e74c3c">${tWrong}</span></p>
+            <p>از کل ${ALL_QUESTIONS.length} سوال | درصد کل موفقیت: <span style="color:#2980b9">${tPercent}%</span></p>
+        </div>
+        <div style="margin-top:15px;font-weight:bold">${finalMsg}</div>
+    `;
+}
+
+function printPDF(type) {
+    let title = type === 'level' ? `کارنامه مرحله ${levelsData[state.level - 1].name}` : 'کارنامه نهایی بازی';
+    let content = "";
+    
+    if (type === 'level') {
+        let s = levelStats[state.level];
+        content = `
+            <div style="overflow-x: auto; width: 100%;">
+            <table>
+                <tr><th>نام مرحله</th><th>امتیاز</th><th>درست</th><th>غلط</th><th>کل سوال</th><th>درصد</th><th>وضعیت</th></tr>
+                <tr><td>${s.name}</td><td>${s.score}</td><td>${s.correct}</td><td>${s.wrong}</td><td>${s.qCount}</td><td>${s.percent}%</td><td>${s.passed ? 'قبول' : 'نیاز به تلاش'}</td></tr>
+            </table>
+            </div>
+            <p style="margin-top:20px; font-weight:bold;">تبریک! شما در این مرحله با موفقیت قبول شدید.</p>
+        `;
+    } else {
+        let tScore = 0, tCorrect = 0, tWrong = 0, tQ = 0;
+        let tableHtml = `<div style="overflow-x: auto; width: 100%;"><table><tr><th>مرحله</th><th>امتیاز</th><th>درست</th><th>غلط</th><th>کل سوال</th><th>درصد</th><th>وضعیت</th></tr>`;
+        for(let i = 1; i <= levelsData.length; i++) {
+            let s = levelStats[i];
+            if (s) {
+                tScore += s.score; tCorrect += s.correct; tWrong += s.wrong; tQ += s.qCount;
+                tableHtml += `<tr><td>${s.name}</td><td>${s.score}</td><td>${s.correct}</td><td>${s.wrong}</td><td>${s.qCount}</td><td>${s.percent}%</td><td>${s.passed ? 'قبول' : 'نیاز به تلاش'}</td></tr>`;
             }
         }
+        tableHtml += `</table></div>`;
+        let tPercent = tQ > 0 ? Math.round((tCorrect / tQ) * 100) : 0;
+        let tPassMark = Math.floor(ALL_QUESTIONS.length / 2) + 1;
+        
+        let allLevelsPassed = Object.values(levelStats).length === levelsData.length && Object.values(levelStats).every(s => s.passed);
+        let tPassed = allLevelsPassed && (tCorrect >= tPassMark);
+        
+        content = `
+            ${tableHtml}
+            <div style="margin-top:15px; padding-top:10px; border-top:2px solid #000; font-weight:bold;">
+                <p>مجموع امتیاز: ${tScore}</p>
+                <p>مجموع پاسخ صحیح: ${tCorrect} | مجموع پاسخ غلط: ${tWrong}</p>
+                <p>از کل ${ALL_QUESTIONS.length} سوال | درصد کل موفقیت: ${tPercent}%</p>
+            </div>
+            <p style="margin-top:20px; font-weight:bold; color:${tPassed ? '#27ae60' : '#e74c3c'};">
+                ${tPassed ? 'تبریک! شما در کل بازی قبول شدید.' : 'متاسفانه شرط قبولی کل بازی را کسب نکردید.'}
+            </p>
+        `;
+    }
 
-        function getRandomMsg(arr) {
-            return arr[Math.floor(Math.random() * arr.length)];
-        }
-
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-        }
-
-        // ==========================================
-        // مدیریت منو و مراحل
-        // ==========================================
-        function renderMenu() {
-            const container = document.getElementById('levels-container');
-            container.innerHTML = '';
-            
-            LEVELS.forEach((level, index) => {
-                const isUnlocked = index === 0 || (state.levelStats[index - 1] && state.levelStats[index - 1].passed);
-                const stat = state.levelStats[index];
-                
-                let btnClass = 'level-btn';
-                let statusHtml = '<span class="level-status">🔒 قفل</span>';
-                
-                if (stat && stat.passed) {
-                    btnClass += ' passed';
-                    statusHtml = '<span class="level-status">✅ پاس شده</span>';
-                } else if (isUnlocked) {
-                    statusHtml = '<span class="level-status">شروع</span>';
-                }
-                
-                const btn = document.createElement('button');
-                btn.className = btnClass;
-                btn.disabled = !isUnlocked;
-                btn.innerHTML = \`
-                    <span>\${level.name}</span>
-                    \${statusHtml}
-                \`;
-                btn.onclick = () => startLevel(index);
-                container.appendChild(btn);
-            });
-            
-            showScreen('screen-menu');
-        }
-
-        function startLevel(levelIndex) {
-            state.currentLevelIndex = levelIndex;
-            state.currentQuestionIndex = 0;
-            state.levelCorrect = 0;
-            state.levelWrong = 0;
-            state.levelEarnedScore = 0;
-            state.isAnswered = false;
-            
-            const level = LEVELS[levelIndex];
-            document.getElementById('gameLevelName').innerText = level.name;
-            
-            showScreen('screen-game');
-            loadQuestion();
-        }
-
-        function loadQuestion() {
-            state.isAnswered = false;
-            const level = LEVELS[state.currentLevelIndex];
-            const q = level.questions[state.currentQuestionIndex];
-            const totalInLevel = level.questions.length;
-            
-            // آپدیت هدر
-            document.getElementById('gameQNum').innerText = \`سوال \${state.currentQuestionIndex + 1}/\${totalInLevel}\`;
-            document.getElementById('gameCorrect').innerText = \`✅ \${state.levelCorrect}\`;
-            document.getElementById('gameWrong').innerText = \`❌ \${state.levelWrong}\`;
-            document.getElementById('progressBar').style.width = \`\${(state.currentQuestionIndex / totalInLevel) * 100}%\`;
-            document.getElementById('questionCounter').innerText = \`سوال \${state.currentQuestionIndex + 1} از \${totalInLevel}\`;
-            
-            // آپدیت متن سوال
-            document.getElementById('questionText').innerHTML = \`
-                <span class="question-score-badge">\${q.score} نمره</span>
-                <br>
-                \${escapeHtml(q.text)}
-            \`;
-            
-            // آپدیت گزینه‌ها
-            const optionsContainer = document.getElementById('optionsContainer');
-            optionsContainer.innerHTML = '';
-            
-            if (q.type === 'multiple-choice') {
-                optionsContainer.className = 'options-list';
-                q.options.forEach((opt, i) => {
-                    const letters = ['الف', 'ب', 'ج', 'د', 'ه', 'و'];
-                    const btn = document.createElement('button');
-                    btn.className = 'option-btn';
-                    btn.innerHTML = \`
-                        <span class="option-letter">\${letters[i] || (i+1)}</span>
-                        <span>\${escapeHtml(opt)}</span>
-                    \`;
-                    btn.onclick = () => checkAnswer(i);
-                    optionsContainer.appendChild(btn);
-                });
-            } else if (q.type === 'true-false') {
-                optionsContainer.className = 'options-list';
-                const btnTrue = document.createElement('button');
-                btnTrue.className = 'option-btn';
-                btnTrue.innerHTML = '<span class="option-letter">✅</span><span>درست</span>';
-                btnTrue.onclick = () => checkAnswer(true);
-                optionsContainer.appendChild(btnTrue);
-                
-                const btnFalse = document.createElement('button');
-                btnFalse.className = 'option-btn';
-                btnFalse.innerHTML = '<span class="option-letter">❌</span><span>غلط</span>';
-                btnFalse.onclick = () => checkAnswer(false);
-                optionsContainer.appendChild(btnFalse);
-            } else {
-                optionsContainer.className = '';
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.className = 'text-answer-input';
-                input.id = 'textAnswerInput';
-                input.placeholder = 'پاسخ خود را بنویسید...';
-                input.onkeydown = (e) => { if (e.key === 'Enter') checkAnswer(input.value); };
-                optionsContainer.appendChild(input);
-            }
-            
-            // ریست کردن بازخورد و دکمه‌ها
-            const fb = document.getElementById('feedbackBox');
-            fb.className = 'feedback-box';
-            fb.innerText = '';
-            
-            const mathAlert = document.getElementById('mathAlert');
-            mathAlert.className = 'math-alert';
-            
-            const btnNext = document.getElementById('btnNext');
-            btnNext.style.display = 'none';
-            btnNext.className = 'btn-nav btn-next';
-            btnNext.innerText = (state.currentQuestionIndex === totalInLevel - 1) ? 'پایان مرحله 🏁' : 'سوال بعدی ⏭️';
-            
-            // فوکوس روی اینپوت متن اگر وجود داشت
-            if (q.type !== 'multiple-choice' && q.type !== 'true-false') {
-                setTimeout(() => {
-                    const input = document.getElementById('textAnswerInput');
-                    if (input) input.focus();
-                }, 100);
-            }
-        }
-
-        function checkAnswer(userAns) {
-            if (state.isAnswered) return;
-            state.isAnswered = true;
-            
-            const level = LEVELS[state.currentLevelIndex];
-            const q = level.questions[state.currentQuestionIndex];
-            let isCorrect = false;
-            
-            // غیرفعال کردن المان‌ها
-            document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
-            const textInput = document.getElementById('textAnswerInput');
-            if (textInput) textInput.disabled = true;
-
-            // بررسی پاسخ
-            if (q.type === 'multiple-choice') {
-                isCorrect = (userAns === q.correctIndex);
-                const btns = document.querySelectorAll('.option-btn');
-                btns.forEach((btn, idx) => {
-                    if (idx === q.correctIndex) btn.classList.add('correct');
-                    else if (idx === userAns) btn.classList.add('wrong');
-                });
-            } else if (q.type === 'true-false') {
-                isCorrect = (userAns === q.correctAnswer);
-                const btns = document.querySelectorAll('.option-btn');
-                const correctIdx = q.correctAnswer ? 0 : 1;
-                const userIdx = userAns ? 0 : 1;
-                btns.forEach((btn, idx) => {
-                    if (idx === correctIdx) btn.classList.add('correct');
-                    else if (idx === userIdx) btn.classList.add('wrong');
-                });
-            } else {
-                const normUser = normalizeText(userAns);
-                const normCorrect = normalizeText(q.answer);
-                isCorrect = (normUser !== '' && normUser === normCorrect);
-                
-                if (textInput) {
-                    textInput.style.borderColor = isCorrect ? '#22c55e' : '#ef4444';
-                    textInput.style.background = isCorrect ? '#f0fdf4' : '#fef2f2';
-                }
-            }
-
-            // نمایش بازخورد
-            const fb = document.getElementById('feedbackBox');
-            if (isCorrect) {
-                state.levelCorrect++;
-                state.levelEarnedScore += q.score;
-                playSound('correct');
-                showConfetti(false);
-                fb.className = 'feedback-box show feedback-correct';
-                fb.innerHTML = getRandomMsg(encCorrect);
-            } else {
-                state.levelWrong++;
-                playSound('wrong');
-                fb.className = 'feedback-box show feedback-wrong';
-                
-                let correctText = '';
-                if (q.type === 'multiple-choice') correctText = q.options[q.correctIndex];
-                else if (q.type === 'true-false') correctText = q.correctAnswer ? 'درست' : 'غلط';
-                else correctText = q.answer;
-                
-                fb.innerHTML = \`\${getRandomMsg(encWrong)}<br>پاسخ صحیح: <span style="color:#166534; font-weight:900;">\${escapeHtml(correctText)}</span>\`;
-            }
-            
-            // آپدیت آمار
-            document.getElementById('gameCorrect').innerText = \`✅ \${state.levelCorrect}\`;
-            document.getElementById('gameWrong').innerText = \`❌ \${state.levelWrong}\`;
-            document.getElementById('progressBar').style.width = \`\${((state.currentQuestionIndex + 1) / level.questions.length) * 100}%\`;
-
-            // بررسی هشدار ریاضی
-            const remaining = level.questions.length - (state.currentQuestionIndex + 1);
-            const passMark = Math.ceil(level.questions.length * 0.5); // ۵۰٪ قبولی
-            const btnNext = document.getElementById('btnNext');
-            
-            if (state.levelCorrect + remaining < passMark) {
-                // دیگر امکان قبولی نیست
-                const mathAlert = document.getElementById('mathAlert');
-                mathAlert.className = 'math-alert show';
-                mathAlert.innerHTML = \`⚠️ متاسفانه از نظر ریاضی امکان قبولی در این مرحله وجود ندارد (حداکثر نمره ممکن: \${state.levelCorrect + remaining} از \${passMark} لازم).\`;
-                
-                btnNext.style.display = 'block';
-                btnNext.className = 'btn-nav btn-retry';
-                btnNext.innerText = 'تلاش مجدد 🔄';
-                btnNext.onclick = () => retryLevel();
-            } else {
-                btnNext.style.display = 'block';
-            }
-        }
-
-        function handleNextClick() {
-            const level = LEVELS[state.currentLevelIndex];
-            if (state.currentQuestionIndex < level.questions.length - 1) {
-                state.currentQuestionIndex++;
-                loadQuestion();
-            } else {
-                finishLevel();
-            }
-        }
-
-        function finishLevel() {
-            const level = LEVELS[state.currentLevelIndex];
-            const totalQ = level.questions.length;
-            const passMark = Math.ceil(totalQ * 0.5);
-            const isPassed = state.levelCorrect >= passMark;
-            
-            state.levelStats[state.currentLevelIndex] = {
-                passed: isPassed,
-                correct: state.levelCorrect,
-                wrong: state.levelWrong
-            };
-            
-            const iconEl = document.getElementById('levelResultIcon');
-            const titleEl = document.getElementById('levelResultTitle');
-            const scoreBox = document.getElementById('levelScoreBox');
-            const btnNextLevel = document.getElementById('btnNextLevel');
-            const btnRetryLevel = document.getElementById('btnRetryLevel');
-            
-            if (isPassed) {
-                playSound('win');
-                showConfetti(false);
-                iconEl.innerText = '🎉';
-                titleEl.style.color = '#16a34a';
-                titleEl.innerText = 'آفرین! این مرحله رو پاس کردی.';
-                scoreBox.style.borderColor = '#22c55e';
-                scoreBox.style.color = '#16a34a';
-            } else {
-                playSound('fail');
-                showConfetti(true);
-                iconEl.innerText = '💪';
-                titleEl.style.color = '#ef4444';
-                titleEl.innerText = 'نیاز به تلاش بیشتر داری.';
-                scoreBox.style.borderColor = '#ef4444';
-                scoreBox.style.color = '#ef4444';
-            }
-            
-            scoreBox.innerHTML = \`
-                <span class="score-number">\${state.levelCorrect} از \${totalQ}</span>
-                <span>پاسخ صحیح</span>
-            \`;
-            
-            // نمایش دکمه‌ها
-            if (isPassed && state.currentLevelIndex < LEVELS.length - 1) {
-                btnNextLevel.style.display = 'block';
-            } else {
-                btnNextLevel.style.display = 'none';
-            }
-            btnRetryLevel.style.display = 'block';
-            
-            showScreen('screen-level-result');
-        }
-
-        function retryLevel() {
-            startLevel(state.currentLevelIndex);
-        }
-
-        function goToNextLevel() {
-            if (state.currentLevelIndex < LEVELS.length - 1) {
-                startLevel(state.currentLevelIndex + 1);
-            }
-        }
-
-        function goToMenu() {
-            renderMenu();
-        }
-
-        // شروع برنامه
-        renderMenu();
-    </script>
+    let printWin = window.open('', '_blank');
+    printWin.document.write(`
+        <!DOCTYPE html>
+        <html dir="rtl" lang="fa">
+        <head>
+            <meta charset="UTF-8">
+            <title>${title}</title>
+            <style>
+                body { font-family: Tahoma, sans-serif; direction: rtl; padding: 30px; text-align: center; }
+                .header { border-bottom: 3px double #2980b9; padding-bottom: 20px; margin-bottom: 20px; }
+                h1 { color: #2c3e50; margin-bottom: 5px; }
+                h2 { color: #3498db; }
+                .info { background: #f8f9fa; border: 1px solid #ddd; padding: 15px; border-radius: 8px; display: inline-block; margin-bottom: 20px; text-align: right; }
+                .info span { font-weight: bold; color: #2980b9; margin-left: 10px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; white-space: nowrap; }
+                th, td { border: 1px solid #000; padding: 10px; text-align: center; }
+                th { background: #ecf0f1; }
+                .footer { margin-top: 40px; font-size: 13px; color: #7f8c8d; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>🎮 ${EXAM_TITLE}</h1>
+                <h2>${title}</h2>
+            </div>
+            <div class="info">
+                <div><span>نام:</span> ${state.fName}</div>
+                <div><span>نام خانوادگی:</span> ${state.lName}</div>
+                <div><span>کلاس:</span> ${state.classNum}</div>
+                <div><span>مدرسه:</span> ${state.school}</div>
+            </div>
+            ${content}
+            <div class="footer">
+                <p>${getPersianDate()}</p>
+            </div>
+            <script>
+                window.onload = function() { setTimeout(function() { window.print(); }, 500); }
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWin.document.close();
+}
+</script>
 </body>
 </html>`;
 }
