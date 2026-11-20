@@ -44,21 +44,18 @@ async function saveGroup(e) {
         academicYear: window.activeAcademicYear
     };
         
-    try {
-        await saveData('groups', data);
-        
-        const form = document.getElementById('group-form');
-        if (form) form.reset();
-        showToast('گروه جدید با موفقیت ثبت شد!', 'success');
-        
-        if (typeof clearFormDirty === 'function') clearFormDirty();
-        
-        loadAllData();
-        
-        if (form) form.scrollIntoView({ behavior: 'smooth' });
-    } catch (err) {
-        window.handleError(err, 'خطا در ثبت گروه! لطفاً دوباره تلاش کنید.');
-    }
+    await saveData('groups', data);
+    
+    const form = document.getElementById('group-form');
+    if (form) form.reset();
+    showToast('گروه جدید با موفقیت ثبت شد!', 'success');
+    
+    // ✅ رفع باگ: پاک کردن وضعیت فرم‌های ذخیره‌نشده
+    if (typeof clearFormDirty === 'function') clearFormDirty();
+    
+    loadAllData();
+    
+    if (form) form.scrollIntoView({ behavior: 'smooth' });
 }
 
 function renderGroupData() {
@@ -187,17 +184,14 @@ async function saveEditedGroup(e) {
         academicYear: existing ? existing.academicYear : window.activeAcademicYear
     };
         
-    try {
-        await saveData('groups', data);
-        showToast('گروه با موفقیت ویرایش شد!', 'success');
-        
-        if (typeof clearFormDirty === 'function') clearFormDirty();
-        
-        closeEditGroupModal();
-        loadAllData();
-    } catch (err) {
-        window.handleError(err, 'خطا در ویرایش گروه! لطفاً دوباره تلاش کنید.');
-    }
+    await saveData('groups', data);
+    showToast('گروه با موفقیت ویرایش شد!', 'success');
+    
+    // ✅ رفع باگ: پاک کردن وضعیت فرم‌های ذخیره‌نشده
+    if (typeof clearFormDirty === 'function') clearFormDirty();
+    
+    closeEditGroupModal();
+    loadAllData();
 }
 
 async function deleteGroup(id) {
@@ -249,24 +243,14 @@ function populateModalStudentSelect() {
     const select = document.getElementById('assignStudentSelectModal');
     if (!select) return;
     
-    // همه دانش‌آموزان به جز کسانی که در همین گروه هستند
     const availableStudents = window.allStudentsData.filter(st => st.groupId !== currentGroupDetailsId);
     
     if (availableStudents.length === 0) {
         select.innerHTML = '<option value="" disabled selected>همه دانش‌آموزان در این گروه هستند.</option>';
     } else {
-        // ✅ اصلاح: نمایش وضعیت گروه فعلی برای دانش‌آموزانی که در گروه دیگری هستند
+        // ✅ اصلاح امنیتی: escape نام و نام خانوادگی دانش‌آموز در منوی کشویی
         select.innerHTML = '<option value="" disabled selected>انتخاب دانش‌آموز...</option>' + 
-            availableStudents.map(st => {
-                let groupInfo = '';
-                if (st.groupId) {
-                    const otherGroup = window.allGroupsData.find(g => g.id === st.groupId);
-                    if (otherGroup) {
-                        groupInfo = ` (عضو گروه: ${otherGroup.name})`;
-                    }
-                }
-                return `<option value="${st.id}">${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}${escapeHtml(groupInfo)}</option>`;
-            }).join('');
+            availableStudents.map(st => `<option value="${st.id}">${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</option>`).join('');
     }
 }
 
@@ -279,40 +263,15 @@ async function assignStudentFromModal() {
         return;
     }
 
-    // ۱. محاسبه ظرفیت مجاز برای هر گروه
-    const totalStudents = window.allStudentsData.length;
-    const totalGroups = window.allGroupsData.length;
-    
-    // فرمول: سقف(تعداد کل / تعداد گروه‌ها) + ۲ (انعطاف برای اعداد فرد و جلوگیری از عدم تعادل شدید)
-    const maxCapacity = totalGroups > 0 ? Math.ceil(totalStudents / totalGroups) + 2 : totalStudents;
-    
-    // محاسبه تعداد فعلی اعضای این گروه
-    const currentGroupMembersCount = window.allStudentsData.filter(st => st.groupId === currentGroupDetailsId).length;
-
-    // ۲. بررسی محدودیت ظرفیت
-    if (currentGroupMembersCount >= maxCapacity) {
-        showToast(`ظرفیت این گروه تکمیل شده است. (حداکثر مجاز برای این گروه: ${toPersianNumber(maxCapacity)} نفر)`, 'error');
-        return;
-    }
-
     try {
         const student = await getDataById('students', parseInt(studentId));
         if (student) {
-            // ۳. بررسی اینکه آیا دانش‌آموز در گروه دیگری است؟
-            if (student.groupId && student.groupId !== currentGroupDetailsId) {
-                const oldGroup = window.allGroupsData.find(g => g.id === student.groupId);
-                const oldGroupName = oldGroup ? oldGroup.name : 'دیگر';
-                if (!confirm(`این دانش‌آموز در حال حاضر در گروه «${oldGroupName}» است.\nآیا مایلید او را به این گروه منتقل کنید؟`)) {
-                    return;
-                }
-            }
-
-            // ۴. ذخیره تغییرات
             student.groupId = currentGroupDetailsId;
             await saveData('students', student);
-            showToast('دانش‌آموز با موفقیت به گروه اضافه/منتقل شد.', 'success');
+            showToast('دانش‌آموز با موفقیت به گروه اضافه شد.', 'success');
             
             await loadAllData(); 
+
             populateModalStudentSelect(); 
             renderGroupDetails(); 
         }
