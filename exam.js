@@ -49,7 +49,6 @@ function renderExamsData() {
     sortedExams.forEach(exam => {
         const sub = window.allSubjectsData ? window.allSubjectsData.find(s => s.id === exam.subjectId) : null;
         
-        // ✅ اصلاح امنیتی: escape نام و نماد درس
         const subName = sub ? `${escapeHtml(sub.symbol || '📚')} ${escapeHtml(sub.name)}` : 'بدون درس';
         
         const results = window.allExamResultsData ? window.allExamResultsData.filter(r => r.examId === exam.id) : [];
@@ -64,7 +63,6 @@ function renderExamsData() {
             avgHtml = `<span style="color:#dc2626;">⚠️ نمره ثبت نشده</span>`;
         }
         
-        // ✅ اصلاح امنیتی: escape عنوان آزمون
         html += `
             <div class="exam-list-item">
                 <div class="exam-list-header">
@@ -289,7 +287,6 @@ async function openExamEditorModal(examId = null) {
     document.getElementById('examEditId').value = '';
 
     const subjectSelect = document.getElementById('examSubject');
-    // ✅ اصلاح امنیتی: escape نام و نماد دروس
     subjectSelect.innerHTML = '<option value="" disabled selected>یک درس را انتخاب کنید...</option>' +
         window.allSubjectsData.map(s => `<option value="${s.id}">${escapeHtml(s.symbol || '')} ${escapeHtml(s.name)}</option>`).join('');
 
@@ -339,7 +336,6 @@ function addExamQuestion(questionData = null) {
     const questionId = 'q_' + Date.now() + '_' + examQuestionCounter;
     const type = questionData ? questionData.type : 'multiple-choice';
     
-    // ✅ اصلاح امنیتی: escape متن سوال در textarea
     const safeQuestionText = questionData ? escapeHtml(questionData.text) : '';
     
     const questionHtml = `
@@ -353,13 +349,14 @@ function addExamQuestion(questionData = null) {
                     <label>نوع سوال</label>
                     <select class="exam-question-type" onchange="changeQuestionType(this)">
                         <option value="multiple-choice" ${type === 'multiple-choice' ? 'selected' : ''}>چندگزینه‌ای</option>
-                        <option value="essay" ${type === 'essay' ? 'selected' : ''}>تشریحی</option>
-                        <option value="fill-blank" ${type === 'fill-blank' ? 'selected' : ''}>جای خالی</option>
                         <option value="true-false" ${type === 'true-false' ? 'selected' : ''}>درست / غلط</option>
+                        <option value="fill-blank" ${type === 'fill-blank' ? 'selected' : ''}>جای خالی</option>
+                        <option value="essay" ${type === 'essay' ? 'selected' : ''}>تشریحی</option>
+                        <option value="matching" ${type === 'matching' ? 'selected' : ''}>تطبیقی (جور کردنی)</option>
                     </select>
                 </div>
                 <div class="exam-question-field">
-                    <label>متن سوال</label>
+                    <label>متن سوال (در صورت نیاز)</label>
                     <textarea class="exam-question-text" placeholder="متن سوال را وارد کنید..." required>${safeQuestionText}</textarea>
                 </div>
                 <div class="exam-question-type-specific">
@@ -384,9 +381,7 @@ function getQuestionTypeHtml(type, data = null, qid = 'default_qid') {
         
         let optionsHtml = '';
         options.forEach((opt, i) => {
-            // ✅ اصلاح امنیتی: escape گزینه‌ها
             const safeOpt = escapeHtml(opt);
-            // ✅ اصلاح باگ: استفاده از qid برای گروه‌بندی رادیو باتن‌ها
             optionsHtml += `
                 <div class="exam-option-row">
                     <input type="radio" name="correct_${qid}" ${i === correctIndex ? 'checked' : ''}>
@@ -406,7 +401,6 @@ function getQuestionTypeHtml(type, data = null, qid = 'default_qid') {
             </div>
         `;
     } else if (type === 'essay') {
-        // ✅ اصلاح امنیتی: escape پاسخ تشریحی
         const safeAnswer = data && data.answer ? escapeHtml(data.answer) : '';
         return `
             <div class="exam-question-field">
@@ -415,7 +409,6 @@ function getQuestionTypeHtml(type, data = null, qid = 'default_qid') {
             </div>
         `;
     } else if (type === 'fill-blank') {
-        // ✅ اصلاح امنیتی: escape پاسخ جای خالی
         const safeAnswer = data && data.answer ? escapeHtml(data.answer) : '';
         return `
             <div class="exam-question-field">
@@ -434,9 +427,47 @@ function getQuestionTypeHtml(type, data = null, qid = 'default_qid') {
                 </select>
             </div>
         `;
+    } else if (type === 'matching') {
+        const pairs = data && data.pairs ? data.pairs : [{a: '', b: ''}, {a: '', b: ''}];
+        let pairsHtml = '';
+        pairs.forEach((pair, i) => {
+            const safeA = escapeHtml(pair.a);
+            const safeB = escapeHtml(pair.b);
+            pairsHtml += `
+                <div class="exam-matching-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
+                    <input type="text" class="exam-match-a form-control" placeholder="مفهوم (ستون ۱)" value="${safeA}">
+                    <span>⬅️</span>
+                    <input type="text" class="exam-match-b form-control" placeholder="مصداق (ستون ۲)" value="${safeB}">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" title="حذف">✖</button>
+                </div>
+            `;
+        });
+        return `
+            <div class="exam-question-field">
+                <label>جفت‌های تطبیقی (حداقل ۲ جفت)</label>
+                <div class="exam-matching-container">
+                    ${pairsHtml}
+                    <button type="button" class="btn btn-secondary btn-sm mt-4" onclick="addMatchingRow(this)">➕ افزودن جفت جدید</button>
+                </div>
+            </div>
+        `;
     }
     return '';
 }
+
+window.addMatchingRow = function(btn) {
+    const container = btn.closest('.exam-matching-container');
+    const newRow = document.createElement('div');
+    newRow.className = 'exam-matching-row';
+    newRow.style = 'display:flex; gap:8px; margin-bottom:8px; align-items:center;';
+    newRow.innerHTML = `
+        <input type="text" class="exam-match-a form-control" placeholder="مفهوم (ستون ۱)">
+        <span>⬅️</span>
+        <input type="text" class="exam-match-b form-control" placeholder="مصداق (ستون ۲)">
+        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" title="حذف">✖</button>
+    `;
+    container.insertBefore(newRow, btn);
+};
 
 function changeQuestionType(selectEl) {
     const questionItem = selectEl.closest('.exam-question-item');
@@ -457,7 +488,6 @@ function addExamOption(btn) {
     
     const newRow = document.createElement('div');
     newRow.className = 'exam-option-row';
-    // ✅ اصلاح باگ: استفاده از qid برای رادیو باتن گزینه جدید
     newRow.innerHTML = `
         <input type="radio" name="correct_${qid}">
         <input type="text" class="exam-option-text" placeholder="گزینه ${toPersianNumber(optionCount + 1)}">
@@ -505,7 +535,6 @@ async function saveExam(event) {
     
     const editId = document.getElementById('examEditId').value;
     
-    // ✅ اصلاح امنیتی: sanitize عنوان آزمون
     let title;
     try {
         title = sanitizeInput(document.getElementById('examTitle').value, 150);
@@ -535,7 +564,7 @@ async function saveExam(event) {
         const text = item.querySelector('.exam-question-text').value.trim();
         const score = parseFloat(item.querySelector('.exam-question-score').value);
         
-        if (!text) {
+        if (type !== 'matching' && !text) {
             showToast(`متن سوال ${toPersianNumber(index + 1)} را وارد کنید.`, 'error');
             hasError = true;
             return;
@@ -560,17 +589,12 @@ async function saveExam(event) {
             let correctIndex = 0;
             const optionRows = item.querySelectorAll('.exam-option-row');
             
-            // ✅ اصلاح باگ: پیدا کردن دقیق ایندکس گزینه صحیح (در صورت خالی بودن گزینه‌ها)
             optionRows.forEach((row) => {
                 const optText = row.querySelector('.exam-option-text').value.trim();
                 const isCorrect = row.querySelector('input[type="radio"]').checked;
                 
-                // فقط گزینه‌هایی که متن دارند را به آرایه اضافه می‌کنیم
                 if (optText) {
-                    // اگر این گزینه به عنوان پاسخ صحیح انتخاب شده بود، ایندکس جدید آن را ذخیره می‌کنیم
-                    if (isCorrect) {
-                        correctIndex = options.length;
-                    }
+                    if (isCorrect) correctIndex = options.length;
                     options.push(optText);
                 }
             });
@@ -581,11 +605,8 @@ async function saveExam(event) {
                 return;
             }
             
-            // اگر کاربر هیچ گزینه‌ای را به عنوان صحیح انتخاب نکرده بود، گزینه اول را صحیح در نظر می‌گیریم
             const anyChecked = Array.from(optionRows).some(row => row.querySelector('input[type="radio"]').checked);
-            if (!anyChecked) {
-                correctIndex = 0;
-            }
+            if (!anyChecked) correctIndex = 0;
 
             questionData.options = options;
             questionData.correctIndex = correctIndex;
@@ -599,6 +620,19 @@ async function saveExam(event) {
         } else if (type === 'true-false') {
             const answerEl = item.querySelector('.exam-tf-answer');
             questionData.correctAnswer = answerEl ? (answerEl.value === 'true') : true;
+        } else if (type === 'matching') {
+            const pairs = [];
+            item.querySelectorAll('.exam-matching-row').forEach(row => {
+                const a = row.querySelector('.exam-match-a').value.trim();
+                const b = row.querySelector('.exam-match-b').value.trim();
+                if (a && b) pairs.push({ a, b });
+            });
+            if (pairs.length < 2) {
+                showToast(`سوال ${toPersianNumber(index + 1)} باید حداقل ۲ جفت معتبر داشته باشد.`, 'error');
+                hasError = true;
+                return;
+            }
+            questionData.pairs = pairs;
         }
         
         questions.push(questionData);
@@ -683,7 +717,6 @@ async function openExamGradingModal(examId) {
     
     const sub = window.allSubjectsData.find(s => s.id === exam.subjectId);
     document.getElementById('grading-exam-title').textContent = exam.title;
-    // ✅ اصلاح امنیتی: escape نام درس
     document.getElementById('grading-exam-subject').textContent = sub ? `${sub.symbol || ''} ${sub.name}` : 'بدون درس';
     document.getElementById('grading-exam-date').textContent = toPersianNumber(exam.date);
     document.getElementById('grading-exam-max').textContent = toPersianNumber(exam.maxScore);
@@ -699,11 +732,9 @@ async function openExamGradingModal(examId) {
         container.innerHTML = '';
         window.allStudentsData.forEach((st, index) => {
             const g = window.allGroupsData.find(x => x.id === st.groupId);
-            // ✅ اصلاح امنیتی: escape نام و نماد گروه
             const groupBadge = g ? `<span class="exam-grading-student-group">${escapeHtml(g.symbol)} ${escapeHtml(g.name)}</span>` : '';
             const currentScore = scoresMap[st.id] !== undefined ? scoresMap[st.id] : '';
             
-            // ✅ اصلاح امنیتی: escape نام دانش‌آموز
             container.innerHTML += `
                 <div class="exam-grading-row" data-student-id="${st.id}">
                     <div class="exam-grading-student-info">
@@ -740,7 +771,6 @@ function closeExamGradingModal() {
     if (typeof clearFormDirty === 'function') clearFormDirty();
 }
 
-// ✅ بهینه‌سازی: تابع debounce برای جلوگیری از محاسبات مکرر هنگام تایپ
 function scheduleGradingStatsUpdate() {
     if (gradingStatsTimer) clearTimeout(gradingStatsTimer);
     gradingStatsTimer = setTimeout(() => {
@@ -798,7 +828,6 @@ function setAllExamScores(value) {
             input.classList.add('has-value');
         }
     });
-    // ✅ اینجا بدون debounce استفاده می‌کنیم تا نتیجه فوری باشد
     if (gradingStatsTimer) clearTimeout(gradingStatsTimer);
     updateGradingStats();
 }
@@ -871,7 +900,6 @@ async function saveExamGrades() {
 // ✅ توابع جدید: خروجی CSV، HTML، چاپ و JSON آزمون
 // ==========================================
 
-// ۱. خروجی اکسل (CSV)
 async function exportExamCSV(examId) {
     const exam = await getDataById('exams', examId);
     if (!exam || !exam.questions || exam.questions.length === 0) {
@@ -883,7 +911,6 @@ async function exportExamCSV(examId) {
     const subName = sub ? sub.name : 'بدون درس';
 
     try {
-        // ✅ جلوگیری از فرمول تزریقی در اکسل
         const safeCsv = (val) => {
             if (val === null || val === undefined) return '';
             let str = String(val);
@@ -923,6 +950,11 @@ async function exportExamCSV(examId) {
             } else if (q.type === 'essay') {
                 typeName = 'تشریحی';
                 correctAnswer = q.answer || '';
+            } else if (q.type === 'matching') {
+                typeName = 'تطبیقی';
+                if (q.pairs) {
+                    correctAnswer = q.pairs.map(p => `${p.a} = ${p.b}`).join(' | ');
+                }
             }
 
             csvContent += `${i + 1},"${safeCsv(q.text)}","${typeName}","${safeCsv(opt1)}","${safeCsv(opt2)}","${safeCsv(opt3)}","${safeCsv(opt4)}","${safeCsv(correctAnswer)}",${q.score}\r\n`;
@@ -947,7 +979,6 @@ async function exportExamCSV(examId) {
     }
 }
 
-// ۲. خروجی فایل HTML مستقل
 async function exportExamHTML(examId) {
     const exam = await getDataById('exams', examId);
     if (!exam || !exam.questions || exam.questions.length === 0) {
@@ -958,7 +989,6 @@ async function exportExamHTML(examId) {
     const sub = window.allSubjectsData.find(s => s.id === exam.subjectId);
     const subName = sub ? `${sub.symbol || ''} ${sub.name}` : 'بدون درس';
 
-    // تولید محتوای سوالات
     let questionsHtml = '';
     exam.questions.forEach((q, i) => {
         questionsHtml += `
@@ -991,6 +1021,23 @@ async function exportExamHTML(examId) {
         } else if (q.type === 'fill-blank' || q.type === 'essay') {
             questionsHtml += `
                 <div class="essay-space" style="margin-top: 15px; min-height: 80px; border-bottom: 1px dashed #ccc;"></div>
+            `;
+        } else if (q.type === 'matching' && q.pairs) {
+            questionsHtml += `
+                <div style="margin-top: 15px; display: flex; gap: 20px;">
+                    <div style="flex: 1;">
+                        <strong>ستون ۱ (مفاهیم):</strong>
+                        <ul style="padding-right: 20px; margin-top: 10px;">
+                            ${q.pairs.map(p => `<li>${escapeHtml(p.a)}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div style="flex: 1;">
+                        <strong>ستون ۲ (مصادیق):</strong>
+                        <ul style="padding-right: 20px; margin-top: 10px;">
+                            ${q.pairs.map(p => `<li>${escapeHtml(p.b)}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
             `;
         }
 
@@ -1046,7 +1093,6 @@ async function exportExamHTML(examId) {
     showToast('فایل HTML دانلود شد.', 'success');
 }
 
-// ۳. چاپ / خروجی PDF
 async function printExam(examId) {
     const exam = await getDataById('exams', examId);
     if (!exam || !exam.questions || exam.questions.length === 0) {
@@ -1095,6 +1141,23 @@ async function printExam(examId) {
             `;
         } else if (q.type === 'fill-blank' || q.type === 'essay') {
             html += `<div style="min-height: 80px; border-bottom: 1px dashed #ccc; margin-top: 15px;"></div>`;
+        } else if (q.type === 'matching' && q.pairs) {
+            html += `
+                <div style="margin-top: 15px; display: flex; gap: 20px; padding-right: 15px;">
+                    <div style="flex: 1;">
+                        <strong>ستون ۱:</strong>
+                        <ul style="margin-top: 10px;">
+                            ${q.pairs.map(p => `<li>${escapeHtml(p.a)}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div style="flex: 1;">
+                        <strong>ستون ۲:</strong>
+                        <ul style="margin-top: 10px;">
+                            ${q.pairs.map(p => `<li>${escapeHtml(p.b)}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
         }
 
         html += `</div>`;
@@ -1113,7 +1176,6 @@ async function printExam(examId) {
     }
 }
 
-// ۴. خروجی JSON (دقیقاً مطابق ساختار فایل نمونه شما)
 async function exportExamJSON(examId) {
     const exam = await getDataById('exams', examId);
     if (!exam || !exam.questions || exam.questions.length === 0) {
@@ -1122,32 +1184,43 @@ async function exportExamJSON(examId) {
     }
 
     try {
-        const mappedQuestions = exam.questions.map(q => {
-            const mapped = {};
-            
-            if (q.type === 'multiple-choice') {
-                mapped.type = 'mc';
-                mapped.q = q.text;
-                mapped.o0 = q.options[0] || '';
-                mapped.o1 = q.options[1] || '';
-                mapped.o2 = q.options[2] || '';
-                mapped.o3 = q.options[3] || '';
-                mapped.a = String(q.correctIndex); // ذخیره به صورت رشته (مثلاً "1")
-            } else if (q.type === 'true-false') {
-                mapped.type = 'tf';
-                mapped.q = q.text;
-                mapped.a = q.correctAnswer ? "true" : "false";
-            } else if (q.type === 'fill-blank') {
-                mapped.type = 'bl';
-                mapped.q = q.text;
-                mapped.a = q.answer || '';
-            } else if (q.type === 'essay') {
-                mapped.type = 'de';
-                mapped.q = q.text;
-                mapped.a = q.answer || '';
+        const mappedQuestions = [];
+        exam.questions.forEach(q => {
+            if (q.type === 'matching') {
+                if (q.pairs) {
+                    q.pairs.forEach(p => {
+                        mappedQuestions.push({
+                            type: 'dd',
+                            a: p.a,
+                            b: p.b
+                        });
+                    });
+                }
+            } else {
+                const mapped = {};
+                if (q.type === 'multiple-choice') {
+                    mapped.type = 'mc';
+                    mapped.q = q.text;
+                    mapped.o0 = q.options[0] || '';
+                    mapped.o1 = q.options[1] || '';
+                    mapped.o2 = q.options[2] || '';
+                    mapped.o3 = q.options[3] || '';
+                    mapped.a = String(q.correctIndex);
+                } else if (q.type === 'true-false') {
+                    mapped.type = 'tf';
+                    mapped.q = q.text;
+                    mapped.a = q.correctAnswer ? "true" : "false";
+                } else if (q.type === 'fill-blank') {
+                    mapped.type = 'bl';
+                    mapped.q = q.text;
+                    mapped.a = q.answer || '';
+                } else if (q.type === 'essay') {
+                    mapped.type = 'de';
+                    mapped.q = q.text;
+                    mapped.a = q.answer || '';
+                }
+                mappedQuestions.push(mapped);
             }
-            
-            return mapped;
         });
 
         const jsonString = JSON.stringify(mappedQuestions, null, 2);
