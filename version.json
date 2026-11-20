@@ -1,7 +1,7 @@
 {
-    "version": "v1.3.7",
+    "version": "v1.3.8",
     "releaseDate": "۱۴۰۵/۰۸/۲۹",
-    "releaseNotes": "🚀 افزودن قابلیت‌های جدید به تب آزمون‌ها: خروجی اکسل (با ستون‌های تفکیک‌شده)، خروجی HTML و چاپ/PDF سوالات آزمون.",
+    "releaseNotes": "🚀 افزودن خروجی JSON به آزمون‌ها و تکمیل مجموعه خروجی‌ها (اکسل، HTML، چاپ و JSON).",
     "downloadUrl": "",
     "forceUpdate": false
 }
