@@ -20,48 +20,14 @@ let editSessionDateModalState = {
 
 const jalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
 
-// ✅ تعطیلات ثابت (شمسی) — هر سال در همین تاریخ‌ها تکرار می‌شوند
-const FIXED_HOLIDAYS = {
-    1: [1, 2, 3, 4, 12, 13],   // فروردین: نوروز و ۱۲ و ۱۳ فروردین
-    3: [14, 15],               // خرداد: رحلت امام و قیام ۱۵ خرداد
-    11: [22],                  // بهمن: پیروزی انقلاب
-    12: [29]                   // اسفند: ملی شدن صنعت نفت (در صورت تعطیلی)
+const officialHolidays = {
+    1405: ["1405/01/01", "1405/01/02", "1405/01/03", "1405/01/04", "1405/01/12", "1405/01/13", "1405/01/21", "1405/01/23", "1405/02/01", "1405/02/09", "1405/03/05", "1405/03/06", "1405/03/14", "1405/03/15", "1405/03/25", "1405/04/02", "1405/04/04", "1405/04/12", "1405/04/20", "1405/05/09", "1405/06/01", "1405/07/13", "1405/08/27", "1405/09/15", "1405/10/25", "1405/11/19", "1405/11/22", "1405/12/29"],
+    1406: ["1406/01/01", "1406/01/02", "1406/01/03", "1406/01/04", "1406/01/11", "1406/01/12", "1406/01/13", "1406/01/20", "1406/01/30", "1406/02/08", "1406/02/17", "1406/02/25", "1406/03/03", "1406/03/11", "1406/03/14", "1406/03/15", "1406/03/19", "1406/03/27", "1406/04/04", "1406/04/28", "1406/05/22", "1406/06/18", "1406/07/06", "1406/07/18", "1406/08/08", "1406/09/04", "1406/10/06", "1406/10/15", "1406/11/12", "1406/11/22", "1406/12/10"],
+    1407: ["1407/01/01", "1407/01/02", "1407/01/03", "1407/01/04", "1407/01/12", "1407/01/13", "1407/01/31", "1407/02/02", "1407/02/10", "1407/02/18", "1407/02/26", "1407/03/05", "1407/03/13", "1407/03/14", "1407/03/15", "1407/03/21", "1407/03/29", "1407/04/06", "1407/05/05", "1407/05/24", "1407/06/15", "1407/07/01", "1407/07/13", "1407/08/03", "1407/08/22", "1407/08/30", "1407/09/09", "1407/09/19", "1407/10/08", "1407/10/17", "1407/11/07", "1407/11/16", "1407/11/22", "1407/12/14"],
+    1408: ["1408/01/01", "1408/01/02", "1408/01/03", "1408/01/04", "1408/01/12", "1408/01/13", "1408/01/20", "1408/01/22", "1408/01/30", "1408/02/07", "1408/02/15", "1408/02/23", "1408/03/02", "1408/03/10", "1408/03/14", "1408/03/15", "1408/03/18", "1408/03/26", "1408/04/04", "1408/04/05", "1408/05/14", "1408/05/24", "1408/06/05", "1408/07/11", "1408/07/26", "1408/08/20", "1408/09/09", "1408/09/17", "1408/10/06", "1408/10/15", "1408/10/23", "1408/11/01", "1408/11/10", "1408/11/11", "1408/11/22", "1408/12/09"],
+    1409: ["1409/01/01", "1409/01/02", "1409/01/03", "1409/01/04", "1409/01/10", "1409/01/12", "1409/01/13", "1409/01/20", "1409/01/28", "1409/02/05", "1409/02/13", "1409/02/21", "1409/03/02", "1409/03/10", "1409/03/14", "1409/03/15", "1409/03/18", "1409/03/26", "1409/04/03", "1409/04/11", "1409/04/23", "1409/05/10", "1409/06/15", "1409/06/25", "1409/07/12", "1409/07/25", "1409/08/14", "1409/08/24", "1409/09/22", "1409/10/11", "1409/10/20", "1409/10/29", "1409/11/07", "1409/11/08", "1409/11/22", "1409/12/06"],
+    1410: ["1410/01/01", "1410/01/02", "1410/01/03", "1410/01/04", "1410/01/12", "1410/01/13", "1410/01/18", "1410/01/20", "1410/01/30", "1410/02/08", "1410/02/16", "1410/02/24", "1410/03/04", "1410/03/12", "1410/03/14", "1410/03/15", "1410/03/20", "1410/03/28", "1410/04/06", "1410/04/26", "1410/05/05", "1410/06/02", "1410/06/30", "1410/07/19", "1410/07/29", "1410/08/07", "1410/08/17", "1410/09/05", "1410/10/01", "1410/10/10", "1410/10/28", "1410/11/05", "1410/11/14", "1410/11/15", "1410/11/22", "1410/12/13"]
 };
-
-// ✅ تعطیلات متغیر (قمری و مناسبتی) — برای سال‌های شناخته‌شده (۱۴۰۵ تا ۱۴۱۰)
-const VARIABLE_HOLIDAYS = {
-    1405: ["1405/01/21", "1405/01/23", "1405/02/09", "1405/03/05", "1405/03/06", "1405/03/14", "1405/03/15", "1405/03/25", "1405/04/02", "1405/04/04", "1405/04/12", "1405/04/20", "1405/05/09", "1405/06/01", "1405/07/13", "1405/08/27", "1405/09/15", "1405/10/25", "1405/11/19", "1405/11/22", "1405/12/29"],
-    1406: ["1406/01/11", "1406/01/20", "1406/01/30", "1406/02/08", "1406/02/17", "1406/02/25", "1406/03/03", "1406/03/11", "1406/03/19", "1406/03/27", "1406/04/04", "1406/04/28", "1406/05/22", "1406/06/18", "1406/07/06", "1406/07/18", "1406/08/08", "1406/09/04", "1406/10/06", "1406/10/15", "1406/11/12", "1406/11/22", "1406/12/10"],
-    1407: ["1407/01/31", "1407/02/02", "1407/02/10", "1407/02/18", "1407/02/26", "1407/03/05", "1407/03/13", "1407/03/21", "1407/03/29", "1407/04/06", "1407/05/05", "1407/05/24", "1407/06/15", "1407/07/01", "1407/07/13", "1407/08/03", "1407/08/22", "1407/08/30", "1407/09/09", "1407/09/19", "1407/10/08", "1407/10/17", "1407/11/07", "1407/11/16", "1407/11/22", "1407/12/14"],
-    1408: ["1408/01/20", "1408/01/22", "1408/01/30", "1408/02/07", "1408/02/15", "1408/02/23", "1408/03/02", "1408/03/10", "1408/03/18", "1408/03/26", "1408/04/04", "1408/04/05", "1408/05/14", "1408/05/24", "1408/06/05", "1408/07/11", "1408/07/26", "1408/08/20", "1408/09/09", "1408/09/17", "1408/10/06", "1408/10/15", "1408/10/23", "1408/11/01", "1408/11/10", "1408/11/11", "1408/11/22", "1408/12/09"],
-    1409: ["1409/01/10", "1409/01/20", "1409/01/28", "1409/02/05", "1409/02/13", "1409/02/21", "1409/03/02", "1409/03/10", "1409/03/18", "1409/03/26", "1409/04/03", "1409/04/11", "1409/04/23", "1409/05/10", "1409/06/15", "1409/06/25", "1409/07/12", "1409/07/25", "1409/08/14", "1409/08/24", "1409/09/22", "1409/10/11", "1409/10/20", "1409/10/29", "1409/11/07", "1409/11/08", "1409/11/22", "1409/12/06"],
-    1410: ["1410/01/18", "1410/01/20", "1410/01/30", "1410/02/08", "1410/02/16", "1410/02/24", "1410/03/04", "1410/03/12", "1410/03/20", "1410/03/28", "1410/04/06", "1410/04/26", "1410/05/05", "1410/06/02", "1410/06/30", "1410/07/19", "1410/07/29", "1410/08/07", "1410/08/17", "1410/09/05", "1410/10/01", "1410/10/10", "1410/10/28", "1410/11/05", "1410/11/14", "1410/11/15", "1410/11/22", "1410/12/13"]
-};
-
-// ✅ تابع جامع بررسی تعطیلات رسمی (پشتیبانی از هر سالی)
-function isOfficialHoliday(dateStr) {
-    if (!dateStr || typeof dateStr !== 'string') return false;
-    const parts = dateStr.split('/');
-    if (parts.length !== 3) return false;
-    
-    const year = parseInt(parts[0]);
-    const month = parseInt(parts[1]);
-    const day = parseInt(parts[2]);
-    
-    if (isNaN(year) || isNaN(month) || isNaN(day)) return false;
-
-    // ۱. بررسی تعطیلات ثابت شمسی
-    if (FIXED_HOLIDAYS[month] && FIXED_HOLIDAYS[month].includes(day)) {
-        return true;
-    }
-    
-    // ۲. بررسی تعطیلات متغیر (فقط برای سال‌های دارای داده)
-    if (VARIABLE_HOLIDAYS[year] && VARIABLE_HOLIDAYS[year].includes(dateStr)) {
-        return true;
-    }
-    
-    return false;
-}
 
 let currentCalendarYear = 1405;
 let currentCalendarMonth = 1;
@@ -541,7 +507,7 @@ function initCalendar() {
             const detectedDisplay = document.getElementById('detectedDayDisplay');
             const actionArea = document.getElementById('sessionActionArea');
             const existingSession = window.allSessionsData.find(s => s.date === selectedSessionDate);
-            const isHoliday = isOfficialHoliday(selectedSessionDate);
+            const isHoliday = officialHolidays[currentCalendarYear]?.includes(selectedSessionDate) || false;
             const isActiveDay = (window.scheduleActiveDays || []).includes(selectedSessionDayOfWeek);
             
             const eventText = (typeof getFormattedEventsForDate === 'function') 
@@ -567,8 +533,8 @@ function initCalendar() {
                     `;
                 } else {
                     if (isHoliday) {
-                        detectedDisplay.innerHTML = displayHtml + `<br><span style="font-size:0.85rem; color:#b45309;">⚠️ هشدار: این روز در تقویم به عنوان تعطیل رسمی ثبت شده است.</span>`;
-                        actionArea.innerHTML = `<button type="button" class="btn btn-primary btn-block" onclick="createNewSession()">➕ ثبت جلسه (با هشدار)</button>`;
+                        detectedDisplay.innerHTML = displayHtml + `<br><span style="font-size:0.85rem; color:#dc2626;">⚠️ امکان ثبت جلسه در تعطیلات رسمی وجود ندارد.</span>`;
+                        actionArea.innerHTML = '';
                     } else if (!isActiveDay) {
                         detectedDisplay.innerHTML = displayHtml + `<br><span style="font-size:0.85rem; color:#dc2626;">⚠️ این روز در تنظیمات کلاس به عنوان روز فعال انتخاب نشده است.</span>`;
                         actionArea.innerHTML = '';
@@ -605,7 +571,7 @@ function renderCalendarGrid() {
         const isFriday = dayOfWeekIndex === 6;
         const dateStr = `${currentCalendarYear}/${String(currentCalendarMonth).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
         
-        const isHoliday = isOfficialHoliday(dateStr);
+        const isHoliday = officialHolidays[currentCalendarYear]?.includes(dateStr) || false;
         const hasSession = window.allSessionsData.some(s => s.date === dateStr);
         const inAcademicYear = (dateStr >= startBound && dateStr <= endBound);
         
@@ -695,7 +661,7 @@ function selectCalendarDay(day, dateStr) {
     const actionArea = document.getElementById('sessionActionArea');
     
     const existingSession = window.allSessionsData.find(s => s.date === dateStr);
-    const isHoliday = isOfficialHoliday(dateStr);
+    const isHoliday = officialHolidays[currentCalendarYear]?.includes(dateStr) || false;
     
     const isActiveDay = (window.scheduleActiveDays || []).includes(selectedSessionDayOfWeek);
 
@@ -723,8 +689,8 @@ function selectCalendarDay(day, dateStr) {
             `;
         } else {
             if (isHoliday) {
-                 detectedDisplay.innerHTML = baseDisplayHtml + `<br><span style="font-size:0.85rem; color:#b45309;">⚠️ هشدار: این روز در تقویم به عنوان تعطیل رسمی ثبت شده است.</span>`;
-                 actionArea.innerHTML = `<button type="button" class="btn btn-primary btn-block" onclick="createNewSession()">➕ ثبت جلسه (با هشدار)</button>`;
+                 detectedDisplay.innerHTML = baseDisplayHtml + `<br><span style="font-size:0.85rem; color:#dc2626;">⚠️ امکان ثبت جلسه در تعطیلات رسمی وجود ندارد.</span>`;
+                 actionArea.innerHTML = '';
             } else if (!isActiveDay) {
                  detectedDisplay.innerHTML = baseDisplayHtml + `<br><span style="font-size:0.85rem; color:#dc2626;">⚠️ این روز در تنظیمات کلاس به عنوان روز فعال انتخاب نشده است.</span>`;
                  actionArea.innerHTML = '';
@@ -755,12 +721,11 @@ async function createNewSession() {
         showToast('خطا در تشخیص روز هفته.', 'error'); return;
     }
 
-    const isHoliday = isOfficialHoliday(selectedSessionDate);
+    const isHoliday = officialHolidays[currentCalendarYear]?.includes(selectedSessionDate) || false;
 
     if (isHoliday) {
-        if (!confirm('⚠️ هشدار:\n\nاین تاریخ در تقویم به عنوان تعطیل رسمی ثبت شده است.\n\nآیا مطمئن هستید که می‌خواهید برای این روز جلسه ثبت کنید؟')) {
-            return;
-        }
+        showToast('امکان ثبت جلسه در تعطیلات رسمی وجود ندارد.', 'error');
+        return;
     }
 
     const isActiveDay = (window.scheduleActiveDays || []).includes(selectedSessionDayOfWeek);
@@ -882,7 +847,7 @@ function renderEditSessionCalendar() {
         const isFriday = dayOfWeekIndex === 6;
         const dateStr = `${currentYear}/${String(currentMonth).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
         
-        const isHoliday = isOfficialHoliday(dateStr);
+        const isHoliday = (officialHolidays[currentYear] || []).includes(dateStr);
         const inAcademicYear = (dateStr >= startBound && dateStr <= endBound);
         const isSelected = (selectedDate === dateStr);
         const isOriginal = (editSessionDateModalState.originalDate === dateStr);
@@ -1189,11 +1154,10 @@ function setAllPeriodAttendance(periodNum, status) {
     }
 }
 
-// ✅ اصلاح بحرانی (باگ ۹): استفاده از تراکنش اتمی IndexedDB (بدون ریسک از دست رفتن داده)
+// ✅ اصلاح باگ: rollback در صورت خطا (جلوگیری از از دست رفتن داده)
 async function saveAllSessionAttendance() {
     if (!currentSessionId) return;
 
-    // ۱. آماده‌سازی رکوردهای جدید
     const recordsToSave = [];
     for (const periodNum in currentSessionAttendanceState) {
         for (const studentId in currentSessionAttendanceState[periodNum]) {
@@ -1207,51 +1171,52 @@ async function saveAllSessionAttendance() {
         }
     }
 
+    // ✅ اصلاح بحرانی: backup از رکوردهای موجود قبل از حذف
+    const existing = window.allAttendanceData.filter(a => a.sessionId === currentSessionId);
+    const backup = existing.map(rec => ({ ...rec }));
+
     try {
-        // ۲. اجرای تراکنش اتمی (همه یا هیچ)
-        await new Promise((resolve, reject) => {
-            const transaction = db.transaction(['attendance'], 'readwrite');
-            const store = transaction.objectStore('attendance');
-            const index = store.index('sessionId');
-
-            // مرحله الف: حذف تمام رکوردهای قبلی این جلسه با استفاده از Index
-            const deleteRequest = index.openKeyCursor(IDBKeyRange.only(currentSessionId));
-            
-            deleteRequest.onsuccess = (event) => {
-                const cursor = event.target.result;
-                if (cursor) {
-                    store.delete(cursor.primaryKey);
-                    cursor.continue();
-                } else {
-                    // مرحله ب: وقتی حذف تمام شد، رکوردهای جدید را اضافه کن
-                    for (const record of recordsToSave) {
-                        store.add(record);
-                    }
-                }
-            };
-
-            deleteRequest.onerror = () => reject(deleteRequest.error);
-
-            transaction.oncomplete = () => resolve();
-            transaction.onerror = (e) => reject(e.target.error);
-            transaction.onabort = (e) => reject(e.target.error || new Error('تراکنش لغو شد'));
-        });
-
-        // ۳. موفقیت: به‌روزرسانی حافظه و کش‌ها
+        // مرحله ۱: حذف قبلی‌ها
+        if (existing.length > 0) {
+            await deleteBulkData('attendance', existing.map(r => r.id));
+        }
+        
+        // مرحله ۲: ذخیره جدیدها
+        await saveBulkData('attendance', recordsToSave);
+        
+        // ✅ موفقیت: به‌روزرسانی حافظه
+        window.allAttendanceData = window.allAttendanceData.filter(a => a.sessionId !== currentSessionId);
+        const savedAtt = await getAllData('attendance');
+        window.allAttendanceData = savedAtt.filter(a => window.allSessionsData.some(s => s.id === a.sessionId));
+        
         showToast('حضور و غیاب کل جلسه ذخیره شد!', 'success');
         
+        // پاک کردن وضعیت فرم‌های ذخیره‌نشده
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
-        // ✅ بارگذاری مجدد کل داده‌ها (همگام‌سازی کامل حافظه با دیتابیس + بازسازی کش)
-        await loadAllData();
+        // ✅ اصلاح بحرانی (فاز ۱): بازسازی کش امتیازات/حضور قبل از رندر گزارش‌ها
+        if (typeof buildScoreCaches === 'function') buildScoreCaches();
         
-        // ✅ به‌روزرسانی گزارش‌ها و داشبورد
         generateAttendanceReports();
         if (typeof renderDashboardData === 'function') renderDashboardData();
         
     } catch (e) {
-        // ۴. خطا: IndexedDB به‌طور خودکار همه تغییرات را لغو کرده و داده‌های قبلی حفظ شده‌اند
-        console.error('❌ خطا در ذخیره حضور و غیاب، تراکنش لغو شد:', e);
+        console.error('❌ خطا در ذخیره حضور و غیاب، بازگردانی داده‌های قبلی:', e);
+        
+        // ✅ اصلاح بحرانی: rollback — بازگردانی داده‌های قبلی
+        try {
+            if (backup.length > 0) {
+                await saveBulkData('attendance', backup);
+                console.log('✅ rollback موفق: ' + backup.length + ' رکورد قبلی بازگردانی شد.');
+            }
+            
+            // بازسازی حافظه با داده‌های بازگردانی‌شده
+            const restoredAtt = await getAllData('attendance');
+            window.allAttendanceData = restoredAtt.filter(a => window.allSessionsData.some(s => s.id === a.sessionId));
+        } catch (rollbackError) {
+            console.error('❌ خطا در rollback:', rollbackError);
+        }
+        
         showToast('خطا در ذخیره! تغییرات لغو شد و داده‌های قبلی حفظ شدند.', 'error');
     }
 }
