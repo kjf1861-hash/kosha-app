@@ -88,6 +88,7 @@ function renderExamsData() {
                     <button class="btn btn-secondary btn-sm" onclick="exportExamCSV('${exam.id}')" title="خروجی اکسل">📗</button>
                     <button class="btn btn-secondary btn-sm" onclick="exportExamHTML('${exam.id}')" title="خروجی HTML">🌐</button>
                     <button class="btn btn-secondary btn-sm" onclick="printExam('${exam.id}')" title="چاپ / PDF">🖨️</button>
+                    <button class="btn btn-secondary btn-sm" onclick="exportExamJSON('${exam.id}')" title="خروجی JSON">📄</button>
                     <button class="btn btn-secondary btn-sm" onclick="openExamEditorModal('${exam.id}')" title="ویرایش آزمون">✏️</button>
                     <button class="btn btn-danger btn-sm" onclick="deleteExam('${exam.id}')" title="حذف آزمون">🗑️</button>
                 </div>
@@ -867,7 +868,7 @@ async function saveExamGrades() {
 }
 
 // ==========================================
-// ✅ توابع جدید: خروجی CSV، HTML و چاپ آزمون
+// ✅ توابع جدید: خروجی CSV، HTML، چاپ و JSON آزمون
 // ==========================================
 
 // ۱. خروجی اکسل (CSV)
@@ -1109,5 +1110,63 @@ async function printExam(examId) {
         printWindow.document.close();
         printWindow.focus();
         setTimeout(() => printWindow.print(), 500);
+    }
+}
+
+// ۴. خروجی JSON (دقیقاً مطابق ساختار فایل نمونه شما)
+async function exportExamJSON(examId) {
+    const exam = await getDataById('exams', examId);
+    if (!exam || !exam.questions || exam.questions.length === 0) {
+        showToast('آزمون سوالی ندارد.', 'error');
+        return;
+    }
+
+    try {
+        const mappedQuestions = exam.questions.map(q => {
+            const mapped = {};
+            
+            if (q.type === 'multiple-choice') {
+                mapped.type = 'mc';
+                mapped.q = q.text;
+                mapped.o0 = q.options[0] || '';
+                mapped.o1 = q.options[1] || '';
+                mapped.o2 = q.options[2] || '';
+                mapped.o3 = q.options[3] || '';
+                mapped.a = String(q.correctIndex); // ذخیره به صورت رشته (مثلاً "1")
+            } else if (q.type === 'true-false') {
+                mapped.type = 'tf';
+                mapped.q = q.text;
+                mapped.a = q.correctAnswer ? "true" : "false";
+            } else if (q.type === 'fill-blank') {
+                mapped.type = 'bl';
+                mapped.q = q.text;
+                mapped.a = q.answer || '';
+            } else if (q.type === 'essay') {
+                mapped.type = 'de';
+                mapped.q = q.text;
+                mapped.a = q.answer || '';
+            }
+            
+            return mapped;
+        });
+
+        const jsonString = JSON.stringify(mappedQuestions, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        
+        const dateStr = (typeof window.getJalaliDateTimeForFilename === 'function') 
+            ? window.getJalaliDateTimeForFilename().split('-').slice(0, 3).join('-') 
+            : new Date().toISOString().slice(0, 10);
+
+        a.href = url;
+        a.download = `exam_${exam.title.replace(/\s+/g, '_')}_${dateStr}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        showToast('فایل JSON با موفقیت دانلود شد.', 'success');
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در تولید فایل JSON.', 'error');
     }
 }
