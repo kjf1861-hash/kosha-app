@@ -1,7 +1,7 @@
 {
-    "version": "v1.3.8",
+    "version": "v1.3.9",
     "releaseDate": "۱۴۰۵/۰۸/۲۹",
-    "releaseNotes": "🚀 افزودن خروجی JSON به آزمون‌ها و تکمیل مجموعه خروجی‌ها (اکسل، HTML، چاپ و JSON).",
+    "releaseNotes": "🚀 ارتقاء بخش آزمون‌ها: افزودن نوع سوال تطبیقی (جور کردنی)، پشتیبانی در خروجی‌های اکسل/HTML/JSON، و هوشمندسازی بخش بازی",
     "downloadUrl": "",
     "forceUpdate": false
 }
