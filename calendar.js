@@ -179,21 +179,16 @@ function renderFullCalendarGrid() {
     const grid = document.getElementById('full-calendar-grid');
     if (!grid) return;
     
-    // ✅ بهینه‌سازی: استفاده از DocumentFragment برای کاهش Reflow
-    const fragment = document.createDocumentFragment();
+    grid.innerHTML = '';
     
     const firstDay = getJalaliFirstDayOfWeek(fullCalendarYear, fullCalendarMonth);
     const daysInMonth = getJalaliDaysInMonth(fullCalendarYear, fullCalendarMonth);
     const eventsMap = getMonthEvents(fullCalendarYear, fullCalendarMonth);
     
-    // خانه‌های خالی ابتدای ماه
     for (let i = 0; i < firstDay; i++) {
-        const emptyDay = document.createElement('div');
-        emptyDay.className = 'full-calendar-day empty';
-        fragment.appendChild(emptyDay);
+        grid.innerHTML += `<div class="full-calendar-day empty"></div>`;
     }
     
-    // روزهای ماه
     for (let day = 1; day <= daysInMonth; day++) {
         const isFriday = ((firstDay + day - 1) % 7) === 6;
         const hasEvent = eventsMap[day] !== undefined;
@@ -204,22 +199,16 @@ function renderFullCalendarGrid() {
         if (hasEvent) classes += ' has-event-soft';
         if (isSelected) classes += ' selected';
         
-        const dayDiv = document.createElement('div');
-        dayDiv.className = classes;
-        dayDiv.setAttribute('onclick', `selectFullCalendarDay(${day})`);
+        // ✅ اصلاح امنیتی: escape متن مناسبت در title (جلوگیری از XSS)
+        const rawTooltipText = hasEvent ? eventsMap[day] : '';
+        const safeTooltipText = escapeHtml(rawTooltipText);
         
-        // ✅ حفظ امنیت: escape متن مناسبت در title
-        if (hasEvent) {
-            dayDiv.setAttribute('title', escapeHtml(eventsMap[day]));
-        }
-        
-        dayDiv.textContent = toPersianNumber(day);
-        fragment.appendChild(dayDiv);
+        grid.innerHTML += `
+            <div class="${classes}" onclick="selectFullCalendarDay(${day})" title="${safeTooltipText}">
+                ${toPersianNumber(day)}
+            </div>
+        `;
     }
-    
-    // ✅ در انتها یک‌جا به DOM اضافه می‌کنیم (فقط یک‌بار Reflow)
-    grid.innerHTML = '';
-    grid.appendChild(fragment);
 }
 
 function selectFullCalendarDay(day) {
