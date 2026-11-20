@@ -1,6 +1,6 @@
 // ==========================================
 // فایل game.js — منطق تولید فایل بازی آزمون (آفلاین)
-// نسخه اصلاح‌شده: رفع کامل باگ تگ اسکریپت و دکمه سوال بعدی
+// نسخه بازنویسی شده بر اساس الگوی ۳ فایل مرجع
 // ==========================================
 
 async function generateGameFile(examId) {
@@ -18,7 +18,7 @@ async function generateGameFile(examId) {
     const sub = window.allSubjectsData.find(s => s.id === exam.subjectId);
     const subName = sub ? `${sub.symbol || ''} ${sub.name}` : 'بدون درس';
     
-    // تبدیل سوالات به فرمت استاندارد بازی
+    // تبدیل سوالات کوشا به فرمت استاندارد بازی
     const gameQuestions = [];
     exam.questions.forEach((q, index) => {
         if (q.type === 'matching' && q.pairs && q.pairs.length > 0) {
@@ -33,34 +33,56 @@ async function generateGameFile(examId) {
                     text: `مفهوم «${pair.a}» با کدام گزینه تطبیق دارد؟ ${q.text ? '(' + q.text + ')' : ''}`,
                     options: options,
                     score: distributedScore,
-                    correctIndex: correctIndex
+                    correctIndex: correctIndex,
+                    correctText: pair.b
                 });
             });
-        } else {
-            const safeQuestion = {
-                type: q.type === 'essay' ? 'fill-blank' : q.type,
+        } else if (q.type === 'multiple-choice') {
+            gameQuestions.push({
+                type: 'multiple-choice',
                 text: q.text,
-                score: q.score
-            };
-            
-            if (q.type === 'multiple-choice') {
-                safeQuestion.options = q.options;
-                safeQuestion.correctIndex = q.correctIndex;
-            } else if (q.type === 'true-false') {
-                safeQuestion.correctAnswer = q.correctAnswer;
-            } else {
-                safeQuestion.answer = q.answer || '';
-            }
-            
-            gameQuestions.push(safeQuestion);
+                options: q.options,
+                score: q.score,
+                correctIndex: q.correctIndex,
+                correctText: q.options[q.correctIndex]
+            });
+        } else if (q.type === 'true-false') {
+            gameQuestions.push({
+                type: 'true-false',
+                text: q.text,
+                score: q.score,
+                correctAnswer: q.correctAnswer,
+                correctText: q.correctAnswer ? 'درست' : 'غلط'
+            });
+        } else {
+            // fill-blank یا essay
+            gameQuestions.push({
+                type: 'fill-blank',
+                text: q.text,
+                score: q.score,
+                answer: q.answer || '',
+                correctText: q.answer || ''
+            });
         }
     });
+
+    // تقسیم سوالات به حداکثر ۳ مرحله
+    const MAX_LEVELS = 3;
+    const levelsData = [];
+    if (gameQuestions.length <= 4) {
+        levelsData.push({ name: 'مرحله ۱', questions: gameQuestions });
+    } else {
+        const chunkSize = Math.ceil(gameQuestions.length / MAX_LEVELS);
+        for (let i = 0; i < MAX_LEVELS; i++) {
+            const start = i * chunkSize;
+            const end = Math.min(start + chunkSize, gameQuestions.length);
+            if (start < gameQuestions.length) {
+                levelsData.push({ name: 'مرحله ' + (i + 1), questions: gameQuestions.slice(start, end) });
+            }
+        }
+    }
     
-    // محاسبه نمره کل
-    let totalMaxScore = 0;
-    gameQuestions.forEach(q => totalMaxScore += q.score);
-    
-    const gameHtml = buildGameHtml(exam, subName, gameQuestions, totalMaxScore);
+    const gameHtml = buildGameHtml(exam, subName, levelsData);
     
     const blob = new Blob([gameHtml], { type: 'text/html;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -75,17 +97,17 @@ async function generateGameFile(examId) {
     showToast('فایل بازی با موفقیت تولید و دانلود شد! 🎮', 'success');
 }
 
-function buildGameHtml(exam, subName, gameQuestions, totalMaxScore) {
-    const jsonSafe = (obj) => JSON.stringify(obj).replace(/</g, '\\u003c');
-    const questionsJson = jsonSafe(gameQuestions);
-    const safeTitleJs = jsonSafe(exam.title);
-    
-    // امن‌سازی داده‌های ورودی برای جلوگیری از شکستن رشته
+function buildGameHtml(exam, subName, levelsData) {
+    // امن‌سازی داده‌ها برای جلوگیری از خطای سینتکس
+    const safeTitleJs = JSON.stringify(exam.title);
+    const levelsJson = JSON.stringify(levelsData).replace(/</g, '\\u003c');
     const safeExamTitleHtml = escapeHtml(exam.title);
     const safeSubNameHtml = escapeHtml(subName);
     const safeDateHtml = escapeHtml(exam.date);
 
-    return `<!DOCTYPE html>
+    // ⚠️ برای جلوگیری از خطای Syntax Error در فایل تولیدی، از رشته‌سازی ساده و امن استفاده می‌کنیم
+    
+    let html = `<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -94,8 +116,8 @@ function buildGameHtml(exam, subName, gameQuestions, totalMaxScore) {
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;font-family:'Vazirmatn',Tahoma,sans-serif}
-body{background:#f0f4f8;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:15px;overflow-x:hidden;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);}
-.c{background:#fff;padding:20px;border-radius:15px;box-shadow:0 5px 15px rgba(0,0,0,.2);width:100%;max-width:600px;text-align:center;position:relative;z-index:10}
+body{background:#f0f4f8;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:15px;overflow-x:hidden}
+.c{background:#fff;padding:20px;border-radius:15px;box-shadow:0 5px 15px rgba(0,0,0,.1);width:100%;max-width:600px;text-align:center;position:relative;z-index:10}
 h1{color:#2c3e50;font-size:22px;margin-bottom:10px}
 h2{color:#34495e;font-size:18px;margin-bottom:15px}
 .info{background:#e8f4f8;padding:10px;border-radius:8px;font-size:13px;color:#2980b9;margin-bottom:15px;line-height:1.6}
@@ -133,7 +155,7 @@ th,td{border:1px solid #ddd;padding:6px;}
 th{background:#f2f2f2;color:#333;font-weight:bold;}
 .pass-msg{color:#27ae60;font-weight:bold}
 .fail-msg{color:#e74c3c;font-weight:bold}
-.math-alert{color:#e74c3c;background:#fdeaea;padding:8px;border-radius:5px;margin-top:10px;font-size:13px;border:1px solid #e74c3c; display: none;}
+.math-alert{color:#e74c3c;background:#fdeaea;padding:8px;border-radius:5px;margin-top:10px;font-size:13px;border:1px solid #e74c3c; display:none;}
 .flower{position:fixed;top:-50px;font-size:24px;z-index:999;pointer-events:none;animation:fall 2.5s linear forwards}
 @keyframes fall{to{transform:translateY(100vh) rotate(360deg);opacity:0}}
 .pdf-btn{background:#e74c3c !important;}
@@ -206,7 +228,7 @@ th{background:#f2f2f2;color:#333;font-weight:bold;}
             <p>✅ صحیح: <span id="endCorrect"></span> | ❌ غلط: <span id="endWrong"></span></p>
             <p>از کل <span id="endTotalQ"></span> سوال | درصد موفقیت: <b><span id="endPercent"></span>%</b></p>
             <p>امتیاز این مرحله: <b id="endScore"></b></p>
-            <div id="global-alert" class="math-alert" style="display:none;"></div>
+            <div id="global-alert" class="math-alert"></div>
         </div>
         <button class="b" id="btn-next-level" onclick="goNextLevel()">رفتن به مرحله بعد 🚀</button>
         <button class="b" id="btn-replay" style="background:#95a5a6" onclick="replayLevel()">بازی مجدد این مرحله 🔄</button>
@@ -226,10 +248,12 @@ th{background:#f2f2f2;color:#333;font-weight:bold;}
 </div>
 
 <script>
-const ALL_QUESTIONS = ${questionsJson};
+const LEVELS_DATA = ${levelsJson};
 const EXAM_TITLE = ${safeTitleJs};
-const TOTAL_MAX_SCORE = ${totalMaxScore};
+`;
 
+    // 🔴 ساخت اسکریپت داخلی به صورت رشته‌های مجزا برای جلوگیری از تداخل
+    html += `
 const encCorrect = ["آفرین! ادامه بده 💪", "عالی بود! تو نابغه‌ای 🌟", "چه هوش بالایی داری 🧠", "دقیق و درست! 👏", "همینطور ادامه بده 🚀", "تو می‌تونی! 🎯", "پاسخ درست بود! ✨", "کارت درسته! 🏆", "محشر بود! 🌈", "عالی جواب دادی! 🎉"];
 const encWrong = ["اشکالی نداره، یاد می‌گیری 🌸", "نزدیک بود! دوباره تلاش کن 💪", "مهم نیست، از اشتباهات یاد می‌گیریم 🌟", "تلاشت قابل تحسینه، ادامه بده 🚀", "کمی دقت کن، دفعه بعد درستش می‌کنی ✨", "پاسخ درست رو بخون و یاد بگیر 📖", "نگران نباش، تمرین باعث پیشرفت میشه 🧩", "دفعه بعد حتماً می‌تونی! 🎯"];
 
@@ -254,7 +278,6 @@ const msgs = {
     school: { ok: ["چه مدرسه خوبی 🏫", "چه مدرسه باحالی 🏰"], err: ["اسم مدرسه‌ات را بنویس 🌸", "در کدام مدرسه درس می‌خوانی؟ 🏫"] }
 };
 
-let levelsData = [];
 let state = { fName:"", lName:"", classNum:"", school:"", totalScore: 0, unlocked: 1, level: 0, idx: 0, qs: [], answered: false, levelScore: 0, levelCorrect: 0, levelWrong: 0 };
 let levelStats = {}; 
 
@@ -272,55 +295,54 @@ function getPersianDate() {
     return new Date().toLocaleDateString('fa-IR', options);
 }
 
-function prepareLevels() {
-    const MAX_LEVELS = 3;
-    if (ALL_QUESTIONS.length <= 4) {
-        levelsData = [{ name: "۱. مرحله اصلی", questions: ALL_QUESTIONS }];
-    } else {
-        const chunkSize = Math.ceil(ALL_QUESTIONS.length / MAX_LEVELS);
-        let lvlNum = 1;
-        for (let i = 0; i < MAX_LEVELS; i++) {
-            const start = i * chunkSize;
-            const end = Math.min(start + chunkSize, ALL_QUESTIONS.length);
-            if (start < ALL_QUESTIONS.length) {
-                levelsData.push({ name: "مرحله " + lvlNum++, questions: ALL_QUESTIONS.slice(start, end) });
-            }
-        }
-    }
-}
-
 document.addEventListener("DOMContentLoaded", () => { 
     $("welcomeDate").innerText = getPersianDate(); 
-    prepareLevels();
 });
 
 function checkField(id) {
     let el = $(id);
     let val = el.value.trim();
     let msgEl = $("msg-" + id);
+
     if (val.length > 0) {
-        el.classList.remove("error"); el.classList.add("filled");
-        msgEl.className = "field-msg msg-green"; msgEl.innerText = getRandomMsg('ok', id);
+        el.classList.remove("error");
+        el.classList.add("filled");
+        msgEl.className = "field-msg msg-green";
+        msgEl.innerText = getRandomMsg('ok', id);
     } else {
-        el.classList.remove("filled"); el.classList.add("error");
-        msgEl.className = "field-msg msg-red"; msgEl.innerText = getRandomMsg('err', id);
+        el.classList.remove("filled");
+        el.classList.add("error");
+        msgEl.className = "field-msg msg-red";
+        msgEl.innerText = getRandomMsg('err', id);
     }
     checkAllFilled();
 }
 
 function checkAllFilled() {
-    let isAllFilled = $("fName").value.trim().length > 0 && $("lName").value.trim().length > 0 && $("classNum").value.trim().length > 0 && $("school").value.trim().length > 0;
-    if (isAllFilled) { $("startBtn").classList.remove("btn-disabled"); } 
-    else { $("startBtn").classList.add("btn-disabled"); }
+    let isAllFilled = $("fName").value.trim().length > 0 &&
+                      $("lName").value.trim().length > 0 &&
+                      $("classNum").value.trim().length > 0 &&
+                      $("school").value.trim().length > 0;
+    if (isAllFilled) {
+        $("startBtn").classList.remove("btn-disabled");
+    } else {
+        $("startBtn").classList.add("btn-disabled");
+    }
 }
 
 function handleStartClick() {
-    let isAllFilled = $("fName").value.trim().length > 0 && $("lName").value.trim().length > 0 && $("classNum").value.trim().length > 0 && $("school").value.trim().length > 0;
+    let isAllFilled = $("fName").value.trim().length > 0 &&
+                      $("lName").value.trim().length > 0 &&
+                      $("classNum").value.trim().length > 0 &&
+                      $("school").value.trim().length > 0;
+                      
     if (!isAllFilled) {
         alert(getRandomAlert('missingFields'));
         ['fName', 'lName', 'classNum', 'school'].forEach(id => checkField(id));
         playSound('wrong');
-    } else { startGame(); }
+    } else {
+        startGame();
+    }
 }
 
 function goWelcome() { hide("sc-menu"); show("sc-welcome"); }
@@ -344,8 +366,7 @@ function playSound(type) {
     else if (type === 'win') { playTone(400, 'sine', 0.1); setTimeout(() => playTone(500, 'sine', 0.1), 100); setTimeout(() => playTone(600, 'sine', 0.1), 200); setTimeout(() => playTone(800, 'sine', 0.4), 300); }
     else if (type === 'fail') { playTone(300, 'sawtooth', 0.2); setTimeout(() => playTone(200, 'sawtooth', 0.3), 200); }
 }
-function showConfetti(isFail) {
-    if (typeof isFail === 'undefined') isFail = false;
+function showConfetti(isFail = false) {
     const emojis = isFail ? ['❌','💔','⚠️','💥'] : ['🌸','🌺','🌟','🎉','✨'];
     for(let i=0; i<30; i++) {
         let el = document.createElement('div');
@@ -361,8 +382,10 @@ function showConfetti(isFail) {
 }
 
 function startGame() {
-    state.fName = $("fName").value.trim(); state.lName = $("lName").value.trim();
-    state.classNum = $("classNum").value.trim(); state.school = $("school").value.trim();
+    state.fName = $("fName").value.trim();
+    state.lName = $("lName").value.trim();
+    state.classNum = $("classNum").value.trim();
+    state.school = $("school").value.trim();
     playSound('welcome'); showConfetti(); 
     updateMenu(); hide("sc-welcome"); show("sc-menu");
 }
@@ -372,7 +395,7 @@ function updateMenu() {
     const container = $("levelButtonsContainer");
     container.innerHTML = "";
     
-    levelsData.forEach((lvl, index) => {
+    LEVELS_DATA.forEach((lvl, index) => {
         const lvlNum = index + 1;
         let btn = document.createElement("button");
         btn.className = "b";
@@ -406,7 +429,7 @@ function goMenu() {
 }
 
 function updateLiveStats() {
-    $("gameLevel").innerText = levelsData[state.level - 1].name;
+    $("gameLevel").innerText = LEVELS_DATA[state.level - 1].name;
     $("gameQNum").innerText = "سوال " + (state.idx + 1) + "/" + state.qs.length;
     $("gameScore").innerText = "امتیاز: " + state.totalScore;
     $("gameCorrect").innerText = "✅ " + state.levelCorrect;
@@ -432,7 +455,7 @@ function startLevel(lvl) {
     }
 
     state.level = lvl; state.idx = 0; state.levelScore = 0; state.levelCorrect = 0; state.levelWrong = 0;
-    state.qs = [...levelsData[lvlIndex].questions].sort(() => Math.random() - 0.5);
+    state.qs = [...LEVELS_DATA[lvlIndex].questions].sort(() => Math.random() - 0.5);
     
     hide("sc-menu"); hide("sc-level-end"); show("sc-game");
     $("math-alert").style.display = "none";
@@ -446,7 +469,7 @@ function startLevel(lvl) {
 function loadQ() {
     state.answered = false; 
     $("f").innerText = ""; 
-    $("n").style.display = "none";
+    $("n").style.display = "none"; // مخفی کردن دکمه تا زمان پاسخ
     $("n").innerText = (state.idx === state.qs.length - 1) ? "پایان مرحله 🏁" : "سؤال بعدی ⏭️";
     $("n").onclick = nextQ; 
     
@@ -456,31 +479,35 @@ function loadQ() {
     updateLiveStats();
     
     if (q.type === 'multiple-choice') {
+        // گزینه‌ها را با ترتیب تصادفی نمایش بده (متن گزینه‌ها را برای دکمه‌ها نگه می‌داریم)
         let opts = [...q.options].sort(() => Math.random() - 0.5);
         opts.forEach(opt => {
             let btn = document.createElement("button");
-            btn.className = "o"; btn.innerText = opt; 
-            btn.onclick = () => checkAns(btn, opt, q.options[q.correctIndex], q.text);
+            btn.className = "o"; 
+            btn.innerText = opt; 
+            btn.onclick = () => checkAns(btn, opt, q.correctText, q.correctText);
             $("options").appendChild(btn);
         });
     } else if (q.type === 'true-false') {
         let trueBtn = document.createElement("button");
         trueBtn.className = "o"; trueBtn.innerText = "درست ✅"; 
-        trueBtn.onclick = () => checkAns(trueBtn, true, q.correctAnswer, q.text);
+        trueBtn.onclick = () => checkAns(trueBtn, 'درست', q.correctText, q.correctText);
         
         let falseBtn = document.createElement("button");
         falseBtn.className = "o"; falseBtn.innerText = "غلط ❌"; 
-        falseBtn.onclick = () => checkAns(falseBtn, false, q.correctAnswer, q.text);
+        falseBtn.onclick = () => checkAns(falseBtn, 'غلط', q.correctText, q.correctText);
         
         $("options").appendChild(trueBtn);
         $("options").appendChild(falseBtn);
     } else {
+        // جای خالی (ورودی متن)
         let input = document.createElement("input");
-        input.type = "text"; input.className = "o"; input.placeholder = "پاسخ خود را بنویسید..."; input.style.textAlign = "center";
+        input.type = "text"; input.className = "o"; input.placeholder = "پاسخ خود را بنویسید..."; input.style.textAlign = "center"; input.style.width = "100%"; input.style.padding = "12px";
         input.id = "textInput";
+        
         let submitBtn = document.createElement("button");
         submitBtn.className = "b"; submitBtn.innerText = "ثبت پاسخ"; submitBtn.style.marginTop = "10px";
-        submitBtn.onclick = () => checkAns(input, input.value, q.answer, q.text);
+        submitBtn.onclick = () => checkAns(input, input.value, q.correctText, q.correctText);
         
         $("options").appendChild(input);
         $("options").appendChild(submitBtn);
@@ -499,9 +526,9 @@ function checkAns(btnElement, chosen, correct, qText) {
     if (state.answered) return;
     state.answered = true;
     
+    // غیر فعال کردن دکمه‌ها
     $("options").querySelectorAll(".o").forEach(b => {
-        if (b.tagName === 'BUTTON') b.disabled = true;
-        else b.disabled = true;
+        b.disabled = true;
     });
     let submitBtn = $("options").querySelector("button.b");
     if (submitBtn) submitBtn.disabled = true;
@@ -509,32 +536,32 @@ function checkAns(btnElement, chosen, correct, qText) {
     let isCorrect = false;
     let correctText = correct;
 
-    if (typeof chosen === 'boolean') {
-        isCorrect = (chosen === correct);
-        correctText = correct ? 'درست' : 'غلط';
+    // بررسی صحت پاسخ
+    if (btnElement && btnElement.tagName === 'BUTTON') {
+        // برای چهارگزینه‌ای و درست/غلط
+        isCorrect = (chosen === correctText);
     } else {
+        // برای جای خالی (مقایسه متنی)
         let normChosen = normalizeText(chosen);
         let normCorrect = normalizeText(correct);
         isCorrect = (normChosen !== '' && normChosen === normCorrect);
     }
-    
-    if (btnElement && btnElement.tagName === 'BUTTON' && correctText !== 'درست' && correctText !== 'غلط') {
-        isCorrect = (chosen === correct);
-    }
 
+    // نمایش بازخورد
     if (isCorrect) {
-        btnElement.classList.add("correct"); 
+        if (btnElement && btnElement.tagName === 'BUTTON') btnElement.classList.add("correct"); 
         state.levelScore += 10; state.totalScore += 10; state.levelCorrect++;
         playSound('correct'); showConfetti(false);
         $("f").style.color = "#27ae60"; 
         $("f").innerText = encCorrect[Math.floor(Math.random() * encCorrect.length)];
     } else {
-        if (btnElement && btnElement.classList.contains("o")) btnElement.classList.add("wrong"); 
+        if (btnElement && btnElement.tagName === 'BUTTON') btnElement.classList.add("wrong"); 
         state.levelWrong++;
         playSound('wrong');
         
+        // پیدا کردن و رنگ کردن گزینه صحیح (اگر دکمه بود)
         $("options").querySelectorAll(".o").forEach(b => { 
-            if (b.innerText === correct || b.value === correct) b.classList.add("correct"); 
+            if (b.innerText === correct) b.classList.add("correct"); 
         });
         
         let wrongMsg = encWrong[Math.floor(Math.random() * encWrong.length)];
@@ -543,8 +570,9 @@ function checkAns(btnElement, chosen, correct, qText) {
     }
     
     updateLiveStats(); 
-    $("n").style.display = "block";
+    $("n").style.display = "block"; // نمایش دکمه سوال بعدی
 
+    // بررسی خودکار پایان مرحله
     if (state.idx === state.qs.length - 1) {
         $("n").style.display = "none"; 
         setTimeout(() => { nextQ(); }, 1500);
@@ -573,9 +601,9 @@ function endLevel() {
     let passMark = Math.floor(qCount / 2) + 1;
     let isPassed = state.levelCorrect >= passMark;
     
-    levelStats[state.level] = { name: levelsData[state.level - 1].name, qCount: qCount, correct: state.levelCorrect, wrong: state.levelWrong, score: state.levelScore, percent: percent, passed: isPassed };
+    levelStats[state.level] = { name: LEVELS_DATA[state.level - 1].name, qCount: qCount, correct: state.levelCorrect, wrong: state.levelWrong, score: state.levelScore, percent: percent, passed: isPassed };
 
-    $("endLevelNum").innerText = levelsData[state.level - 1].name;
+    $("endLevelNum").innerText = LEVELS_DATA[state.level - 1].name;
     $("levelEndDate").innerText = "تاریخ: " + getPersianDate();
     $("endCorrect").innerText = state.levelCorrect;
     $("endWrong").innerText = state.levelWrong;
@@ -590,7 +618,7 @@ function endLevel() {
         $("levelEncouragement").innerHTML = '<span class="pass-msg">🎉 تبریک! شما در این مرحله قبول شدید.</span>';
         $("btn-pdf-level").style.display = "block"; 
         setTimeout(() => {
-            if (state.level === levelsData.length) { alert(getRandomAlert('gamePassed')); } 
+            if (state.level === LEVELS_DATA.length) { alert(getRandomAlert('gamePassed')); } 
             else { alert(getRandomAlert('levelPassed')); }
         }, 500);
     } else {
@@ -600,8 +628,8 @@ function endLevel() {
     }
     
     $("btn-replay").style.display = (state.levelCorrect === qCount) ? "none" : "block";
-    $("btn-next-level").style.display = (isPassed && state.level < levelsData.length) ? "block" : "none";
-    $("btn-final-report").style.display = (state.level === levelsData.length) ? "block" : "none";
+    $("btn-next-level").style.display = (isPassed && state.level < LEVELS_DATA.length) ? "block" : "none";
+    $("btn-final-report").style.display = (state.level === LEVELS_DATA.length) ? "block" : "none";
 }
 
 function replayLevel() { startLevel(state.level); }
@@ -619,22 +647,22 @@ function showFinalReport() {
     let tScore = 0, tCorrect = 0, tWrong = 0, tQ = 0;
     let table = '<div class="table-wrap"><table><tr><th>مرحله</th><th>امتیاز</th><th>درست</th><th>غلط</th><th>کل سوال</th><th>درصد</th><th>وضعیت</th></tr>';
     
-    for(let i = 1; i <= levelsData.length; i++) {
+    for(let i = 1; i <= LEVELS_DATA.length; i++) {
         let s = levelStats[i];
         if (s) {
             tScore += s.score; tCorrect += s.correct; tWrong += s.wrong; tQ += s.qCount;
             let status = s.passed ? '<span style="color:#27ae60">قبول</span>' : '<span style="color:#e74c3c">نیاز به تلاش</span>';
             table += '<tr><td>' + s.name + '</td><td>' + s.score + '</td><td>' + s.correct + '</td><td>' + s.wrong + '</td><td>' + s.qCount + '</td><td>' + s.percent + '%</td><td>' + status + '</td></tr>';
         } else {
-            table += '<tr><td>' + levelsData[i-1].name + '</td><td colspan="6" style="color:#999">انجام نشده</td></tr>';
+            table += '<tr><td>' + LEVELS_DATA[i-1].name + '</td><td colspan="6" style="color:#999">انجام نشده</td></tr>';
         }
     }
     table += '</table></div>';
     
     let tPercent = tQ > 0 ? Math.round((tCorrect / tQ) * 100) : 0;
-    let tPassMark = Math.floor(ALL_QUESTIONS.length / 2) + 1;
+    let tPassMark = Math.floor(LEVELS_DATA.reduce((sum, lvl) => sum + lvl.questions.length, 0) / 2) + 1;
     
-    let allLevelsPassed = Object.values(levelStats).length === levelsData.length && Object.values(levelStats).every(s => s.passed);
+    let allLevelsPassed = Object.values(levelStats).length === LEVELS_DATA.length && Object.values(levelStats).every(s => s.passed);
     let tPassed = allLevelsPassed && (tCorrect >= tPassMark);
     
     let finalMsg = "";
@@ -653,13 +681,13 @@ function showFinalReport() {
         '<div style="margin-top:15px;padding-top:10px;border-top:2px solid #bdc3c7;font-weight:bold">' +
             '<p>مجموع امتیاز: ' + tScore + '</p>' +
             '<p>مجموع پاسخ صحیح: <span style="color:#27ae60">' + tCorrect + '</span> | مجموع پاسخ غلط: <span style="color:#e74c3c">' + tWrong + '</span></p>' +
-            '<p>از کل ' + ALL_QUESTIONS.length + ' سوال | درصد کل موفقیت: <span style="color:#2980b9">' + tPercent + '%</span></p>' +
+            '<p>از کل ' + tQ + ' سوال | درصد کل موفقیت: <span style="color:#2980b9">' + tPercent + '%</span></p>' +
         '</div>' +
         '<div style="margin-top:15px;font-weight:bold">' + finalMsg + '</div>';
 }
 
 function printPDF(type) {
-    let title = type === 'level' ? ('کارنامه مرحله ' + levelsData[state.level - 1].name) : 'کارنامه نهایی بازی';
+    let title = type === 'level' ? ('کارنامه مرحله ' + LEVELS_DATA[state.level - 1].name) : 'کارنامه نهایی بازی';
     let content = "";
     
     if (type === 'level') {
@@ -674,7 +702,7 @@ function printPDF(type) {
     } else {
         let tScore = 0, tCorrect = 0, tWrong = 0, tQ = 0;
         let tableHtml = '<div style="overflow-x: auto; width: 100%;"><table><tr><th>مرحله</th><th>امتیاز</th><th>درست</th><th>غلط</th><th>کل سوال</th><th>درصد</th><th>وضعیت</th></tr>';
-        for(let i = 1; i <= levelsData.length; i++) {
+        for(let i = 1; i <= LEVELS_DATA.length; i++) {
             let s = levelStats[i];
             if (s) {
                 tScore += s.score; tCorrect += s.correct; tWrong += s.wrong; tQ += s.qCount;
@@ -683,16 +711,16 @@ function printPDF(type) {
         }
         tableHtml += '</table></div>';
         let tPercent = tQ > 0 ? Math.round((tCorrect / tQ) * 100) : 0;
-        let tPassMark = Math.floor(ALL_QUESTIONS.length / 2) + 1;
+        let tPassMark = Math.floor(LEVELS_DATA.reduce((sum, lvl) => sum + lvl.questions.length, 0) / 2) + 1;
         
-        let allLevelsPassed = Object.values(levelStats).length === levelsData.length && Object.values(levelStats).every(s => s.passed);
+        let allLevelsPassed = Object.values(levelStats).length === LEVELS_DATA.length && Object.values(levelStats).every(s => s.passed);
         let tPassed = allLevelsPassed && (tCorrect >= tPassMark);
         
         content = tableHtml +
             '<div style="margin-top:15px; padding-top:10px; border-top:2px solid #000; font-weight:bold;">' +
                 '<p>مجموع امتیاز: ' + tScore + '</p>' +
                 '<p>مجموع پاسخ صحیح: ' + tCorrect + ' | مجموع پاسخ غلط: ' + tWrong + '</p>' +
-                '<p>از کل ' + ALL_QUESTIONS.length + ' سوال | درصد کل موفقیت: ' + tPercent + '%</p>' +
+                '<p>از کل ' + tQ + ' سوال | درصد کل موفقیت: ' + tPercent + '%</p>' +
             '</div>' +
             '<p style="margin-top:20px; font-weight:bold; color:' + (tPassed ? '#27ae60' : '#e74c3c') + ';">' +
                 (tPassed ? 'تبریک! شما در کل بازی قبول شدید.' : 'متاسفانه شرط قبولی کل بازی را کسب نکردید.') +
@@ -701,7 +729,7 @@ function printPDF(type) {
 
     let printWin = window.open('', '_blank');
     
-    // ⚠️ رفع باگ حیاتی: استفاده از <\\/script> به جای <\/script> برای جلوگیری از بسته شدن زودهنگام تگ اسکریپت
+    // ⚠️ رفع باگ حیاتی: استفاده از <\\/script> برای جلوگیری از بسته شدن زودهنگام اسکریپت
     let htmlContent = '<!DOCTYPE html>' +
         '<html dir="rtl" lang="fa">' +
         '<head>' +
@@ -744,7 +772,9 @@ function printPDF(type) {
     printWin.document.write(htmlContent);
     printWin.document.close();
 }
-</script>
+`;
+    html += `</script>
 </body>
 </html>`;
+    return html;
 }
