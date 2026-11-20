@@ -1,47 +1,24 @@
 // ==========================================
 // فایل version.js — منبع واحد نسخه برنامه
+// این فایل تنها جایی است که عدد نسخه به صورت دستی تغییر می‌کند.
+// سایر فایل‌ها (index.html ، sw.js ، db.js ، updater.js) باید از این فایل بخوانند.
 // ==========================================
 
 (function() {
     'use strict';
 
-    function compareVersions(a, b) {
-        const partsA = String(a).replace(/^v/i, '').split('.').map(x => parseInt(x) || 0);
-        const partsB = String(b).replace(/^v/i, '').split('.').map(x => parseInt(x) || 0);
-        const maxLength = Math.max(partsA.length, partsB.length);
-        for (let i = 0; i < maxLength; i++) {
-            const numA = partsA[i] || 0;
-            const numB = partsB[i] || 0;
-            if (numA > numB) return 1;
-            if (numA < numB) return -1;
-        }
-        return 0;
-    }
+    // ==========================================
+    // 📌 اطلاعات نسخه — تنها این سه خط را برای نسخه جدید تغییر دهید
+    // ==========================================
+    const APP_VERSION = 'v1.2.2';
+    const APP_RELEASE_DATE = '۱۴۰۵/۰۸/۲۵';
+    const APP_RELEASE_NOTES = '🧹 بهبود کیفیت کد (DRY): انتقال منطق تکراری مدال‌ها به یک تابع مشترک در app.js، کاهش حجم کد و آماده‌سازی برای نگهداری آسان‌تر در آینده';
 
     // ==========================================
-    // 📌 اطلاعات پیش‌فرض نسخه (فقط اینجا تغییر دهید)
+    // 🧩 در دسترس قرار دادن برای همه فایل‌ها
     // ==========================================
-    let APP_VERSION = 'v1.3.6';
-    let APP_RELEASE_DATE = '۱۴۰۵/۰۸/۳۰'; 
-    let APP_RELEASE_NOTES = '🚀 اصلاح ریشه‌ای نصب PWA (افزودن آیکون‌های استاندارد)، یکدست‌سازی آیکون‌ها و حذف وابستگی آیکون به index.html';
-
-    // ==========================================
-    // ✅ همگام‌سازی هوشمند با localStorage
-    // ==========================================
-    try {
-        const syncedVersion = localStorage.getItem('kosha-synced-version');
-        if (syncedVersion && compareVersions(syncedVersion, APP_VERSION) > 0) {
-            APP_VERSION = syncedVersion;
-        }
-        
-        const syncedDate = localStorage.getItem('kosha-synced-date');
-        if (syncedDate) APP_RELEASE_DATE = syncedDate;
-        
-        const syncedNotes = localStorage.getItem('kosha-synced-notes');
-        if (syncedNotes) APP_RELEASE_NOTES = syncedNotes;
-    } catch (e) { 
-        console.warn('خطا در همگام‌سازی نسخه از localStorage:', e); 
-    }
+    // - window.APP_VERSION → برای فایل‌های دنیای صفحه (index.html، db.js، updater.js)
+    // - self.APP_VERSION   → برای فایل‌های دنیای سرویس‌ورکر (sw.js)
 
     const versionInfo = {
         version: APP_VERSION,
@@ -49,6 +26,7 @@
         releaseNotes: APP_RELEASE_NOTES
     };
 
+    // برای دنیای صفحه (Window)
     if (typeof window !== 'undefined') {
         window.APP_VERSION = APP_VERSION;
         window.APP_RELEASE_DATE = APP_RELEASE_DATE;
@@ -56,6 +34,7 @@
         window.APP_VERSION_INFO = versionInfo;
     }
 
+    // برای دنیای سرویس‌ورکر (Service Worker)
     if (typeof self !== 'undefined') {
         self.APP_VERSION = APP_VERSION;
         self.APP_RELEASE_DATE = APP_RELEASE_DATE;
@@ -63,5 +42,6 @@
         self.APP_VERSION_INFO = versionInfo;
     }
 
+    // لاگ برای دیباگ (فقط در کنسول، برای کاربر عادی دیده نمی‌شود)
     console.log('📦 Kosha Version: ' + APP_VERSION + ' (' + APP_RELEASE_DATE + ')');
 })();
