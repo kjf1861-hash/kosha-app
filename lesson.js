@@ -40,18 +40,21 @@ async function saveLesson(e) {
         academicYear: window.activeAcademicYear
     };
         
-    await saveData('subjects', data);
-    
-    document.getElementById('lesson-form').reset();
-    showToast('درس جدید با موفقیت ثبت شد!', 'success');
-    
-    // ✅ رفع باگ: پاک کردن وضعیت فرم‌های ذخیره‌نشده
-    if (typeof clearFormDirty === 'function') clearFormDirty();
-    
-    loadAllData();
-    
-    const lessonForm = document.getElementById('lesson-form');
-    if (lessonForm) lessonForm.scrollIntoView({ behavior: 'smooth' });
+    try {
+        await saveData('subjects', data);
+        
+        document.getElementById('lesson-form').reset();
+        showToast('درس جدید با موفقیت ثبت شد!', 'success');
+        
+        if (typeof clearFormDirty === 'function') clearFormDirty();
+        
+        loadAllData();
+        
+        const lessonForm = document.getElementById('lesson-form');
+        if (lessonForm) lessonForm.scrollIntoView({ behavior: 'smooth' });
+    } catch (err) {
+        window.handleError(err, 'خطا در ثبت درس! لطفاً دوباره تلاش کنید.');
+    }
 }
 
 async function editLesson(id) {
@@ -95,14 +98,17 @@ async function saveEditedLesson(e) {
         academicYear: existing ? existing.academicYear : window.activeAcademicYear
     };
         
-    await saveData('subjects', data);
-    showToast('درس با موفقیت ویرایش شد!', 'success');
-    
-    // ✅ رفع باگ: پاک کردن وضعیت فرم‌های ذخیره‌نشده
-    if (typeof clearFormDirty === 'function') clearFormDirty();
-    
-    closeEditLessonModal();
-    loadAllData();
+    try {
+        await saveData('subjects', data);
+        showToast('درس با موفقیت ویرایش شد!', 'success');
+        
+        if (typeof clearFormDirty === 'function') clearFormDirty();
+        
+        closeEditLessonModal();
+        loadAllData();
+    } catch (err) {
+        window.handleError(err, 'خطا در ویرایش درس! لطفاً دوباره تلاش کنید.');
+    }
 }
 
 function renderLessonData() {
