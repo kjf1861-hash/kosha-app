@@ -153,6 +153,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .settings-toggle { right: 15px; }
 
 .theme-toggle:active, .settings-toggle:active { transform: scale(0.9); }
+.theme-toggle:hover, .settings-toggle:hover { background: rgba(255, 255, 255, 0.30); }
 
 .theme-toggle svg, .settings-toggle svg {
     width: 21px;
@@ -167,6 +168,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
 /* =========================================
    کانتینر اصلی
    ========================================= */
+/* ✅ اصلاح ریشه‌ای UI: محدودیت عرض ۱۰۰ درصد برای جلوگیری از بیرون زدن */
 .container { padding: 0 16px 100px 16px; max-width: 640px; margin: 0 auto; width: 100%; box-sizing: border-box; }
 
 .page-header-title {
@@ -293,7 +295,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .dashboard-accordion[open] summary::after { transform: rotate(180deg); }
 .dashboard-accordion[open] summary { border-bottom: 1px dashed var(--border-color); }
 .dashboard-accordion-content { padding: 15px; background: var(--card-bg); }
-
 /* =========================================
    فرم‌ها
    ========================================= */
@@ -309,6 +310,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
     background-color: var(--input-bg);
     transition: all 0.25s ease;
     outline: none;
+    /* ✅ اصلاح UI: جلوگیری از سرریز متن‌های طولانی */
     word-break: break-word;
 }
 .form-control:focus {
@@ -350,6 +352,7 @@ select.form-control {
     gap: 8px;
     position: relative;
     overflow: hidden;
+    /* ✅ اصلاح UI: شکستن خط برای دکمه‌های طولانی */
     flex-wrap: wrap; 
     text-align: center;
 }
@@ -368,7 +371,9 @@ select.form-control {
 @keyframes ripple { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(60); opacity: 0; } }
 .btn:active { transform: scale(0.97); }
 .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3); }
+.btn-primary:hover { box-shadow: 0 6px 18px rgba(74, 144, 226, 0.45); }
 .btn-secondary { background: var(--input-bg); color: var(--text-main); }
+.btn-secondary:hover { opacity: 0.8; }
 .btn-danger { background: rgba(254, 226, 226, 0.8); color: #dc2626; }
 [data-theme="dark"] .btn-danger { background: rgba(220, 38, 38, 0.2); color: #f87171; }
 [data-theme="dark"] .btn-primary { box-shadow: 0 4px 12px rgba(90, 161, 245, 0.35); }
@@ -376,10 +381,6 @@ select.form-control {
 .btn-sm { padding: 6px 12px; font-size: 0.85rem; border-radius: 8px; }
 .mt-4 { margin-top: 12px; }
 
-@media (hover: hover) and (pointer: fine) {
-    .btn-primary:hover { box-shadow: 0 6px 18px rgba(74, 144, 226, 0.45); }
-    .btn-secondary:hover { opacity: 0.8; }
-}
 /* =========================================
    منوی پایین (Bottom Nav)
    ========================================= */
@@ -461,6 +462,7 @@ select.form-control {
     background: var(--input-bg);
     color: var(--text-muted);
     animation: cardIn 0.4s ease both;
+    /* ✅ اصلاح UI: جلوگیری از سرریز متن */
     word-break: break-word;
 }
 .empty-state svg {
@@ -497,18 +499,16 @@ select.form-control {
     cursor: pointer;
     transition: all 0.2s;
     box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+    /* ✅ اصلاح UI */
     flex-wrap: wrap;
     justify-content: center;
 }
+.empty-state .empty-action:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 6px 18px rgba(74, 144, 226, 0.4);
+}
 .empty-state .empty-action:active {
     transform: scale(0.97);
-}
-
-@media (hover: hover) and (pointer: fine) {
-    .empty-state .empty-action:hover {
-        filter: brightness(1.05);
-        box-shadow: 0 6px 18px rgba(74, 144, 226, 0.4);
-    }
 }
 
 /* =========================================
@@ -563,7 +563,6 @@ select.form-control {
 .custom-toast-error svg { color: #ef4444; }
 .custom-toast-info { border-right: 4px solid #3b82f6; }
 .custom-toast-info svg { color: #3b82f6; }
-
 /* =========================================
    لیست‌ها (بهبود حالت شب)
    ========================================= */
@@ -573,15 +572,13 @@ select.form-control {
     border-radius: var(--radius-sm); border: 1px solid var(--border-color);
     display: flex; justify-content: space-between; align-items: center;
     gap: 10px; transition: all 0.2s;
+    /* ✅ اصلاح UI: جلوگیری از سرریز و شکستن خط */
     flex-wrap: wrap;
     width: 100%;
     box-sizing: border-box;
     word-break: break-word;
 }
-
-@media (hover: hover) and (pointer: fine) {
-    .list-item:hover { box-shadow: var(--shadow-sm); }
-}
+.list-item:hover { box-shadow: var(--shadow-sm); }
 
 .group-label {
     background: var(--primary-light);
@@ -594,7 +591,7 @@ select.form-control {
     display: inline-block;
     margin-right: 8px;
     word-break: break-word;
-    white-space: normal;
+    white-space: normal; /* ✅ اجازه شکستن در صورت نیاز */
 }
 [data-theme="dark"] .group-label { background: rgba(90, 161, 245, 0.20); color: #7EB3F7; }
 
@@ -612,18 +609,18 @@ select.form-control {
     background: rgba(11, 18, 32, 0.60); backdrop-filter: blur(4px);
     display: flex; justify-content: center; align-items: center;
     z-index: 2000; opacity: 0; visibility: hidden; transition: all 0.3s ease;
-    padding: 10px;
+    padding: 10px; /* ✅ فاصله از لبه‌های صفحه */
 }
 [data-theme="dark"] .modal-overlay { background: rgba(0, 0, 0, 0.75); }
 .modal-overlay.show { opacity: 1; visibility: visible; }
 .modal-content {
-    background: var(--card-bg); width: 100%; max-width: 420px;
+    background: var(--card-bg); width: 100%; max-width: 420px; /* ✅ محدودیت عرض */
     border-radius: var(--radius-lg); padding: 24px;
     box-shadow: var(--shadow-md); transform: scale(0.9) translateY(20px);
     transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-    max-height: 90vh; overflow-y: auto; overflow-x: hidden;
+    max-height: 90vh; overflow-y: auto; overflow-x: hidden; /* ✅ جلوگیری از اسکرول افقی */
     border: 1px solid var(--border-color);
-    box-sizing: border-box;
+    box-sizing: border-box; /* ✅ جلوگیری از بیرون زدن */
 }
 [data-theme="dark"] .modal-content {
     border: 1px solid rgba(90, 161, 245, 0.20);
@@ -634,9 +631,9 @@ select.form-control {
     font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;
     text-align: center; color: var(--primary);
     padding-bottom: 12px; border-bottom: 2px dashed var(--border-color);
-    word-break: break-word;
+    word-break: break-word; /* ✅ اصلاح UI */
 }
-.modal-footer { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+.modal-footer { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; /* ✅ اصلاح UI */ }
 
 .preview-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border-color); font-size: 0.95rem; flex-wrap: wrap; gap: 5px; word-break: break-word; }
 .preview-row:last-child { border-bottom: none; }
@@ -647,12 +644,8 @@ select.form-control {
    ========================================= */
 .student-checkbox-list { max-height: 300px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px; background: var(--input-bg); width: 100%; box-sizing: border-box; }
 .student-checkbox-item { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid var(--border-color); cursor: pointer; border-radius: 6px; transition: background 0.15s; flex-wrap: wrap; word-break: break-word; }
-
-@media (hover: hover) and (pointer: fine) {
-    .student-checkbox-item:hover { background: var(--primary-light); }
-    [data-theme="dark"] .student-checkbox-item:hover { background: rgba(90, 161, 245, 0.15); }
-}
-
+.student-checkbox-item:hover { background: var(--primary-light); }
+[data-theme="dark"] .student-checkbox-item:hover { background: rgba(90, 161, 245, 0.15); }
 .student-checkbox-item:last-child { border-bottom: none; }
 .student-checkbox-item input { accent-color: var(--primary); width: 18px; height: 18px; flex-shrink: 0; }
 .student-checkbox-item-content { display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 5px; }
@@ -673,11 +666,7 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
    ========================================= */
 .attendance-list-container { display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding: 5px; width: 100%; box-sizing: border-box; }
 .attendance-student-row { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); flex-wrap: wrap; word-break: break-word; }
-
-@media (min-width: 400px) { 
-    .attendance-student-row { flex-direction: row; justify-content: space-between; align-items: center; } 
-}
-
+@media (min-width: 400px) { .attendance-student-row { flex-direction: row; justify-content: space-between; align-items: center; } }
 .attendance-student-name { font-weight: 700; font-size: 0.95rem; flex: 1 1 auto; min-width: 0; }
 .att-btn-group { display: flex; gap: 5px; width: 100%; flex-wrap: wrap; }
 .att-btn { flex: 1 1 auto; padding: 8px 5px; border: 2px solid var(--border-color); background: var(--card-bg); border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s; color: var(--text-muted); text-align: center; min-width: 70px; }
@@ -800,19 +789,14 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
    ========================================= */
 .session-period-section { background: var(--input-bg); border-radius: var(--radius-sm); padding: 15px; margin-bottom: 15px; border: 1px solid var(--border-color); word-break: break-word; }
 .session-period-title { font-weight: 700; color: var(--primary); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
-
 /* =========================================
    Jalali Calendar (بهبود حالت شب و اصلاح UI)
    ========================================= */
 .jalali-calendar-wrapper { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 15px; box-shadow: var(--shadow-sm); direction: rtl; margin-top: 10px; width: 100%; box-sizing: border-box; overflow-x: auto; }
 .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color); flex-wrap: wrap; gap: 5px; }
 .calendar-header button { background: var(--input-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 0.85rem; font-weight: 700; color: var(--text-main); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px; }
+.calendar-header button:hover { background: var(--primary-light); }
 .calendar-header button:active { transform: scale(0.95); }
-
-@media (hover: hover) and (pointer: fine) {
-    .calendar-header button:hover { background: var(--primary-light); }
-}
-
 .calendar-title { display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; color: var(--primary); font-size: 1.1rem; flex-wrap: wrap; margin-bottom: 15px; }
 .calendar-title select { padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-size: 1rem; font-weight: 700; outline: none; cursor: pointer; max-width: 100%; }
 
@@ -823,6 +807,8 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 
 .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; width: 100%; }
 .calendar-day { display: flex; justify-content: center; align-items: center; height: 40px; border-radius: var(--radius-sm); background: var(--input-bg); border: 1px solid transparent; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; user-select: none; position: relative; }
+.calendar-day:hover { background: var(--primary-light); }
+[data-theme="dark"] .calendar-day:hover { background: rgba(90, 161, 245, 0.15); }
 .calendar-day.empty { background: transparent; cursor: default; border: none; pointer-events: none; }
 .calendar-day.friday, .calendar-day.holiday { color: #ef4444; }
 [data-theme="dark"] .calendar-day.friday, [data-theme="dark"] .calendar-day.holiday { color: #f87171; }
@@ -831,11 +817,6 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .calendar-day.selected { background: var(--primary); color: white !important; border: 1px solid var(--primary); box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4); transform: scale(1.05); }
 [data-theme="dark"] .calendar-day.selected { box-shadow: 0 4px 12px rgba(90, 161, 245, 0.50); }
 .calendar-day.selected.has-session { border: 1px solid white; }
-
-@media (hover: hover) and (pointer: fine) {
-    .calendar-day:hover { background: var(--primary-light); }
-    [data-theme="dark"] .calendar-day:hover { background: rgba(90, 161, 245, 0.15); }
-}
 
 .selected-date-display { text-align: center; margin-top: 15px; font-weight: 700; color: var(--primary); font-size: 1.1rem; padding: 10px; background: var(--primary-light); border-radius: var(--radius-sm); word-break: break-word; }
 [data-theme="dark"] .selected-date-display { background: rgba(90, 161, 245, 0.20); }
@@ -872,11 +853,14 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 #exam-questions-container { display: flex; flex-direction: column; gap: 15px; min-height: 100px; padding: 5px 0; }
 #exam-questions-container:empty::before { content: 'هنوز سوالی اضافه نشده است. روی دکمه زیر کلیک کنید.'; display: block; text-align: center; color: var(--text-muted); font-size: 0.9rem; padding: 25px 10px; background: var(--input-bg); border-radius: var(--radius-sm); border: 1px dashed var(--border-color); }
 .exam-question-item { background: var(--input-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 15px; position: relative; transition: all 0.2s ease; }
+.exam-question-item:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
 .exam-question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color); flex-wrap: wrap; gap: 10px; }
 .exam-question-number { font-weight: 700; color: var(--primary); background: var(--primary-light); padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; }
 [data-theme="dark"] .exam-question-number { background: rgba(90, 161, 245, 0.20); }
 .exam-question-delete-btn { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.exam-question-delete-btn:hover { background: rgba(239, 68, 68, 0.2); transform: scale(1.1); }
 [data-theme="dark"] .exam-question-delete-btn { background: rgba(239, 68, 68, 0.20); color: #f87171; }
+[data-theme="dark"] .exam-question-delete-btn:hover { background: rgba(239, 68, 68, 0.30); }
 .exam-question-body { display: flex; flex-direction: column; gap: 12px; }
 .exam-question-field { display: flex; flex-direction: column; gap: 5px; }
 .exam-question-field label { font-size: 0.85rem; color: var(--text-muted); font-weight: 700; }
@@ -888,35 +872,28 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .exam-option-row input[type="radio"] { accent-color: var(--primary); width: 18px; height: 18px; flex-shrink: 0; }
 .exam-option-row input[type="text"] { flex: 1 1 150px; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--input-bg); color: var(--text-main); font-size: 0.9rem; font-family: inherit; min-width: 0; }
 .exam-option-row .exam-option-delete { background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 1.1rem; padding: 4px; transition: transform 0.2s; }
+.exam-option-row .exam-option-delete:hover { transform: scale(1.2); }
 .exam-add-option-btn { background: transparent; border: 1px dashed var(--primary); color: var(--primary); padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-family: inherit; transition: all 0.2s; margin-top: 5px; }
+.exam-add-option-btn:hover { background: var(--primary-light); }
+[data-theme="dark"] .exam-add-option-btn:hover { background: rgba(90, 161, 245, 0.15); }
 .exam-question-score-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .exam-question-score-row label { font-size: 0.85rem; color: var(--text-muted); font-weight: 700; white-space: nowrap; }
 .exam-question-score-row input { flex: 1 1 100px; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--card-bg); color: var(--text-main); font-family: inherit; font-size: 0.9rem; min-width: 0; }
-
-@media (hover: hover) and (pointer: fine) {
-    .exam-question-item:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
-    .exam-question-delete-btn:hover { background: rgba(239, 68, 68, 0.2); transform: scale(1.1); }
-    [data-theme="dark"] .exam-question-delete-btn:hover { background: rgba(239, 68, 68, 0.30); }
-    .exam-option-row .exam-option-delete:hover { transform: scale(1.2); }
-    .exam-add-option-btn:hover { background: var(--primary-light); }
-    [data-theme="dark"] .exam-add-option-btn:hover { background: rgba(90, 161, 245, 0.15); }
-}
 
 /* =========================================
    Exam List (بهبود حالت شب)
    ========================================= */
 .exam-list-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 15px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; transition: all 0.2s; }
+.exam-list-item:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
 .exam-list-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px; }
 .exam-list-title { font-weight: 700; color: var(--primary); font-size: 1.05rem; word-break: break-word; }
 .exam-list-details { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); flex-wrap: wrap; gap: 5px; }
 .exam-list-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 5px; padding-top: 8px; border-top: 1px dashed var(--border-color); flex-wrap: wrap; }
 
-@media (hover: hover) and (pointer: fine) {
-    .exam-list-item:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
-}
-
 #exam-grading-modal .modal-content { max-width: 700px; width: 95%; }
-.exam-grading-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); margin-bottom: 8px; transition: all 0.2s; flex-wrap: wrap; }
+.exam-grading-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); margin-bottom: 8px; transition: all 0.2s; flex-wrap: wrap; /* ✅ اصلاح UI: اجازه شکستن خط */ }
+.exam-grading-row:hover { border-color: var(--primary); background: var(--input-bg); }
+[data-theme="dark"] .exam-grading-row:hover { background: rgba(90, 161, 245, 0.08); }
 .exam-grading-student-info { display: flex; align-items: center; gap: 8px; flex: 1 1 150px; min-width: 0; flex-wrap: wrap; }
 .exam-grading-student-rank { font-weight: 700; color: var(--text-muted); min-width: 25px; text-align: center; font-size: 0.9rem; }
 .exam-grading-student-name { font-weight: 700; font-size: 0.95rem; white-space: normal; word-break: break-word; }
@@ -935,34 +912,30 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 #exam-grading-stats strong { color: var(--primary); font-size: 1.05rem; }
 .exam-grading-empty { text-align: center; padding: 30px 15px; color: var(--text-muted); font-size: 0.95rem; }
 
-@media (hover: hover) and (pointer: fine) {
-    .exam-grading-row:hover { border-color: var(--primary); background: var(--input-bg); }
-    [data-theme="dark"] .exam-grading-row:hover { background: rgba(90, 161, 245, 0.08); }
-}
-
 @keyframes shake {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-6px); }
     75% { transform: translateX(6px); }
 }
+
 /* =========================================
    Full Calendar (بهبود حالت شب)
    ========================================= */
 .full-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
 .full-calendar-day { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 45px; border-radius: var(--radius-sm); background: var(--input-bg); border: 1px solid transparent; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; user-select: none; position: relative; color: var(--text-main); }
+.full-calendar-day:hover { background: var(--primary-light); transform: scale(1.05); }
+[data-theme="dark"] .full-calendar-day:hover { background: rgba(90, 161, 245, 0.15); }
 .full-calendar-day.empty { background: transparent; cursor: default; border: none; pointer-events: none; }
 .full-calendar-day.friday { color: #ef4444; }
 [data-theme="dark"] .full-calendar-day.friday { color: #f87171; }
 .full-calendar-day.selected { background: var(--primary); color: white !important; border: 1px solid var(--primary); box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4); transform: scale(1.05); }
 [data-theme="dark"] .full-calendar-day.selected { box-shadow: 0 4px 12px rgba(90, 161, 245, 0.50); }
-
-@media (hover: hover) and (pointer: fine) {
-    .full-calendar-day:hover { background: var(--primary-light); transform: scale(1.05); }
-    [data-theme="dark"] .full-calendar-day:hover { background: rgba(90, 161, 245, 0.15); }
-}
-
 .events-list { display: flex; flex-direction: column; gap: 8px; }
 .event-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; flex-wrap: wrap; }
+.event-item:hover { border-color: var(--primary); background: var(--input-bg); }
+[data-theme="dark"] .event-item:hover { background: rgba(90, 161, 245, 0.08); }
+.event-item.selected { border-color: var(--primary); background: var(--primary-light); box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2); }
+[data-theme="dark"] .event-item.selected { background: rgba(90, 161, 245, 0.20); }
 .event-day-badge { background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
 .event-text { flex: 1 1 150px; font-size: 0.9rem; line-height: 1.5; color: var(--text-main); word-break: break-word; }
 .event-highlight { background: linear-gradient(135deg, var(--primary-light) 0%, rgba(74, 144, 226, 0.1) 100%); border: 2px solid var(--primary); border-radius: var(--radius-md); padding: 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 12px; animation: fadeIn 0.3s ease; flex-wrap: wrap; }
@@ -972,11 +945,6 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 .full-calendar-day.has-event-soft { background: rgba(74, 144, 226, 0.06); border: 1px solid rgba(74, 144, 226, 0.15); }
 [data-theme="dark"] .full-calendar-day.has-event-soft { background: rgba(90, 161, 245, 0.15); border: 1px solid rgba(90, 161, 245, 0.25); }
-
-@media (hover: hover) and (pointer: fine) {
-    .event-item:hover { border-color: var(--primary); background: var(--input-bg); }
-    [data-theme="dark"] .event-item:hover { background: rgba(90, 161, 245, 0.08); }
-}
 
 /* =========================================
    Schedule Table (بهبود حالت شب)
@@ -1068,7 +1036,7 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
     display: flex;
     align-items: center;
     gap: 10px;
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* ✅ اصلاح UI: جلوگیری از بیرون زدن منو در موبایل */
 }
 .schedule-period-row span {
     min-width: 60px;
@@ -1151,7 +1119,7 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 }
 .update-mode-option {
     display: flex;
-    align-items: flex-start;
+    align-items: flex-start; /* ✅ برای هم‌ترازی درست رادیو با متن چندخطی */
     gap: 10px;
     padding: 10px 12px;
     background: var(--input-bg);
@@ -1160,7 +1128,7 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
     cursor: pointer;
     transition: all 0.2s;
     font-size: 0.9rem;
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* ✅ اجازه شکستن خط */
     word-break: break-word;
 }
 .update-mode-option input[type="radio"] {
@@ -1168,24 +1136,16 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
     width: 18px;
     height: 18px;
     flex-shrink: 0;
-    margin-top: 4px;
+    margin-top: 4px; /* تنظیم فاصله رادیو با خط اول متن */
 }
 .update-mode-option span {
-    flex: 1 1 150px;
+    flex: 1 1 150px; /* ✅ اجازه فشرده شدن یا انتقال به خط بعد */
 }
 .update-mode-option.selected {
     border-color: var(--primary);
     background: var(--primary-light);
     font-weight: 700;
 }
-
-@media (hover: hover) and (pointer: fine) {
-    .update-mode-option:hover {
-        border-color: var(--primary);
-        background: var(--primary-light);
-    }
-}
-
 .academic-year-badge {
     display: flex;
     justify-content: space-between;
@@ -1195,7 +1155,7 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
     border-radius: var(--radius-md);
     padding: 15px 20px;
     margin-bottom: 20px;
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* ✅ اجازه شکستن خط در موبایل */
     gap: 10px;
 }
 .academic-year-badge .ay-info {
