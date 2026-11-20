@@ -17,19 +17,44 @@ async function generateGameFile(examId) {
     const sub = window.allSubjectsData.find(s => s.id === exam.subjectId);
     const subName = sub ? `${sub.symbol || ''} ${sub.name}` : 'بدون درس';
     
-    const gameQuestions = exam.questions.map((q, index) => {
-        const safeQuestion = {
-            index: index + 1,
-            type: q.type,
-            text: q.text,
-            score: q.score
-        };
-        
-        if (q.type === 'multiple-choice') {
-            safeQuestion.options = q.options;
+    const gameQuestions = [];
+    exam.questions.forEach((q, index) => {
+        if (q.type === 'matching' && q.pairs && q.pairs.length > 0) {
+            // تبدیل سوال تطبیقی به چند سوال چهارگزینه‌ای
+            q.pairs.forEach((pair, pIndex) => {
+                let options = [pair.b, ...q.pairs.filter((_, i) => i !== pIndex).map(p => p.b)];
+                // مخلوط کردن گزینه‌ها
+                options = options.sort(() => Math.random() - 0.5);
+                const correctIndex = options.indexOf(pair.b);
+                
+                // توزیع نمره سوال بین جفت‌ها
+                const distributedScore = Math.round((q.score / q.pairs.length) * 100) / 100;
+
+                gameQuestions.push({
+                    index: gameQuestions.length + 1,
+                    type: 'multiple-choice',
+                    text: `مفهوم «${pair.a}» با کدام گزینه تطبیق دارد؟ ${q.text ? '(' + q.text + ')' : ''}`,
+                    options: options,
+                    score: distributedScore,
+                    correctIndex: correctIndex
+                });
+            });
+        } else {
+            // بقیه انواع سوالات
+            const safeQuestion = {
+                index: gameQuestions.length + 1,
+                type: q.type,
+                text: q.text,
+                score: q.score
+            };
+            
+            if (q.type === 'multiple-choice') {
+                safeQuestion.options = q.options;
+                safeQuestion.correctIndex = q.correctIndex;
+            }
+            
+            gameQuestions.push(safeQuestion);
         }
-        
-        return safeQuestion;
     });
     
     const gameHtml = buildGameHtml(exam, subName, gameQuestions);
@@ -48,13 +73,11 @@ async function generateGameFile(examId) {
 }
 
 function buildGameHtml(exam, subName, questions) {
-    // ✅ اصلاح امنیتی: امن‌سازی داده‌ها برای جلوگیری از شکستن کدهای جاوااسکریپت
     const jsonSafe = (obj) => JSON.stringify(obj).replace(/</g, '\\u003c');
     
     const questionsJson = jsonSafe(questions);
     const safeTitleJs = jsonSafe(exam.title);
     
-    // ✅ اصلاح امنیتی: escape متن‌ها برای نمایش در HTML
     const safeExamTitleHtml = escapeHtml(exam.title);
     const safeSubNameHtml = escapeHtml(subName);
     const safeDateHtml = escapeHtml(exam.date);
@@ -319,7 +342,6 @@ function buildGameHtml(exam, subName, questions) {
     </div>
 
     <script>
-        // ✅ تابع امنیتی برای جلوگیری از اجرای کدهای HTML در مرورگر دانش‌آموز
         function escapeHtml(str) {
             if (str === null || str === undefined) return '';
             return String(str).replace(/[&<>"']/g, function(m) {
@@ -446,7 +468,8 @@ function buildGameHtml(exam, subName, questions) {
                 showFinishScreen();
             }
         }
-                function showFinishScreen() {
+        
+        function showFinishScreen() {
             const answersString = userAnswers.map(a => {
                 if (a === null) return 'null';
                 if (typeof a === 'string') return a.trim();
