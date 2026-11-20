@@ -20,7 +20,13 @@ const scoreJalaliMonths = ["فروردین", "اردیبهشت", "خرداد", "
 let _lastStudentsHash = '';
 
 function getStudentsHash() {
-    return window.allStudentsData.map(s => s.id).join(',') + '|' + window.allGroupsData.map(g => g.id).join(',');
+    const studentsPart = window.allStudentsData.map(s => 
+        `${s.id}:${s.firstName || ''}:${s.lastName || ''}:${s.groupId || ''}`
+    ).join(',');
+    const groupsPart = window.allGroupsData.map(g => 
+        `${g.id}:${g.name || ''}:${g.symbol || ''}`
+    ).join(',');
+    return studentsPart + '|' + groupsPart;
 }
 
 function saveScoreCalendarState(type) {
@@ -91,9 +97,47 @@ function renderScoreData() {
         }
     }
 
-    if (window.allRecordsData && Array.isArray(window.allRecordsData)) {
+        if (window.allRecordsData && Array.isArray(window.allRecordsData)) {
         initScoreCalendars();
     }
+    
+    // ✅ اصلاح: بررسی اینکه آیا اصلاً دانش‌آموزی گروه‌بندی شده است یا خیر
+    const hasAnyGroupedStudent = window.allStudentsData.some(st => st.groupId !== null && st.groupId !== undefined);
+    
+    // لیست تمام دکمه‌های نمای گروهی در فرم‌های مختلف
+    const groupedViewButtons = [
+        'btnGroupView',           // فرم ارزشیابی
+        'btnQuranGroupView',      // فرم قرآن
+        'btnSpecialGroupView',    // فرم تشویق ویژه
+        'btnHandwritingGroupView' // فرم خوش‌خط‌نویسی
+    ];
+
+    groupedViewButtons.forEach(btnId => {
+        const btn = document.getElementById(btnId);
+        if (btn) {
+            if (!hasAnyGroupedStudent) {
+                // اگر هیچ گروه‌بندی وجود ندارد، دکمه را غیرفعال و شفاف کن
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+                btn.title = 'هیچ دانش‌آموزی گروه‌بندی نشده است. ابتدا از تب گروه‌ها اقدام کنید.';
+                
+                // اگر کاربر روی نمای گروهی بود، به زور به نمای کلاسی برگردان
+                if (btn.classList.contains('active')) {
+                    if (btnId === 'btnGroupView') switchStudentView('flat');
+                    if (btnId === 'btnQuranGroupView') switchQuranStudentView('flat');
+                    if (btnId === 'btnSpecialGroupView') switchSpecialStudentView('flat');
+                    if (btnId === 'btnHandwritingGroupView') switchHandwritingStudentView('flat');
+                }
+            } else {
+                // اگر گروه‌بندی وجود دارد، دکمه را فعال کن
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.title = 'نمای گروهی';
+            }
+        }
+    });
     
     const currentHash = getStudentsHash();
     if (currentHash !== _lastStudentsHash) {
@@ -630,13 +674,26 @@ async function confirmAndSaveRecord() {
     const currentItem = recordItemEl ? recordItemEl.value : '';
     
     try {
-        await saveData('records', window.tempRecordData);
+        // ✅ ۱. ذخیره رکورد جدید و دریافت id از دیتابیس
+        const newId = await saveData('records', window.tempRecordData);
+        window.tempRecordData.id = newId; // اضافه کردن id به رکورد در حافظه
+        
+        // ✅ ۲. بهینه‌سازی: به‌روزرسانی افزایشی کش‌ها (بدون محاسبه مجدد کل)
+        if (typeof window.updateScoreCachesForNewRecord === 'function') {
+            window.updateScoreCachesForNewRecord(window.tempRecordData);
+        }
+        
+        // ✅ ۳. به‌روزرسانی داده‌های حافظه (allRecordsData)
+        if (window.allRecordsData) {
+            window.allRecordsData.push(window.tempRecordData);
+        }
         
         showToast('امتیاز با موفقیت ثبت شد!', 'success');
         closePreviewModal();
         
         if (typeof clearFormDirty === 'function') clearFormDirty();
         
+        // ✅ ۴. منطق قبلی (بدون تغییر)
         if (isSaveAndNext) {
             document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = false);
             document.querySelectorAll('.group-select-all-checkbox').forEach(cb => cb.checked = false);
@@ -644,7 +701,10 @@ async function confirmAndSaveRecord() {
             const scoreInput = document.getElementById('dynamicLevelInput') || document.getElementById('dynamicCountInput') || document.getElementById('dynamicFreeInput');
             if (scoreInput) scoreInput.value = '';
             
-            await loadAllData(); 
+            // ✅ رندر مجدد هدفمند (به جای loadAllData سنگین)
+            if (typeof loadAssessmentRecords === 'function') loadAssessmentRecords();
+            if (typeof renderDashboardData === 'function') renderDashboardData();
+            if (typeof renderStudentsList === 'function') renderStudentsList();
             
             setTimeout(() => {
                 if (currentSubject && recordSubjectEl) recordSubjectEl.value = currentSubject;
@@ -664,14 +724,18 @@ async function confirmAndSaveRecord() {
             resetScoreCalendar('record');
             const dynSection = document.getElementById('dynamic-score-section');
             if (dynSection) dynSection.style.display = 'none'; 
-            await loadAllData();
+            
+            // ✅ رندر مجدد هدفمند (به جای loadAllData سنگین)
+            if (typeof loadAssessmentRecords === 'function') loadAssessmentRecords();
+            if (typeof renderDashboardData === 'function') renderDashboardData();
+            if (typeof renderStudentsList === 'function') renderStudentsList();
             
             if (recordForm) recordForm.scrollIntoView({ behavior: 'smooth' });
         }
     } catch (error) { 
-        showToast('خطا در ذخیره!', 'error'); 
-        closePreviewModal(); 
-    }
+    window.handleError(error, 'خطا در ذخیره امتیاز. لطفاً دوباره تلاش کنید.');
+    closePreviewModal(); 
+}
 }
 
 // ⏸️ پایان بخش ۳ از ۵ — منتظر پیام «ادامه» شما هستم تا بخش ۴ را بفرستم.
@@ -699,7 +763,12 @@ async function saveQuranRecord() {
     }
 
     const dateStr = document.getElementById('quranDateHidden').value;
-    if (!dateStr) { showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return; }
+if (!dateStr) { showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return; }
+// ✅ اصلاح امنیتی: اعتبارسنجی ساختار تاریخ (جلوگیری از ورود تاریخ نامعتبر)
+if (!window.isValidJalaliDateString(dateStr)) {
+    showToast('تاریخ وارد شده معتبر نیست.', 'error');
+    return;
+}
 
     const recordData = {
         subjectId: null,
@@ -789,7 +858,12 @@ async function saveSpecialReward() {
     if (isNaN(score) || score <= 0) { showToast('امتیاز معتبر وارد کنید.', 'error'); return; }
 
     const dateStr = document.getElementById('specialDateHidden').value;
-    if (!dateStr) { showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return; }
+if (!dateStr) { showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return; }
+// ✅ اصلاح امنیتی: اعتبارسنجی ساختار تاریخ
+if (!window.isValidJalaliDateString(dateStr)) {
+    showToast('تاریخ وارد شده معتبر نیست.', 'error');
+    return;
+}
 
     const recordData = {
         subjectId: null,
@@ -823,7 +897,12 @@ async function saveHandwritingReward() {
     if (studentCheckboxes.length === 0) { showToast('دانش‌آموز انتخاب کنید.', 'error'); return; }
 
     const dateStr = document.getElementById('handwritingDateHidden').value;
-    if (!dateStr) { showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return; }
+if (!dateStr) { showToast('تاریخ را از تقویم انتخاب کنید.', 'error'); return; }
+// ✅ اصلاح امنیتی: اعتبارسنجی ساختار تاریخ
+if (!window.isValidJalaliDateString(dateStr)) {
+    showToast('تاریخ وارد شده معتبر نیست.', 'error');
+    return;
+}
 
     const recordData = {
         subjectId: null,
@@ -950,33 +1029,94 @@ function loadAssessmentRecords() {
     }
 }
 
-// ✅ اصلاح باگ: حذف badgeهای یتیم هنگام حذف رکورد قرآن
+// ✅ اصلاح باگ: بازمحاسبه هوشمند badgeهای قرآن هنگام حذف رکورد (به جای حذف کامل)
 async function deleteRecord(id) {
     if (!confirm('آیا از حذف این رکورد مطمئن هستید؟')) return;
     try { 
-        // ✅ خواندن رکورد قبل از حذف (برای بررسی نوع آن)
+        // ✅ خواندن رکورد قبل از حذف (برای بررسی نوع آن و دانش‌آموزان مرتبط)
         const record = await getDataById('records', id);
+        if (!record) {
+            showToast('رکورد یافت نشد.', 'error');
+            return;
+        }
         
-        // ✅ اگر رکورد «پویش قرآن» بود، badgeهای مرتبط هم پاک شوند
-        if (record && record.itemName === "پویش حفظ جزء سی قرآن کریم" && record.students && record.students.length > 0) {
-            const allBadges = await getAllData('badgesSettings');
-            const relatedBadges = allBadges.filter(badge => 
-                badge.id && 
-                badge.id.startsWith('quranReward_') && 
-                record.students.includes(badge.studentId) &&
-                badge.academicYear === (record.academicYear || window.activeAcademicYear)
+        const recordYear = record.academicYear || window.activeAcademicYear;
+        const isQuranRecord = record.itemName === "پویش حفظ جزء سی قرآن کریم";
+        const affectedStudentIds = (isQuranRecord && record.students && Array.isArray(record.students))
+            ? [...record.students]
+            : [];
+        
+        // ۱. حذف خود رکورد
+        await deleteData('records', id);
+        
+        // ۲. اگر رکورد «پویش قرآن» بود، badgeهای مرتبط را بازمحاسبه کن
+        if (isQuranRecord && affectedStudentIds.length > 0) {
+            // تمام رکوردهای قرآن باقی‌مانده در این سال تحصیلی
+            const allRecords = await getAllData('records');
+            const remainingQuranRecords = allRecords.filter(rec => 
+                rec.itemName === "پویش حفظ جزء سی قرآن کریم" && 
+                rec.academicYear === recordYear
             );
             
-            for (const badge of relatedBadges) {
-                await deleteData('badgesSettings', badge.id);
+            // تمام badgeهای قرآن این سال تحصیلی (برای حذف نسخه‌های قدیمی)
+            const allBadges = await getAllData('badgesSettings');
+            const quranBadges = allBadges.filter(b => 
+                b.id && 
+                b.id.startsWith('quranReward_') && 
+                b.academicYear === recordYear
+            );
+            
+            let recalculatedCount = 0;
+            let removedCount = 0;
+            
+            for (const studentId of affectedStudentIds) {
+                // ✅ بازمحاسبه آمار این دانش‌آموز از روی رکوردهای باقی‌مانده
+                const surahSet = new Set();
+                let totalAyats = 0;
+                let latestDate = '';
+                let hasAnyRemainingRecord = false;
+                
+                remainingQuranRecords.forEach(rec => {
+                    if (rec.students && rec.students.includes(studentId)) {
+                        hasAnyRemainingRecord = true;
+                        
+                        const surahMatch = rec.title ? rec.title.match(/حفظ سوره (.+?) -/) : null;
+                        if (surahMatch) surahSet.add(surahMatch[1]);
+                        
+                        const ayatMatch = rec.title ? rec.title.match(/- (\d+) آیه/) : null;
+                        if (ayatMatch) totalAyats += parseInt(ayatMatch[1]);
+                        
+                        if (rec.date && rec.date > latestDate) latestDate = rec.date;
+                    }
+                });
+                
+                // ✅ حذف badgeهای قبلی این دانش‌آموز (در این سال تحصیلی)
+                const studentBadges = quranBadges.filter(b => b.studentId === studentId);
+                if (studentBadges.length > 0) {
+                    await deleteBulkData('badgesSettings', studentBadges.map(b => b.id));
+                    removedCount += studentBadges.length;
+                }
+                
+                // ✅ اگر دانش‌آموز هنوز رکورد قرآن دارد، badge جدید با آمار صحیح بساز
+                if (hasAnyRemainingRecord) {
+                    await saveData('badgesSettings', { 
+                        id: `quranReward_${studentId}_${generateUniqueId()}`, 
+                        studentId: studentId, 
+                        title: "تشویق شرکت در پویش حفظ جزء سی قرآن کریم", 
+                        totalSurahs: surahSet.size, 
+                        totalAyats: totalAyats, 
+                        date: latestDate || record.date,
+                        academicYear: recordYear
+                    });
+                    recalculatedCount++;
+                }
             }
             
-            if (relatedBadges.length > 0) {
-                console.log(`🧹 ${relatedBadges.length} badge قرآن مرتبط با رکورد حذف‌شده پاک شد.`);
+            if (recalculatedCount > 0 || removedCount > 0) {
+                console.log(`♻️ بازمحاسبه badge قرآن: ${recalculatedCount} بازسازی شد، ${removedCount} حذف شد.`);
             }
         }
         
-        await deleteData('records', id); 
         showToast('رکورد حذف شد.', 'success'); 
         loadAllData(); 
     }
