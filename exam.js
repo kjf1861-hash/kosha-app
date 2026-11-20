@@ -7,7 +7,7 @@ window.allExamResultsData = [];
 
 let examQuestionCounter = 0;
 let currentGradingExamId = null;
-let gradingStatsTimer = null; // ✅ این خط را اینجا اضافه کنید (زیر خط ۹)
+let gradingStatsTimer = null; 
 
 let examCalendarState = {
     year: 1405,
@@ -82,11 +82,14 @@ function renderExamsData() {
                 <div class="exam-list-details" style="margin-top: 4px;">
                     ${avgHtml}
                 </div>
-                <div class="exam-list-actions" style="flex-wrap: wrap;">
+                <div class="exam-list-actions" style="flex-wrap: wrap; gap: 5px;">
                     <button class="btn btn-primary btn-sm" onclick="openExamGradingModal('${exam.id}')" title="ثبت نمرات">📝 ثبت نمرات</button>
-                    <button class="btn btn-secondary btn-sm" onclick="generateGameFile('${exam.id}')" title="تولید فایل بازی برای دانش‌آموز" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none;">🎮 تولید بازی</button>
-                    <button class="btn btn-secondary btn-sm" onclick="openExamEditorModal('${exam.id}')" title="ویرایش آزمون">✏️ ویرایش</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteExam('${exam.id}')" title="حذف آزمون">🗑️ حذف</button>
+                    <button class="btn btn-secondary btn-sm" onclick="generateGameFile('${exam.id}')" title="تولید فایل بازی" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none;">🎮 بازی</button>
+                    <button class="btn btn-secondary btn-sm" onclick="exportExamCSV('${exam.id}')" title="خروجی اکسل">📗</button>
+                    <button class="btn btn-secondary btn-sm" onclick="exportExamHTML('${exam.id}')" title="خروجی HTML">🌐</button>
+                    <button class="btn btn-secondary btn-sm" onclick="printExam('${exam.id}')" title="چاپ / PDF">🖨️</button>
+                    <button class="btn btn-secondary btn-sm" onclick="openExamEditorModal('${exam.id}')" title="ویرایش آزمون">✏️</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteExam('${exam.id}')" title="حذف آزمون">🗑️</button>
                 </div>
             </div>
         `;
@@ -265,7 +268,6 @@ function selectExamCalendarDay(dateStr) {
     }
 }
 
-// ⏸️ پایان بخش ۱ — منتظر پیام «ادامه» شما هستم تا بخش ۲ را بفرستم.
 // ==========================================
 // 3. باز کردن مودال سازنده آزمون
 // ==========================================
@@ -491,7 +493,6 @@ function updateQuestionNumbers() {
     });
 }
 
-// ⏸️ پایان بخش ۲ — منتظر پیام «ادامه» شما هستم تا بخش ۳ را بفرستم.
 // ==========================================
 // 5. ذخیره آزمون
 // ==========================================
@@ -738,7 +739,6 @@ function closeExamGradingModal() {
     if (typeof clearFormDirty === 'function') clearFormDirty();
 }
 
-// ⏸️ پایان بخش ۳ — منتظر پیام «ادامه» شما هستم تا بخش ۴ را بفرستم.
 // ✅ بهینه‌سازی: تابع debounce برای جلوگیری از محاسبات مکرر هنگام تایپ
 function scheduleGradingStatsUpdate() {
     if (gradingStatsTimer) clearTimeout(gradingStatsTimer);
@@ -866,4 +866,248 @@ async function saveExamGrades() {
     }
 }
 
-// ⏸️ پایان بخش ۴ — منتظر پیام «ادامه» شما هستم تا بخش ۵ (آخرین بخش) را بفرستم.
+// ==========================================
+// ✅ توابع جدید: خروجی CSV، HTML و چاپ آزمون
+// ==========================================
+
+// ۱. خروجی اکسل (CSV)
+async function exportExamCSV(examId) {
+    const exam = await getDataById('exams', examId);
+    if (!exam || !exam.questions || exam.questions.length === 0) {
+        showToast('آزمون سوالی ندارد.', 'error');
+        return;
+    }
+
+    const sub = window.allSubjectsData.find(s => s.id === exam.subjectId);
+    const subName = sub ? sub.name : 'بدون درس';
+
+    try {
+        // ✅ جلوگیری از فرمول تزریقی در اکسل
+        const safeCsv = (val) => {
+            if (val === null || val === undefined) return '';
+            let str = String(val);
+            if (str.startsWith('=') || str.startsWith('+') || str.startsWith('-') || str.startsWith('@')) {
+                str = "'" + str;
+            }
+            return str.replace(/"/g, '""');
+        };
+
+        let csvContent = `عنوان آزمون:, "${safeCsv(exam.title)}"\n`;
+        csvContent += `درس:, "${safeCsv(subName)}"\n`;
+        csvContent += `تاریخ:, "${safeCsv(exam.date)}"\n`;
+        csvContent += `نمره کل:, ${exam.maxScore}\n\n`;
+
+        csvContent += "ردیف,متن سوال,نوع سوال,گزینه ۱,گزینه ۲,گزینه ۳,گزینه ۴,پاسخ صحیح,نمره\r\n";
+
+        exam.questions.forEach((q, i) => {
+            let typeName = '';
+            let opt1 = '', opt2 = '', opt3 = '', opt4 = '';
+            let correctAnswer = '';
+
+            if (q.type === 'multiple-choice') {
+                typeName = 'چندگزینه‌ای';
+                if (q.options) {
+                    opt1 = q.options[0] || '';
+                    opt2 = q.options[1] || '';
+                    opt3 = q.options[2] || '';
+                    opt4 = q.options[3] || '';
+                    correctAnswer = q.options[q.correctIndex] || '';
+                }
+            } else if (q.type === 'true-false') {
+                typeName = 'درست/غلط';
+                correctAnswer = q.correctAnswer ? 'درست' : 'غلط';
+            } else if (q.type === 'fill-blank') {
+                typeName = 'جای خالی';
+                correctAnswer = q.answer || '';
+            } else if (q.type === 'essay') {
+                typeName = 'تشریحی';
+                correctAnswer = q.answer || '';
+            }
+
+            csvContent += `${i + 1},"${safeCsv(q.text)}","${typeName}","${safeCsv(opt1)}","${safeCsv(opt2)}","${safeCsv(opt3)}","${safeCsv(opt4)}","${safeCsv(correctAnswer)}",${q.score}\r\n`;
+        });
+
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        
+        const dateStr = (typeof window.getJalaliDateTimeForFilename === 'function') 
+            ? window.getJalaliDateTimeForFilename().split('-').slice(0, 3).join('-') 
+            : new Date().toISOString().slice(0, 10);
+
+        a.href = url;
+        a.download = `exam_${exam.title.replace(/\s+/g, '_')}_${dateStr}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('فایل CSV دانلود شد.', 'success');
+    } catch (e) {
+        console.error(e);
+        showToast('خطا در تولید فایل اکسل.', 'error');
+    }
+}
+
+// ۲. خروجی فایل HTML مستقل
+async function exportExamHTML(examId) {
+    const exam = await getDataById('exams', examId);
+    if (!exam || !exam.questions || exam.questions.length === 0) {
+        showToast('آزمون سوالی ندارد.', 'error');
+        return;
+    }
+    
+    const sub = window.allSubjectsData.find(s => s.id === exam.subjectId);
+    const subName = sub ? `${sub.symbol || ''} ${sub.name}` : 'بدون درس';
+
+    // تولید محتوای سوالات
+    let questionsHtml = '';
+    exam.questions.forEach((q, i) => {
+        questionsHtml += `
+            <div class="question-item">
+                <div class="question-header">
+                    <span class="question-number">سوال ${i + 1}</span>
+                    <span class="question-score">${q.score} نمره</span>
+                </div>
+                <div class="question-text">${escapeHtml(q.text)}</div>
+        `;
+
+        if (q.type === 'multiple-choice' && q.options) {
+            questionsHtml += `<div class="options-list">`;
+            q.options.forEach((opt, optIdx) => {
+                questionsHtml += `
+                    <div class="option-item">
+                        <span class="option-letter">${optIdx + 1})</span>
+                        <span>${escapeHtml(opt)}</span>
+                    </div>
+                `;
+            });
+            questionsHtml += `</div>`;
+        } else if (q.type === 'true-false') {
+            questionsHtml += `
+                <div class="options-list" style="flex-direction: row; gap: 30px; margin-top: 15px;">
+                    <div class="option-item"><span class="option-letter">1)</span><span>درست</span></div>
+                    <div class="option-item"><span class="option-letter">2)</span><span>غلط</span></div>
+                </div>
+            `;
+        } else if (q.type === 'fill-blank' || q.type === 'essay') {
+            questionsHtml += `
+                <div class="essay-space" style="margin-top: 15px; min-height: 80px; border-bottom: 1px dashed #ccc;"></div>
+            `;
+        }
+
+        questionsHtml += `</div>`;
+    });
+
+    const html = `<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>آزمون: ${escapeHtml(exam.title)}</title>
+    <style>
+        body { font-family: Tahoma, 'Vazirmatn', sans-serif; background: #f1f5f9; color: #1e293b; padding: 20px; line-height: 1.8; }
+        .paper { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .header { text-align: center; border-bottom: 2px solid #4A90E2; padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { color: #4A90E2; margin: 0 0 10px 0; font-size: 1.8rem; }
+        .header p { margin: 0; color: #64748b; font-size: 0.95rem; }
+        .info-bar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 25px; font-size: 0.9rem; }
+        .question-item { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px dashed #e2e8f0; page-break-inside: avoid; }
+        .question-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .question-number { font-weight: bold; color: #4A90E2; }
+        .question-score { background: #eef2ff; color: #4A90E2; padding: 2px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+        .question-text { font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; }
+        .options-list { display: flex; flex-direction: column; gap: 10px; padding-right: 10px; }
+        .option-item { display: flex; gap: 10px; align-items: flex-start; }
+        .option-letter { font-weight: bold; color: #64748b; }
+    </style>
+</head>
+<body>
+    <div class="paper">
+        <div class="header">
+            <h1>${escapeHtml(exam.title)}</h1>
+            <p>${escapeHtml(subName)}</p>
+        </div>
+        <div class="info-bar">
+            <span><strong>تاریخ:</strong> ${toPersianNumber(exam.date)}</span>
+            <span><strong>تعداد سوالات:</strong> ${toPersianNumber(exam.questions.length)}</span>
+            <span><strong>نمره کل:</strong> ${toPersianNumber(exam.maxScore)}</span>
+        </div>
+        ${questionsHtml}
+    </div>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `exam_${exam.title.replace(/\s+/g, '_')}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('فایل HTML دانلود شد.', 'success');
+}
+
+// ۳. چاپ / خروجی PDF
+async function printExam(examId) {
+    const exam = await getDataById('exams', examId);
+    if (!exam || !exam.questions || exam.questions.length === 0) {
+        showToast('آزمون سوالی ندارد.', 'error');
+        return;
+    }
+
+    const sub = window.allSubjectsData.find(s => s.id === exam.subjectId);
+    const subName = sub ? `${sub.symbol || ''} ${sub.name}` : 'بدون درس';
+
+    let html = `
+        <div class="rc-header">
+            <h2>${escapeHtml(exam.title)}</h2>
+            <p>${escapeHtml(subName)} | تاریخ: ${toPersianNumber(exam.date)} | نمره کل: ${toPersianNumber(exam.maxScore)}</p>
+        </div>
+        <div style="margin-top: 20px;">
+    `;
+
+    exam.questions.forEach((q, i) => {
+        html += `
+            <div style="margin-bottom: 25px; page-break-inside: avoid;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: bold;">
+                    <span>سوال ${toPersianNumber(i + 1)}</span>
+                    <span style="color: #4A90E2; font-size: 0.85rem;">(${toPersianNumber(q.score)} نمره)</span>
+                </div>
+                <div style="font-size: 1.1rem; margin-bottom: 12px; font-weight: bold;">${escapeHtml(q.text)}</div>
+        `;
+
+        if (q.type === 'multiple-choice' && q.options) {
+            html += `<div style="display: flex; flex-direction: column; gap: 8px; padding-right: 15px;">`;
+            q.options.forEach((opt, optIdx) => {
+                html += `
+                    <div style="display: flex; gap: 10px;">
+                        <span style="font-weight: bold;">${toPersianNumber(optIdx + 1)})</span>
+                        <span>${escapeHtml(opt)}</span>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        } else if (q.type === 'true-false') {
+            html += `
+                <div style="display: flex; gap: 40px; padding-right: 15px; margin-top: 10px;">
+                    <div style="display: flex; gap: 8px;"><span style="font-weight: bold;">1)</span><span>درست</span></div>
+                    <div style="display: flex; gap: 8px;"><span style="font-weight: bold;">2)</span><span>غلط</span></div>
+                </div>
+            `;
+        } else if (q.type === 'fill-blank' || q.type === 'essay') {
+            html += `<div style="min-height: 80px; border-bottom: 1px dashed #ccc; margin-top: 15px;"></div>`;
+        }
+
+        html += `</div>`;
+    });
+
+    html += `</div>`;
+
+    if (typeof window.printHtmlContent === 'function') {
+        window.printHtmlContent(html);
+    } else {
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>چاپ آزمون</title></head><body>${html}</body></html>`);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => printWindow.print(), 500);
+    }
+}
