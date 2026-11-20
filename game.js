@@ -1,6 +1,6 @@
 // ==========================================
 // فایل game.js — منطق تولید فایل بازی آزمون (آفلاین)
-// نسخه بازنویسی شده بر اساس الگوی ۳ فایل برتر (با قابلیت‌های کامل)
+// نسخه بازنویسی شده با رفع کامل خطای نحوی
 // ==========================================
 
 async function generateGameFile(examId) {
@@ -234,7 +234,6 @@ const ALL_QUESTIONS = ${questionsJson};
 const EXAM_TITLE = ${safeTitleJs};
 const TOTAL_MAX_SCORE = ${totalMaxScore};
 
-// پیام‌های تشویقی
 const encCorrect = ["آفرین! ادامه بده 💪", "عالی بود! تو نابغه‌ای 🌟", "چه هوش بالایی داری 🧠", "دقیق و درست! 👏", "همینطور ادامه بده 🚀", "تو می‌تونی! 🎯", "پاسخ درست بود! ✨", "کارت درسته! 🏆", "محشر بود! 🌈", "عالی جواب دادی! 🎉"];
 const encWrong = ["اشکالی نداره، یاد می‌گیری 🌸", "نزدیک بود! دوباره تلاش کن 💪", "مهم نیست، از اشتباهات یاد می‌گیریم 🌟", "تلاشت قابل تحسینه، ادامه بده 🚀", "کمی دقت کن، دفعه بعد درستش می‌کنی ✨", "پاسخ درست رو بخون و یاد بگیر 📖", "نگران نباش، تمرین باعث پیشرفت میشه 🧩", "دفعه بعد حتماً می‌تونی! 🎯"];
 
@@ -259,7 +258,6 @@ const msgs = {
     school: { ok: ["چه مدرسه خوبی 🏫", "چه مدرسه باحالی 🏰"], err: ["اسم مدرسه‌ات را بنویس 🌸", "در کدام مدرسه درس می‌خوانی؟ 🏫"] }
 };
 
-// متغیرهای وضعیت
 let levelsData = [];
 let state = { fName:"", lName:"", classNum:"", school:"", totalScore: 0, unlocked: 1, level: 0, idx: 0, qs: [], answered: false, levelScore: 0, levelCorrect: 0, levelWrong: 0 };
 let levelStats = {}; 
@@ -278,7 +276,6 @@ function getPersianDate() {
     return new Date().toLocaleDateString('fa-IR', options);
 }
 
-// تقسیم سوالات به مراحل
 function prepareLevels() {
     const MAX_LEVELS = 3;
     if (ALL_QUESTIONS.length <= 4) {
@@ -301,7 +298,6 @@ document.addEventListener("DOMContentLoaded", () => {
     prepareLevels();
 });
 
-// فرم و اعتبارسنجی
 function checkField(id) {
     let el = $(id);
     let val = el.value.trim();
@@ -333,7 +329,6 @@ function handleStartClick() {
 
 function goWelcome() { hide("sc-menu"); show("sc-welcome"); }
 
-// سیستم صدا و افکت
 let audioCtx;
 function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
 function playTone(freq, type, duration) {
@@ -353,7 +348,8 @@ function playSound(type) {
     else if (type === 'win') { playTone(400, 'sine', 0.1); setTimeout(() => playTone(500, 'sine', 0.1), 100); setTimeout(() => playTone(600, 'sine', 0.1), 200); setTimeout(() => playTone(800, 'sine', 0.4), 300); }
     else if (type === 'fail') { playTone(300, 'sawtooth', 0.2); setTimeout(() => playTone(200, 'sawtooth', 0.3), 200); }
 }
-function showConfetti(isFail = false) {
+function showConfetti(isFail) {
+    if (typeof isFail === 'undefined') isFail = false;
     const emojis = isFail ? ['❌','💔','⚠️','💥'] : ['🌸','🌺','🌟','🎉','✨'];
     for(let i=0; i<30; i++) {
         let el = document.createElement('div');
@@ -424,14 +420,12 @@ function updateLiveStats() {
 function startLevel(lvl) {
     const lvlIndex = lvl - 1;
     
-    // بررسی قفل بودن
     if (lvlIndex > 0 && (!levelStats[lvlIndex] || !levelStats[lvlIndex].passed)) {
         alert(getRandomAlert('lockedLevel'));
         playSound('wrong');
         return;
     }
     
-    // بررسی پاس شدن کامل
     if (levelStats[lvl] && levelStats[lvl].percent === 100) {
         alert(getRandomAlert('alreadyPassed'));
         return;
@@ -447,7 +441,6 @@ function startLevel(lvl) {
     hide("sc-menu"); hide("sc-level-end"); show("sc-game");
     $("math-alert").style.display = "none";
     
-    // نمایش راهنما (اختیاری)
     $("instructionBox").innerText = "به مرحله " + lvl + " خوش آمدی! به سوالات با دقت پاسخ بده.";
     $("instructionBox").classList.remove("hidden");
 
@@ -459,7 +452,7 @@ function loadQ() {
     $("f").innerText = ""; 
     $("n").style.display = "none";
     $("n").innerText = (state.idx === state.qs.length - 1) ? "پایان مرحله 🏁" : "سؤال بعدی ⏭️";
-    $("n").onclick = nextQ; // اتصال مجدد رویداد کلیک برای اطمینان
+    $("n").onclick = nextQ; 
     
     const q = state.qs[state.idx];
     $("q").innerText = q.text; 
@@ -486,7 +479,6 @@ function loadQ() {
         $("options").appendChild(trueBtn);
         $("options").appendChild(falseBtn);
     } else {
-        // جای خالی
         let input = document.createElement("input");
         input.type = "text"; input.className = "o"; input.placeholder = "پاسخ خود را بنویسید..."; input.style.textAlign = "center";
         input.id = "textInput";
@@ -511,7 +503,6 @@ function checkAns(btnElement, chosen, correct, qText) {
     if (state.answered) return;
     state.answered = true;
     
-    // غیرفعال کردن دکمه‌ها
     $("options").querySelectorAll(".o").forEach(b => {
         if (b.tagName === 'BUTTON') b.disabled = true;
         else b.disabled = true;
@@ -525,15 +516,12 @@ function checkAns(btnElement, chosen, correct, qText) {
     if (typeof chosen === 'boolean') {
         isCorrect = (chosen === correct);
         correctText = correct ? 'درست' : 'غلط';
-    } else if (typeof chosen === 'number' || !isNaN(chosen)) {
-        // این حالت برای چهارگزینه‌ای استفاده نمی‌شود چون متن پاس می‌دهیم
     } else {
         let normChosen = normalizeText(chosen);
         let normCorrect = normalizeText(correct);
         isCorrect = (normChosen !== '' && normChosen === normCorrect);
     }
     
-    // اگر چهارگزینه‌ای است، چک کنیم آیا متن کلیک شده با پاسخ صحیح یکی است؟
     if (btnElement && btnElement.tagName === 'BUTTON' && correctText !== 'درست' && correctText !== 'غلط') {
         isCorrect = (chosen === correct);
     }
@@ -549,20 +537,18 @@ function checkAns(btnElement, chosen, correct, qText) {
         state.levelWrong++;
         playSound('wrong');
         
-        // پیدا کردن و رنگ کردن گزینه صحیح
         $("options").querySelectorAll(".o").forEach(b => { 
             if (b.innerText === correct || b.value === correct) b.classList.add("correct"); 
         });
         
         let wrongMsg = encWrong[Math.floor(Math.random() * encWrong.length)];
         $("f").style.color = "#e74c3c";
-        $("f").innerHTML = `<span style="color:#e74c3c">${wrongMsg}</span><br>پاسخ صحیح: <span style="color:#27ae60">${correctText}</span>`;
+        $("f").innerHTML = '<span style="color:#e74c3c">' + wrongMsg + '</span><br>پاسخ صحیح: <span style="color:#27ae60">' + correctText + '</span>';
     }
     
     updateLiveStats(); 
     $("n").style.display = "block";
 
-    // بررسی هشدار ریاضی
     if (state.idx === state.qs.length - 1) {
         $("n").style.display = "none"; 
         setTimeout(() => { nextQ(); }, 1500);
@@ -571,7 +557,7 @@ function checkAns(btnElement, chosen, correct, qText) {
         let passMark = Math.floor(state.qs.length / 2) + 1;
         if (state.levelCorrect + remaining < passMark) {
             let mathAlert = $("math-alert");
-            mathAlert.innerHTML = `❌ متاسفانه از نظر ریاضی امکان قبولی در این مرحله وجود ندارد. باید دوباره تلاش کنید.`;
+            mathAlert.innerHTML = '❌ متاسفانه از نظر ریاضی امکان قبولی در این مرحله وجود ندارد. باید دوباره تلاش کنید.';
             mathAlert.style.display = "block";
             $("n").innerText = "تلاش مجدد 🔄";
             $("n").onclick = replayLevel;
@@ -605,7 +591,7 @@ function endLevel() {
 
     if (isPassed) {
         playSound('win'); showConfetti(); 
-        $("levelEncouragement").innerHTML = `<span class="pass-msg">🎉 تبریک! شما در این مرحله قبول شدید.</span>`;
+        $("levelEncouragement").innerHTML = '<span class="pass-msg">🎉 تبریک! شما در این مرحله قبول شدید.</span>';
         $("btn-pdf-level").style.display = "block"; 
         setTimeout(() => {
             if (state.level === levelsData.length) { alert(getRandomAlert('gamePassed')); } 
@@ -613,7 +599,7 @@ function endLevel() {
         }, 500);
     } else {
         playSound('fail'); showConfetti(true); 
-        $("levelEncouragement").innerHTML = `<span class="fail-msg">❌ متاسفانه شرط قبولی رو نتونستی کسب کنی.<br><span style="font-size:12px;color:#555">(حداقل پاسخ صحیح: ${passMark} سوال)</span></span>`;
+        $("levelEncouragement").innerHTML = '<span class="fail-msg">❌ متاسفانه شرط قبولی رو نتونستی کسب کنی.<br><span style="font-size:12px;color:#555">(حداقل پاسخ صحیح: ' + passMark + ' سوال)</span></span>';
         $("btn-pdf-level").style.display = "none"; 
     }
     
@@ -635,19 +621,19 @@ function showFinalReport() {
 
     hide("sc-menu"); hide("sc-level-end"); show("sc-report");
     let tScore = 0, tCorrect = 0, tWrong = 0, tQ = 0;
-    let table = `<div class="table-wrap"><table><tr><th>مرحله</th><th>امتیاز</th><th>درست</th><th>غلط</th><th>کل سوال</th><th>درصد</th><th>وضعیت</th></tr>`;
+    let table = '<div class="table-wrap"><table><tr><th>مرحله</th><th>امتیاز</th><th>درست</th><th>غلط</th><th>کل سوال</th><th>درصد</th><th>وضعیت</th></tr>';
     
     for(let i = 1; i <= levelsData.length; i++) {
         let s = levelStats[i];
         if (s) {
             tScore += s.score; tCorrect += s.correct; tWrong += s.wrong; tQ += s.qCount;
-            let status = s.passed ? `<span style="color:#27ae60">قبول</span>` : `<span style="color:#e74c3c">نیاز به تلاش</span>`;
-            table += `<tr><td>${s.name}</td><td>${s.score}</td><td>${s.correct}</td><td>${s.wrong}</td><td>${s.qCount}</td><td>${s.percent}%</td><td>${status}</td></tr>`;
+            let status = s.passed ? '<span style="color:#27ae60">قبول</span>' : '<span style="color:#e74c3c">نیاز به تلاش</span>';
+            table += '<tr><td>' + s.name + '</td><td>' + s.score + '</td><td>' + s.correct + '</td><td>' + s.wrong + '</td><td>' + s.qCount + '</td><td>' + s.percent + '%</td><td>' + status + '</td></tr>';
         } else {
-            table += `<tr><td>${levelsData[i-1].name}</td><td colspan="6" style="color:#999">انجام نشده</td></tr>`;
+            table += '<tr><td>' + levelsData[i-1].name + '</td><td colspan="6" style="color:#999">انجام نشده</td></tr>';
         }
     }
-    table += `</table></div>`;
+    table += '</table></div>';
     
     let tPercent = tQ > 0 ? Math.round((tCorrect / tQ) * 100) : 0;
     let tPassMark = Math.floor(ALL_QUESTIONS.length / 2) + 1;
@@ -659,111 +645,103 @@ function showFinalReport() {
     if (tQ === 0) { finalMsg = "شما هنوز هیچ مرحله‌ای را بازی نکرده‌اید."; } 
     else if (tPassed) {
         playSound('win'); showConfetti(); 
-        finalMsg = `<span class="pass-msg">🏆 تبریک! شما در کل بازی قبول شدید.</span>`;
+        finalMsg = '<span class="pass-msg">🏆 تبریک! شما در کل بازی قبول شدید.</span>';
     } else {
         playSound('fail'); showConfetti(true); 
-        finalMsg = `<span class="fail-msg">❌ متاسفانه شرط قبولی کل بازی رو نتونستی کسب کنی.<br><span style="font-size:12px;color:#555">(برای قبولی باید تمام مراحل را پاس کنی)</span></span>`;
+        finalMsg = '<span class="fail-msg">❌ متاسفانه شرط قبولی کل بازی رو نتونستی کسب کنی.<br><span style="font-size:12px;color:#555">(برای قبولی باید تمام مراحل را پاس کنی)</span></span>';
     }
 
-    $("reportText").innerHTML = `
-        <p style="font-size:18px;color:#2980b9;text-align:center"><b>${state.fName} ${state.lName} عزیز</b> 🌺</p>
-        <p style="font-size:12px;color:#7f8c8d;margin-bottom:10px;text-align:center">تاریخ: ${getPersianDate()}</p>
-        ${table}
-        <div style="margin-top:15px;padding-top:10px;border-top:2px solid #bdc3c7;font-weight:bold">
-            <p>مجموع امتیاز: ${tScore}</p>
-            <p>مجموع پاسخ صحیح: <span style="color:#27ae60">${tCorrect}</span> | مجموع پاسخ غلط: <span style="color:#e74c3c">${tWrong}</span></p>
-            <p>از کل ${ALL_QUESTIONS.length} سوال | درصد کل موفقیت: <span style="color:#2980b9">${tPercent}%</span></p>
-        </div>
-        <div style="margin-top:15px;font-weight:bold">${finalMsg}</div>
-    `;
+    $("reportText").innerHTML = '<p style="font-size:18px;color:#2980b9;text-align:center"><b>' + state.fName + ' ' + state.lName + ' عزیز</b> 🌺</p>' +
+        '<p style="font-size:12px;color:#7f8c8d;margin-bottom:10px;text-align:center">تاریخ: ' + getPersianDate() + '</p>' +
+        table +
+        '<div style="margin-top:15px;padding-top:10px;border-top:2px solid #bdc3c7;font-weight:bold">' +
+            '<p>مجموع امتیاز: ' + tScore + '</p>' +
+            '<p>مجموع پاسخ صحیح: <span style="color:#27ae60">' + tCorrect + '</span> | مجموع پاسخ غلط: <span style="color:#e74c3c">' + tWrong + '</span></p>' +
+            '<p>از کل ' + ALL_QUESTIONS.length + ' سوال | درصد کل موفقیت: <span style="color:#2980b9">' + tPercent + '%</span></p>' +
+        '</div>' +
+        '<div style="margin-top:15px;font-weight:bold">' + finalMsg + '</div>';
 }
 
 function printPDF(type) {
-    let title = type === 'level' ? `کارنامه مرحله ${levelsData[state.level - 1].name}` : 'کارنامه نهایی بازی';
+    let title = type === 'level' ? ('کارنامه مرحله ' + levelsData[state.level - 1].name) : 'کارنامه نهایی بازی';
     let content = "";
     
     if (type === 'level') {
         let s = levelStats[state.level];
-        content = `
-            <div style="overflow-x: auto; width: 100%;">
-            <table>
-                <tr><th>نام مرحله</th><th>امتیاز</th><th>درست</th><th>غلط</th><th>کل سوال</th><th>درصد</th><th>وضعیت</th></tr>
-                <tr><td>${s.name}</td><td>${s.score}</td><td>${s.correct}</td><td>${s.wrong}</td><td>${s.qCount}</td><td>${s.percent}%</td><td>${s.passed ? 'قبول' : 'نیاز به تلاش'}</td></tr>
-            </table>
-            </div>
-            <p style="margin-top:20px; font-weight:bold;">تبریک! شما در این مرحله با موفقیت قبول شدید.</p>
-        `;
+        content = '<div style="overflow-x: auto; width: 100%;">' +
+            '<table>' +
+                '<tr><th>نام مرحله</th><th>امتیاز</th><th>درست</th><th>غلط</th><th>کل سوال</th><th>درصد</th><th>وضعیت</th></tr>' +
+                '<tr><td>' + s.name + '</td><td>' + s.score + '</td><td>' + s.correct + '</td><td>' + s.wrong + '</td><td>' + s.qCount + '</td><td>' + s.percent + '%</td><td>' + (s.passed ? 'قبول' : 'نیاز به تلاش') + '</td></tr>' +
+            '</table>' +
+            '</div>' +
+            '<p style="margin-top:20px; font-weight:bold;">تبریک! شما در این مرحله با موفقیت قبول شدید.</p>';
     } else {
         let tScore = 0, tCorrect = 0, tWrong = 0, tQ = 0;
-        let tableHtml = `<div style="overflow-x: auto; width: 100%;"><table><tr><th>مرحله</th><th>امتیاز</th><th>درست</th><th>غلط</th><th>کل سوال</th><th>درصد</th><th>وضعیت</th></tr>`;
+        let tableHtml = '<div style="overflow-x: auto; width: 100%;"><table><tr><th>مرحله</th><th>امتیاز</th><th>درست</th><th>غلط</th><th>کل سوال</th><th>درصد</th><th>وضعیت</th></tr>';
         for(let i = 1; i <= levelsData.length; i++) {
             let s = levelStats[i];
             if (s) {
                 tScore += s.score; tCorrect += s.correct; tWrong += s.wrong; tQ += s.qCount;
-                tableHtml += `<tr><td>${s.name}</td><td>${s.score}</td><td>${s.correct}</td><td>${s.wrong}</td><td>${s.qCount}</td><td>${s.percent}%</td><td>${s.passed ? 'قبول' : 'نیاز به تلاش'}</td></tr>`;
+                tableHtml += '<tr><td>' + s.name + '</td><td>' + s.score + '</td><td>' + s.correct + '</td><td>' + s.wrong + '</td><td>' + s.qCount + '</td><td>' + s.percent + '%</td><td>' + (s.passed ? 'قبول' : 'نیاز به تلاش') + '</td></tr>';
             }
         }
-        tableHtml += `</table></div>`;
+        tableHtml += '</table></div>';
         let tPercent = tQ > 0 ? Math.round((tCorrect / tQ) * 100) : 0;
         let tPassMark = Math.floor(ALL_QUESTIONS.length / 2) + 1;
         
         let allLevelsPassed = Object.values(levelStats).length === levelsData.length && Object.values(levelStats).every(s => s.passed);
         let tPassed = allLevelsPassed && (tCorrect >= tPassMark);
         
-        content = `
-            ${tableHtml}
-            <div style="margin-top:15px; padding-top:10px; border-top:2px solid #000; font-weight:bold;">
-                <p>مجموع امتیاز: ${tScore}</p>
-                <p>مجموع پاسخ صحیح: ${tCorrect} | مجموع پاسخ غلط: ${tWrong}</p>
-                <p>از کل ${ALL_QUESTIONS.length} سوال | درصد کل موفقیت: ${tPercent}%</p>
-            </div>
-            <p style="margin-top:20px; font-weight:bold; color:${tPassed ? '#27ae60' : '#e74c3c'};">
-                ${tPassed ? 'تبریک! شما در کل بازی قبول شدید.' : 'متاسفانه شرط قبولی کل بازی را کسب نکردید.'}
-            </p>
-        `;
+        content = tableHtml +
+            '<div style="margin-top:15px; padding-top:10px; border-top:2px solid #000; font-weight:bold;">' +
+                '<p>مجموع امتیاز: ' + tScore + '</p>' +
+                '<p>مجموع پاسخ صحیح: ' + tCorrect + ' | مجموع پاسخ غلط: ' + tWrong + '</p>' +
+                '<p>از کل ' + ALL_QUESTIONS.length + ' سوال | درصد کل موفقیت: ' + tPercent + '%</p>' +
+            '</div>' +
+            '<p style="margin-top:20px; font-weight:bold; color:' + (tPassed ? '#27ae60' : '#e74c3c') + ';">' +
+                (tPassed ? 'تبریک! شما در کل بازی قبول شدید.' : 'متاسفانه شرط قبولی کل بازی را کسب نکردید.') +
+            '</p>';
     }
 
     let printWin = window.open('', '_blank');
-    printWin.document.write(`
-        <!DOCTYPE html>
-        <html dir="rtl" lang="fa">
-        <head>
-            <meta charset="UTF-8">
-            <title>${title}</title>
-            <style>
-                body { font-family: Tahoma, sans-serif; direction: rtl; padding: 30px; text-align: center; }
-                .header { border-bottom: 3px double #2980b9; padding-bottom: 20px; margin-bottom: 20px; }
-                h1 { color: #2c3e50; margin-bottom: 5px; }
-                h2 { color: #3498db; }
-                .info { background: #f8f9fa; border: 1px solid #ddd; padding: 15px; border-radius: 8px; display: inline-block; margin-bottom: 20px; text-align: right; }
-                .info span { font-weight: bold; color: #2980b9; margin-left: 10px; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; white-space: nowrap; }
-                th, td { border: 1px solid #000; padding: 10px; text-align: center; }
-                th { background: #ecf0f1; }
-                .footer { margin-top: 40px; font-size: 13px; color: #7f8c8d; }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>🎮 ${EXAM_TITLE}</h1>
-                <h2>${title}</h2>
-            </div>
-            <div class="info">
-                <div><span>نام:</span> ${state.fName}</div>
-                <div><span>نام خانوادگی:</span> ${state.lName}</div>
-                <div><span>کلاس:</span> ${state.classNum}</div>
-                <div><span>مدرسه:</span> ${state.school}</div>
-            </div>
-            ${content}
-            <div class="footer">
-                <p>${getPersianDate()}</p>
-            </div>
-            <script>
-                window.onload = function() { setTimeout(function() { window.print(); }, 500); }
-            <\/script>
-        </body>
-        </html>
-    `);
+    printWin.document.write('<!DOCTYPE html>' +
+        '<html dir="rtl" lang="fa">' +
+        '<head>' +
+            '<meta charset="UTF-8">' +
+            '<title>' + title + '</title>' +
+            '<style>' +
+                'body { font-family: Tahoma, sans-serif; direction: rtl; padding: 30px; text-align: center; }' +
+                '.header { border-bottom: 3px double #2980b9; padding-bottom: 20px; margin-bottom: 20px; }' +
+                'h1 { color: #2c3e50; margin-bottom: 5px; }' +
+                'h2 { color: #3498db; }' +
+                '.info { background: #f8f9fa; border: 1px solid #ddd; padding: 15px; border-radius: 8px; display: inline-block; margin-bottom: 20px; text-align: right; }' +
+                '.info span { font-weight: bold; color: #2980b9; margin-left: 10px; }' +
+                'table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; white-space: nowrap; }' +
+                'th, td { border: 1px solid #000; padding: 10px; text-align: center; }' +
+                'th { background: #ecf0f1; }' +
+                '.footer { margin-top: 40px; font-size: 13px; color: #7f8c8d; }' +
+            '</style>' +
+        '</head>' +
+        '<body>' +
+            '<div class="header">' +
+                '<h1>🎮 ' + EXAM_TITLE + '</h1>' +
+                '<h2>' + title + '</h2>' +
+            '</div>' +
+            '<div class="info">' +
+                '<div><span>نام:</span> ' + state.fName + '</div>' +
+                '<div><span>نام خانوادگی:</span> ' + state.lName + '</div>' +
+                '<div><span>کلاس:</span> ' + state.classNum + '</div>' +
+                '<div><span>مدرسه:</span> ' + state.school + '</div>' +
+            '</div>' +
+            content +
+            '<div class="footer">' +
+                '<p>' + getPersianDate() + '</p>' +
+            '</div>' +
+            '<script>' +
+                'window.onload = function() { setTimeout(function() { window.print(); }, 500); }' +
+            '<\/script>' +
+        '</body>' +
+        '</html>');
     printWin.document.close();
 }
 </script>
