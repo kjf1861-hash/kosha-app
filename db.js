@@ -153,64 +153,52 @@ function initDB() {
             const transaction = event.currentTarget.transaction;
             console.log('در حال ساخت/به‌روزرسانی جداول پایگاه داده...');
 
-            // ✅ مهاجرت weeklySchedule (با محافظت در برابر خطا)
-if (db.objectStoreNames.contains('weeklySchedule') && event.oldVersion >= 1 && event.oldVersion < 15) {
-    const oldStore = transaction.objectStore('weeklySchedule');
-    const oldKeyPath = oldStore.keyPath;
-    
-    if (oldKeyPath === 'day') {
-        const getAllRequest = oldStore.getAll();
-        getAllRequest.onsuccess = () => {
-            try {
-                const oldData = getAllRequest.result || [];
-                db.deleteObjectStore('weeklySchedule');
-                const newStore = db.createObjectStore('weeklySchedule', { keyPath: 'id' });
-                newStore.createIndex('day', 'day', { unique: false });
-                newStore.createIndex('academicYear', 'academicYear', { unique: false });
+            // مهاجرت weeklySchedule (از قبل وجود داشت)
+            if (db.objectStoreNames.contains('weeklySchedule') && event.oldVersion >= 1 && event.oldVersion < 15) {
+                const oldStore = transaction.objectStore('weeklySchedule');
+                const oldKeyPath = oldStore.keyPath;
                 
-                const currentYear = window.activeAcademicYear || '1405-1406';
-                oldData.forEach(item => {
-                    if (item && item.day) {
-                        newStore.put({
-                            id: `${item.academicYear || currentYear}_${item.day}`,
-                            day: item.day,
-                            periods: item.periods || [],
-                            academicYear: item.academicYear || currentYear
+                if (oldKeyPath === 'day') {
+                    const getAllRequest = oldStore.getAll();
+                    getAllRequest.onsuccess = () => {
+                        const oldData = getAllRequest.result || [];
+                        db.deleteObjectStore('weeklySchedule');
+                        const newStore = db.createObjectStore('weeklySchedule', { keyPath: 'id' });
+                        newStore.createIndex('day', 'day', { unique: false });
+                        newStore.createIndex('academicYear', 'academicYear', { unique: false });
+                        
+                        const currentYear = window.activeAcademicYear || '1405-1406';
+                        oldData.forEach(item => {
+                            if (item && item.day) {
+                                newStore.put({
+                                    id: `${item.academicYear || currentYear}_${item.day}`,
+                                    day: item.day,
+                                    periods: item.periods || [],
+                                    academicYear: item.academicYear || currentYear
+                                });
+                            }
                         });
-                    }
-                });
-            } catch (err) {
-                // ✅ اصلاح: اگر خطایی رخ داد، کل تراکنش را لغو کن تا دیتابیس سالم بماند
-                console.error('❌ خطا در مهاجرت weeklySchedule، لغو تراکنش:', err);
-                try { transaction.abort(); } catch (e) {}
+                    };
+                }
             }
-        };
-    }
-}
 
-// ✅ مهاجرت assessmentItems (با محافظت در برابر خطا)
-if (db.objectStoreNames.contains('assessmentItems') && event.oldVersion >= 1 && event.oldVersion < 16) {
-    const oldStore = transaction.objectStore('assessmentItems');
-    const getAllRequest = oldStore.getAll();
-    getAllRequest.onsuccess = () => {
-        try {
-            const oldData = getAllRequest.result || [];
-            db.deleteObjectStore('assessmentItems');
-            const newStore = db.createObjectStore('assessmentItems', { keyPath: 'id' });
-            newStore.createIndex('academicYear', 'academicYear', { unique: false });
-            
-            const currentYear = window.activeAcademicYear || '1405-1406';
-            oldData.forEach((item, index) => {
-                const newId = item.academicYear ? item.id : `${currentYear}_migrated_${item.id || Date.now()}_${index}`;
-                newStore.put({ ...item, id: newId, academicYear: item.academicYear || currentYear });
-            });
-        } catch (err) {
-            // ✅ اصلاح: اگر خطایی رخ داد، کل تراکنش را لغو کن تا دیتابیس سالم بماند
-            console.error('❌ خطا در مهاجرت assessmentItems، لغو تراکنش:', err);
-            try { transaction.abort(); } catch (e) {}
-        }
-    };
-}
+            // مهاجرت assessmentItems (از قبل وجود داشت)
+            if (db.objectStoreNames.contains('assessmentItems') && event.oldVersion >= 1 && event.oldVersion < 16) {
+                const oldStore = transaction.objectStore('assessmentItems');
+                const getAllRequest = oldStore.getAll();
+                getAllRequest.onsuccess = () => {
+                    const oldData = getAllRequest.result || [];
+                    db.deleteObjectStore('assessmentItems');
+                    const newStore = db.createObjectStore('assessmentItems', { keyPath: 'id' });
+                    newStore.createIndex('academicYear', 'academicYear', { unique: false });
+                    
+                    const currentYear = window.activeAcademicYear || '1405-1406';
+                    oldData.forEach((item, index) => {
+                        const newId = item.academicYear ? item.id : `${currentYear}_migrated_${item.id || Date.now()}_${index}`;
+                        newStore.put({ ...item, id: newId, academicYear: item.academicYear || currentYear });
+                    });
+                };
+            }
             
             // ساخت یا به‌روزرسانی سایر جداول
             if (!db.objectStoreNames.contains('classProfile')) {
@@ -325,7 +313,7 @@ if (db.objectStoreNames.contains('assessmentItems') && event.oldVersion >= 1 && 
 }
 
 // ==========================================
-// ✅ تابع مهاجرت داده‌های قدیمی به نسخه ۱۷ (با تراکنش اتمی)
+// ✅ تابع مهاجرت داده‌های قدیمی به نسخه ۱۷
 // ==========================================
 async function migrateDataToV17() {
     const currentYear = window.activeAcademicYear || '1405-1406';
@@ -333,79 +321,45 @@ async function migrateDataToV17() {
 
     console.log('🔄 در حال بررسی و مهاجرت داده‌های قدیمی به نسخه چندساله...');
     const storesToMigrate = ['students', 'groups', 'subjects', 'attendance', 'exams', 'examResults', 'badgesSettings', 'backupSettings'];
-    let totalMigratedCount = 0;
-    let hasError = false;
+    let migratedCount = 0;
 
     for (const storeName of storesToMigrate) {
         try {
-            // ۱. خواندن تمام داده‌های این جدول
             const allData = await getAllData(storeName);
-            // پیدا کردن رکوردهایی که academicYear ندارند
             const needsMigration = allData.filter(item => !item.academicYear);
             
             if (needsMigration.length > 0) {
-                // ۲. اجرای تراکنش اتمی برای این جدول (همه یا هیچ)
-                await new Promise((resolve, reject) => {
-                    const transaction = db.transaction([storeName], 'readwrite');
-                    const store = transaction.objectStore(storeName);
-
-                    try {
-                        for (const item of needsMigration) {
-                            item.academicYear = currentYear;
-                            store.put(item);
-                        }
-                    } catch (e) {
-                        try { transaction.abort(); } catch (err) {}
-                        reject(e);
-                        return;
-                    }
-
-                    transaction.oncomplete = () => resolve();
-                    transaction.onerror = (e) => reject(e.target.error);
-                    transaction.onabort = (e) => reject(e.target.error || new Error('تراکنش لغو شد'));
-                });
-
-                totalMigratedCount += needsMigration.length;
+                for (let item of needsMigration) {
+                    item.academicYear = currentYear;
+                    await saveData(storeName, item);
+                    migratedCount++;
+                }
             }
         } catch (e) {
-            console.error(`❌ خطا در مهاجرت جدول ${storeName}:`, e);
-            hasError = true;
-            // ⚠️ مهم: اگر خطا رخ داد، اینجا break نمی‌کنیم،
-            // بلکه به جدول بعدی می‌رویم تا حداکثر داده نجات پیدا کند.
+            console.warn(`خطا در مهاجرت جدول ${storeName}:`, e);
         }
     }
 
-    // ✅ اگر همه جداول بدون خطا مهاجرت کردند، پرچم را ست کن
-    if (!hasError) {
-        localStorage.setItem('kosha-db-migrated-v17', 'true');
-        if (totalMigratedCount > 0) {
-            console.log(`✅ ${totalMigratedCount} رکورد قدیمی به سال تحصیلی جاری منتقل شدند.`);
-        }
-    } else {
-        // ⚠️ اگر حتی یک جدول خطا داشت، پرچم ست نمی‌شود تا در اجرای بعدی دوباره تلاش شود
-        console.warn('⚠️ مهاجرت داده‌ها کامل نشد. در اجرای بعدی دوباره تلاش خواهد شد.');
+    localStorage.setItem('kosha-db-migrated-v17', 'true');
+    if (migratedCount > 0) {
+        console.log(`✅ ${migratedCount} رکورد قدیمی به سال تحصیلی جاری منتقل شدند.`);
     }
 }
-            
 // ==========================================
 // ذخیره داده
 // ==========================================
 function saveData(storeName, data) {
     return new Promise((resolve, reject) => {
-        // ✅ اصلاح: ساخت یک کپی سطحی (Shallow Copy) برای جلوگیری از تغییر شیء اصلی در حافظه (Mutation)
-        const dataToSave = { ...data };
-        
-        if (storeName === 'classProfile' && dataToSave) {
-            if (!dataToSave.academicYear) {
-                dataToSave.academicYear = window.activeAcademicYear || '1405-1406';
+        if (storeName === 'classProfile' && data) {
+            if (!data.academicYear) {
+                data.academicYear = window.activeAcademicYear || '1405-1406';
             }
-            dataToSave.id = dataToSave.academicYear;
+            data.id = data.academicYear;
         }
         
         const transaction = db.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
-        // ✅ از کپی ساخته‌شده برای ذخیره استفاده می‌کنیم
-        const request = store.put(dataToSave);
+        const request = store.put(data);
         
         request.onsuccess = () => {
             resolve(request.result);
@@ -637,46 +591,10 @@ async function exportYearData(year) {
 }
 
 // ==========================================
-// ✅ تابع اعتبارسنجی ساختار فایل بکاپ ورودی
-// ==========================================
-function validateImportDataStructure(data) {
-    // ۱. بررسی نوع پایه داده
-    if (!data || typeof data !== 'object' || Array.isArray(data)) {
-        throw new Error('فایل انتخاب‌شده معتبر نیست. لطفاً یک فایل بکاپ صحیح (JSON) انتخاب کنید.');
-    }
-
-    const validStores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
-    let totalRecords = 0;
-    let hasAtLeastOneStore = false;
-
-    for (const store of validStores) {
-        if (data[store] !== undefined) {
-            // ۲. بررسی آرایه بودن جداول
-            if (!Array.isArray(data[store])) {
-                throw new Error(`ساختار فایل بکاپ خراب است. جدول "${store}" باید لیستی از داده‌ها باشد.`);
-            }
-            hasAtLeastOneStore = true;
-            totalRecords += data[store].length;
-        }
-    }
-
-    // ۳. بررسی خالی نبودن کل فایل
-    if (!hasAtLeastOneStore) {
-        throw new Error('فایل بکاپ هیچ داده‌ای برای بازیابی ندارد یا ساختار آن کاملاً ناشناخته است.');
-    }
-
-    // ۴. محدودیت حجم (برای جلوگیری از فریز شدن مرورگر در فایل‌های مخرب یا بسیار حجیم)
-    if (totalRecords > 50000) {
-        throw new Error('حجم داده‌های فایل بکاپ بیش از حد مجاز است (بیش از ۵۰,۰۰۰ رکورد). لطفاً فایل معتبرتری انتخاب کنید.');
-    }
-}
-
-// ==========================================
-// بازیابی داده‌ها (با تراکنش اتمی — بدون ریسک از دست رفتن داده)
+// بازیابی داده‌ها (با پشتیبانی کامل از بکاپ‌های قدیمی/جدید)
 // ==========================================
 async function importAllData(data) {
-    // ✅ مرحله ۱: اعتبارسنجی جامع ساختار فایل ورودی (قبل از هرگونه تغییر در دیتابیس)
-    validateImportDataStructure(data);
+    if (!data || typeof data !== 'object') throw new Error('داده‌های نامعتبر');
     
     if (data._meta && data._meta.version) {
         if (data._meta.version > DB_VERSION) {
@@ -688,123 +606,66 @@ async function importAllData(data) {
     }
     
     const stores = ['classProfile', 'students', 'groups', 'subjects', 'records', 'badgesSettings', 'sessions', 'attendance', 'assessmentItems', 'weeklySchedule', 'exams', 'examResults', 'backupSettings'];
+    const backup = {};
+    for (const store of stores) { backup[store] = await getAllData(store); }
     
     const currentYear = window.activeAcademicYear || '1405-1406';
 
-    // ✅ مرحله ۲: آماده‌سازی داده‌ها (بدون دستکاری دیتابیس)
-    // این مرحله ایزوله است و اگر خطا بدهد، دیتابیس دست‌نخورده می‌ماند.
-    const preparedData = {};
-    for (const store of stores) {
-        if (data[store] && Array.isArray(data[store])) {
-            preparedData[store] = data[store].map((item, index) => {
-                let newItem = { ...item };
+    try {
+        for (const store of stores) {
+            if (data[store] && Array.isArray(data[store])) {
+                await clearStore(store);
+                if (data[store].length > 0) {
+                    
+                    // ✅ اصلاح باگ: بررسی و تزریق academicYear برای تمام جداول (سازگاری با بکاپ‌های قدیمی)
+                    let storeData = data[store].map((item, index) => {
+                        let newItem = { ...item };
+                        
+                        // اگر رکورد اصلاً academicYear ندارد، سال جاری را به آن می‌دهیم
+                        if (!newItem.academicYear) {
+                            newItem.academicYear = currentYear;
+                        }
 
-                // اگر رکورد اصلاً academicYear ندارد، سال جاری را به آن می‌دهیم
-                if (!newItem.academicYear) {
-                    newItem.academicYear = currentYear;
-                }
+                        // تنظیمات مخصوص weeklySchedule
+                        if (store === 'weeklySchedule') {
+                            if (!newItem.id && newItem.day) {
+                                newItem.id = `${newItem.academicYear}_${newItem.day}`;
+                            }
+                        }
+                        
+                        // تنظیمات مخصوص assessmentItems
+                        if (store === 'assessmentItems') {
+                            if (!newItem.id) {
+                                newItem.id = `${newItem.academicYear}_migrated_${Date.now()}_${index}`;
+                            }
+                        }
 
-                // تنظیمات مخصوص weeklySchedule
-                if (store === 'weeklySchedule') {
-                    if (!newItem.id && newItem.day) {
-                        newItem.id = `${newItem.academicYear}_${newItem.day}`;
-                    }
+                        // تنظیمات مخصوص classProfile (شناسه باید با سال تحصیلی یکی شود)
+                        if (store === 'classProfile') {
+                            newItem.id = newItem.academicYear;
+                        }
+                        
+                        return newItem;
+                    });
+                    
+                    await saveBulkData(store, storeData);
                 }
-                
-                // تنظیمات مخصوص assessmentItems
-                if (store === 'assessmentItems') {
-                    if (!newItem.id) {
-                        newItem.id = `${newItem.academicYear}_migrated_${Date.now()}_${index}`;
-                    }
-                }
-
-                // تنظیمات مخصوص classProfile (شناسه باید با سال تحصیلی یکی شود)
-                if (store === 'classProfile') {
-                    newItem.id = newItem.academicYear;
-                }
-                
-                return newItem;
-            });
-        } else {
-            preparedData[store] = [];
+            }
         }
-    }
-
-    // ✅ مرحله ۳: اجرای تراکنش اتمی — یا همه اعمال می‌شوند، یا هیچ‌کدام
-    return new Promise((resolve, reject) => {
-        let transaction;
         
-        try {
-            // یک تراکنش واحد روی تمام جداول
-            transaction = db.transaction(stores, 'readwrite');
-        } catch (e) {
-            reject(new Error('خطا در ایجاد تراکنش دیتابیس: ' + e.message));
-            return;
+        // پاک کردن پرچم مهاجرت تا برنامه یک بار دیگر چک کند (اطمینان از سلامت داده)
+        localStorage.removeItem('kosha-db-migrated-v17');
+        
+    } catch (e) {
+        // اگر خطایی رخ داد، داده‌های قبلی را برمی‌گردانیم
+        for (const store of stores) {
+            await clearStore(store);
+            if (backup[store].length > 0) {
+                await saveBulkData(store, backup[store]);
+            }
         }
-
-        let transactionCompleted = false;
-
-        // رویداد موفقیت کامل تراکنش (فقط زمانی که همه عملیات موفق باشند)
-transaction.oncomplete = () => {
-    transactionCompleted = true;
-    console.log('✅ بازیابی داده‌ها با تراکنش اتمی با موفقیت انجام شد.');
-    
-    // ✅ پاک کردن پرچم‌های مهاجرت تا برنامه یک بار دیگر چک کند
-    // (v16 برای سازگاری با بکاپ‌های خیلی قدیمی، v17 برای نسخه چندساله)
-    localStorage.removeItem('kosha-db-migrated-v16');
-    localStorage.removeItem('kosha-db-migrated-v17');
-    
-    // اجرای بکاپ خودکار بعد از بازیابی موفق
-    if (typeof window.triggerAutoBackup === 'function') {
-        window.triggerAutoBackup();
+        throw new Error('خطا در بازیابی داده‌ها، تغییرات لغو شد.');
     }
-    
-    resolve();
-};
-
-        // رویداد خطا در تراکنش — همه تغییرات به‌طور خودکار لغو می‌شوند
-        transaction.onerror = (event) => {
-            if (!transactionCompleted) {
-                console.error('❌ خطا در تراکنش بازیابی:', event.target.error);
-                reject(new Error('خطا در بازیابی داده‌ها. تغییرات لغو شد و داده‌های قبلی حفظ شدند.'));
-            }
-        };
-
-        // رویداد لغو تراکنش (by abort)
-        transaction.onabort = (event) => {
-            if (!transactionCompleted) {
-                console.error('❌ تراکنش بازیابی لغو شد:', event.target.error);
-                reject(new Error('بازیابی داده‌ها لغو شد. داده‌های قبلی حفظ شدند.'));
-            }
-        };
-
-        // ✅ مرحله ۴: عملیات روی جداول (درون همان تراکنش)
-        try {
-            for (const store of stores) {
-                const objectStore = transaction.objectStore(store);
-                
-                // خالی کردن جدول
-                objectStore.clear();
-                
-                // ذخیره داده‌های جدید
-                const itemsToSave = preparedData[store];
-                if (itemsToSave.length > 0) {
-                    for (const item of itemsToSave) {
-                        objectStore.put(item);
-                    }
-                }
-            }
-        } catch (e) {
-            // اگر خطایی در همین‌جا رخ دهد، تراکنش را abort می‌کنیم
-            console.error('❌ خطا در آماده‌سازی عملیات تراکنش:', e);
-            try {
-                transaction.abort();
-            } catch (abortErr) {
-                console.warn('⚠️ خطا در abort تراکنش:', abortErr);
-            }
-            reject(new Error('خطا در بازیابی داده‌ها، تغییرات لغو شد.'));
-        }
-    });
 }
 
 // ==========================================
