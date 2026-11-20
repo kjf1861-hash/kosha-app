@@ -59,8 +59,9 @@ const data = {
         if (studentForm) studentForm.scrollIntoView({ behavior: 'smooth' });
         
     } catch (err) {
-    window.handleError(err, 'خطا در ثبت دانش‌آموز. لطفاً دوباره تلاش کنید.');
-}
+        console.error(err);
+        showToast('خطا در ثبت دانش‌آموز.', 'error');
+    }
 }
 
 function renderStudentsList() {
@@ -255,25 +256,24 @@ async function saveEditedStudent(e) {
         closeEditStudentModal();
         loadAllData();
     } catch (err) {
-    window.handleError(err, 'خطا در ذخیره تغییرات. لطفاً دوباره تلاش کنید.');
-}
+        console.error('خطا در ویرایش دانش‌آموز:', err);
+        
+        if (err && err.name === 'ConstraintError') {
+            showToast('خطای دیتابیس: این کد ملی قبلاً ثبت شده است.', 'error');
+        } else {
+            showToast('خطا در ذخیره تغییرات. لطفاً دوباره تلاش کنید.', 'error');
+        }
+    }
 }
 
 async function deleteStudent(id) {
-    if (!confirm('آیا از حذف این دانش‌آموز مطمئن هستید؟ تمام سوابق ارزشیابی، نمرات آزمون و تشویق‌های این دانش‌آموز (فقط برای سال تحصیلی جاری) نیز حذف خواهد شد!')) return;
-    
-    const currentYear = window.activeAcademicYear;
+    if (!confirm('آیا از حذف این دانش‌آموز مطمئن هستید؟ تمام سوابق ارزشیابی، نمرات آزمون و تشویق‌های این دانش‌آموز نیز حذف خواهد شد!')) return;
     
     try {
         // ✅ بهینه‌سازی (اولویت ۲): استفاده از deleteBulkData و saveBulkData
-        
-        // ۱. حذف/به‌روزرسانی رکوردهای ارزشیابی — فقط سال جاری
+        // ۱. حذف/به‌روزرسانی رکوردهای ارزشیابی
         const allRecords = await getAllData('records');
-        const studentRecords = allRecords.filter(r => 
-            r.students && 
-            r.students.includes(id) && 
-            r.academicYear === currentYear
-        );
+        const studentRecords = allRecords.filter(r => r.students && r.students.includes(id));
         
         const recordsToUpdate = [];
         const recordsToDeleteIds = [];
@@ -290,44 +290,29 @@ async function deleteStudent(id) {
         if (recordsToUpdate.length > 0) await saveBulkData('records', recordsToUpdate);
         if (recordsToDeleteIds.length > 0) await deleteBulkData('records', recordsToDeleteIds);
 
-        // ۲. حذف نتایج آزمون دانش‌آموز — فقط سال جاری
+        // ۲. حذف نتایج آزمون دانش‌آموز
         const allResults = await getAllData('examResults');
-        const studentResults = allResults.filter(r => 
-            r.studentId === id && 
-            r.academicYear === currentYear
-        );
+        const studentResults = allResults.filter(r => r.studentId === id);
         if (studentResults.length > 0) {
             await deleteBulkData('examResults', studentResults.map(r => r.id));
         }
 
-        // ۳. حذف تشویق‌های قرآن دانش‌آموز — فقط سال جاری
+        // ۳. حذف تشویق‌های قرآن دانش‌آموز
         const allBadges = await getAllData('badgesSettings');
-        const studentBadges = allBadges.filter(b => 
-            b.studentId === id && 
-            b.academicYear === currentYear
-        );
+        const studentBadges = allBadges.filter(b => b.studentId === id);
         if (studentBadges.length > 0) {
             await deleteBulkData('badgesSettings', studentBadges.map(b => b.id));
         }
 
-        // ۴. ✅ جدید: حذف حضور و غیاب‌های دانش‌آموز — فقط سال جاری
-        const allAttendance = await getAllData('attendance');
-        const studentAttendance = allAttendance.filter(a => 
-            a.studentId === id && 
-            a.academicYear === currentYear
-        );
-        if (studentAttendance.length > 0) {
-            await deleteBulkData('attendance', studentAttendance.map(a => a.id));
-        }
-
-        // ۵. حذف خود دانش‌آموز (id آن در کل دیتابیس یکتاست — نیازی به فیلتر ندارد)
+        // ۴. حذف خود دانش‌آموز
         await deleteData('students', id);
         
-        showToast('دانش‌آموز و تمام سوابق مرتبط (در سال تحصیلی جاری) حذف شد.', 'success');
+        showToast('دانش‌آموز و تمام سوابق مرتبط حذف شد.', 'success');
         loadAllData();
     } catch (e) {
-    window.handleError(e, 'خطا در حذف دانش‌آموز! لطفاً دوباره تلاش کنید.');
-}
+        console.error(e);
+        showToast('خطا در حذف دانش‌آموز!', 'error');
+    }
 }
 
 async function resetAllStudents() {
