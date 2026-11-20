@@ -1,6 +1,6 @@
 // ==========================================
 // فایل game.js — منطق تولید فایل بازی آزمون (آفلاین)
-// نسخه بازنویسی شده با رفع کامل خطای نحوی
+// نسخه اصلاح‌شده: رفع کامل باگ تگ اسکریپت و دکمه سوال بعدی
 // ==========================================
 
 async function generateGameFile(examId) {
@@ -38,7 +38,7 @@ async function generateGameFile(examId) {
             });
         } else {
             const safeQuestion = {
-                type: q.type === 'essay' ? 'fill-blank' : q.type, // تبدیل تشریحی به جای خالی برای بازی
+                type: q.type === 'essay' ? 'fill-blank' : q.type,
                 text: q.text,
                 score: q.score
             };
@@ -80,6 +80,7 @@ function buildGameHtml(exam, subName, gameQuestions, totalMaxScore) {
     const questionsJson = jsonSafe(gameQuestions);
     const safeTitleJs = jsonSafe(exam.title);
     
+    // امن‌سازی داده‌های ورودی برای جلوگیری از شکستن رشته
     const safeExamTitleHtml = escapeHtml(exam.title);
     const safeSubNameHtml = escapeHtml(subName);
     const safeDateHtml = escapeHtml(exam.date);
@@ -141,7 +142,6 @@ th{background:#f2f2f2;color:#333;font-weight:bold;}
 </head>
 <body>
 <div class="c">
-    <!-- صفحه خوش‌آمدگویی -->
     <div id="sc-welcome">
         <div style="font-size:50px">🎮</div>
         <h1>${safeExamTitleHtml}</h1>
@@ -170,7 +170,6 @@ th{background:#f2f2f2;color:#333;font-weight:bold;}
         </form>
     </div>
 
-    <!-- صفحه منو -->
     <div id="sc-menu" class="hidden">
         <h2>مسیر خود را انتخاب کن:</h2>
         <div class="score-badge" id="menuScore">امتیاز کل: 0</div>
@@ -179,7 +178,6 @@ th{background:#f2f2f2;color:#333;font-weight:bold;}
         <button class="b" style="background:#95a5a6" onclick="goWelcome()">بازگشت به صفحه اول 🔙</button>
     </div>
 
-    <!-- صفحه بازی -->
     <div id="sc-game" class="hidden">
         <button class="b" style="background:#95a5a6; padding:8px; font-size:14px; margin-bottom:10px" onclick="goMenu()">🔙 بازگشت به منو</button>
         <div class="stats-bar">
@@ -199,7 +197,6 @@ th{background:#f2f2f2;color:#333;font-weight:bold;}
         <button id="n" class="b" onclick="nextQ()">سؤال بعدی ⏭️</button>
     </div>
 
-    <!-- صفحه پایان مرحله -->
     <div id="sc-level-end" class="hidden">
         <div style="font-size:50px">🎉</div>
         <h2>پایان مرحله <span id="endLevelNum"></span></h2>
@@ -218,7 +215,6 @@ th{background:#f2f2f2;color:#333;font-weight:bold;}
         <button class="b" style="background:#e67e22" id="btn-final-report" onclick="showFinalReport()">مشاهده کارنامه کل 📜</button>
     </div>
 
-    <!-- صفحه کارنامه کل -->
     <div id="sc-report" class="hidden">
         <div style="font-size:50px">🏆</div>
         <h2>کارنامه نهایی</h2>
@@ -704,7 +700,9 @@ function printPDF(type) {
     }
 
     let printWin = window.open('', '_blank');
-    printWin.document.write('<!DOCTYPE html>' +
+    
+    // ⚠️ رفع باگ حیاتی: استفاده از <\\/script> به جای <\/script> برای جلوگیری از بسته شدن زودهنگام تگ اسکریپت
+    let htmlContent = '<!DOCTYPE html>' +
         '<html dir="rtl" lang="fa">' +
         '<head>' +
             '<meta charset="UTF-8">' +
@@ -739,9 +737,11 @@ function printPDF(type) {
             '</div>' +
             '<script>' +
                 'window.onload = function() { setTimeout(function() { window.print(); }, 500); }' +
-            '<\/script>' +
+            '<\\/script>' + // اینجا باید دابل بک‌اسلش باشد تا در فایل تولیدی به درستی رندر شود
         '</body>' +
-        '</html>');
+        '</html>';
+
+    printWin.document.write(htmlContent);
     printWin.document.close();
 }
 </script>
