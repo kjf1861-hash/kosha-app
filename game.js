@@ -259,7 +259,7 @@ th{background:#f2f2f2;color:#333;font-weight:bold;}
         <div style="font-size:50px">🏆</div>
         <h2>کارنامه نهایی</h2>
         <div class="report" id="reportText"></div>
-        <button class="b code-btn ${isSmart ? '' : 'hidden'}" id="btn-result-code" onclick="generateResultCode()">📋 کپی کد نتیجه (برای معلم)</button>
+        <button class="b code-btn hidden" id="btn-result-code" onclick="generateResultCode()">📋 کپی کد نتیجه (برای معلم)</button>
         <button class="b pdf-btn" onclick="printPDF('final')">دریافت کارنامه نهایی 📄</button>
         <button class="b" style="background:#95a5a6" onclick="location.reload()">بازی مجدد از ابتدا 🔄</button>
     </div>
@@ -442,7 +442,14 @@ function replayLevel() { startLevel(state.level); }
 function goNextLevel() { startLevel(state.level + 1); }
 function showFinalReport() {
     if (Object.keys(levelStats).length === 0) { alert("هنوز مرحله‌ای بازی نکرده‌اید."); return; }
-    hide("sc-menu"); hide("sc-level-end"); show("sc-report"); let tScore = 0, tCorrect = 0, tWrong = 0, tQ = 0; let table = '<div class="table-wrap"><table><tr><th>مرحله</th><th>امتیاز</th><th>درست</th><th>غلط</th><th>کل سوال</th><th>درصد</th><th>وضعیت</th></tr>';
+    hide("sc-menu"); hide("sc-level-end"); show("sc-report"); 
+// ✅ نمایش دکمه کد نتیجه فقط برای دانش‌آموز رسمی
+if (IS_SMART && state.isOfficial) {
+    $("btn-result-code").classList.remove("hidden");
+} else {
+    $("btn-result-code").classList.add("hidden");
+}
+let tScore = 0, tCorrect = 0, tWrong = 0, tQ = 0; let table = '<div class="table-wrap"><table><tr><th>مرحله</th><th>امتیاز</th><th>درست</th><th>غلط</th><th>کل سوال</th><th>درصد</th><th>وضعیت</th></tr>';
     for(let i = 1; i <= LEVELS_DATA.length; i++) { let s = levelStats[i]; if (s) { tScore += s.score; tCorrect += s.correct; tWrong += s.wrong; tQ += s.qCount; let status = s.passed ? '<span style="color:#27ae60">قبول</span>' : '<span style="color:#e74c3c">نیاز به تلاش</span>'; table += '<tr><td>' + s.name + '</td><td>' + s.score + '</td><td>' + s.correct + '</td><td>' + s.wrong + '</td><td>' + s.qCount + '</td><td>' + s.percent + '%</td><td>' + status + '</td></tr>'; } else { table += '<tr><td>' + LEVELS_DATA[i-1].name + '</td><td colspan="6" style="color:#999">انجام نشده</td></tr>'; } }
     table += '</table></div>'; let tPercent = tQ > 0 ? Math.round((tCorrect / tQ) * 100) : 0; let allLevelsPassed = Object.values(levelStats).length === LEVELS_DATA.length && Object.values(levelStats).every(s => s.passed);
     let finalMsg = allLevelsPassed ? '<span class="pass-msg">🏆 تبریک! شما در کل بازی قبول شدید.</span>' : '<span class="fail-msg">❌ متاسفانه در برخی مراحل قبول نشدید.</span>';
@@ -451,7 +458,7 @@ function showFinalReport() {
 
 // ================= تولید کد نتیجه امن =================
 async function generateResultCode() {
-    if (!IS_SMART) return;
+    if (!IS_SMART || !state.isOfficial) return;
     const btn = $("btn-result-code"); btn.innerText = "⏳ در حال تولید کد..."; btn.disabled = true;
     try {
         if (!crypto || !crypto.subtle) throw new Error("مرورگر شما از Web Crypto API پشتیبانی نمی‌کند.");
