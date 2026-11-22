@@ -1,6 +1,6 @@
 // ==========================================
 // فایل game.js — منطق تولید فایل بازی آزمون (آفلاین)
-// نسخه نهایی با رفع کامل خطای b64EncodeUnicode
+// نسخه نهایی: رفع کامل خطای بک‌تیک، دکمه‌های لاگین و کپی کد
 // ==========================================
 
 async function encryptStudentName(name, password) {
@@ -35,15 +35,8 @@ async function encryptStudentName(name, password) {
 
 async function generateGameFile(examId, isSmart = false) {
     const exam = await getDataById('exams', examId);
-    if (!exam) {
-        showToast('آزمون یافت نشد.', 'error');
-        return;
-    }
-    
-    if (!exam.questions || exam.questions.length === 0) {
-        showToast('این آزمون هیچ سوالی ندارد. ابتدا سوالات را اضافه کنید.', 'error');
-        return;
-    }
+    if (!exam) { showToast('آزمون یافت نشد.', 'error'); return; }
+    if (!exam.questions || exam.questions.length === 0) { showToast('آزمون سوالی ندارد.', 'error'); return; }
     
     const sub = window.allSubjectsData.find(s => s.id === exam.subjectId);
     const subName = sub ? `${sub.symbol || ''} ${sub.name}` : 'بدون درس';
@@ -55,16 +48,12 @@ async function generateGameFile(examId, isSmart = false) {
         try {
             showToast('در حال رمزنگاری اطلاعات و تولید بازی هوشمند...', 'info');
             classProfile = await getClassProfile(window.activeAcademicYear);
-            
             const studentsList = await getDataByYear('students', window.activeAcademicYear);
             for (const st of studentsList) {
                 const password = generateStudentPassword(st.nationalId);
                 const encryptedData = await encryptStudentName(st.firstName + ' ' + st.lastName, password);
                 if (encryptedData) {
-                    encryptedStudents.push({
-                        nationalId: st.nationalId,
-                        ...encryptedData
-                    });
+                    encryptedStudents.push({ nationalId: st.nationalId, ...encryptedData });
                 }
             }
         } catch (e) {
@@ -82,41 +71,14 @@ async function generateGameFile(examId, isSmart = false) {
                 options = options.sort(() => Math.random() - 0.5);
                 const correctIndex = options.indexOf(pair.b);
                 const distributedScore = Math.round((q.score / q.pairs.length) * 100) / 100;
-
-                gameQuestions.push({
-                    type: 'multiple-choice',
-                    text: `مفهوم «${pair.a}» با کدام گزینه تطبیق دارد؟ ${q.text ? '(' + q.text + ')' : ''}`,
-                    options: options,
-                    score: distributedScore,
-                    correctIndex: correctIndex,
-                    correctText: pair.b
-                });
+                gameQuestions.push({ type: 'multiple-choice', text: `مفهوم «${pair.a}» با کدام گزینه تطبیق دارد؟ ${q.text ? '(' + q.text + ')' : ''}`, options: options, score: distributedScore, correctIndex: correctIndex, correctText: pair.b });
             });
         } else if (q.type === 'multiple-choice') {
-            gameQuestions.push({
-                type: 'multiple-choice',
-                text: q.text,
-                options: q.options,
-                score: q.score,
-                correctIndex: q.correctIndex,
-                correctText: q.options[q.correctIndex]
-            });
+            gameQuestions.push({ type: 'multiple-choice', text: q.text, options: q.options, score: q.score, correctIndex: q.correctIndex, correctText: q.options[q.correctIndex] });
         } else if (q.type === 'true-false') {
-            gameQuestions.push({
-                type: 'true-false',
-                text: q.text,
-                score: q.score,
-                correctAnswer: q.correctAnswer,
-                correctText: q.correctAnswer ? 'درست' : 'غلط'
-            });
+            gameQuestions.push({ type: 'true-false', text: q.text, score: q.score, correctAnswer: q.correctAnswer, correctText: q.correctAnswer ? 'درست' : 'غلط' });
         } else {
-            gameQuestions.push({
-                type: 'fill-blank',
-                text: q.text,
-                score: q.score,
-                answer: q.answer || '',
-                correctText: q.answer || ''
-            });
+            gameQuestions.push({ type: 'fill-blank', text: q.text, score: q.score, answer: q.answer || '', correctText: q.answer || '' });
         }
     });
 
@@ -146,15 +108,17 @@ async function generateGameFile(examId, isSmart = false) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
-    showToast(`فایل بازی ${isSmart ? 'هوشمند' : 'ساده'} با موفقیت تولید و دانلود شد! 🎮`, 'success');
+    showToast(`فایل بازی ${isSmart ? 'هوشمند' : 'ساده'} تولید شد! 🎮`, 'success');
 }
 
 function buildGameHtml(exam, subName, levelsData, classProfile, encryptedStudents, isSmart) {
+    // ✅ تابع امن‌سازی رشته‌ها برای جلوگیری از خطای سینتکس
+    const safeJson = (obj) => JSON.stringify(obj).replace(/</g, '\\u003c').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
+    
     const safeTitleJs = JSON.stringify(exam.title);
-    const levelsJson = JSON.stringify(levelsData).replace(/</g, '\\u003c');
-    const studentsJson = JSON.stringify(encryptedStudents).replace(/</g, '\\u003c');
-    const classProfileJson = JSON.stringify(classProfile).replace(/</g, '\\u003c');
+    const levelsJson = safeJson(levelsData);
+    const studentsJson = safeJson(encryptedStudents);
+    const classProfileJson = safeJson(classProfile);
     const examIdJs = JSON.stringify(exam.id);
     const secretKeyJs = JSON.stringify("KOSHA_SECURE_V1");
 
@@ -346,7 +310,7 @@ async function hmacSign(message, secret) {
 }
 function b64EncodeUnicode(str) {
     return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
-        return String.fromCharCode('0x' + p1);
+        return String.fromCharCode(parseInt(p1, 16));
     }));
 }
 
@@ -354,12 +318,25 @@ function b64EncodeUnicode(str) {
 function showLoginForm() { show("officialLoginForm"); }
 function hideLoginForm() { hide("officialLoginForm"); }
 async function handleOfficialLogin() {
-    const nationalId = $("authNationalId").value.trim(); const password = $("authPassword").value.trim(); const btn = $("btnAuthLogin");
+    if (!crypto || !crypto.subtle) {
+        alert("خطای امنیتی: مرورگر شما از رمزنگاری پشتیبانی نمی‌کند (یا فایل به صورت محلی باز شده است). لطفاً از مرورگر Chrome و در محیط وب استفاده کنید.");
+        return;
+    }
+    
+    const nationalId = $("authNationalId").value.trim(); 
+    const password = $("authPassword").value.trim(); 
+    const btn = $("btnAuthLogin");
+    
     if (nationalId.length !== 10 || password.length !== 4) { alert("کد ملی ۱۰ رقمی و رمز ۴ رقمی وارد کنید."); return; }
-    btn.innerText = "⏳ در حال بررسی..."; btn.disabled = true;
+    
+    btn.innerText = "⏳ در حال بررسی..."; 
+    btn.disabled = true;
+    
     const studentData = STUDENTS_DATA.find(s => s.nationalId === nationalId);
     if (!studentData) { alert("کد ملی یافت نشد."); btn.innerText = "ورود به بازی ✅"; btn.disabled = false; return; }
+    
     const decryptedName = await decryptName(studentData.ciphertext, studentData.iv, studentData.salt, password);
+    
     if (decryptedName) {
         state.isOfficial = true; state.nationalId = nationalId;
         const nameParts = decryptedName.split(' '); state.fName = nameParts[0] || ''; state.lName = nameParts.slice(1).join(' ') || '';
@@ -368,7 +345,11 @@ async function handleOfficialLogin() {
         ["fName", "lName", "classNum", "school", "grade"].forEach(id => { $(id).disabled = true; $(id).classList.add("filled"); });
         $("startBtn").classList.remove("btn-disabled");
         hide("sc-auth"); show("sc-welcome");
-    } else { alert("رمز عبور اشتباه است."); btn.innerText = "ورود به بازی ✅"; btn.disabled = false; }
+    } else { 
+        alert("رمز عبور اشتباه است."); 
+        btn.innerText = "ورود به بازی ✅"; 
+        btn.disabled = false; 
+    }
 }
 function loginAsGuest() { state.isOfficial = false; hide("sc-auth"); show("sc-welcome"); }
 
@@ -471,81 +452,38 @@ function showFinalReport() {
 // ================= تولید کد نتیجه امن =================
 async function generateResultCode() {
     if (!IS_SMART) return;
-    
-    const btn = $("btn-result-code");
-    btn.innerText = "⏳ در حال تولید کد...";
-    btn.disabled = true;
-
+    const btn = $("btn-result-code"); btn.innerText = "⏳ در حال تولید کد..."; btn.disabled = true;
     try {
-        if (!crypto || !crypto.subtle) {
-            throw new Error("مرورگر شما از Web Crypto API پشتیبانی نمی‌کند. لطفاً فایل را در مرورگر Chrome باز کنید.");
-        }
-
-        const payload = {
-            examId: EXAM_ID,
-            examTitle: EXAM_TITLE,
-            studentNationalId: state.nationalId,
-            studentName: state.fName,
-            studentLastName: state.lName,
-            classNum: state.classNum,
-            school: state.school,
-            grade: state.grade,
-            totalScore: state.totalScore,
-            history: state.examHistory,
-            timestamp: Date.now()
-        };
-
+        if (!crypto || !crypto.subtle) throw new Error("مرورگر شما از Web Crypto API پشتیبانی نمی‌کند.");
+        const payload = { examId: EXAM_ID, examTitle: EXAM_TITLE, studentNationalId: state.nationalId, studentName: state.fName, studentLastName: state.lName, classNum: state.classNum, school: state.school, grade: state.grade, totalScore: state.totalScore, history: state.examHistory, timestamp: Date.now() };
         const payloadString = JSON.stringify(payload);
         const signature = await hmacSign(payloadString, SECRET_KEY);
-        
         const finalPayload = JSON.stringify({ p: payloadString, s: signature });
         const base64Payload = b64EncodeUnicode(finalPayload);
         const finalCode = "KOSHA-" + base64Payload;
-
-        // ✅ تلاش برای کپی امن با مدیریت خطا و روش‌های جایگزین
-        let copySuccess = false;
         
+        let copySuccess = false;
         try {
             if (navigator.clipboard && window.isSecureContext) {
                 await navigator.clipboard.writeText(finalCode);
                 copySuccess = true;
             }
-        } catch (err) {
-            console.warn("Clipboard API failed, trying fallback...", err);
-        }
+        } catch (err) { console.warn("Clipboard API failed, trying fallback...", err); }
 
-        // اگر روش اول کار نکرد، از روش قدیمی استفاده کن
         if (!copySuccess) {
             try {
                 const ta = document.createElement("textarea");
-                ta.value = finalCode;
-                ta.style.position = "fixed"; // جلوگیری از پرش صفحه
-                ta.style.opacity = "0";
-                document.body.appendChild(ta);
-                ta.focus();
-                ta.select();
+                ta.value = finalCode; ta.style.position = "fixed"; ta.style.opacity = "0";
+                document.body.appendChild(ta); ta.focus(); ta.select();
                 copySuccess = document.execCommand('copy');
                 document.body.removeChild(ta);
-            } catch (err) {
-                console.warn("Fallback copy failed", err);
-            }
+            } catch (err) { console.warn("Fallback copy failed", err); }
         }
 
-        // نمایش نتیجه به کاربر
-        if (copySuccess) {
-            alert("✅ کد نتیجه با موفقیت کپی شد!\n\nاین کد را برای معلم خود ارسال کنید.");
-        } else {
-            // اگر هر دو روش شکست خوردند، کد را به کاربر نشان بده تا دستی کپی کند
-            prompt("⚠️ کپی خودکار توسط مرورگر مسدود شد.\nلطفاً متن زیر را به طور کامل انتخاب کرده و کپی کنید:", finalCode);
-        }
-
-    } catch (e) {
-        console.error(e);
-        alert("خطا در تولید کد نتیجه: " + e.message);
-    } finally {
-        btn.innerText = "📋 کپی کد نتیجه (برای معلم)";
-        btn.disabled = false;
-    }
+        if (copySuccess) { alert("✅ کد نتیجه با موفقیت کپی شد!"); } 
+        else { prompt("⚠️ کپی خودکار مسدود شد. لطفاً متن زیر را کپی کنید:", finalCode); }
+    } catch (e) { console.error(e); alert("خطا در تولید کد نتیجه: " + e.message); } 
+    finally { btn.innerText = "📋 کپی کد نتیجه (برای معلم)"; btn.disabled = false; }
 }
 
 // ================= چاپ =================
