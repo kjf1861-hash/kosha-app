@@ -471,19 +471,81 @@ function showFinalReport() {
 // ================= تولید کد نتیجه امن =================
 async function generateResultCode() {
     if (!IS_SMART) return;
-    const btn = $("btn-result-code"); btn.innerText = "⏳ در حال تولید کد..."; btn.disabled = true;
+    
+    const btn = $("btn-result-code");
+    btn.innerText = "⏳ در حال تولید کد...";
+    btn.disabled = true;
+
     try {
-        if (!crypto || !crypto.subtle) throw new Error("مرورگر شما از Web Crypto API پشتیبانی نمی‌کند.");
-        const payload = { examId: EXAM_ID, examTitle: EXAM_TITLE, studentNationalId: state.nationalId, studentName: state.fName, studentLastName: state.lName, classNum: state.classNum, school: state.school, grade: state.grade, totalScore: state.totalScore, history: state.examHistory, timestamp: Date.now() };
+        if (!crypto || !crypto.subtle) {
+            throw new Error("مرورگر شما از Web Crypto API پشتیبانی نمی‌کند. لطفاً فایل را در مرورگر Chrome باز کنید.");
+        }
+
+        const payload = {
+            examId: EXAM_ID,
+            examTitle: EXAM_TITLE,
+            studentNationalId: state.nationalId,
+            studentName: state.fName,
+            studentLastName: state.lName,
+            classNum: state.classNum,
+            school: state.school,
+            grade: state.grade,
+            totalScore: state.totalScore,
+            history: state.examHistory,
+            timestamp: Date.now()
+        };
+
         const payloadString = JSON.stringify(payload);
         const signature = await hmacSign(payloadString, SECRET_KEY);
+        
         const finalPayload = JSON.stringify({ p: payloadString, s: signature });
         const base64Payload = b64EncodeUnicode(finalPayload);
         const finalCode = "KOSHA-" + base64Payload;
-        if (navigator.clipboard) { await navigator.clipboard.writeText(finalCode); alert("✅ کد نتیجه با موفقیت کپی شد!"); } 
-        else { const ta = document.createElement("textarea"); ta.value = finalCode; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert("✅ کد نتیجه کپی شد!"); }
-    } catch (e) { console.error(e); alert("خطا در تولید کد نتیجه: " + e.message); } 
-    finally { btn.innerText = "📋 کپی کد نتیجه (برای معلم)"; btn.disabled = false; }
+
+        // ✅ تلاش برای کپی امن با مدیریت خطا و روش‌های جایگزین
+        let copySuccess = false;
+        
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(finalCode);
+                copySuccess = true;
+            }
+        } catch (err) {
+            console.warn("Clipboard API failed, trying fallback...", err);
+        }
+
+        // اگر روش اول کار نکرد، از روش قدیمی استفاده کن
+        if (!copySuccess) {
+            try {
+                const ta = document.createElement("textarea");
+                ta.value = finalCode;
+                ta.style.position = "fixed"; // جلوگیری از پرش صفحه
+                ta.style.opacity = "0";
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                copySuccess = document.execCommand('copy');
+                document.body.removeChild(ta);
+            } catch (err) {
+                console.warn("Fallback copy failed", err);
+            }
+        }
+
+        // نمایش نتیجه به کاربر
+        if (copySuccess) {
+            alert("✅ کد نتیجه با موفقیت کپی شد!\n\nاین کد را برای معلم خود ارسال کنید.");
+        } else {
+            // اگر هر دو روش شکست خوردند، کد را به کاربر نشان بده تا دستی کپی کند
+            prompt("⚠️ کپی خودکار توسط مرورگر مسدود شد.\nلطفاً متن زیر را به طور کامل انتخاب کرده و کپی کنید:", finalCode);
+        }
+
+    } catch (e) {
+        console.error(e);
+        alert("خطا در تولید کد نتیجه: " + e.message);
+    } finally {
+        btn.innerText = "📋 کپی کد نتیجه (برای معلم)";
+        btn.disabled = false;
+    }
 }
 
 // ================= چاپ =================
