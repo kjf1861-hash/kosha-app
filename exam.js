@@ -16,6 +16,17 @@ let examCalendarState = {
     selectedDate: ''
 };
 
+function b64DecodeUnicode(str) {
+    try {
+        return decodeURIComponent(Array.prototype.map.call(atob(str), function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+    } catch (e) {
+        console.error('Base64 Decode Error:', e);
+        return atob(str);
+    }
+}
+
 const SECRET_KEY = "KOSHA_SECURE_V1"; // کلید مخفی مشترک با game.js
 
 async function loadExamsData() {
@@ -473,8 +484,13 @@ async function processResultCode() {
     btn.disabled = true;
 
     try {
+        if (!crypto || !crypto.subtle) {
+            throw new Error("مرورگر شما از Web Crypto API پشتیبانی نمی‌کند.");
+        }
+
         const base64Data = code.replace("KOSHA-", "");
-        const jsonStr = decodeURIComponent(escape(atob(base64Data)));
+        // رمزگشایی امن از Base64
+        const jsonStr = b64DecodeUnicode(base64Data);
         const parsed = JSON.parse(jsonStr);
         
         if (!parsed.p || !parsed.s) throw new Error('ساختار کد ناقص است.');
@@ -492,17 +508,17 @@ async function processResultCode() {
         const student = window.allStudentsData.find(s => s.nationalId === payload.studentNationalId);
         if (!student) {
             statusEl.style.display = 'block'; statusEl.style.background = '#fef3c7'; statusEl.style.color = '#b45309';
-            statusEl.innerText = `⚠️ دانش‌آموز با کد ملی ${payload.studentNationalId} در این سال تحصیلی یافت نشد.`; return;
+            statusEl.innerText = `⚠️ دانش‌آموز با کد ملی ${payload.studentNationalId} یافت نشد.`; return;
         }
 
         // ۳. پیدا کردن آزمون
         const exam = window.allExamsData.find(e => e.id === payload.examId);
         if (!exam) {
             statusEl.style.display = 'block'; statusEl.style.background = '#fef3c7'; statusEl.style.color = '#b45309';
-            statusEl.innerText = `⚠️ آزمون مرتبط با این کد در این سال تحصیلی یافت نشد.`; return;
+            statusEl.innerText = `⚠️ آزمون مرتبط با این کد یافت نشد.`; return;
         }
 
-        // ۴. ذخیره در دیتابیس (بررسی تکراری بودن)
+        // ۴. ذخیره در دیتابیس
         const existing = window.allExamResultsData.find(r => r.examId === payload.examId && r.studentId === student.id);
         const newResult = {
             id: existing ? existing.id : generateUniqueId(),
@@ -510,17 +526,15 @@ async function processResultCode() {
             studentId: student.id,
             score: payload.totalScore,
             academicYear: window.activeAcademicYear,
-            details: payload.history // ✅ ذخیره جزئیات تک‌تک سوالات
+            details: payload.history
         };
 
         await saveData('examResults', newResult);
-        
-        // بارگذاری مجدد و رندر
         await loadExamsData();
         renderExamsData();
 
         statusEl.style.display = 'block'; statusEl.style.background = '#dcfce7'; statusEl.style.color = '#166534';
-        statusEl.innerText = `✅ نمره ${payload.totalScore} برای دانش‌آموز «${student.firstName} ${student.lastName}» در آزمون «${exam.title}» با موفقیت ثبت شد.`;
+        statusEl.innerText = `✅ نمره ${payload.totalScore} برای «${student.firstName} ${student.lastName}» در آزمون «${exam.title}» ثبت شد.`;
 
         setTimeout(() => {
             closeResultCodeModal();
@@ -530,7 +544,7 @@ async function processResultCode() {
     } catch (e) {
         console.error(e);
         statusEl.style.display = 'block'; statusEl.style.background = '#fee2e2'; statusEl.style.color = '#b91c1c';
-        statusEl.innerText = '❌ خطا در خواندن کد. لطفاً مطمئن شوید کد را کامل و صحیح کپی کرده‌اید.';
+        statusEl.innerText = '❌ خطا در خواندن کد: ' + e.message;
     } finally {
         btn.innerText = "ثبت نتیجه ✅";
         btn.disabled = false;
