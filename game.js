@@ -35,6 +35,17 @@ async function encryptStudentName(name, password) {
     }
 }
 
+function b64EncodeUnicode(str) {
+    try {
+        return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+            return String.fromCharCode('0x' + p1);
+        }));
+    } catch (e) {
+        console.error('Base64 Encode Error:', e);
+        return btoa(str);
+    }
+}
+
 async function generateGameFile(examId, isSmart = false) {
     const exam = await getDataById('exams', examId);
     if (!exam) {
@@ -801,6 +812,10 @@ async function generateResultCode() {
     btn.disabled = true;
 
     try {
+        if (!crypto || !crypto.subtle) {
+            throw new Error("مرورگر شما از Web Crypto API پشتیبانی نمی‌کند. لطفاً فایل را در مرورگر Chrome باز کنید.");
+        }
+
         const payload = {
             examId: EXAM_ID,
             examTitle: EXAM_TITLE,
@@ -818,21 +833,23 @@ async function generateResultCode() {
         const payloadString = JSON.stringify(payload);
         const signature = await hmacSign(payloadString, SECRET_KEY);
         
-        const finalCode = "KOSHA-" + btoa(unescape(encodeURIComponent(JSON.stringify({ p: payloadString, s: signature }))));
+        // تبدیل امن به Base64
+        const finalPayload = JSON.stringify({ p: payloadString, s: signature });
+        const base64Payload = b64EncodeUnicode(finalPayload);
+        const finalCode = "KOSHA-" + base64Payload;
 
         // کپی به کلیپ‌بورد
         if (navigator.clipboard) {
             await navigator.clipboard.writeText(finalCode);
             alert("✅ کد نتیجه با موفقیت کپی شد! این کد را برای معلم خود ارسال کنید.");
         } else {
-            // فالبک برای مرورگرهای قدیمی
             const ta = document.createElement("textarea");
             ta.value = finalCode; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
             alert("✅ کد نتیجه کپی شد!");
         }
     } catch (e) {
         console.error(e);
-        alert("خطا در تولید کد نتیجه.");
+        alert("خطا در تولید کد نتیجه: " + e.message); // ← نمایش دقیق خطا برای دیباگ
     } finally {
         btn.innerText = "📋 کپی کد نتیجه (برای معلم)";
         btn.disabled = false;
