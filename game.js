@@ -685,7 +685,8 @@ function checkAns(btnElement, chosen, correct) {
 
     if (isCorrect) {
         if (btnElement && btnElement.tagName === 'BUTTON') btnElement.classList.add("correct"); 
-        state.levelScore += 10; state.totalScore += 10; state.levelCorrect++;
+        const earnedScore = state.qs[state.idx].score || 10;
+state.levelScore += earnedScore; state.totalScore += earnedScore; state.levelCorrect++;
         playSound('correct'); showConfetti(false);
         $("f").style.color = "#27ae60"; 
         $("f").innerText = encCorrect[Math.floor(Math.random() * encCorrect.length)];
