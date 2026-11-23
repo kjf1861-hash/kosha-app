@@ -9,7 +9,7 @@ importScripts('./version.js?t=' + Date.now());
 const APP_VERSION_SAFE = (self.APP_VERSION || 'v0.0.0').replace(/\./g, '-');
 const CACHE_NAME = `kosha-cache-${APP_VERSION_SAFE}`; 
 
-// ✅ لیست فایل‌های اصلی برای کش شدن
+// ✅ لیست فایل‌های اصلی برای کش شدن (آیکون‌ها به پوشه icons منتقل شدند)
 const RAW_ASSETS_TO_CACHE = [
     './', 
     './index.html', 
@@ -31,13 +31,23 @@ const RAW_ASSETS_TO_CACHE = [
     './back-button.js', 
     './version.js', 
     './updater.js',
-    './icon-192.png',
-    './icon-512.png',
-    './icon-maskable-512.png',
-    './icon.svg' 
+    // ✅ آیکون‌های جدید در پوشه icons
+    './icons/icon-72.png',
+    './icons/icon-96.png',
+    './icons/icon-128.png',
+    './icons/icon-144.png',
+    './icons/icon-152.png',
+    './icons/icon-192.png',
+    './icons/icon-384.png',
+    './icons/icon-512.png',
+    './icons/icon-maskable-192.png',
+    './icons/icon-maskable-512.png',
+    './icons/apple-touch-icon.png',
+    './icons/favicon-16x16.png',
+    './icons/favicon-32x32.png'
 ];
 
-// ✅ اضافه کردن نسخه داینامیک به فایل‌های استاتیک (به جز فایل‌های حساس)
+// ✅ اضافه کردن نسخه داینامیک به فایل‌های استاتیک (به جز فایل‌های حساس و تصاویر)
 const ASSETS_TO_CACHE = RAW_ASSETS_TO_CACHE.map(url => {
     if (
         url === './' || 
