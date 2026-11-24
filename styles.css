@@ -8,63 +8,109 @@ body, button, input, select, textarea, .form-control, .btn, .nav-item, .list-ite
 }
 
 /* =========================================
-   متغیرهای اصلی (حالت روشن) - تمیز و مینیمال
+   پالت رنگی ۷ رنگه (از لوگو) - Material 3 Tokens
    ========================================= */
 :root {
     color-scheme: light;
     
-    --primary: #4A90E2;
-    --primary-dark: #357ABD;
-    --primary-light: #f0f7ff; /* آبی بسیار روشن و ملایم */
-    --primary-soft: rgba(74, 144, 226, 0.15);
+    /* --- رنگ‌های پایه پالت لوگو --- */
+    --color-red: #E53935;
+    --color-orange: #F57C00;
+    --color-yellow: #FDD835;
+    --color-green: #43A047;
+    --color-blue: #039BE5;
+    --color-indigo: #3949AB;
+    --color-violet: #8E24AA;
+
+    /* --- توکن‌های اصلی (Primary) --- */
+    --md-primary: var(--color-blue);
+    --md-on-primary: #FFFFFF;
+    --md-primary-container: rgba(3, 155, 229, 0.15); /* نشانگر تب فعال */
+    --md-on-primary-container: var(--color-blue);
+
+    /* --- توکن‌های معنایی (Semantic) --- */
+    --md-error: var(--color-red);
+    --md-success: var(--color-green);
+    --md-warning: var(--color-orange);
+    --md-info: var(--color-violet);
+
+    /* --- توکن‌های سطوح (Surfaces) - Tonal Elevation --- */
+    --md-surface: #F8FAFC;
+    --md-surface-container-lowest: #FFFFFF;
+    --md-surface-container-low: #FFFFFF;      /* کارت‌های معمولی */
+    --md-surface-container: #FFFFFF;          /* نوار پایین */
+    --md-surface-container-high: #E2E8F0;     /* حاشیه‌ها */
     
-    /* تغییرات: پس‌زمینه روشن و حذف گرادیانت */
-    --bg-color: #f8fafc; 
+    --md-on-surface: #0F172A;                 /* متن اصلی */
+    --md-on-surface-variant: #64748B;         /* متن فرعی */
+
+    /* --- سازگاری با کدهای قبلی --- */
+    --primary: var(--md-primary);
+    --primary-dark: var(--color-indigo);
+    --primary-light: var(--md-primary-container);
+    --primary-soft: rgba(3, 155, 229, 0.25);
+    
+    --bg-color: var(--md-surface);
     --bg-gradient: none; 
-    --card-bg: #ffffff;
-    --text-main: #0f172a;
-    --text-muted: #64748b;
-    --border-color: #e2e8f0;
-    --input-bg: #f1f5f9;
-    --input-focus-bg: #ffffff;
-    --nav-bg: #ffffff;
+    --card-bg: var(--md-surface-container-lowest);
+    --text-main: var(--md-on-surface);
+    --text-muted: var(--md-on-surface-variant);
+    --border-color: var(--md-surface-container-high);
+    --input-bg: #F1F5F9;
+    --input-focus-bg: #FFFFFF;
+    --nav-bg: var(--md-surface-container);
     
-    --arf-bg: #FFF8E1;
-    --arf-border: #f59e0b;
+    --arf-bg: rgba(253, 216, 53, 0.15);
+    --arf-border: var(--color-yellow);
     
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --shadow-sm: none; /* حذف سایه‌های سنگین به سبک گوگل پلی */
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
     --radius-sm: 12px;
-    --radius-md: 18px;
-    --radius-lg: 26px;
+    --radius-md: 20px;
+    --radius-lg: 28px;
 }
 
 /* =========================================
-   متغیرهای حالت شب (Dark Mode) - حفظ وضعیت قبلی
+   متغیرهای حالت شب (Dark Mode)
    ========================================= */
 [data-theme="dark"] {
     color-scheme: dark;
     
-    --primary: #5AA1F5;
-    --primary-dark: #3B7FD1;
-    --primary-light: rgba(90, 161, 245, 0.16);
-    --primary-soft: rgba(90, 161, 245, 0.28);
+    /* در حالت شب رنگ اصلی کمی روشن‌تر می‌شود تا کنتراست حفظ شود */
+    --md-primary: #29B6F6; 
+    --md-on-primary: #000000;
+    --md-primary-container: rgba(41, 182, 246, 0.20);
+    --md-on-primary-container: #81D4FA;
+
+    --md-surface: #0B1220;
+    --md-surface-container-lowest: #141E2F;
+    --md-surface-container-low: #141E2F;
+    --md-surface-container: #1B2739;
+    --md-surface-container-high: #22304A;
     
-    --bg-color: #0B1220;
-    --bg-gradient: linear-gradient(135deg, #0b1220 0%, #14243d 100%);
-    --card-bg: #141E2F;
-    --text-main: #E9EFFA;
-    --text-muted: #8FA0B8;
-    --border-color: #22304A;
+    --md-on-surface: #E9EFFA;
+    --md-on-surface-variant: #8FA0B8;
+
+    --primary: var(--md-primary);
+    --primary-dark: #0288D1;
+    --primary-light: var(--md-primary-container);
+    --primary-soft: rgba(41, 182, 246, 0.30);
+    
+    --bg-color: var(--md-surface);
+    --bg-gradient: none;
+    --card-bg: var(--md-surface-container-low);
+    --text-main: var(--md-on-surface);
+    --text-muted: var(--md-on-surface-variant);
+    --border-color: var(--md-surface-container-high);
     --input-bg: #1B2739;
     --input-focus-bg: #1e293b;
-    --nav-bg: #101A2B;
+    --nav-bg: var(--md-surface-container);
     
-    --arf-bg: rgba(245, 158, 11, 0.15);
-    --arf-border: #f59e0b;
+    --arf-bg: rgba(253, 216, 53, 0.15);
+    --arf-border: var(--color-yellow);
     
-    --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.40), 0 0 1px rgba(90, 161, 245, 0.10);
-    --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 1px rgba(90, 161, 245, 0.15);
+    --shadow-sm: none;
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.40);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -82,8 +128,6 @@ body {
     margin: 0;
     padding: 0;
     background-color: var(--bg-color);
-    background-image: var(--bg-gradient); /* در حالت روشن حذف شده است */
-    background-attachment: fixed;
     color: var(--text-main);
     line-height: 1.8;
     direction: rtl;
@@ -98,45 +142,49 @@ h1, h2, h3, h4, p { margin-top: 0; }
 ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 4px; opacity: 0.5; }
 
 /* =========================================
-   هدر (تغییر یافته: مینیمال و سفید)
+   هدر (Google Play Style - Flat & Minimal)
    ========================================= */
 .app-header {
-    background: #ffffff;
+    background: var(--md-surface-container-lowest);
     color: var(--text-main);
     padding: 24px 16px;
     text-align: center;
     border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     margin-bottom: 20px;
     position: relative;
     overflow: hidden;
-    border-bottom: 1px solid var(--border-color);
-    transition: background 0.3s ease, border-color 0.3s ease;
+    border-bottom: none; /* حذف خط */
+    transition: background 0.3s ease;
 }
 
 [data-theme="dark"] .app-header {
-    background: var(--card-bg);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.30);
-    border-bottom: 1px solid var(--border-color);
+    background: var(--md-surface-container-lowest);
 }
 
-/* حذف دایره تزئینی پس زمینه هدر */
-.app-header::before {
-    display: none; 
+.app-header h1 { 
+    margin: 0; 
+    font-size: 1.7rem; 
+    position: relative; 
+    z-index: 1; 
+    letter-spacing: -0.5px; 
+    font-weight: 800; 
+    color: var(--md-primary); 
+}
+.app-header p { 
+    margin: 6px 0 0 0; 
+    font-size: 0.95rem; 
+    color: var(--text-muted); 
+    position: relative; 
+    z-index: 1; 
 }
 
-.app-header h1 { margin: 0; font-size: 1.7rem; position: relative; z-index: 1; letter-spacing: -0.5px; font-weight: 800; color: var(--primary); }
-.app-header p { margin: 6px 0 0 0; font-size: 0.95rem; color: var(--text-muted); position: relative; z-index: 1; }
-
-/* =========================================
-   دکمه‌های هدر (تم + تنظیمات) - تغییر یافته برای پس زمینه سفید
-   ========================================= */
+/* دکمه‌های هدر */
 .theme-toggle, .settings-toggle {
     position: absolute;
     top: 15px;
     z-index: 10;
-    background: var(--bg-color);
-    border: 1px solid var(--border-color);
+    background: var(--md-surface-container);
+    border: none;
     color: var(--text-main);
     width: 44px;
     height: 44px;
@@ -145,13 +193,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    transition: all 0.2s;
-}
-
-[data-theme="dark"] .theme-toggle, 
-[data-theme="dark"] .settings-toggle {
-    background: var(--input-bg);
-    color: var(--text-main);
+    transition: background 0.2s, transform 0.2s;
 }
 
 .theme-toggle { left: 15px; }
@@ -178,7 +220,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
     text-align: center;
     font-size: 1.5rem;
     font-weight: 800;
-    color: var(--primary);
+    color: var(--md-primary);
     margin-bottom: 20px;
     display: flex;
     align-items: center;
@@ -188,205 +230,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
 }
 
 /* =========================================
-   کارت‌ها
-   ========================================= */
-.card {
-    background: var(--card-bg);
-    border-radius: var(--radius-md);
-    padding: 20px;
-    margin-bottom: 16px;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border-color);
-    width: 100%;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
-    animation: cardIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes cardIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.card-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 16px;
-    border-bottom: 1px dashed var(--border-color);
-    padding-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-/* =========================================
-   کارت‌های داشبورد
-   ========================================= */
-.dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-.dashboard-card {
-    background: var(--card-bg);
-    border-radius: var(--radius-md);
-    padding: 20px 15px;
-    text-align: center;
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.2s;
-}
-.dashboard-card:active { transform: scale(0.98); }
-.dc-icon { font-size: 2rem; margin-bottom: 5px; }
-.dc-value { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
-.dc-label { font-size: 0.9rem; color: var(--text-muted); }
-
-.horizontal-scroll-container {
-    display: flex;
-    overflow-x: auto;
-    gap: 12px;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-}
-.horizontal-scroll-container::-webkit-scrollbar { display: none; }
-
-.activity-card {
-    min-width: 110px;
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 15px 10px;
-    text-align: center;
-    flex-shrink: 0;
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-.ac-icon { font-size: 1.8rem; }
-.ac-value { font-size: 1.4rem; font-weight: 800; color: var(--primary); }
-.ac-label { font-size: 0.75rem; color: var(--text-muted); line-height: 1.2; }
-
-.dashboard-accordion {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    margin-bottom: 15px;
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-}
-.dashboard-accordion summary {
-    padding: 15px 20px;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    list-style: none;
-    color: var(--primary);
-    background: var(--card-bg);
-    font-size: 1.05rem;
-}
-.dashboard-accordion summary::-webkit-details-marker { display: none; }
-.dashboard-accordion summary::after {
-    content: '▼';
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    transition: transform 0.2s;
-}
-.dashboard-accordion[open] summary::after { transform: rotate(180deg); }
-.dashboard-accordion[open] summary { border-bottom: 1px dashed var(--border-color); }
-.dashboard-accordion-content { padding: 15px; background: var(--card-bg); }
-
-/* =========================================
-   فرم‌ها
-   ========================================= */
-.form-group { margin-bottom: 16px; width: 100%; }
-.form-label { display: block; margin-bottom: 8px; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); }
-.form-control {
-    width: 100%;
-    padding: 14px;
-    border: 1.5px solid transparent;
-    border-radius: var(--radius-sm);
-    font-size: 1rem;
-    color: var(--text-main);
-    background-color: var(--input-bg);
-    transition: all 0.25s ease;
-    outline: none;
-    word-break: break-word;
-}
-.form-control:focus {
-    border-color: var(--primary);
-    background-color: var(--input-focus-bg);
-    box-shadow: 0 0 0 4px var(--primary-soft);
-}
-textarea.form-control { resize: vertical; min-height: 80px; }
-
-/* حذف فلش‌های Input Number */
-input[type=number]::-webkit-outer-spin-button,
-input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-input[type=number] { -moz-appearance: textfield; }
-
-select.form-control {
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%234A90E2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-    background-repeat: no-repeat;
-    background-position: left 14px center;
-    background-size: 12px;
-    padding-left: 36px;
-}
-
-/* =========================================
-   دکمه‌ها
-   ========================================= */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 14px 22px;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    gap: 8px;
-    position: relative;
-    overflow: hidden;
-    flex-wrap: wrap; 
-    text-align: center;
-}
-.btn::after {
-    content: '';
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 5px; height: 5px;
-    background: rgba(255,255,255,0.5);
-    opacity: 0;
-    border-radius: 100%;
-    transform: scale(1) translate(-50%, -50%);
-    transform-origin: 50% 50%;
-}
-.btn:active::after { animation: ripple 0.6s ease-out; }
-@keyframes ripple { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(60); opacity: 0; } }
-.btn:active { transform: scale(0.97); }
-.btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3); }
-.btn-secondary { background: var(--input-bg); color: var(--text-main); }
-.btn-danger { background: rgba(254, 226, 226, 0.8); color: #dc2626; }
-[data-theme="dark"] .btn-danger { background: rgba(220, 38, 38, 0.2); color: #f87171; }
-[data-theme="dark"] .btn-primary { box-shadow: 0 4px 12px rgba(90, 161, 245, 0.35); }
-.btn-block { width: 100%; }
-.btn-sm { padding: 6px 12px; font-size: 0.85rem; border-radius: 8px; }
-.mt-4 { margin-top: 12px; }
-
-@media (hover: hover) and (pointer: fine) {
-    .btn-primary:hover { box-shadow: 0 6px 18px rgba(74, 144, 226, 0.45); }
-    .btn-secondary:hover { opacity: 0.8; }
-}
-/* =========================================
-   منوی پایین (Bottom Nav)
+   منوی پایین (Bottom Nav - Google Play Style)
    ========================================= */
 .bottom-nav {
     position: fixed;
@@ -394,22 +238,16 @@ select.form-control {
     left: 0;
     right: 0;
     background: var(--nav-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     display: flex;
     justify-content: space-around;
     align-items: center;
-    height: 70px;
+    height: 80px; /* کمی بلندتر برای جا دادن نشانگر قرصی */
     padding: 0 5px;
     padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.06);
+    box-shadow: none; /* حذف سایه */
     z-index: 100;
-    border-top: 1px solid var(--border-color);
-    transition: background 0.3s ease, border-color 0.3s ease;
-}
-
-[data-theme="dark"] .bottom-nav {
-    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.40);
+    border-top: none; /* حذف خط بالای منو */
+    transition: background 0.3s ease;
 }
 
 .nav-item {
@@ -417,42 +255,45 @@ select.form-control {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: var(--text-muted);
-    padding: 0;
-    margin: 0;
+    color: var(--md-on-surface-variant);
+    padding: 8px 12px;
+    margin: 0 4px;
     text-decoration: none;
-    border-radius: var(--radius-sm);
+    border-radius: 20px; /* شکل قرصی */
     flex: 1;
-    height: 100%;
-    transition: all 0.2s ease;
+    height: 60px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
 }
 
 .nav-item svg {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     fill: none;
     stroke: currentColor;
-    stroke-width: 1.85;
+    stroke-width: 2; /* ضخامت خط برای خوانایی بهتر */
     stroke-linecap: round;
     stroke-linejoin: round;
-    transition: transform 0.22s ease;
+    transition: all 0.3s ease;
 }
 
-.nav-item.active { color: var(--primary); }
-.nav-item.active svg { transform: translateY(-3px) scale(1.1); }
+/* حالت فعال (Google Play Pill Style) */
+.nav-item.active {
+    color: var(--md-on-primary-container);
+    background-color: var(--md-primary-container);
+}
+
+.nav-item.active svg {
+    stroke-width: 2.5; /* توپرتر شدن آیکون در حالت فعال */
+    transform: scale(1.05);
+}
+
+/* حذف خط بالای تب فعال (کد قبلی) */
 .nav-item.active::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    width: 28px;
-    height: 3px;
-    background: var(--primary);
-    border-radius: 0 0 4px 4px;
+    display: none; 
 }
-
 /* =========================================
-   Empty State
+   Empty State (حالت خالی - مینیمال)
    ========================================= */
 .empty-state {
     display: flex;
@@ -461,9 +302,9 @@ select.form-control {
     justify-content: center;
     padding: 36px 16px;
     text-align: center;
-    border: 2px dashed var(--border-color);
+    border: 2px dashed var(--md-surface-container-high);
     border-radius: var(--radius-md);
-    background: var(--input-bg);
+    background: var(--md-surface-container-lowest);
     color: var(--text-muted);
     animation: cardIn 0.4s ease both;
     word-break: break-word;
@@ -471,8 +312,8 @@ select.form-control {
 .empty-state svg {
     width: 48px;
     height: 48px;
-    color: var(--primary);
-    opacity: 0.6;
+    color: var(--md-primary);
+    opacity: 0.8;
     margin-bottom: 12px;
 }
 .empty-state .empty-title {
@@ -491,51 +332,43 @@ select.form-control {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 10px 18px;
-    background: var(--primary);
-    color: white;
+    padding: 10px 20px;
+    background: var(--md-primary);
+    color: var(--md-on-primary);
     border: none;
-    border-radius: 999px;
+    border-radius: 999px; /* کاملاً گرد به سبک گوگل */
     font-family: inherit;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
     flex-wrap: wrap;
     justify-content: center;
 }
 .empty-state .empty-action:active {
     transform: scale(0.97);
-}
-
-@media (hover: hover) and (pointer: fine) {
-    .empty-state .empty-action:hover {
-        filter: brightness(1.05);
-        box-shadow: 0 6px 18px rgba(74, 144, 226, 0.4);
-    }
+    opacity: 0.9;
 }
 
 /* =========================================
-   Toast (با بهبود رنگ‌ها برای حالت شب)
+   Toast (اعلان‌ها)
    ========================================= */
 .custom-toast-container {
     position: fixed;
     bottom: 96px;
     left: 50%;
     transform: translateX(-50%) translateY(20px);
-    background: var(--text-main);
-    color: var(--bg-color);
-    padding: 12px 18px;
-    border-radius: 30px;
-    box-shadow: var(--shadow-md);
+    background: var(--md-on-surface); /* مشکی/سرمه‌ای برای حالت روشن */
+    color: var(--md-surface);
+    padding: 14px 20px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     gap: 10px;
     z-index: 3500;
     opacity: 0;
     visibility: hidden;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-size: 0.92rem;
     font-weight: 700;
     direction: rtl;
@@ -544,9 +377,8 @@ select.form-control {
 }
 
 [data-theme="dark"] .custom-toast-container {
-    background: #E9EFFA;
-    color: #0B1220;
-    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55);
+    background: var(--md-surface-container-high);
+    color: var(--md-on-surface);
 }
 
 .custom-toast-container.show {
@@ -562,22 +394,28 @@ select.form-control {
     stroke: currentColor;
     stroke-width: 2.5;
 }
-.custom-toast-success { border-right: 4px solid #22c55e; }
-.custom-toast-success svg { color: #22c55e; }
-.custom-toast-error { border-right: 4px solid #ef4444; }
-.custom-toast-error svg { color: #ef4444; }
-.custom-toast-info { border-right: 4px solid #3b82f6; }
-.custom-toast-info svg { color: #3b82f6; }
+/* رنگ‌های معنایی برای نوار کناری Toast */
+.custom-toast-success { border-right: 4px solid var(--md-success); }
+.custom-toast-success svg { color: var(--md-success); }
+.custom-toast-error { border-right: 4px solid var(--md-error); }
+.custom-toast-error svg { color: var(--md-error); }
+.custom-toast-info { border-right: 4px solid var(--md-primary); }
+.custom-toast-info svg { color: var(--md-primary); }
 
 /* =========================================
-   لیست‌ها (بهبود حالت شب)
+   لیست‌ها (Flat Design)
    ========================================= */
-.list-group { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.list-group { display: flex; flex-direction: column; gap: 12px; width: 100%; }
 .list-item {
-    background: var(--card-bg); padding: 14px 18px;
-    border-radius: var(--radius-sm); border: 1px solid var(--border-color);
-    display: flex; justify-content: space-between; align-items: center;
-    gap: 10px; transition: all 0.2s;
+    background: var(--md-surface-container-lowest); 
+    padding: 16px; 
+    border-radius: var(--radius-sm); 
+    border: 1px solid var(--md-surface-container-high);
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    gap: 10px; 
+    transition: background-color 0.2s;
     flex-wrap: wrap;
     width: 100%;
     box-sizing: border-box;
@@ -585,14 +423,16 @@ select.form-control {
 }
 
 @media (hover: hover) and (pointer: fine) {
-    .list-item:hover { box-shadow: var(--shadow-sm); }
+    .list-item:hover { 
+        background-color: var(--md-surface-container); /* تغییر جزئی پس‌زمینه به جای سایه */
+    }
 }
 
 .group-label {
-    background: var(--primary-light);
-    color: var(--primary-dark);
-    padding: 2px 8px;
-    border-radius: 12px;
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+    padding: 2px 10px;
+    border-radius: 8px;
     font-size: 0.75rem;
     font-weight: 700;
     white-space: nowrap;
@@ -601,166 +441,272 @@ select.form-control {
     word-break: break-word;
     white-space: normal;
 }
-[data-theme="dark"] .group-label { background: rgba(90, 161, 245, 0.20); color: #7EB3F7; }
 
-.arf-badge { background-color: var(--arf-bg); border-right: 4px solid var(--arf-border); padding: 8px 12px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--arf-border); margin-top: 8px; flex-wrap: wrap; }
-.rank-badge { display: inline-flex; align-items: center; background: var(--primary-light); color: var(--text-main); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; white-space: nowrap; }
-[data-theme="dark"] .rank-badge { background: rgba(90, 161, 245, 0.20); color: #E9EFFA; }
-.top-student-row { background: linear-gradient(90deg, var(--arf-bg) 0%, rgba(245, 158, 11, 0.3) 100%) !important; border-right: 4px solid var(--arf-border) !important; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15); }
-[data-theme="dark"] .top-student-row { background: linear-gradient(90deg, rgba(245, 158, 11, 0.20) 0%, rgba(245, 158, 11, 0.05) 100%) !important; border-right: 4px solid var(--arf-border) !important; }
+.arf-badge { 
+    background-color: var(--arf-bg); 
+    border-right: 4px solid var(--arf-border); 
+    padding: 8px 12px; 
+    border-radius: var(--radius-sm); 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    font-weight: 700; 
+    color: var(--text-main); /* متن باید خوانا بماند */
+    margin-top: 8px; 
+    flex-wrap: wrap; 
+}
+.rank-badge { 
+    display: inline-flex; 
+    align-items: center; 
+    background: var(--md-primary-container); 
+    color: var(--md-on-primary-container); 
+    padding: 6px 14px; 
+    border-radius: 12px; 
+    font-size: 0.85rem; 
+    font-weight: 700; 
+    white-space: nowrap; 
+}
+.top-student-row { 
+    background: linear-gradient(90deg, var(--arf-bg) 0%, rgba(253, 216, 53, 0.1) 100%) !important; 
+    border: 1px solid var(--arf-border) !important; 
+}
 
 /* =========================================
-   مودال‌ها (بهبود حالت شب و اصلاح ریشه‌ای UI)
+   مودال‌ها (Google Play Dialog Style)
    ========================================= */
 .modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(11, 18, 32, 0.60); backdrop-filter: blur(4px);
+    background: rgba(15, 23, 42, 0.4); /* پس‌زمینه نیمه شفاف ملایم */
     display: flex; justify-content: center; align-items: center;
     z-index: 2000; opacity: 0; visibility: hidden; transition: all 0.3s ease;
-    padding: 10px;
+    padding: 15px;
 }
-[data-theme="dark"] .modal-overlay { background: rgba(0, 0, 0, 0.75); }
+[data-theme="dark"] .modal-overlay { background: rgba(0, 0, 0, 0.6); }
 .modal-overlay.show { opacity: 1; visibility: visible; }
 .modal-content {
-    background: var(--card-bg); width: 100%; max-width: 420px;
-    border-radius: var(--radius-lg); padding: 24px;
-    box-shadow: var(--shadow-md); transform: scale(0.9) translateY(20px);
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-    max-height: 90vh; overflow-y: auto; overflow-x: hidden;
-    border: 1px solid var(--border-color);
+    background: var(--md-surface-container-lowest); 
+    width: 100%; 
+    max-width: 420px;
+    border-radius: var(--radius-lg); 
+    padding: 24px;
+    transform: scale(0.95) translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    max-height: 90vh; 
+    overflow-y: auto; 
+    overflow-x: hidden;
+    border: none; /* حذف حاشیه */
     box-sizing: border-box;
 }
 [data-theme="dark"] .modal-content {
-    border: 1px solid rgba(90, 161, 245, 0.20);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.70);
+    background: var(--md-surface-container-low);
 }
 .modal-overlay.show .modal-content { transform: scale(1) translateY(0); }
 .modal-header {
-    font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;
-    text-align: center; color: var(--primary);
-    padding-bottom: 12px; border-bottom: 2px dashed var(--border-color);
+    font-size: 1.2rem; 
+    font-weight: 800; 
+    margin-bottom: 20px;
+    text-align: center; 
+    color: var(--text-main);
+    padding-bottom: 12px; 
+    border-bottom: 1px solid var(--md-surface-container-high);
     word-break: break-word;
 }
-.modal-footer { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+.modal-footer { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; justify-content: flex-end; }
 
-.preview-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border-color); font-size: 0.95rem; flex-wrap: wrap; gap: 5px; word-break: break-word; }
+.preview-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--md-surface-container-high); font-size: 0.95rem; flex-wrap: wrap; gap: 5px; word-break: break-word; }
 .preview-row:last-child { border-bottom: none; }
-.preview-row strong { color: var(--primary); }
+.preview-row strong { color: var(--md-primary); }
 
 /* =========================================
-   Student Checkbox (بهبود حالت شب)
+   Student Checkbox
    ========================================= */
-.student-checkbox-list { max-height: 300px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px; background: var(--input-bg); width: 100%; box-sizing: border-box; }
-.student-checkbox-item { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid var(--border-color); cursor: pointer; border-radius: 6px; transition: background 0.15s; flex-wrap: wrap; word-break: break-word; }
-
-@media (hover: hover) and (pointer: fine) {
-    .student-checkbox-item:hover { background: var(--primary-light); }
-    [data-theme="dark"] .student-checkbox-item:hover { background: rgba(90, 161, 245, 0.15); }
+.student-checkbox-list { 
+    max-height: 300px; 
+    overflow-y: auto; 
+    border: 1px solid var(--md-surface-container-high); 
+    border-radius: var(--radius-sm); 
+    padding: 8px; 
+    background: var(--md-surface-container-lowest); 
+    width: 100%; 
+    box-sizing: border-box; 
+}
+.student-checkbox-item { 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+    padding: 12px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    transition: background 0.2s; 
+    flex-wrap: wrap; 
+    word-break: break-word; 
+    margin-bottom: 4px;
 }
 
-.student-checkbox-item:last-child { border-bottom: none; }
-.student-checkbox-item input { accent-color: var(--primary); width: 18px; height: 18px; flex-shrink: 0; }
-.student-checkbox-item-content { display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 5px; }
+@media (hover: hover) and (pointer: fine) {
+    .student-checkbox-item:hover { background: var(--md-surface-container); }
+}
+
+.student-checkbox-item input { 
+    accent-color: var(--md-primary); 
+    width: 20px; 
+    height: 20px; 
+    flex-shrink: 0; 
+    cursor: pointer;
+}
+.student-checkbox-item-content { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    width: 100%; 
+    flex-wrap: wrap; 
+    gap: 5px; 
+}
 
 /* =========================================
-   Group Accordion (بهبود حالت شب)
+   Group Accordion
    ========================================= */
-details.group-accordion { margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--card-bg); overflow: hidden; width: 100%; box-sizing: border-box; }
-details.group-accordion summary { padding: 12px; background: var(--input-bg); font-weight: 700; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 5px; word-break: break-word; }
+details.group-accordion { 
+    margin-bottom: 10px; 
+    border: 1px solid var(--md-surface-container-high); 
+    border-radius: var(--radius-sm); 
+    background: var(--md-surface-container-lowest); 
+    overflow: hidden; 
+    width: 100%; 
+    box-sizing: border-box; 
+}
+details.group-accordion summary { 
+    padding: 14px; 
+    background: var(--md-surface-container-lowest); 
+    font-weight: 700; 
+    cursor: pointer; 
+    list-style: none; 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    flex-wrap: wrap; 
+    gap: 5px; 
+    word-break: break-word; 
+    transition: background 0.2s;
+}
 details.group-accordion summary::-webkit-details-marker { display: none; }
 details.group-accordion summary::after { content: '▼'; font-size: 0.8rem; color: var(--text-muted); transition: transform 0.2s; }
 details.group-accordion[open] summary::after { transform: rotate(180deg); }
-.group-header-checkbox { display: flex; align-items: center; gap: 8px; flex: 1; word-break: break-word; }
-.group-students-container { padding: 10px; border-top: 1px solid var(--border-color); }
+details.group-accordion[open] summary { background: var(--md-surface-container); border-bottom: 1px solid var(--md-surface-container-high); }
+.group-header-checkbox { display: flex; align-items: center; gap: 10px; flex: 1; word-break: break-word; }
+.group-students-container { padding: 10px; }
 
 /* =========================================
-   Attendance (بهبود حالت شب)
+   Attendance (حضور و غیاب)
    ========================================= */
 .attendance-list-container { display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding: 5px; width: 100%; box-sizing: border-box; }
-.attendance-student-row { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); flex-wrap: wrap; word-break: break-word; }
+.attendance-student-row { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 12px; 
+    padding: 14px; 
+    background: var(--md-surface-container-lowest); 
+    border: 1px solid var(--md-surface-container-high); 
+    border-radius: var(--radius-sm); 
+    flex-wrap: wrap; 
+    word-break: break-word; 
+}
 
 @media (min-width: 400px) { 
     .attendance-student-row { flex-direction: row; justify-content: space-between; align-items: center; } 
 }
 
 .attendance-student-name { font-weight: 700; font-size: 0.95rem; flex: 1 1 auto; min-width: 0; }
-.att-btn-group { display: flex; gap: 5px; width: 100%; flex-wrap: wrap; }
-.att-btn { flex: 1 1 auto; padding: 8px 5px; border: 2px solid var(--border-color); background: var(--card-bg); border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s; color: var(--text-muted); text-align: center; min-width: 70px; }
-.att-btn.present.active { background: rgba(34, 197, 94, 0.2); color: #15803d; border-color: #22c55e; }
-.att-btn.absent.active { background: rgba(239, 68, 68, 0.2); color: #b91c1c; border-color: #ef4444; }
-.att-btn.late.active { background: rgba(245, 158, 11, 0.2); color: #b45309; border-color: #f59e0b; }
-[data-theme="dark"] .att-btn.present.active { background: rgba(34, 197, 94, 0.25); color: #4ade80; border-color: #22c55e; }
-[data-theme="dark"] .att-btn.absent.active { background: rgba(239, 68, 68, 0.25); color: #f87171; border-color: #ef4444; }
-[data-theme="dark"] .att-btn.late.active { background: rgba(245, 158, 11, 0.25); color: #fbbf24; border-color: #f59e0b; }
+.att-btn-group { display: flex; gap: 8px; width: 100%; flex-wrap: wrap; }
+.att-btn { 
+    flex: 1 1 auto; 
+    padding: 10px 8px; 
+    border: 1px solid var(--md-surface-container-high); 
+    background: var(--md-surface-container-lowest); 
+    border-radius: 8px; 
+    font-size: 0.85rem; 
+    font-weight: 700; 
+    cursor: pointer; 
+    transition: all 0.2s; 
+    color: var(--text-muted); 
+    text-align: center; 
+    min-width: 70px; 
+}
 
-.att-report-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: 700; margin: 2px; }
-.att-report-badge.present { background: rgba(34, 197, 94, 0.2); color: #15803d; }
-.att-report-badge.absent { background: rgba(239, 68, 68, 0.2); color: #b91c1c; }
-.att-report-badge.late { background: rgba(245, 158, 11, 0.2); color: #b45309; }
-[data-theme="dark"] .att-report-badge.present { background: rgba(34, 197, 94, 0.25); color: #4ade80; }
-[data-theme="dark"] .att-report-badge.absent { background: rgba(239, 68, 68, 0.25); color: #f87171; }
-[data-theme="dark"] .att-report-badge.late { background: rgba(245, 158, 11, 0.25); color: #fbbf24; }
+/* استفاده از رنگ‌های معنایی پالت */
+.att-btn.present.active { background: rgba(67, 160, 71, 0.15); color: var(--color-green); border-color: var(--color-green); }
+.att-btn.absent.active { background: rgba(229, 57, 53, 0.15); color: var(--color-red); border-color: var(--color-red); }
+.att-btn.late.active { background: rgba(245, 124, 0, 0.15); color: var(--color-orange); border-color: var(--color-orange); }
+
+.att-report-badge { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; margin: 2px; }
+.att-report-badge.present { background: rgba(67, 160, 71, 0.15); color: var(--color-green); }
+.att-report-badge.absent { background: rgba(229, 57, 53, 0.15); color: var(--color-red); }
+.att-report-badge.late { background: rgba(245, 124, 0, 0.15); color: var(--color-orange); }
 
 /* =========================================
-   Records (بهبود حالت شب)
+   Records (سوابق ارزشیابی)
    ========================================= */
-.record-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px 15px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; width: 100%; box-sizing: border-box; }
+.record-item { 
+    background: var(--md-surface-container-lowest); 
+    border: 1px solid var(--md-surface-container-high); 
+    border-radius: var(--radius-sm); 
+    padding: 16px; 
+    margin-bottom: 12px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+    width: 100%; 
+    box-sizing: border-box; 
+}
 .record-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; flex-wrap: wrap; gap: 5px; }
-.record-title { color: var(--primary); font-size: 1.05rem; word-break: break-word; }
-.record-score { background: var(--primary-light); color: var(--text-main); padding: 4px 10px; border-radius: 20px; font-size: 0.9rem; white-space: nowrap; }
-[data-theme="dark"] .record-score { background: rgba(90, 161, 245, 0.20); color: #E9EFFA; }
+.record-title { color: var(--text-main); font-size: 1.05rem; word-break: break-word; }
+.record-score { background: var(--md-primary-container); color: var(--md-on-primary-container); padding: 6px 12px; border-radius: 12px; font-size: 0.9rem; white-space: nowrap; }
 .record-details { font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px; }
-.record-actions { display: flex; gap: 8px; margin-top: 5px; justify-content: flex-end; flex-wrap: wrap; }
+.record-actions { display: flex; gap: 8px; margin-top: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
 /* =========================================
-   Report Card (بهبود حالت شب)
+   Report Card
    ========================================= */
-.report-card-modal { max-width: 600px; width: 95%; padding: 30px; background: var(--card-bg); box-sizing: border-box; }
-.rc-header { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 15px; margin-bottom: 20px; }
-.rc-header h2 { margin: 0 0 5px 0; color: var(--primary); }
+.report-card-modal { max-width: 600px; width: 95%; padding: 30px; background: var(--md-surface-container-lowest); box-sizing: border-box; }
+.rc-header { text-align: center; border-bottom: 2px solid var(--md-primary); padding-bottom: 15px; margin-bottom: 20px; }
+.rc-header h2 { margin: 0 0 5px 0; color: var(--text-main); }
 .rc-header p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
-.rc-student-info { background: var(--primary-light); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; word-break: break-word; }
-.rc-student-info strong { font-size: 1.2rem; color: var(--primary); }
-.rc-section-title { font-weight: 700; color: var(--text-main); margin: 20px 0 10px 0; border-bottom: 1px dashed var(--border-color); padding-bottom: 5px; word-break: break-word; }
+.rc-student-info { background: var(--md-surface-container); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; word-break: break-word; }
+.rc-student-info strong { font-size: 1.2rem; color: var(--md-primary); }
+.rc-section-title { font-weight: 700; color: var(--text-main); margin: 20px 0 10px 0; border-bottom: 1px solid var(--md-surface-container-high); padding-bottom: 5px; word-break: break-word; }
 .rc-stats-row { display: flex; gap: 10px; flex-wrap: wrap; }
-.rc-stat-box { flex: 1 1 100px; min-width: 100px; text-align: center; padding: 10px; border-radius: var(--radius-sm); background: var(--input-bg); border: 1px solid var(--border-color); }
+.rc-stat-box { flex: 1 1 100px; min-width: 100px; text-align: center; padding: 12px; border-radius: var(--radius-sm); background: var(--md-surface-container-lowest); border: 1px solid var(--md-surface-container-high); }
 .rc-stat-box span { display: block; font-size: 1.5rem; font-weight: 800; margin-top: 5px; }
-.rc-stat-box.present span { color: #15803d; }
-.rc-stat-box.absent span { color: #b91c1c; }
-.rc-stat-box.late span { color: #b45309; }
-[data-theme="dark"] .rc-stat-box.present span { color: #4ade80; }
-[data-theme="dark"] .rc-stat-box.absent span { color: #f87171; }
-[data-theme="dark"] .rc-stat-box.late span { color: #fbbf24; }
-.rc-subject-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted var(--border-color); flex-wrap: wrap; gap: 5px; word-break: break-word; }
+.rc-stat-box.present span { color: var(--color-green); }
+.rc-stat-box.absent span { color: var(--color-red); }
+.rc-stat-box.late span { color: var(--color-orange); }
+.rc-subject-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dotted var(--md-surface-container-high); flex-wrap: wrap; gap: 5px; word-break: break-word; }
 .rc-subject-row:last-child { border-bottom: none; }
-
 /* =========================================
-   Progress Bars (بهبود حالت شب)
+   Progress Bars (نوارهای پیشرفت - فلت)
    ========================================= */
-.score-bar-container { width: 100%; height: 10px; background-color: var(--border-color); border-radius: 5px; margin-top: 8px; overflow: hidden; direction: ltr; }
-[data-theme="dark"] .score-bar-container { background-color: rgba(255, 255, 255, 0.08); }
-.score-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 5px; transition: width 0.8s ease-out; }
-.score-bar-fill.is-first { background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%); }
+.score-bar-container { width: 100%; height: 8px; background-color: var(--md-surface-container-high); border-radius: 4px; margin-top: 8px; overflow: hidden; direction: ltr; }
+.score-bar-fill { height: 100%; background: var(--md-primary); border-radius: 4px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+.score-bar-fill.is-first { background: var(--color-yellow); } /* مدال طلا */
 
-.progress-bar-container { width: 100%; height: 10px; background-color: var(--border-color); border-radius: 5px; overflow: hidden; margin-top: 5px; direction: ltr; }
-[data-theme="dark"] .progress-bar-container { background-color: rgba(255, 255, 255, 0.08); }
-.progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 5px; transition: width 0.8s ease-out; }
+.progress-bar-container { width: 100%; height: 8px; background-color: var(--md-surface-container-high); border-radius: 4px; overflow: hidden; margin-top: 5px; direction: ltr; }
+.progress-bar-fill { height: 100%; background: var(--md-primary); border-radius: 4px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
 
-.att-stacked-bar-container { width: 100%; height: 25px; background-color: var(--border-color); border-radius: 8px; display: flex; overflow: hidden; margin-bottom: 15px; direction: ltr; }
-[data-theme="dark"] .att-stacked-bar-container { background-color: rgba(255, 255, 255, 0.08); }
+.att-stacked-bar-container { width: 100%; height: 24px; background-color: var(--md-surface-container-high); border-radius: 12px; display: flex; overflow: hidden; margin-bottom: 15px; direction: ltr; }
 .att-stacked-segment { height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: 700; transition: width 0.8s ease-out; }
-.att-stacked-segment.present { background-color: #22c55e; }
-.att-stacked-segment.absent { background-color: #ef4444; }
-.att-stacked-segment.late { background-color: #f59e0b; }
+.att-stacked-segment.present { background-color: var(--color-green); }
+.att-stacked-segment.absent { background-color: var(--color-red); }
+.att-stacked-segment.late { background-color: var(--color-orange); }
 
 .att-legend { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; font-size: 0.85rem; flex-wrap: wrap; }
 .att-legend-item { display: flex; align-items: center; gap: 5px; }
 .att-legend-color { width: 12px; height: 12px; border-radius: 50%; }
-.att-legend-color.present { background-color: #22c55e; }
-.att-legend-color.absent { background-color: #ef4444; }
-.att-legend-color.late { background-color: #f59e0b; }
+.att-legend-color.present { background-color: var(--color-green); }
+.att-legend-color.absent { background-color: var(--color-red); }
+.att-legend-color.late { background-color: var(--color-orange); }
 
 /* =========================================
-   Print
+   Print (استایل‌های چاپ)
    ========================================= */
 @media print {
     :root, [data-theme="dark"] { --bg-color: #ffffff; --card-bg: #ffffff; --input-bg: #ffffff; --input-focus-bg: #ffffff; --text-main: #000000; --text-muted: #333333; --border-color: #cccccc; --primary: #000000; --primary-dark: #000000; --primary-light: #f0f0f0; }
@@ -775,18 +721,17 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 }
 
 /* =========================================
-   Pagination (بهبود حالت شب)
+   Pagination (دکمه‌های صفحه‌بندی - قرصی)
    ========================================= */
 .pagination-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; margin-bottom: 20px; flex-wrap: wrap; }
-.pagination-btn { padding: 8px 15px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; transition: all 0.2s; }
-.pagination-btn:disabled { background: var(--border-color); cursor: not-allowed; color: var(--text-muted); }
-[data-theme="dark"] .pagination-btn:disabled { background: rgba(255, 255, 255, 0.08); }
+.pagination-btn { padding: 10px 20px; background: var(--md-primary-container); color: var(--md-on-primary-container); border: none; border-radius: 999px; cursor: pointer; font-weight: 700; transition: all 0.2s; }
+.pagination-btn:disabled { background: var(--md-surface-container-high); cursor: not-allowed; color: var(--text-muted); }
 .pagination-info { font-size: 0.9rem; font-weight: 700; color: var(--text-main); }
 
 /* =========================================
-   Item Management (بهبود حالت شب)
+   Item Management (مدیریت آیتم‌ها)
    ========================================= */
-.item-management-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 10px; word-break: break-word; }
+.item-management-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--md-surface-container-high); flex-wrap: wrap; gap: 10px; word-break: break-word; }
 .item-management-row:last-child { border-bottom: none; }
 .level-row-input { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
 .level-row-input input { flex: 1 1 100px; }
@@ -794,155 +739,135 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .medal-badge { font-size: 1.2rem; margin-left: 5px; vertical-align: middle; }
 
 /* =========================================
-   Details List (بهبود حالت شب)
+   Details List
    ========================================= */
-.details-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px dashed var(--border-color); flex-wrap: wrap; gap: 5px; word-break: break-word; }
+.details-list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--md-surface-container-high); flex-wrap: wrap; gap: 5px; word-break: break-word; }
 .details-list-item:last-child { border-bottom: none; }
-.details-list-item .rank { font-weight: 700; color: var(--primary); min-width: 30px; }
+.details-list-item .rank { font-weight: 700; color: var(--md-primary); min-width: 30px; }
 
 /* =========================================
-   Session Period (بهبود حالت شب)
+   Session Period
    ========================================= */
-.session-period-section { background: var(--input-bg); border-radius: var(--radius-sm); padding: 15px; margin-bottom: 15px; border: 1px solid var(--border-color); word-break: break-word; }
-.session-period-title { font-weight: 700; color: var(--primary); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
+.session-period-section { background: var(--md-surface-container-lowest); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 15px; border: 1px solid var(--md-surface-container-high); word-break: break-word; }
+.session-period-title { font-weight: 700; color: var(--text-main); margin-bottom: 12px; border-bottom: 1px solid var(--md-surface-container-high); padding-bottom: 8px; }
 
 /* =========================================
-   Jalali Calendar (بهبود حالت شب و اصلاح UI)
+   Jalali Calendar (تقویم - ساده و تمیز)
    ========================================= */
-.jalali-calendar-wrapper { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 15px; box-shadow: var(--shadow-sm); direction: rtl; margin-top: 10px; width: 100%; box-sizing: border-box; overflow-x: auto; }
-.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color); flex-wrap: wrap; gap: 5px; }
-.calendar-header button { background: var(--input-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 0.85rem; font-weight: 700; color: var(--text-main); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px; }
-.calendar-header button:active { transform: scale(0.95); }
+.jalali-calendar-wrapper { background: var(--md-surface-container-lowest); border: 1px solid var(--md-surface-container-high); border-radius: var(--radius-md); padding: 16px; direction: rtl; margin-top: 10px; width: 100%; box-sizing: border-box; overflow-x: auto; }
+.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--md-surface-container-high); flex-wrap: wrap; gap: 5px; }
+.calendar-header button { background: var(--md-surface-container); border: none; border-radius: 8px; padding: 8px 14px; font-size: 0.85rem; font-weight: 700; color: var(--text-main); cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 5px; }
+.calendar-header button:active { background: var(--md-surface-container-high); }
 
-@media (hover: hover) and (pointer: fine) {
-    .calendar-header button:hover { background: var(--primary-light); }
-}
+.calendar-title { display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; color: var(--text-main); font-size: 1.1rem; flex-wrap: wrap; margin-bottom: 15px; }
+.calendar-title select { padding: 6px 10px; border-radius: 8px; border: none; background: var(--md-surface-container); color: var(--text-main); font-size: 1rem; font-weight: 700; outline: none; cursor: pointer; max-width: 100%; }
 
-.calendar-title { display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; color: var(--primary); font-size: 1.1rem; flex-wrap: wrap; margin-bottom: 15px; }
-.calendar-title select { padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-size: 1rem; font-weight: 700; outline: none; cursor: pointer; max-width: 100%; }
-
-.calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: 700; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid var(--border-color); }
+.calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: 700; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--md-surface-container-high); }
 .calendar-weekdays span { display: flex; justify-content: center; align-items: center; height: 30px; }
-.calendar-weekdays span.friday { color: #ef4444; }
-[data-theme="dark"] .calendar-weekdays span.friday { color: #f87171; }
+.calendar-weekdays span.friday { color: var(--color-red); }
 
-.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; width: 100%; }
-.calendar-day { display: flex; justify-content: center; align-items: center; height: 40px; border-radius: var(--radius-sm); background: var(--input-bg); border: 1px solid transparent; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; user-select: none; position: relative; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; width: 100%; }
+.calendar-day { display: flex; justify-content: center; align-items: center; height: 40px; border-radius: 50%; /* دایره‌ای مانند گوگل */ background: transparent; border: 1px solid transparent; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; user-select: none; position: relative; }
 .calendar-day.empty { background: transparent; cursor: default; border: none; pointer-events: none; }
-.calendar-day.friday, .calendar-day.holiday { color: #ef4444; }
-[data-theme="dark"] .calendar-day.friday, [data-theme="dark"] .calendar-day.holiday { color: #f87171; }
-.calendar-day.has-session { color: #16a34a; border: 1px dashed #16a34a; }
-[data-theme="dark"] .calendar-day.has-session { color: #4ade80; border-color: #4ade80; }
-.calendar-day.selected { background: var(--primary); color: white !important; border: 1px solid var(--primary); box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4); transform: scale(1.05); }
-[data-theme="dark"] .calendar-day.selected { box-shadow: 0 4px 12px rgba(90, 161, 245, 0.50); }
-.calendar-day.selected.has-session { border: 1px solid white; }
+.calendar-day.friday, .calendar-day.holiday { color: var(--color-red); }
+.calendar-day.has-session { color: var(--color-green); border: 1px dashed var(--color-green); }
+.calendar-day.selected { background: var(--md-primary); color: white !important; border: 1px solid var(--md-primary); transform: scale(1.05); }
 
 @media (hover: hover) and (pointer: fine) {
-    .calendar-day:hover { background: var(--primary-light); }
-    [data-theme="dark"] .calendar-day:hover { background: rgba(90, 161, 245, 0.15); }
+    .calendar-day:hover { background: var(--md-surface-container); }
+    .calendar-day.selected:hover { background: var(--md-primary); }
 }
 
-.selected-date-display { text-align: center; margin-top: 15px; font-weight: 700; color: var(--primary); font-size: 1.1rem; padding: 10px; background: var(--primary-light); border-radius: var(--radius-sm); word-break: break-word; }
-[data-theme="dark"] .selected-date-display { background: rgba(90, 161, 245, 0.20); }
+.selected-date-display { text-align: center; margin-top: 15px; font-weight: 700; color: var(--md-on-primary-container); font-size: 1.1rem; padding: 12px; background: var(--md-primary-container); border-radius: var(--radius-sm); word-break: break-word; }
 
-.score-calendar-accordion { border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--input-bg); margin-bottom: 10px; overflow: hidden; }
-.score-calendar-accordion summary { padding: 12px 15px; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; list-style: none; color: var(--text-main); background: var(--card-bg); flex-wrap: wrap; gap: 5px; }
+.score-calendar-accordion { border: 1px solid var(--md-surface-container-high); border-radius: var(--radius-sm); background: var(--md-surface-container-lowest); margin-bottom: 10px; overflow: hidden; }
+.score-calendar-accordion summary { padding: 14px 16px; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; list-style: none; color: var(--text-main); background: var(--md-surface-container-lowest); flex-wrap: wrap; gap: 5px; transition: background 0.2s; }
 .score-calendar-accordion summary::-webkit-details-marker { display: none; }
 .score-calendar-accordion summary::after { content: '▼'; font-size: 0.8rem; color: var(--text-muted); transition: transform 0.2s; }
 .score-calendar-accordion[open] summary::after { transform: rotate(180deg); }
-.score-calendar-accordion[open] summary { border-bottom: 1px dashed var(--border-color); }
-.score-calendar-body { padding: 15px; background: var(--card-bg); }
+.score-calendar-accordion[open] summary { border-bottom: 1px solid var(--md-surface-container-high); background: var(--md-surface-container); }
+.score-calendar-body { padding: 16px; background: var(--md-surface-container-lowest); }
 .score-calendar-body .calendar-header { margin-bottom: 10px; padding-bottom: 5px; }
-.score-calendar-body .calendar-header button { padding: 4px 10px; }
+.score-calendar-body .calendar-header button { padding: 6px 12px; }
 .score-calendar-body .calendar-title { font-size: 1rem; }
 .score-calendar-body .calendar-grid { margin-bottom: 10px; }
 
-.calendar-day.has-record { color: #16a34a; border: 1px solid #16a34a; background: rgba(22, 163, 74, 0.05); }
-[data-theme="dark"] .calendar-day.has-record { color: #4ade80; border-color: #4ade80; background: rgba(74, 222, 128, 0.10); }
+.calendar-day.has-record { color: var(--color-green); border: 1px solid var(--color-green); background: rgba(67, 160, 71, 0.1); }
 
-.score-day-archive { padding: 12px 15px; background: var(--primary-light); border-top: 1px dashed var(--border-color); font-size: 0.85rem; }
-[data-theme="dark"] .score-day-archive { background: rgba(90, 161, 245, 0.10); }
-.score-day-archive h4 { margin: 0 0 8px 0; color: var(--primary); font-size: 0.9rem; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
-.score-archive-item { padding: 6px 0; border-bottom: 1px dotted var(--border-color); display: flex; justify-content: space-between; align-items: center; color: var(--text-main); flex-wrap: wrap; gap: 5px; }
+.score-day-archive { padding: 14px 16px; background: var(--md-surface-container); border-top: 1px solid var(--md-surface-container-high); font-size: 0.85rem; }
+.score-day-archive h4 { margin: 0 0 10px 0; color: var(--text-main); font-size: 0.9rem; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.score-archive-item { padding: 8px 0; border-bottom: 1px solid var(--md-surface-container-high); display: flex; justify-content: space-between; align-items: center; color: var(--text-main); flex-wrap: wrap; gap: 5px; }
 .score-archive-item:last-child { border-bottom: none; }
-.score-archive-item strong { color: var(--primary); font-weight: 700; }
+.score-archive-item strong { color: var(--md-primary); font-weight: 700; }
 
 /* =========================================
-   Exam Editor (بهبود حالت شب و اصلاح UI)
+   Exam Editor (فرم ساخت آزمون)
    ========================================= */
 #exam-editor-modal .modal-content { max-width: 700px; width: 95%; }
-#exam-editor-modal fieldset { border: 2px solid var(--border-color); border-radius: var(--radius-md); padding: 15px; margin-bottom: 20px; background: var(--card-bg); transition: border-color 0.3s; box-sizing: border-box; }
-#exam-editor-modal fieldset:focus-within { border-color: var(--primary); }
-#exam-editor-modal legend { font-weight: 700; color: var(--primary); padding: 0 12px; font-size: 1.05rem; background: var(--card-bg); border-radius: 8px; }
+#exam-editor-modal fieldset { border: 1px solid var(--md-surface-container-high); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px; background: var(--md-surface-container-lowest); transition: border-color 0.3s; box-sizing: border-box; }
+#exam-editor-modal fieldset:focus-within { border-color: var(--md-primary); }
+#exam-editor-modal legend { font-weight: 700; color: var(--text-main); padding: 0 12px; font-size: 1.05rem; background: var(--md-surface-container-lowest); border-radius: 8px; }
 #exam-questions-container { display: flex; flex-direction: column; gap: 15px; min-height: 100px; padding: 5px 0; }
-#exam-questions-container:empty::before { content: 'هنوز سوالی اضافه نشده است. روی دکمه زیر کلیک کنید.'; display: block; text-align: center; color: var(--text-muted); font-size: 0.9rem; padding: 25px 10px; background: var(--input-bg); border-radius: var(--radius-sm); border: 1px dashed var(--border-color); }
-.exam-question-item { background: var(--input-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 15px; position: relative; transition: all 0.2s ease; }
-.exam-question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color); flex-wrap: wrap; gap: 10px; }
-.exam-question-number { font-weight: 700; color: var(--primary); background: var(--primary-light); padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; }
-[data-theme="dark"] .exam-question-number { background: rgba(90, 161, 245, 0.20); }
-.exam-question-delete-btn { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-[data-theme="dark"] .exam-question-delete-btn { background: rgba(239, 68, 68, 0.20); color: #f87171; }
+#exam-questions-container:empty::before { content: 'هنوز سوالی اضافه نشده است. روی دکمه زیر کلیک کنید.'; display: block; text-align: center; color: var(--text-muted); font-size: 0.9rem; padding: 25px 10px; background: var(--md-surface-container); border-radius: var(--radius-sm); border: 1px dashed var(--md-surface-container-high); }
+.exam-question-item { background: var(--md-surface-container-lowest); border: 1px solid var(--md-surface-container-high); border-radius: var(--radius-sm); padding: 16px; position: relative; transition: all 0.2s ease; }
+.exam-question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--md-surface-container-high); flex-wrap: wrap; gap: 10px; }
+.exam-question-number { font-weight: 700; color: var(--md-on-primary-container); background: var(--md-primary-container); padding: 4px 12px; border-radius: 8px; font-size: 0.85rem; }
+.exam-question-delete-btn { background: rgba(229, 57, 53, 0.1); color: var(--color-red); border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
 .exam-question-body { display: flex; flex-direction: column; gap: 12px; }
 .exam-question-field { display: flex; flex-direction: column; gap: 5px; }
 .exam-question-field label { font-size: 0.85rem; color: var(--text-muted); font-weight: 700; }
-.exam-question-field input, .exam-question-field textarea, .exam-question-field select { padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); font-family: inherit; font-size: 0.9rem; outline: none; transition: border-color 0.2s; width: 100%; box-sizing: border-box; }
-.exam-question-field input:focus, .exam-question-field textarea:focus, .exam-question-field select:focus { border-color: var(--primary); }
+.exam-question-field input, .exam-question-field textarea, .exam-question-field select { padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--md-surface-container-high); background: var(--md-surface-container); color: var(--text-main); font-family: inherit; font-size: 0.9rem; outline: none; transition: border-color 0.2s; width: 100%; box-sizing: border-box; }
+.exam-question-field input:focus, .exam-question-field textarea:focus, .exam-question-field select:focus { border-color: var(--md-primary); background: var(--md-surface-container-lowest); }
 .exam-question-field textarea { resize: vertical; min-height: 60px; }
-.exam-options-container { display: flex; flex-direction: column; gap: 8px; padding: 10px; background: var(--card-bg); border-radius: var(--radius-sm); border: 1px dashed var(--border-color); }
-.exam-option-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.exam-option-row input[type="radio"] { accent-color: var(--primary); width: 18px; height: 18px; flex-shrink: 0; }
-.exam-option-row input[type="text"] { flex: 1 1 150px; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--input-bg); color: var(--text-main); font-size: 0.9rem; font-family: inherit; min-width: 0; }
-.exam-option-row .exam-option-delete { background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 1.1rem; padding: 4px; transition: transform 0.2s; }
-.exam-add-option-btn { background: transparent; border: 1px dashed var(--primary); color: var(--primary); padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-family: inherit; transition: all 0.2s; margin-top: 5px; }
+.exam-options-container { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--md-surface-container); border-radius: var(--radius-sm); border: 1px solid var(--md-surface-container-high); }
+.exam-option-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.exam-option-row input[type="radio"] { accent-color: var(--md-primary); width: 20px; height: 20px; flex-shrink: 0; cursor: pointer; }
+.exam-option-row input[type="text"] { flex: 1 1 150px; padding: 10px; border: 1px solid var(--md-surface-container-high); border-radius: 8px; background: var(--md-surface-container-lowest); color: var(--text-main); font-size: 0.9rem; font-family: inherit; min-width: 0; }
+.exam-option-row .exam-option-delete { background: transparent; border: none; color: var(--color-red); cursor: pointer; font-size: 1.1rem; padding: 4px; transition: transform 0.2s; }
+.exam-add-option-btn { background: transparent; border: 1px dashed var(--md-primary); color: var(--md-primary); padding: 10px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-family: inherit; transition: all 0.2s; margin-top: 5px; }
 .exam-question-score-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .exam-question-score-row label { font-size: 0.85rem; color: var(--text-muted); font-weight: 700; white-space: nowrap; }
-.exam-question-score-row input { flex: 1 1 100px; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--card-bg); color: var(--text-main); font-family: inherit; font-size: 0.9rem; min-width: 0; }
+.exam-question-score-row input { flex: 1 1 100px; padding: 10px; border: 1px solid var(--md-surface-container-high); border-radius: 8px; background: var(--md-surface-container); color: var(--text-main); font-family: inherit; font-size: 0.9rem; min-width: 0; }
 
 @media (hover: hover) and (pointer: fine) {
-    .exam-question-item:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
-    .exam-question-delete-btn:hover { background: rgba(239, 68, 68, 0.2); transform: scale(1.1); }
-    [data-theme="dark"] .exam-question-delete-btn:hover { background: rgba(239, 68, 68, 0.30); }
+    .exam-question-item:hover { border-color: var(--md-primary); }
+    .exam-question-delete-btn:hover { background: rgba(229, 57, 53, 0.2); transform: scale(1.1); }
     .exam-option-row .exam-option-delete:hover { transform: scale(1.2); }
-    .exam-add-option-btn:hover { background: var(--primary-light); }
-    [data-theme="dark"] .exam-add-option-btn:hover { background: rgba(90, 161, 245, 0.15); }
+    .exam-add-option-btn:hover { background: var(--md-primary-container); }
 }
 
 /* =========================================
-   Exam List (بهبود حالت شب)
+   Exam List
    ========================================= */
-.exam-list-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 15px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; transition: all 0.2s; }
+.exam-list-item { background: var(--md-surface-container-lowest); border: 1px solid var(--md-surface-container-high); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; transition: all 0.2s; }
 .exam-list-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px; }
-.exam-list-title { font-weight: 700; color: var(--primary); font-size: 1.05rem; word-break: break-word; }
+.exam-list-title { font-weight: 700; color: var(--text-main); font-size: 1.05rem; word-break: break-word; }
 .exam-list-details { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); flex-wrap: wrap; gap: 5px; }
-.exam-list-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 5px; padding-top: 8px; border-top: 1px dashed var(--border-color); flex-wrap: wrap; }
+.exam-list-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--md-surface-container-high); flex-wrap: wrap; }
 
 @media (hover: hover) and (pointer: fine) {
-    .exam-list-item:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
+    .exam-list-item:hover { border-color: var(--md-primary); }
 }
 
 #exam-grading-modal .modal-content { max-width: 700px; width: 95%; }
-.exam-grading-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); margin-bottom: 8px; transition: all 0.2s; flex-wrap: wrap; }
+.exam-grading-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px; background: var(--md-surface-container-lowest); border: 1px solid var(--md-surface-container-high); border-radius: var(--radius-sm); margin-bottom: 8px; transition: all 0.2s; flex-wrap: wrap; }
 .exam-grading-student-info { display: flex; align-items: center; gap: 8px; flex: 1 1 150px; min-width: 0; flex-wrap: wrap; }
 .exam-grading-student-rank { font-weight: 700; color: var(--text-muted); min-width: 25px; text-align: center; font-size: 0.9rem; }
 .exam-grading-student-name { font-weight: 700; font-size: 0.95rem; white-space: normal; word-break: break-word; }
-.exam-grading-student-group { font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; background: var(--primary-light); color: var(--primary); white-space: nowrap; }
-[data-theme="dark"] .exam-grading-student-group { background: rgba(90, 161, 245, 0.20); color: #7EB3F7; }
-.exam-grading-score-wrapper { display: flex; align-items: center; gap: 5px; flex-shrink: 0; margin-right: auto; }
-.exam-grading-score-input { width: 80px; padding: 8px 10px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-main); font-family: inherit; font-size: 0.95rem; font-weight: 700; text-align: center; outline: none; transition: all 0.2s; }
-.exam-grading-score-input:focus { border-color: var(--primary); background: var(--input-focus-bg); box-shadow: 0 0 0 3px var(--primary-soft); }
-.exam-grading-score-input.has-value { border-color: #22c55e; background: rgba(34, 197, 94, 0.05); }
-[data-theme="dark"] .exam-grading-score-input.has-value { background: rgba(34, 197, 94, 0.10); }
-.exam-grading-score-input.invalid { border-color: #ef4444; background: rgba(239, 68, 68, 0.05); animation: shake 0.3s ease-in-out; }
-[data-theme="dark"] .exam-grading-score-input.invalid { background: rgba(239, 68, 68, 0.10); }
+.exam-grading-student-group { font-size: 0.75rem; padding: 2px 8px; border-radius: 8px; background: var(--md-primary-container); color: var(--md-on-primary-container); white-space: nowrap; }
+.exam-grading-score-wrapper { display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-right: auto; }
+.exam-grading-score-input { width: 80px; padding: 10px; border: 2px solid var(--md-surface-container-high); border-radius: 8px; background: var(--md-surface-container); color: var(--text-main); font-family: inherit; font-size: 0.95rem; font-weight: 700; text-align: center; outline: none; transition: all 0.2s; }
+.exam-grading-score-input:focus { border-color: var(--md-primary); background: var(--md-surface-container-lowest); }
+.exam-grading-score-input.has-value { border-color: var(--color-green); background: rgba(67, 160, 71, 0.05); }
+.exam-grading-score-input.invalid { border-color: var(--color-red); background: rgba(229, 57, 53, 0.05); animation: shake 0.3s ease-in-out; }
 .exam-grading-score-max { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
 #exam-grading-stats { display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 10px; }
 #exam-grading-stats span { display: inline-flex; align-items: center; gap: 5px; }
-#exam-grading-stats strong { color: var(--primary); font-size: 1.05rem; }
+#exam-grading-stats strong { color: var(--md-primary); font-size: 1.05rem; }
 .exam-grading-empty { text-align: center; padding: 30px 15px; color: var(--text-muted); font-size: 0.95rem; }
 
 @media (hover: hover) and (pointer: fine) {
-    .exam-grading-row:hover { border-color: var(--primary); background: var(--input-bg); }
-    [data-theme="dark"] .exam-grading-row:hover { background: rgba(90, 161, 245, 0.08); }
+    .exam-grading-row:hover { border-color: var(--md-primary); background: var(--md-surface-container); }
 }
 
 @keyframes shake {
@@ -950,49 +875,44 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
     25% { transform: translateX(-6px); }
     75% { transform: translateX(6px); }
 }
+
 /* =========================================
-   Full Calendar (بهبود حالت شب)
+   Full Calendar
    ========================================= */
-.full-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
-.full-calendar-day { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 45px; border-radius: var(--radius-sm); background: var(--input-bg); border: 1px solid transparent; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; user-select: none; position: relative; color: var(--text-main); }
+.full-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
+.full-calendar-day { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 45px; border-radius: 50%; background: transparent; border: 1px solid transparent; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; user-select: none; position: relative; color: var(--text-main); }
 .full-calendar-day.empty { background: transparent; cursor: default; border: none; pointer-events: none; }
-.full-calendar-day.friday { color: #ef4444; }
-[data-theme="dark"] .full-calendar-day.friday { color: #f87171; }
-.full-calendar-day.selected { background: var(--primary); color: white !important; border: 1px solid var(--primary); box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4); transform: scale(1.05); }
-[data-theme="dark"] .full-calendar-day.selected { box-shadow: 0 4px 12px rgba(90, 161, 245, 0.50); }
+.full-calendar-day.friday { color: var(--color-red); }
+.full-calendar-day.selected { background: var(--md-primary); color: white !important; border: 1px solid var(--md-primary); transform: scale(1.05); }
 
 @media (hover: hover) and (pointer: fine) {
-    .full-calendar-day:hover { background: var(--primary-light); transform: scale(1.05); }
-    [data-theme="dark"] .full-calendar-day:hover { background: rgba(90, 161, 245, 0.15); }
+    .full-calendar-day:hover { background: var(--md-surface-container); transform: scale(1.05); }
+    .full-calendar-day.selected:hover { background: var(--md-primary); }
 }
 
 .events-list { display: flex; flex-direction: column; gap: 8px; }
-.event-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; flex-wrap: wrap; }
-.event-day-badge { background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+.event-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--md-surface-container-lowest); border: 1px solid var(--md-surface-container-high); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; flex-wrap: wrap; }
+.event-day-badge { background: var(--md-primary-container); color: var(--md-on-primary-container); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
 .event-text { flex: 1 1 150px; font-size: 0.9rem; line-height: 1.5; color: var(--text-main); word-break: break-word; }
-.event-highlight { background: linear-gradient(135deg, var(--primary-light) 0%, rgba(74, 144, 226, 0.1) 100%); border: 2px solid var(--primary); border-radius: var(--radius-md); padding: 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 12px; animation: fadeIn 0.3s ease; flex-wrap: wrap; }
-[data-theme="dark"] .event-highlight { background: linear-gradient(135deg, rgba(90, 161, 245, 0.15) 0%, rgba(90, 161, 245, 0.05) 100%); }
-.event-highlight-day { background: var(--primary); color: white; padding: 8px 15px; border-radius: var(--radius-sm); font-weight: 700; white-space: nowrap; font-size: 0.95rem; }
+.event-highlight { background: var(--md-surface-container); border: 1px solid var(--md-primary-container); border-radius: var(--radius-md); padding: 16px; margin-bottom: 15px; display: flex; align-items: center; gap: 12px; animation: fadeIn 0.3s ease; flex-wrap: wrap; }
+.event-highlight-day { background: var(--md-primary); color: white; padding: 8px 16px; border-radius: 999px; font-weight: 700; white-space: nowrap; font-size: 0.95rem; }
 .event-highlight-text { font-size: 0.95rem; color: var(--text-main); line-height: 1.6; word-break: break-word; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-.full-calendar-day.has-event-soft { background: rgba(74, 144, 226, 0.06); border: 1px solid rgba(74, 144, 226, 0.15); }
-[data-theme="dark"] .full-calendar-day.has-event-soft { background: rgba(90, 161, 245, 0.15); border: 1px solid rgba(90, 161, 245, 0.25); }
+.full-calendar-day.has-event-soft { background: var(--md-primary-container); }
 
 @media (hover: hover) and (pointer: fine) {
-    .event-item:hover { border-color: var(--primary); background: var(--input-bg); }
-    [data-theme="dark"] .event-item:hover { background: rgba(90, 161, 245, 0.08); }
+    .event-item:hover { border-color: var(--md-primary); background: var(--md-surface-container); }
 }
 
 /* =========================================
-   Schedule Table (بهبود حالت شب)
+   Schedule Table
    ========================================= */
 .schedule-table-wrapper {
     overflow-x: auto;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--md-surface-container-high);
     margin-bottom: 15px;
-    background: var(--card-bg);
+    background: var(--md-surface-container-lowest);
     width: 100%;
 }
 .schedule-table {
@@ -1002,7 +922,7 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
     table-layout: auto;
 }
 .schedule-table th, .schedule-table td {
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--md-surface-container-high);
     padding: 12px 10px;
     vertical-align: middle;
     height: 50px;
@@ -1010,47 +930,44 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
     white-space: nowrap;
 }
 .schedule-table thead th {
-    background: var(--primary);
-    color: white;
+    background: var(--md-surface-container);
+    color: var(--text-main);
     font-weight: 700;
-    border-bottom: 3px solid var(--primary-dark);
     position: sticky;
     top: 0;
 }
 .schedule-table tbody th {
-    background: var(--primary-light);
-    color: var(--primary-dark);
+    background: var(--md-surface-container);
+    color: var(--text-main);
     font-weight: 700;
     position: sticky;
     right: 0;
     z-index: 2;
-    border-left: 2px solid var(--primary);
     min-width: 80px;
 }
-[data-theme="dark"] .schedule-table tbody th { background: rgba(90, 161, 245, 0.20); color: #7EB3F7; }
 .schedule-table td {
-    background: var(--card-bg);
+    background: var(--md-surface-container-lowest);
     color: var(--text-main);
     cursor: default;
     min-width: 70px;
 }
 
 .schedule-edit-accordion {
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--md-surface-container-high);
     border-radius: var(--radius-sm);
-    background: var(--input-bg);
+    background: var(--md-surface-container-lowest);
     margin-bottom: 10px;
     overflow: hidden;
 }
 .schedule-edit-accordion summary {
-    padding: 12px 15px;
+    padding: 14px 16px;
     font-weight: 700;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
     list-style: none;
-    background: var(--card-bg);
+    background: var(--md-surface-container);
     color: var(--text-main);
 }
 .schedule-edit-accordion summary::-webkit-details-marker { display: none; }
@@ -1061,10 +978,10 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
     transition: transform 0.2s;
 }
 .schedule-edit-accordion[open] summary::after { transform: rotate(180deg); }
-.schedule-edit-accordion[open] summary { border-bottom: 1px dashed var(--border-color); }
+.schedule-edit-accordion[open] summary { border-bottom: 1px solid var(--md-surface-container-high); }
 
 .schedule-edit-content {
-    padding: 15px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -1078,148 +995,205 @@ details.group-accordion[open] summary::after { transform: rotate(180deg); }
 .schedule-period-row span {
     min-width: 60px;
     font-size: 0.9rem;
-    color: var(--primary);
+    color: var(--text-main);
     font-weight: 700;
 }
 .schedule-period-row select {
     flex: 1 1 150px;
     padding: 10px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-color);
-    background: var(--input-bg);
+    border-radius: 8px;
+    border: 1px solid var(--md-surface-container-high);
+    background: var(--md-surface-container);
     color: var(--text-main);
     font-size: 0.9rem;
     outline: none;
     min-width: 0;
 }
-
 /* =========================================
-   Special Cards (اصلاح #۱۹)
+   Special Cards (کارت‌های ویژه - فلت و مدرن)
    ========================================= */
 .card-warning {
-    background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
-    border: 1px solid #f59e0b;
+    background: rgba(253, 216, 53, 0.08); /* پس‌زمینه زرد بسیار ملایم از پالت */
+    border: 1px solid var(--color-yellow);
+    box-shadow: none;
 }
 .card-title-warning {
-    color: #b45309;
-    border-bottom-color: #fcd34d;
+    color: var(--md-on-surface);
+    border-bottom-color: rgba(253, 216, 53, 0.3);
 }
 [data-theme="dark"] .card-warning {
-    background: var(--card-bg);
-    border-color: var(--border-color);
+    background: var(--md-surface-container-low);
+    border-color: var(--color-yellow);
 }
 [data-theme="dark"] .card-title-warning {
-    color: #fbbf24;
-    border-bottom-color: #f59e0b;
+    color: var(--color-yellow);
+    border-bottom-color: rgba(253, 216, 53, 0.2);
 }
 
 .card-info {
-    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
-    border: 2px solid #a5b4fc;
+    background: var(--md-primary-container); /* پس‌زمینه آبی ملایم */
+    border: 1px solid var(--color-blue);
+    box-shadow: none;
 }
 .card-title-info {
-    color: #4f46e5;
-    border-bottom-color: #c7d2fe;
+    color: var(--md-on-primary-container);
+    border-bottom-color: rgba(3, 155, 229, 0.3);
 }
 [data-theme="dark"] .card-info {
-    background: var(--card-bg);
-    border-color: var(--border-color);
+    background: var(--md-surface-container-low);
+    border-color: var(--color-blue);
 }
 [data-theme="dark"] .card-title-info {
-    color: #818cf8;
-    border-bottom-color: #6366f1;
+    color: var(--md-on-primary-container);
+    border-bottom-color: rgba(41, 182, 246, 0.2);
 }
 
 .card-quran {
-    background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+    background: rgba(67, 160, 71, 0.08); /* پس‌زمینه سبز ملایم */
+    border: 1px solid var(--color-green);
+    box-shadow: none;
 }
 .card-title-quran {
-    color: #16a34a;
-    border-bottom-color: #86efac;
+    color: var(--color-green);
+    border-bottom-color: rgba(67, 160, 71, 0.3);
 }
 [data-theme="dark"] .card-quran {
-    background: var(--card-bg);
+    background: var(--md-surface-container-low);
+    border-color: var(--color-green);
 }
 [data-theme="dark"] .card-title-quran {
-    color: #4ade80;
-    border-bottom-color: #22c55e;
+    color: var(--color-green);
+    border-bottom-color: rgba(67, 160, 71, 0.2);
 }
 
 /* =========================================
-   ✅ اصلاحات ویژه مودال تنظیمات (رفع باگ بیرون‌زدگی)
+   ✅ مودال تنظیمات و به‌روزرسانی (سبک گوگل پلی)
    ========================================= */
 .update-mode-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 10px;
+    gap: 10px;
+    margin-top: 12px;
 }
 .update-mode-option {
     display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 10px 12px;
-    background: var(--input-bg);
-    border: 1px solid var(--border-color);
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--md-surface-container-lowest);
+    border: 1px solid var(--md-surface-container-high);
     border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     font-size: 0.9rem;
     flex-wrap: wrap;
     word-break: break-word;
 }
 .update-mode-option input[type="radio"] {
-    accent-color: var(--primary);
-    width: 18px;
-    height: 18px;
+    accent-color: var(--md-primary);
+    width: 20px;
+    height: 20px;
     flex-shrink: 0;
-    margin-top: 4px;
+    margin: 0;
+    cursor: pointer;
 }
 .update-mode-option span {
     flex: 1 1 150px;
+    line-height: 1.5;
 }
 .update-mode-option.selected {
-    border-color: var(--primary);
-    background: var(--primary-light);
+    border-color: var(--md-primary);
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
     font-weight: 700;
 }
 
 @media (hover: hover) and (pointer: fine) {
     .update-mode-option:hover {
-        border-color: var(--primary);
-        background: var(--primary-light);
+        background: var(--md-surface-container);
+        border-color: var(--md-primary);
+    }
+    .update-mode-option.selected:hover {
+        background: var(--md-primary-container);
     }
 }
 
+/* باکس نسخه */
+.version-info-box {
+    background: var(--md-surface-container-lowest);
+    border: 1px solid var(--md-surface-container-high);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+.version-info-box .version-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--md-primary);
+    font-family: 'IRNumber', monospace;
+    margin: 8px 0;
+}
+.version-info-box .version-date {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* باکس سال تحصیلی */
 .academic-year-badge {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
-    border: 2px solid #a5b4fc;
+    background: var(--md-surface-container);
+    border: 1px solid var(--md-surface-container-high);
     border-radius: var(--radius-md);
-    padding: 15px 20px;
+    padding: 16px 20px;
     margin-bottom: 20px;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
 }
 .academic-year-badge .ay-info {
     text-align: right;
     flex: 1 1 150px;
     word-break: break-word;
 }
+.academic-year-badge .ay-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+.academic-year-badge .ay-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text-main);
+    font-family: 'IRNumber', monospace;
+}
 .academic-year-badge .btn-change-year {
-    background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
-    color: white;
+    background: var(--md-primary);
+    color: var(--md-on-primary);
     border: none;
-    padding: 10px 18px;
-    border-radius: 10px;
-    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 999px; /* دکمه قرصی */
+    font-weight: 700;
     cursor: pointer;
     font-family: inherit;
     display: flex;
     align-items: center;
-    gap: 6px;
-    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+    gap: 8px;
+    box-shadow: none; /* حذف سایه */
     flex-shrink: 0;
+    transition: opacity 0.2s;
+}
+.academic-year-badge .btn-change-year:active {
+    opacity: 0.8;
+}
+
+.last-check-display {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 12px;
+    padding: 8px;
+    background: var(--md-surface-container);
+    border-radius: 8px;
 }
