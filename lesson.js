@@ -121,7 +121,7 @@ function renderLessonData() {
                 <svg><use href="#empty-lessons"/></svg>
                 <div class="empty-title">هنوز درسی اضافه نکردی!</div>
                 <div class="empty-desc">اولین درس رو اضافه کن تا ارزشیابی‌های مربوط به اون درس رو ثبت کنی.</div>
-                <button class="empty-action" onclick="document.getElementById('lessonName').focus()">➕ افزودن اولین درس</button>
+                <button class="empty-action" onclick="document.getElementById('lessonName').focus()"><svg><use href="#ico-plus"/></svg> افزودن اولین درس</button>
             </div>
         `;
         return;
@@ -131,7 +131,6 @@ function renderLessonData() {
 
     container.innerHTML = '';
     sortedSubjects.forEach((sub, index) => {
-        // ✅ اصلاح امنیتی: escape نماد درس
         container.innerHTML += `
             <div class="list-item">
                 <div style="display:flex; align-items:center; gap:8px;">
@@ -143,9 +142,9 @@ function renderLessonData() {
                     </div>
                 </div>
                 <div style="display:flex; gap:5px;">
-                    <button class="btn btn-secondary btn-sm" onclick="openLessonDetails(${sub.id})" title="مشاهده جزئیات">👁️</button>
-                    <button class="btn btn-secondary btn-sm" onclick="editLesson(${sub.id})" title="ویرایش">✏️</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteLesson(${sub.id})" title="حذف">🗑️</button>
+                    <button class="btn btn-secondary btn-sm" onclick="openLessonDetails(${sub.id})" title="مشاهده جزئیات"><svg><use href="#ico-eye"/></svg></button>
+                    <button class="btn btn-secondary btn-sm" onclick="editLesson(${sub.id})" title="ویرایش"><svg><use href="#ico-edit"/></svg></button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteLesson(${sub.id})" title="حذف"><svg><use href="#ico-trash"/></svg></button>
                 </div>
             </div>
         `;
@@ -156,15 +155,11 @@ async function deleteLesson(id) {
     if (!confirm('آیا از حذف این درس مطمئن هستید؟ تمام سوابق ارزشیابی و آزمون‌های مرتبط با این درس نیز حذف خواهند شد!')) return;
     
     try {
-        // ✅ بهینه‌سازی (اولویت ۲): استفاده از deleteBulkData
-        
-        // ۱. حذف سوابق ارزشیابی مرتبط با این درس
         const subjectRecords = window.allRecordsData.filter(r => r.subjectId === id);
         if (subjectRecords.length > 0) {
             await deleteBulkData('records', subjectRecords.map(r => r.id));
         }
 
-        // ✅ اصلاح باگ: حذف آزمون‌های مرتبط با این درس و نتایج آن‌ها
         const allExams = await getAllData('exams');
         const relatedExams = allExams.filter(e => e.subjectId === id);
         const relatedExamIds = relatedExams.map(e => e.id);
@@ -178,7 +173,6 @@ async function deleteLesson(id) {
             await deleteBulkData('exams', relatedExamIds);
         }
 
-        // ۲. حذف خود درس
         await deleteData('subjects', id);
         showToast('درس و سوابق و آزمون‌های مرتبط حذف شد.', 'success');
         loadAllData();
@@ -203,15 +197,11 @@ async function resetAllLessons() {
     try {
         const subjectIds = window.allSubjectsData.map(s => s.id);
         
-        // ✅ بهینه‌سازی (اولویت ۲): استفاده از deleteBulkData
-        
-        // ۱. حذف سوابق ارزشیابی مرتبط با دروس
         const recordsToDelete = window.allRecordsData.filter(r => subjectIds.includes(r.subjectId));
         if (recordsToDelete.length > 0) {
             await deleteBulkData('records', recordsToDelete.map(r => r.id));
         }
 
-        // ✅ اصلاح باگ: حذف آزمون‌های مرتبط با دروس و نتایج آن‌ها
         const allExams = await getAllData('exams');
         const relatedExams = allExams.filter(e => subjectIds.includes(e.subjectId));
         const relatedExamIds = relatedExams.map(e => e.id);
@@ -225,7 +215,6 @@ async function resetAllLessons() {
             await deleteBulkData('exams', relatedExamIds);
         }
 
-        // ۲. حذف خود دروس
         if (subjectIds.length > 0) {
             await deleteBulkData('subjects', subjectIds);
         }
@@ -237,6 +226,7 @@ async function resetAllLessons() {
         showToast('خطا در حذف دروس!', 'error');
     }
 }
+
 function openLessonDetails(id) {
     currentLessonDetailsId = id;
     currentLessonDetailView = 'class'; 
@@ -247,7 +237,7 @@ function openLessonDetails(id) {
         return;
     }
 
-    document.getElementById('lesson-details-title').textContent = `📊 جزئیات درس: ${sub.symbol || ''} ${sub.name}`;
+    document.getElementById('lesson-details-title').innerHTML = `<svg style="vertical-align: middle; margin-left: 5px;"><use href="#ico-bar-chart"/></svg> جزئیات درس: ${sub.symbol || ''} ${sub.name}`;
     
     document.getElementById('btnLessonClassView').classList.add('active');
     document.getElementById('btnLessonGroupView').classList.remove('active');
@@ -274,7 +264,6 @@ function renderLessonDetails() {
 
     const subjectRecords = window.allRecordsData.filter(r => r.subjectId === currentLessonDetailsId);
 
-    // ✅ محاسبه یک‌باره امتیاز هر دانش‌آموز در این درس
     const studentSubjectScores = {};
     for (const rec of subjectRecords) {
         if (!rec.students || !Array.isArray(rec.students)) continue;
@@ -290,7 +279,6 @@ function renderLessonDetails() {
             return a.name.localeCompare(b.name, 'fa');
         });
 
-        // ✅ بهینه‌سازی (اولویت ۳): استفاده از تابع مشترک در app.js
         const medals = window.calculateMedals(items, 'totalScore');
 
         let html = '';
@@ -298,7 +286,6 @@ function renderLessonDetails() {
             const item = items[i];
             const medal = window.getMedalEmoji(item.totalScore, medals);
 
-            // ✅ اصلاح امنیتی و UI: escape نام و استفاده از flex-wrap برای جلوگیری از سرریز
             html += `
                 <div class="list-item" style="padding: 10px 15px; flex-wrap: wrap; gap: 5px;">
                     <div style="display:flex; align-items:center; gap:8px; word-break: break-word;">
@@ -353,7 +340,6 @@ function renderLessonDetails() {
             return { id: g.id, name: `${g.symbol || ''} ${g.name}`, totalScore: groupTotal, studentsHtml: studentsHtml };
         });
 
-        // ✅ بهینه‌سازی (اولویت ۳): استفاده از تابع مشترک برای مدال گروه‌ها
         const groupMedals = window.calculateMedals(groupData, 'totalScore');
 
         groupData.sort((a, b) => {
@@ -366,7 +352,6 @@ function renderLessonDetails() {
             const g = groupData[i];
             const medal = window.getMedalEmoji(g.totalScore, groupMedals);
 
-            // ✅ اصلاح امنیتی و UI: escape نام گروه و استفاده از flex-wrap
             finalHtml += `
                 <div class="card" style="margin-bottom: 15px; padding: 15px; background: var(--input-bg); border: 1px solid var(--border-color);">
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; margin-bottom:10px; border-bottom:1px dashed var(--border-color); padding-bottom:10px; gap: 5px;">
