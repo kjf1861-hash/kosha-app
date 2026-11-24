@@ -75,7 +75,7 @@ function renderGroupsList() {
                 <svg><use href="#empty-groups"/></svg>
                 <div class="empty-title">هنوز گروهی ایجاد نکردی!</div>
                 <div class="empty-desc">گروه‌ها بهت کمک می‌کنن تا رقابت سالم بین دانش‌آموزها ایجاد کنی.</div>
-                <button class="empty-action" onclick="document.getElementById('groupName').focus()">➕ ایجاد اولین گروه</button>
+                <button class="empty-action" onclick="document.getElementById('groupName').focus()"><svg><use href="#ico-plus"/></svg> ایجاد اولین گروه</button>
             </div>
         `;
         return;
@@ -104,7 +104,6 @@ function renderGroupsList() {
         return a.name.localeCompare(b.name, 'fa');
     });
 
-    // ✅ بهینه‌سازی (اولویت ۳): استفاده از تابع مشترک در app.js
     const medals = window.calculateMedals(groupScores, 'totalScore');
 
     let html = '';
@@ -128,9 +127,9 @@ function renderGroupsList() {
                     <span class="rank-badge" style="flex-shrink: 0;">${toPersianNumber(g.totalScore)} امتیاز</span>
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:5px; margin-top:5px; border-top:1px dashed var(--border-color); padding-top:10px;">
-                    <button class="btn btn-secondary btn-sm" onclick="openGroupDetails(${g.id})" title="مشاهده جزئیات و مدیریت اعضا">👁️</button>
-                    <button class="btn btn-secondary btn-sm" onclick="editGroup(${g.id})" title="ویرایش">✏️</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteGroup(${g.id})" title="حذف">🗑️</button>
+                    <button class="btn btn-secondary btn-sm" onclick="openGroupDetails(${g.id})" title="مشاهده جزئیات و مدیریت اعضا"><svg><use href="#ico-eye"/></svg></button>
+                    <button class="btn btn-secondary btn-sm" onclick="editGroup(${g.id})" title="ویرایش"><svg><use href="#ico-edit"/></svg></button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteGroup(${g.id})" title="حذف"><svg><use href="#ico-trash"/></svg></button>
                 </div>
             </div>
         `;
@@ -206,7 +205,6 @@ async function deleteGroup(id) {
     try {
         const groupStudents = window.allStudentsData.filter(st => st.groupId === id);
         
-        // ✅ بهینه‌سازی (اولویت ۲): استفاده از saveBulkData برای به‌روزرسانی یک‌جای دانش‌آموزان
         if (groupStudents.length > 0) {
             const updatedStudents = groupStudents.map(st => ({ ...st, groupId: null }));
             await saveBulkData('students', updatedStudents);
@@ -220,6 +218,7 @@ async function deleteGroup(id) {
         showToast('خطا در حذف گروه!', 'error');
     }
 }
+
 function openGroupDetails(id) {
     const group = window.allGroupsData.find(g => g.id === id);
     if (!group) {
@@ -230,7 +229,7 @@ function openGroupDetails(id) {
     currentGroupDetailsId = id;
 
     const titleEl = document.getElementById('group-details-title');
-    if (titleEl) titleEl.textContent = `📊 جزئیات گروه: ${group.symbol} ${group.name}`;
+    if (titleEl) titleEl.innerHTML = `<svg style="vertical-align: middle; margin-left: 5px;"><use href="#ico-bar-chart"/></svg> جزئیات گروه: ${group.symbol} ${group.name}`;
     
     populateModalStudentSelect(); 
 
@@ -249,13 +248,11 @@ function populateModalStudentSelect() {
     const select = document.getElementById('assignStudentSelectModal');
     if (!select) return;
     
-    // همه دانش‌آموزان به جز کسانی که در همین گروه هستند
     const availableStudents = window.allStudentsData.filter(st => st.groupId !== currentGroupDetailsId);
     
     if (availableStudents.length === 0) {
         select.innerHTML = '<option value="" disabled selected>همه دانش‌آموزان در این گروه هستند.</option>';
     } else {
-        // ✅ اصلاح: نمایش وضعیت گروه فعلی برای دانش‌آموزانی که در گروه دیگری هستند
         select.innerHTML = '<option value="" disabled selected>انتخاب دانش‌آموز...</option>' + 
             availableStudents.map(st => {
                 let groupInfo = '';
@@ -279,17 +276,11 @@ async function assignStudentFromModal() {
         return;
     }
 
-    // ۱. محاسبه ظرفیت مجاز برای هر گروه
     const totalStudents = window.allStudentsData.length;
     const totalGroups = window.allGroupsData.length;
-    
-    // فرمول: سقف(تعداد کل / تعداد گروه‌ها) + ۲ (انعطاف برای اعداد فرد و جلوگیری از عدم تعادل شدید)
     const maxCapacity = totalGroups > 0 ? Math.ceil(totalStudents / totalGroups) + 2 : totalStudents;
-    
-    // محاسبه تعداد فعلی اعضای این گروه
     const currentGroupMembersCount = window.allStudentsData.filter(st => st.groupId === currentGroupDetailsId).length;
 
-    // ۲. بررسی محدودیت ظرفیت
     if (currentGroupMembersCount >= maxCapacity) {
         showToast(`ظرفیت این گروه تکمیل شده است. (حداکثر مجاز برای این گروه: ${toPersianNumber(maxCapacity)} نفر)`, 'error');
         return;
@@ -298,7 +289,6 @@ async function assignStudentFromModal() {
     try {
         const student = await getDataById('students', parseInt(studentId));
         if (student) {
-            // ۳. بررسی اینکه آیا دانش‌آموز در گروه دیگری است؟
             if (student.groupId && student.groupId !== currentGroupDetailsId) {
                 const oldGroup = window.allGroupsData.find(g => g.id === student.groupId);
                 const oldGroupName = oldGroup ? oldGroup.name : 'دیگر';
@@ -307,7 +297,6 @@ async function assignStudentFromModal() {
                 }
             }
 
-            // ۴. ذخیره تغییرات
             student.groupId = currentGroupDetailsId;
             await saveData('students', student);
             showToast('دانش‌آموز با موفقیت به گروه اضافه/منتقل شد.', 'success');
@@ -348,7 +337,6 @@ function renderGroupDetails() {
         return a.lastName.localeCompare(b.lastName, 'fa');
     });
 
-    // ✅ بهینه‌سازی (اولویت ۳): استفاده از تابع مشترک در app.js
     const medals = window.calculateMedals(studentScores, 'totalScore');
 
     let html = '';
@@ -357,7 +345,7 @@ function renderGroupDetails() {
         const medal = window.getMedalEmoji(st.totalScore, medals);
 
         html += `
-            <div class="details-list-item" style="background: var(--card-bg); margin-bottom: 5px; border-radius: 8px; border: 1px solid var(--border-color); padding: 10px; flex-wrap: wrap; gap: 5px;">
+            <div class="details-list-item" style="background: var(--md-surface-container-lowest); margin-bottom: 8px; border-radius: 8px; border: 1px solid var(--md-surface-container-high); padding: 12px; flex-wrap: wrap; gap: 5px;">
                 <div style="display:flex; align-items:center; gap:8px; flex: 1 1 auto; min-width: 0;">
                     <span style="font-weight:bold; color:var(--text-muted); min-width:25px;">${toPersianNumber(i + 1)}.</span>
                     <span class="medal-badge" style="font-size:1.2rem;">${medal}</span>
@@ -365,7 +353,7 @@ function renderGroupDetails() {
                 </div>
                 <div style="display:flex; align-items:center; gap:5px; flex-shrink: 0; margin-right: auto;">
                     <span class="rank-badge" style="font-size:0.9rem; white-space: nowrap;">${toPersianNumber(st.totalScore)} امتیاز</span>
-                    <button class="btn btn-danger btn-sm" onclick="removeStudentFromGroup(${st.id})" title="حذف از گروه">🗑️</button>
+                    <button class="btn btn-danger btn-sm" onclick="removeStudentFromGroup(${st.id})" title="حذف از گروه"><svg><use href="#ico-trash"/></svg></button>
                 </div>
             </div>
         `;
