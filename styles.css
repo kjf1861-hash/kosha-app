@@ -1366,3 +1366,72 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
     fill: var(--md-primary);
     vertical-align: middle;
 }
+/* =========================================
+   ✅ رفع مشکل اسکرول افقی (داشبورد)
+   ========================================= */
+.horizontal-scroll-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 12px;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+.horizontal-scroll-container::-webkit-scrollbar { 
+    display: none; 
+}
+
+/* =========================================
+   ✅ زیباسازی تب‌های دانش‌آموزان، دروس و گروه‌ها
+   ========================================= */
+
+/* نوار رنگی کناری برای لیست‌ها (مشابه گوگل پلی) */
+#students-list .list-item {
+    border-right: 4px solid var(--color-blue);
+    background: linear-gradient(90deg, var(--md-surface-container-lowest) 90%, rgba(3, 155, 229, 0.05) 100%);
+}
+#lessons-list .list-item {
+    border-right: 4px solid var(--color-orange);
+    background: linear-gradient(90deg, var(--md-surface-container-lowest) 90%, rgba(245, 124, 0, 0.05) 100%);
+}
+#groups-list .list-item {
+    border-right: 4px solid var(--color-indigo);
+    background: linear-gradient(90deg, var(--md-surface-container-lowest) 90%, rgba(57, 73, 171, 0.05) 100%);
+}
+
+/* زیباسازی دکمه‌های عملیات (چشم، مداد، سطل زباله) */
+#students-list .btn-secondary, #lessons-list .btn-secondary, #groups-list .btn-secondary {
+    background: var(--md-primary-container);
+    color: var(--md-primary);
+    border: none;
+}
+#students-list .btn-secondary:hover { background: rgba(3, 155, 229, 0.25); }
+#lessons-list .btn-secondary:hover { background: rgba(245, 124, 0, 0.25); }
+#groups-list .btn-secondary:hover { background: rgba(57, 73, 171, 0.25); }
+
+#students-list .btn-danger, #lessons-list .btn-danger, #groups-list .btn-danger {
+    background: rgba(229, 57, 53, 0.1);
+    color: var(--color-red);
+    border: none;
+}
+#students-list .btn-danger:hover { background: rgba(229, 57, 53, 0.2); }
+
+/* رنگ‌بندی دکمه‌های اصلی ثبت در هر تب */
+#student-form .btn-primary {
+    background: var(--color-blue);
+    box-shadow: 0 4px 12px rgba(3, 155, 229, 0.3);
+}
+#lesson-form .btn-primary {
+    background: var(--color-orange);
+    box-shadow: 0 4px 12px rgba(245, 124, 0, 0.3);
+}
+#group-form .btn-primary {
+    background: var(--color-indigo);
+    box-shadow: 0 4px 12px rgba(57, 73, 171, 0.3);
+}
+
+/* رنگ‌بندی آیکون‌های بالای هر صفحه */
+#page-students .page-header-title svg { fill: var(--color-blue); }
+#page-lesson .page-header-title svg { fill: var(--color-orange); }
+#page-group .page-header-title svg { fill: var(--color-indigo); }
