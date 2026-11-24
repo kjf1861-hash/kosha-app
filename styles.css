@@ -1319,3 +1319,50 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 .activity-card.qa-orange .ac-value { color: var(--color-orange); }
 .activity-card.qa-violet .ac-icon { color: var(--color-violet); }
 .activity-card.qa-violet .ac-value { color: var(--color-violet); }
+/* =========================================
+   Global SVG Icon Styling
+   ========================================= */
+.page-header-title svg {
+    width: 28px;
+    height: 28px;
+    fill: var(--md-primary);
+    vertical-align: middle;
+}
+
+.card-title svg {
+    width: 22px;
+    height: 22px;
+    fill: var(--md-primary);
+    vertical-align: middle;
+    margin-left: 6px;
+}
+
+.btn svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+    vertical-align: middle;
+    margin-left: 4px; /* فاصله مناسب در حالت راست‌چین */
+}
+
+/* برای دکمه‌هایی که فقط آیکون دارند (مثل دکمه‌های عملیات لیست) */
+.btn-sm svg {
+    width: 16px;
+    height: 16px;
+    margin-left: 0; 
+}
+
+.empty-state .empty-action svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+    vertical-align: middle;
+}
+
+/* استایل مودال‌ها */
+.modal-header svg {
+    width: 24px;
+    height: 24px;
+    fill: var(--md-primary);
+    vertical-align: middle;
+}
