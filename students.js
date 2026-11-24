@@ -26,26 +26,26 @@ async function saveStudent(e) {
     }
 
     let sanitizedFirstName, sanitizedLastName;
-try {
-    sanitizedFirstName = sanitizeInput(document.getElementById('studentFirstName').value, 50);
-    sanitizedLastName = sanitizeInput(document.getElementById('studentLastName').value, 50);
-    if (!sanitizedFirstName || !sanitizedLastName) {
-        showToast('نام و نام خانوادگی نمی‌تواند خالی باشد.', 'error');
+    try {
+        sanitizedFirstName = sanitizeInput(document.getElementById('studentFirstName').value, 50);
+        sanitizedLastName = sanitizeInput(document.getElementById('studentLastName').value, 50);
+        if (!sanitizedFirstName || !sanitizedLastName) {
+            showToast('نام و نام خانوادگی نمی‌تواند خالی باشد.', 'error');
+            return;
+        }
+    } catch (err) {
+        showToast(err.message, 'error');
         return;
     }
-} catch (err) {
-    showToast(err.message, 'error');
-    return;
-}
 
-const data = {
-    firstName: sanitizedFirstName,
-    lastName: sanitizedLastName,
-    nationalId: nationalId,
-    groupId: null,
-    academicYear: window.activeAcademicYear
-};
-    
+    const data = {
+        firstName: sanitizedFirstName,
+        lastName: sanitizedLastName,
+        nationalId: nationalId,
+        groupId: null,
+        academicYear: window.activeAcademicYear
+    };
+        
     try {
         await saveData('students', data);
         document.getElementById('student-form').reset();
@@ -59,8 +59,8 @@ const data = {
         if (studentForm) studentForm.scrollIntoView({ behavior: 'smooth' });
         
     } catch (err) {
-    window.handleError(err, 'خطا در ثبت دانش‌آموز. لطفاً دوباره تلاش کنید.');
-}
+        window.handleError(err, 'خطا در ثبت دانش‌آموز. لطفاً دوباره تلاش کنید.');
+    }
 }
 
 function renderStudentsList() {
@@ -73,7 +73,7 @@ function renderStudentsList() {
                 <svg><use href="#empty-students"/></svg>
                 <div class="empty-title">هنوز دانش‌آموزی اضافه نکردی!</div>
                 <div class="empty-desc">اولین دانش‌آموز کلاس رو اضافه کن تا بتونی ارزشیابی رو شروع کنی.</div>
-                <button class="empty-action" onclick="document.getElementById('studentFirstName').focus()">➕ افزودن اولین دانش‌آموز</button>
+                <button class="empty-action" onclick="document.getElementById('studentFirstName').focus()"><svg><use href="#ico-plus"/></svg> افزودن اولین دانش‌آموز</button>
             </div>
         `;
         const pagination = document.getElementById('students-pagination');
@@ -96,7 +96,6 @@ function renderStudentsList() {
         return a.lastName.localeCompare(b.lastName, 'fa');
     });
 
-    // ✅ بهینه‌سازی (اولویت ۳): استفاده از تابع مشترک در app.js برای محاسبه مدال‌ها
     const medals = window.calculateMedals(studentScores, 'totalScore');
 
     const groupMap = {};
@@ -114,17 +113,14 @@ function renderStudentsList() {
         const st = paginated[i];
         const globalRank = startIndex + i + 1;
         
-        // ✅ بهینه‌سازی (اولویت ۳): استفاده از تابع مشترک
         const medal = window.getMedalEmoji(st.totalScore, medals);
         const medalHtml = medal ? `<span class="medal-badge">${medal}</span>` : '';
 
         const g = groupMap[st.groupId];
-        // ✅ اصلاح امنیتی: escape نام و نماد گروه
         const groupBadge = g ? `<span class="group-label">${escapeHtml(g.symbol)} ${escapeHtml(g.name)}</span>` : '';
         
         const studentPass = st.nationalId ? generateStudentPassword(st.nationalId) : '---';
 
-        // ✅ اصلاح UI: استفاده از flex-wrap برای جلوگیری از بیرون‌زدگی دکمه‌ها
         html += `
             <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px; padding: 12px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap: wrap; gap: 10px;">
@@ -137,9 +133,9 @@ function renderStudentsList() {
                     <div style="display:flex; align-items:center; gap:5px; flex-shrink: 0; margin-right: auto;">
                         <span class="rank-badge">${toPersianNumber(st.totalScore)} امتیاز</span>
                         <div style="display:flex; gap:5px;">
-                            <button class="btn btn-secondary btn-sm" onclick="openStudentDetails(${st.id})" title="مشاهده جزئیات">👁️</button>
-                            <button class="btn btn-secondary btn-sm" onclick="editStudent(${st.id})" title="ویرایش">✏️</button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteStudent(${st.id})" title="حذف">🗑️</button>
+                            <button class="btn btn-secondary btn-sm" onclick="openStudentDetails(${st.id})" title="مشاهده جزئیات"><svg><use href="#ico-eye"/></svg></button>
+                            <button class="btn btn-secondary btn-sm" onclick="editStudent(${st.id})" title="ویرایش"><svg><use href="#ico-edit"/></svg></button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteStudent(${st.id})" title="حذف"><svg><use href="#ico-trash"/></svg></button>
                         </div>
                     </div>
                 </div>
@@ -165,6 +161,7 @@ function renderStudentsList() {
         }
     }
 }
+
 async function editStudent(id) {
     const student = await getDataById('students', id);
     if (student) {
@@ -255,8 +252,8 @@ async function saveEditedStudent(e) {
         closeEditStudentModal();
         loadAllData();
     } catch (err) {
-    window.handleError(err, 'خطا در ذخیره تغییرات. لطفاً دوباره تلاش کنید.');
-}
+        window.handleError(err, 'خطا در ذخیره تغییرات. لطفاً دوباره تلاش کنید.');
+    }
 }
 
 async function deleteStudent(id) {
@@ -265,9 +262,6 @@ async function deleteStudent(id) {
     const currentYear = window.activeAcademicYear;
     
     try {
-        // ✅ بهینه‌سازی (اولویت ۲): استفاده از deleteBulkData و saveBulkData
-        
-        // ۱. حذف/به‌روزرسانی رکوردهای ارزشیابی — فقط سال جاری
         const allRecords = await getAllData('records');
         const studentRecords = allRecords.filter(r => 
             r.students && 
@@ -290,7 +284,6 @@ async function deleteStudent(id) {
         if (recordsToUpdate.length > 0) await saveBulkData('records', recordsToUpdate);
         if (recordsToDeleteIds.length > 0) await deleteBulkData('records', recordsToDeleteIds);
 
-        // ۲. حذف نتایج آزمون دانش‌آموز — فقط سال جاری
         const allResults = await getAllData('examResults');
         const studentResults = allResults.filter(r => 
             r.studentId === id && 
@@ -300,7 +293,6 @@ async function deleteStudent(id) {
             await deleteBulkData('examResults', studentResults.map(r => r.id));
         }
 
-        // ۳. حذف تشویق‌های قرآن دانش‌آموز — فقط سال جاری
         const allBadges = await getAllData('badgesSettings');
         const studentBadges = allBadges.filter(b => 
             b.studentId === id && 
@@ -310,7 +302,6 @@ async function deleteStudent(id) {
             await deleteBulkData('badgesSettings', studentBadges.map(b => b.id));
         }
 
-        // ۴. ✅ جدید: حذف حضور و غیاب‌های دانش‌آموز — فقط سال جاری
         const allAttendance = await getAllData('attendance');
         const studentAttendance = allAttendance.filter(a => 
             a.studentId === id && 
@@ -320,14 +311,13 @@ async function deleteStudent(id) {
             await deleteBulkData('attendance', studentAttendance.map(a => a.id));
         }
 
-        // ۵. حذف خود دانش‌آموز (id آن در کل دیتابیس یکتاست — نیازی به فیلتر ندارد)
         await deleteData('students', id);
         
         showToast('دانش‌آموز و تمام سوابق مرتبط (در سال تحصیلی جاری) حذف شد.', 'success');
         loadAllData();
     } catch (e) {
-    window.handleError(e, 'خطا در حذف دانش‌آموز! لطفاً دوباره تلاش کنید.');
-}
+        window.handleError(e, 'خطا در حذف دانش‌آموز! لطفاً دوباره تلاش کنید.');
+    }
 }
 
 async function resetAllStudents() {
@@ -345,34 +335,27 @@ async function resetAllStudents() {
     try {
         const currentYear = window.activeAcademicYear;
         
-        // ✅ بهینه‌سازی (اولویت ۲): حذف دسته‌ای همه داده‌ها با deleteBulkData
-        
-        // ۱. حذف دانش‌آموزان
         const studentIds = window.allStudentsData.map(st => st.id);
         if (studentIds.length > 0) {
             await deleteBulkData('students', studentIds);
         }
         
-        // ۲. حذف رکوردهای ارزشیابی
         const recordIds = window.allRecordsData.map(rec => rec.id);
         if (recordIds.length > 0) {
             await deleteBulkData('records', recordIds);
         }
         
-        // ۳. حذف حضور و غیاب
         const attendanceIds = window.allAttendanceData.map(att => att.id);
         if (attendanceIds.length > 0) {
             await deleteBulkData('attendance', attendanceIds);
         }
         
-        // ۴. حذف تمام نتایج آزمون سال جاری
         const allResults = await getAllData('examResults');
         const yearResults = allResults.filter(r => r.academicYear === currentYear);
         if (yearResults.length > 0) {
             await deleteBulkData('examResults', yearResults.map(r => r.id));
         }
         
-        // ۵. حذف تمام تشویق‌های قرآن سال جاری
         const allBadges = await getAllData('badgesSettings');
         const yearBadges = allBadges.filter(b => b.academicYear === currentYear);
         if (yearBadges.length > 0) {
@@ -386,13 +369,13 @@ async function resetAllStudents() {
         showToast('خطا در حذف دانش‌آموزان!', 'error');
     }
 }
+
 async function openStudentDetails(id) {
     const student = window.allStudentsData.find(s => s.id === id);
     if (!student) return;
 
     currentStudentDetailsId = id;
 
-    // ✅ اصلاح امنیتی: escape نام دانش‌آموز
     document.getElementById('student-details-title').textContent = `👤 جزئیات ${student.firstName} ${student.lastName}`;
     
     switchStudentDetailsTab('summary');
@@ -418,7 +401,6 @@ async function openStudentDetails(id) {
         subRecords.forEach(r => total += r.finalScore);
         
         if (subRecords.length > 0) {
-            // ✅ اصلاح UI: استفاده از flex-wrap برای جلوگیری از سرریز نام درس طولانی
             subjectHtml += `<div class="details-list-item" style="flex-wrap: wrap; gap: 5px;"><span style="word-break: break-word;">${escapeHtml(sub.symbol || '')} ${escapeHtml(sub.name)}</span><strong>${escapeHtml(toPersianNumber(total))} امتیاز</strong></div>`;
             hasSubjects = true;
         }
@@ -436,7 +418,6 @@ async function openStudentDetails(id) {
     });
 
     for (const [itemName, stats] of Object.entries(itemCounts)) {
-        // ✅ اصلاح UI: word-break و flex-wrap برای نام آیتم
         itemHtml += `<div class="details-list-item" style="flex-wrap: wrap; gap: 5px;"><span style="word-break: break-word;">${escapeHtml(itemName)}</span><span style="color:var(--text-muted); font-size:0.85rem;">${escapeHtml(toPersianNumber(stats.count))} بار (${escapeHtml(toPersianNumber(stats.totalScore))} امتیاز)</span></div>`;
         hasItems = true;
     }
@@ -507,7 +488,6 @@ async function loadStudentExamsForDetails(studentId) {
     const totalScores = studentResults.reduce((sum, r) => sum + r.score, 0);
     const avgScore = totalExamsWithScore > 0 ? (totalScores / totalExamsWithScore).toFixed(1) : 0;
     
-    // ✅ اصلاح UI: flex-wrap برای آمار بالای آزمون‌ها
     html += `
         <div style="background: var(--primary-light); padding: 12px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; font-size: 0.85rem;">
             <span>📊 تعداد آزمون: <strong style="color:var(--primary);">${toPersianNumber(totalExamsWithScore)}</strong></span>
@@ -521,7 +501,6 @@ async function loadStudentExamsForDetails(studentId) {
     
     sortedExams.forEach(exam => {
         const sub = window.allSubjectsData.find(s => s.id === exam.subjectId);
-        // ✅ اصلاح امنیتی: escape نام و نماد درس
         const subName = sub ? `${escapeHtml(sub.symbol || '')} ${escapeHtml(sub.name)}` : 'بدون درس';
         
         const result = studentResults.find(r => r.examId === exam.id);
@@ -531,19 +510,18 @@ async function loadStudentExamsForDetails(studentId) {
         
         if (result) {
             const percent = (result.score / exam.maxScore) * 100;
-            if (percent >= 85) badgeColor = '#22c55e';
-            else if (percent >= 60) badgeColor = '#3b82f6';
-            else if (percent >= 40) badgeColor = '#f59e0b';
-            else badgeColor = '#ef4444';
+            if (percent >= 85) badgeColor = 'var(--color-green)';
+            else if (percent >= 60) badgeColor = 'var(--color-blue)';
+            else if (percent >= 40) badgeColor = 'var(--color-orange)';
+            else badgeColor = 'var(--color-red)';
             
             scoreHtml = `<span class="rank-badge" style="background: ${badgeColor}20; color: ${badgeColor}; font-weight: bold; white-space: nowrap;">${toPersianNumber(result.score)} از ${toPersianNumber(exam.maxScore)} (${toPersianNumber(Math.round(percent))}٪)</span>`;
         } else {
-            scoreHtml = `<span class="rank-badge" style="background:#f1f5f9; color:#94a3b8; white-space: nowrap;">ثبت نشده</span>`;
+            scoreHtml = `<span class="rank-badge" style="background:var(--md-surface-container-high); color:var(--text-muted); white-space: nowrap;">ثبت نشده</span>`;
         }
         
-        // ✅ اصلاح UI: استفاده از flex-wrap برای جلوگیری از به‌هم‌ریختگی در موبایل
         html += `
-            <div class="details-list-item" style="flex-direction: column; align-items: stretch; gap: 8px; padding: 10px; background: var(--input-bg); border-radius: 8px; margin-bottom: 8px; border-bottom: none;">
+            <div class="details-list-item" style="flex-direction: column; align-items: stretch; gap: 8px; padding: 10px; background: var(--md-surface-container); border-radius: 8px; margin-bottom: 8px; border-bottom: none;">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap: wrap; gap: 8px;">
                     <strong style="color:var(--text-main); font-size: 0.95rem; flex: 1 1 auto; word-break: break-word;">${escapeHtml(exam.title)}</strong>
                     ${scoreHtml}
