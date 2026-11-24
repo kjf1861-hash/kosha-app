@@ -156,16 +156,16 @@ function renderActivityCards() {
     const progressPercent = Math.round((usedItems.size / totalItems) * 100);
 
     const cards = [
-        { icon: '🌟', value: toPersianNumber(totalAyats), label: 'آیه حفظ شده' },
-        { icon: '✍️', value: toPersianNumber(handwritingCount), label: 'خوش‌خط‌نویسی' },
-        { icon: '🎁', value: toPersianNumber(specialRewardsCount), label: 'تشویق ویژه' },
-        { icon: '🧪', value: toPersianNumber(examCount), label: 'آزمون برگزار شده' },
-        { icon: '📈', value: toPersianNumber(progressPercent) + '٪', label: 'پیشرفت ارزشیابی' }
+        { iconSvg: '#ico-quran', value: toPersianNumber(totalAyats), label: 'آیه حفظ شده', colorClass: 'qa-green' },
+        { iconSvg: '#ico-handwriting', value: toPersianNumber(handwritingCount), label: 'خوش‌خط‌نویسی', colorClass: 'qa-blue' },
+        { iconSvg: '#ico-quick-reward', value: toPersianNumber(specialRewardsCount), label: 'تشویق ویژه', colorClass: 'qa-yellow' },
+        { iconSvg: '#ico-exam', value: toPersianNumber(examCount), label: 'آزمون برگزار شده', colorClass: 'qa-orange' },
+        { iconSvg: '#ico-progress', value: toPersianNumber(progressPercent) + '٪', label: 'پیشرفت ارزشیابی', colorClass: 'qa-violet' }
     ];
 
     container.innerHTML = cards.map(c => `
-        <div class="activity-card">
-            <div class="ac-icon">${c.icon}</div>
+        <div class="activity-card ${c.colorClass}">
+            <div class="ac-icon"><svg><use href="${c.iconSvg}"/></svg></div>
             <div class="ac-value">${c.value}</div>
             <div class="ac-label">${c.label}</div>
         </div>
