@@ -1320,49 +1320,61 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 .activity-card.qa-violet .ac-icon { color: var(--color-violet); }
 .activity-card.qa-violet .ac-value { color: var(--color-violet); }
 /* =========================================
-   Global SVG Icon Styling
+   Global SVG Icon Styling (اصلاح و یکدست‌سازی نهایی)
    ========================================= */
-/* اصلاح استایل آیکون‌های بالای صفحه برای هماهنگی با منوی پایین */
+
+/* آیکون‌های عنوان صفحات (بالای هر تب) */
 .page-header-title svg {
-    width: 28px;
-    height: 28px;
-    fill: none; /* خطی به جای توپر */
-    stroke: var(--md-primary); /* رنگ آبی اصلی */
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: var(--md-primary);
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
     vertical-align: middle;
-    margin-left: 8px;
+    margin-left: 6px;
 }
 
+/* آیکون‌های داخل دکمه‌های معمولی (با متن) */
 .btn svg {
     width: 18px;
     height: 18px;
     fill: currentColor;
+    stroke: none; /* برای اطمینان از نمایش توپر در دکمه‌ها */
     vertical-align: middle;
-    margin-left: 4px; /* فاصله مناسب در حالت راست‌چین */
+    margin-left: 4px;
 }
 
-/* برای دکمه‌هایی که فقط آیکون دارند (مثل دکمه‌های عملیات لیست) */
+/* آیکون‌های داخل دکمه‌های کوچک (مثل عملیات لیست‌ها) */
 .btn-sm svg {
     width: 16px;
     height: 16px;
-    margin-left: 0; 
+    margin-left: 0;
 }
 
+/* آیکون داخل دکمه‌های حالت خالی (Empty State) */
 .empty-state .empty-action svg {
     width: 18px;
     height: 18px;
     fill: currentColor;
+    stroke: none;
     vertical-align: middle;
 }
 
-/* استایل مودال‌ها */
+/* استایل آیکون‌های داخل هدر مودال‌ها */
 .modal-header svg {
     width: 24px;
     height: 24px;
-    fill: var(--md-primary);
+    fill: currentColor;
+    stroke: none;
     vertical-align: middle;
+}
+
+/* ✅ اصلاح خاص برای آیکون‌های منو در عنوان صفحات (اگر با استایل بالا هم‌خوانی نداشت) */
+.page-header-title svg use {
+    fill: none;
+    stroke: var(--md-primary);
 }
 /* =========================================
    ✅ رفع مشکل اسکرول افقی (داشبورد)
