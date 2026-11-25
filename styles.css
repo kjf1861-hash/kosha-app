@@ -141,6 +141,105 @@ h1, h2, h3, h4, p { margin-top: 0; }
 ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 4px; opacity: 0.5; }
 
 /* =========================================
+   ✅ بخش جدید: پایه دکمه‌ها (Buttons)
+   ========================================= */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn:active {
+    transform: scale(0.97);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-primary {
+    background: var(--md-primary);
+    color: var(--md-on-primary);
+    box-shadow: 0 4px 12px var(--md-primary-container);
+}
+
+.btn-secondary {
+    background: var(--md-surface-container);
+    color: var(--text-main);
+    border: 1px solid var(--md-surface-container-high);
+}
+
+.btn-danger {
+    background: rgba(229, 57, 53, 0.1);
+    color: var(--color-red);
+    border: 1px solid rgba(229, 57, 53, 0.2);
+}
+
+.btn-block {
+    width: 100%;
+}
+
+.btn-sm {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+}
+
+/* =========================================
+   ✅ بخش جدید: پایه فرم‌ها (Forms)
+   ========================================= */
+.form-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text-main);
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--md-surface-container-high);
+    background: var(--input-bg);
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus {
+    border-color: var(--md-primary);
+    box-shadow: 0 0 0 3px var(--md-primary-container);
+    background: var(--input-focus-bg);
+}
+
+.form-control::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+/* =========================================
    هدر (Google Play Style - Flat & Minimal)
    ========================================= */
 .app-header {
@@ -515,6 +614,38 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .preview-row strong { color: var(--md-primary); }
 
 /* =========================================
+   ✅ بخش جدید: کارت‌های اصلی برنامه (Cards)
+   ========================================= */
+.card {
+    background: var(--md-surface-container-lowest);
+    border: 1px solid var(--md-surface-container-high);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+}
+
+.card-title {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--md-surface-container-high);
+    flex-wrap: wrap;
+}
+
+.card-title svg {
+    width: 22px;
+    height: 22px;
+    fill: var(--md-primary);
+}
+
+/* =========================================
    Student Checkbox
    ========================================= */
 .student-checkbox-list { 
@@ -640,46 +771,6 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 .att-report-badge.late { background: rgba(245, 124, 0, 0.15); color: var(--color-orange); }
 
 /* =========================================
-   Records (سوابق ارزشیابی)
-   ========================================= */
-.record-item { 
-    background: var(--md-surface-container-lowest); 
-    border: 1px solid var(--md-surface-container-high); 
-    border-radius: var(--radius-sm); 
-    padding: 16px; 
-    margin-bottom: 12px; 
-    display: flex; 
-    flex-direction: column; 
-    gap: 10px; 
-    width: 100%; 
-    box-sizing: border-box; 
-}
-.record-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; flex-wrap: wrap; gap: 5px; }
-.record-title { color: var(--text-main); font-size: 1.05rem; word-break: break-word; }
-.record-score { background: var(--md-primary-container); color: var(--md-on-primary-container); padding: 6px 12px; border-radius: 12px; font-size: 0.9rem; white-space: nowrap; }
-.record-details { font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px; }
-.record-actions { display: flex; gap: 8px; margin-top: 8px; justify-content: flex-end; flex-wrap: wrap; }
-
-/* =========================================
-   Report Card
-   ========================================= */
-.report-card-modal { max-width: 600px; width: 95%; padding: 30px; background: var(--md-surface-container-lowest); box-sizing: border-box; }
-.rc-header { text-align: center; border-bottom: 2px solid var(--md-primary); padding-bottom: 15px; margin-bottom: 20px; }
-.rc-header h2 { margin: 0 0 5px 0; color: var(--text-main); }
-.rc-header p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
-.rc-student-info { background: var(--md-surface-container); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; word-break: break-word; }
-.rc-student-info strong { font-size: 1.2rem; color: var(--md-primary); }
-.rc-section-title { font-weight: 700; color: var(--text-main); margin: 20px 0 10px 0; border-bottom: 1px solid var(--md-surface-container-high); padding-bottom: 5px; word-break: break-word; }
-.rc-stats-row { display: flex; gap: 10px; flex-wrap: wrap; }
-.rc-stat-box { flex: 1 1 100px; min-width: 100px; text-align: center; padding: 12px; border-radius: var(--radius-sm); background: var(--md-surface-container-lowest); border: 1px solid var(--md-surface-container-high); }
-.rc-stat-box span { display: block; font-size: 1.5rem; font-weight: 800; margin-top: 5px; }
-.rc-stat-box.present span { color: var(--color-green); }
-.rc-stat-box.absent span { color: var(--color-red); }
-.rc-stat-box.late span { color: var(--color-orange); }
-.rc-subject-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dotted var(--md-surface-container-high); flex-wrap: wrap; gap: 5px; word-break: break-word; }
-.rc-subject-row:last-child { border-bottom: none; }
-
-/* =========================================
    Progress Bars (نوارهای پیشرفت - فلت)
    ========================================= */
 .score-bar-container { width: 100%; height: 8px; background-color: var(--md-surface-container-high); border-radius: 4px; margin-top: 8px; overflow: hidden; direction: ltr; }
@@ -718,7 +809,7 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 }
 
 /* =========================================
-   Pagination (دکمه‌های صفحه‌بندی - قرصی)
+   Pagination (دکمه‌های صفحه‌بندی)
    ========================================= */
 .pagination-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; margin-bottom: 20px; flex-wrap: wrap; }
 .pagination-btn { padding: 10px 20px; background: var(--md-primary-container); color: var(--md-on-primary-container); border: none; border-radius: 999px; cursor: pointer; font-weight: 700; transition: all 0.2s; }
@@ -796,6 +887,7 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 .score-archive-item { padding: 8px 0; border-bottom: 1px solid var(--md-surface-container-high); display: flex; justify-content: space-between; align-items: center; color: var(--text-main); flex-wrap: wrap; gap: 5px; }
 .score-archive-item:last-child { border-bottom: none; }
 .score-archive-item strong { color: var(--md-primary); font-weight: 700; }
+
 /* =========================================
    Exam Editor (فرم ساخت آزمون)
    ========================================= */
@@ -833,7 +925,7 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 }
 
 /* =========================================
-   Exam List
+   Exam List & Grading
    ========================================= */
 .exam-list-item { background: var(--md-surface-container-lowest); border: 1px solid var(--md-surface-container-high); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; transition: all 0.2s; }
 .exam-list-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px; }
@@ -1005,6 +1097,7 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
     outline: none;
     min-width: 0;
 }
+
 /* =========================================
    Special Cards (کارت‌های ویژه - فلت و مدرن)
    ========================================= */
@@ -1141,6 +1234,39 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 .activity-card.qa-orange .ac-value { color: var(--color-orange); }
 .activity-card.qa-violet .ac-icon { color: var(--color-violet); }
 .activity-card.qa-violet .ac-value { color: var(--color-violet); }
+
+/* ✅ آکاردئون‌های داشبورد */
+.dashboard-accordion {
+    background: var(--md-surface-container-lowest);
+    border: 1px solid var(--md-surface-container-high);
+    border-radius: var(--radius-md);
+    margin-bottom: 15px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.dashboard-accordion summary {
+    padding: 16px;
+    font-weight: 800;
+    color: var(--text-main);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    list-style: none;
+    font-size: 1.05rem;
+    transition: background 0.2s;
+}
+
+.dashboard-accordion summary::-webkit-details-marker { display: none; }
+.dashboard-accordion summary::after { content: '▼'; font-size: 0.8rem; color: var(--text-muted); transition: transform 0.2s; }
+.dashboard-accordion[open] summary::after { transform: rotate(180deg); }
+.dashboard-accordion[open] summary { background: var(--md-surface-container); border-bottom: 1px solid var(--md-surface-container-high); }
+
+.dashboard-accordion-content {
+    padding: 16px;
+    background: var(--md-surface-container-lowest);
+}
 
 /* =========================================
    Global SVG Icon Styling
@@ -1389,6 +1515,7 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
     color: var(--text-main);
     font-family: 'IRNumber', monospace;
 }
+
 /* =========================================================================
    ✅ بخش جدید: استایل کارت‌های مدرن برای گروه‌ها و دروس
    ========================================================================= */
@@ -1446,6 +1573,7 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
     border-right: none;
     background: transparent;
 }
+
 /* =========================================================================
    ✅ بخش جدید: استایل کارت‌های مدرن آزمون‌ها و سوابق ارزشیابی
    ========================================================================= */
@@ -1504,6 +1632,7 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 /* دکمه‌های عملیات رنگی برای آزمون */
 .btn-action-play { background: rgba(57, 73, 171, 0.12); color: var(--color-indigo); }
 .btn-action-grade { background: rgba(67, 160, 71, 0.12); color: var(--color-green); }
+
 /* =========================================================================
    ✅ بخش جدید: استایل مدرن بخش تنظیمات (Settings Modal)
    ========================================================================= */
