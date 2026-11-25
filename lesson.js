@@ -129,26 +129,43 @@ function renderLessonData() {
 
     const sortedSubjects = [...window.allSubjectsData].sort((a, b) => a.name.localeCompare(b.name, 'fa'));
 
-    container.innerHTML = '';
+    let html = '';
     sortedSubjects.forEach((sub, index) => {
-        container.innerHTML += `
-            <div class="list-item">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-weight:bold; color:var(--text-muted); min-width:20px;">${toPersianNumber(index + 1)}.</span>
-                    <span style="font-size:1.5rem;">${escapeHtml(sub.symbol || '📚')}</span>
-                    <div>
-                        <strong>${escapeHtml(sub.name)}</strong>
-                        ${sub.motto ? `<div style="font-size:0.8rem; color:var(--text-muted);">${escapeHtml(sub.motto)}</div>` : ''}
+        // انتخاب رنگ آواتار از پالت ۷ رنگه
+        const avatarColorClass = `av-color-${sub.id % 7}`;
+        
+        html += `
+            <div class="modern-list-card">
+                <div class="modern-card-header">
+                    <div class="student-modern-profile">
+                        <div class="modern-card-icon ${avatarColorClass}">
+                            ${escapeHtml(sub.symbol || '📚')}
+                        </div>
+                        <div class="student-modern-info">
+                            <div class="student-modern-name">
+                                <span style="display:inline-block; min-width:20px; color:var(--text-muted); font-weight:bold;">${toPersianNumber(index + 1)}.</span>
+                                <span>${escapeHtml(sub.name)}</span>
+                            </div>
+                            ${sub.motto ? `<div class="student-modern-rank">${escapeHtml(sub.motto)}</div>` : '<div class="student-modern-rank" style="opacity:0.5;">بدون شعار</div>'}
+                        </div>
                     </div>
                 </div>
-                <div style="display:flex; gap:5px;">
-                    <button class="btn btn-secondary btn-sm" onclick="openLessonDetails(${sub.id})" title="مشاهده جزئیات"><svg><use href="#ico-eye"/></svg></button>
-                    <button class="btn btn-secondary btn-sm" onclick="editLesson(${sub.id})" title="ویرایش"><svg><use href="#ico-edit"/></svg></button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteLesson(${sub.id})" title="حذف"><svg><use href="#ico-trash"/></svg></button>
+                
+                <div class="modern-card-actions">
+                    <button class="action-btn-circle btn-action-view" onclick="openLessonDetails(${sub.id})" title="مشاهده جزئیات">
+                        <svg viewBox="0 0 24 24"><use href="#ico-eye"/></svg>
+                    </button>
+                    <button class="action-btn-circle btn-action-edit" onclick="editLesson(${sub.id})" title="ویرایش">
+                        <svg viewBox="0 0 24 24"><use href="#ico-edit"/></svg>
+                    </button>
+                    <button class="action-btn-circle btn-action-delete" onclick="deleteLesson(${sub.id})" title="حذف">
+                        <svg viewBox="0 0 24 24"><use href="#ico-trash"/></svg>
+                    </button>
                 </div>
             </div>
         `;
     });
+    container.innerHTML = html;
 }
 
 async function deleteLesson(id) {
@@ -287,7 +304,7 @@ function renderLessonDetails() {
             const medal = window.getMedalEmoji(item.totalScore, medals);
 
             html += `
-                <div class="list-item" style="padding: 10px 15px; flex-wrap: wrap; gap: 5px;">
+                <div class="list-item" style="padding: 10px 15px; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; border-radius: 8px;">
                     <div style="display:flex; align-items:center; gap:8px; word-break: break-word;">
                         <span style="font-weight:bold; color:var(--text-muted); min-width:20px;">${toPersianNumber(i + 1)}.</span>
                         <span class="medal-badge">${medal}</span>
@@ -310,7 +327,7 @@ function renderLessonDetails() {
         }));
 
         if (studentScores.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ دانش‌آموزی وجود ندارد.</p>';
+            container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">هیچ دانش‌آموزی وجود ندارد.</p>';
             return;
         }
         container.innerHTML = processRanking(studentScores);
@@ -335,7 +352,7 @@ function renderLessonDetails() {
 
             const studentsHtml = studentScores.length > 0 
                 ? processRanking(studentScores) 
-                : '<p style="font-size:0.8rem; color:#64748b; text-align:center;">دانش‌آموزی ندارد.</p>';
+                : '<p style="font-size:0.8rem; color:var(--text-muted); text-align:center;">دانش‌آموزی ندارد.</p>';
 
             return { id: g.id, name: `${g.symbol || ''} ${g.name}`, totalScore: groupTotal, studentsHtml: studentsHtml };
         });
@@ -353,12 +370,12 @@ function renderLessonDetails() {
             const medal = window.getMedalEmoji(g.totalScore, groupMedals);
 
             finalHtml += `
-                <div class="card" style="margin-bottom: 15px; padding: 15px; background: var(--input-bg); border: 1px solid var(--border-color);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; margin-bottom:10px; border-bottom:1px dashed var(--border-color); padding-bottom:10px; gap: 5px;">
+                <div class="card" style="margin-bottom: 15px; padding: 15px; background: var(--md-surface-container); border: 1px solid var(--md-surface-container-high); border-radius: 12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; margin-bottom:10px; border-bottom:1px dashed var(--md-surface-container-high); padding-bottom:10px; gap: 5px;">
                         <div style="display:flex; align-items:center; gap:8px; word-break: break-word;">
                             <span style="font-weight:bold; color:var(--text-muted);">${toPersianNumber(i + 1)}.</span>
                             <span class="medal-badge" style="font-size:1.5rem;">${medal}</span>
-                            <strong style="color:var(--primary); font-size:1.1rem;">${escapeHtml(g.name)}</strong>
+                            <strong style="color:var(--text-main); font-size:1.1rem;">${escapeHtml(g.name)}</strong>
                         </div>
                         <span class="rank-badge" style="white-space: nowrap;">${toPersianNumber(g.totalScore)} امتیاز کل</span>
                     </div>
@@ -370,7 +387,7 @@ function renderLessonDetails() {
         }
 
         if (groupData.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ گروهی وجود ندارد.</p>';
+            container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">هیچ گروهی وجود ندارد.</p>';
         } else {
             container.innerHTML = finalHtml;
         }
