@@ -27,26 +27,33 @@ async function loadExamsData() {
 }
 
 // ==========================================
-// 1. نمایش لیست آزمون‌ها
+// 1. نمایش لیست آزمون‌ها (ظاهر مدرن)
 // ==========================================
 function renderExamsData() {
     const container = document.getElementById('exams-list-container');
     if (!container) return;
 
     let topHtml = `
-        <div style="margin-bottom: 15px; padding: 15px; background: var(--card-bg); border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-            <div style="font-weight: bold; color: var(--text-main);">📥 ثبت خودکار نتایج با کد</div>
-            <button type="button" class="btn btn-primary" onclick="openResultCodeModal()" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); border: none;">📥 دریافت کد نتیجه</button>
+        <div style="margin-bottom: 20px; padding: 16px; background: var(--md-surface-container-lowest); border-radius: var(--radius-md); border: 1px solid var(--md-surface-container-high); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div style="font-weight: 800; color: var(--text-main); font-size: 1.05rem;">📥 ثبت خودکار نتایج با کد</div>
+            <button type="button" class="action-btn-circle btn-action-play" style="width: auto; padding: 0 16px; border-radius: 999px; font-weight: 700;" onclick="openResultCodeModal()">📥 دریافت کد نتیجه</button>
         </div>
     `;
 
     if (!window.allExamsData || window.allExamsData.length === 0) {
-        container.innerHTML = topHtml + `<div class="empty-state"><svg><use href="#empty-exams"/></svg><div class="empty-title">هنوز آزمونی نساختی!</div><div class="empty-desc">اولین آزمونت رو بساز.</div><button class="empty-action" onclick="openExamEditorModal()">➕ ساخت اولین آزمون</button></div>`;
+        container.innerHTML = topHtml + `
+            <div class="empty-state">
+                <svg><use href="#empty-exams"/></svg>
+                <div class="empty-title">هنوز آزمونی نساختی!</div>
+                <div class="empty-desc">اولین آزمونت رو بساز.</div>
+                <button class="empty-action" onclick="openExamEditorModal()">➕ ساخت اولین آزمون</button>
+            </div>`;
         return;
     }
 
     const sortedExams = [...window.allExamsData].sort((a, b) => b.date.localeCompare(a.date));
     let html = topHtml;
+    
     sortedExams.forEach(exam => {
         const sub = window.allSubjectsData ? window.allSubjectsData.find(s => s.id === exam.subjectId) : null;
         const subName = sub ? `${escapeHtml(sub.symbol || '📚')} ${escapeHtml(sub.name)}` : 'بدون درس';
@@ -54,24 +61,47 @@ function renderExamsData() {
         const participantCount = results.length;
         const questionCount = exam.questions ? exam.questions.length : 0;
         
-        let avgHtml = participantCount > 0 ? `<span>📊 میانگین: <strong style="color:var(--primary);">${toPersianNumber((results.reduce((sum, r) => sum + r.score, 0) / participantCount).toFixed(1))}</strong></span>` : `<span style="color:#dc2626;">⚠️ نمره ثبت نشده</span>`;
+        let avgHtml = participantCount > 0 
+            ? `<span>📊 میانگین: <strong style="color:var(--color-green);">${toPersianNumber((results.reduce((sum, r) => sum + r.score, 0) / participantCount).toFixed(1))}</strong></span>` 
+            : `<span style="color:var(--color-red);">⚠️ نمره ثبت نشده</span>`;
         
         html += `
-            <div class="exam-list-item">
-                <div class="exam-list-header"><span class="exam-list-title">${escapeHtml(exam.title)}</span><span class="rank-badge">${toPersianNumber(exam.maxScore)} نمره</span></div>
-                <div class="exam-list-details"><span>📚 ${subName}</span><span>📅 ${toPersianNumber(exam.date)}</span></div>
-                <div class="exam-list-details" style="margin-top: 4px;"><span>❓ ${toPersianNumber(questionCount)} سوال</span><span>👥 ${toPersianNumber(participantCount)} شرکت‌کننده</span></div>
-                <div class="exam-list-details" style="margin-top: 4px;">${avgHtml}</div>
-                <div class="exam-list-actions" style="flex-wrap: wrap; gap: 5px;">
-                    <button class="btn btn-primary btn-sm" onclick="openExamGradingModal('${exam.id}')" title="ثبت نمرات دستی">📝 ثبت نمرات</button>
-                    <button class="btn btn-secondary btn-sm" onclick="generateGameFile('${exam.id}', false)" title="بازی ساده" style="background: #64748b; color: white; border: none;">🎮 بازی ساده</button>
-                    <button class="btn btn-secondary btn-sm" onclick="generateGameFile('${exam.id}', true)" title="بازی هوشمند" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none;">🧠 بازی هوشمند</button>
-                    <button class="btn btn-secondary btn-sm" onclick="exportExamCSV('${exam.id}')" title="خروجی اکسل">📗</button>
-                    <button class="btn btn-secondary btn-sm" onclick="exportExamHTML('${exam.id}')" title="خروجی HTML">🌐</button>
-                    <button class="btn btn-secondary btn-sm" onclick="printExam('${exam.id}')" title="چاپ / PDF">🖨️</button>
-                    <button class="btn btn-secondary btn-sm" onclick="exportExamJSON('${exam.id}')" title="خروجی JSON">📄</button>
-                    <button class="btn btn-secondary btn-sm" onclick="openExamEditorModal('${exam.id}')" title="ویرایش">✏️</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteExam('${exam.id}')" title="حذف">🗑️</button>
+            <div class="modern-list-card" style="margin-bottom: 12px;">
+                <div class="modern-card-header">
+                    <div class="student-modern-profile">
+                        <div class="exam-icon-box">📝</div>
+                        <div class="student-modern-info">
+                            <div class="student-modern-name">${escapeHtml(exam.title)}</div>
+                            <div class="student-modern-rank">
+                                <span class="rank-badge" style="padding: 2px 8px; font-size: 0.75rem;">${toPersianNumber(exam.maxScore)} نمره</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="exam-meta-grid">
+                    <div class="exam-meta-item">📚 ${subName}</div>
+                    <div class="exam-meta-item">📅 ${toPersianNumber(exam.date)}</div>
+                    <div class="exam-meta-item">❓ ${toPersianNumber(questionCount)} سوال</div>
+                    <div class="exam-meta-item">👥 ${toPersianNumber(participantCount)} شرکت‌کننده</div>
+                    <div class="exam-meta-item" style="grid-column: span 2; justify-content: center; margin-top: 4px;">${avgHtml}</div>
+                </div>
+
+                <div class="exam-actions-wrap">
+                    <button class="action-btn-circle btn-action-grade" onclick="openExamGradingModal('${exam.id}')" title="ثبت نمرات دستی">
+                        <svg viewBox="0 0 24 24"><use href="#ico-edit"/></svg>
+                    </button>
+                    <button class="action-btn-circle btn-action-play" onclick="generateGameFile('${exam.id}', false)" title="بازی ساده">🎮</button>
+                    <button class="action-btn-circle btn-action-play" onclick="generateGameFile('${exam.id}', true)" title="بازی هوشمند">🧠</button>
+                    <button class="action-btn-circle btn-action-view" onclick="exportExamCSV('${exam.id}')" title="خروجی اکسل">📗</button>
+                    <button class="action-btn-circle btn-action-view" onclick="exportExamHTML('${exam.id}')" title="خروجی HTML">🌐</button>
+                    <button class="action-btn-circle btn-action-view" onclick="printExam('${exam.id}')" title="چاپ / PDF">🖨️</button>
+                    <button class="action-btn-circle btn-action-edit" onclick="openExamEditorModal('${exam.id}')" title="ویرایش">
+                        <svg viewBox="0 0 24 24"><use href="#ico-edit"/></svg>
+                    </button>
+                    <button class="action-btn-circle btn-action-delete" onclick="deleteExam('${exam.id}')" title="حذف">
+                        <svg viewBox="0 0 24 24"><use href="#ico-trash"/></svg>
+                    </button>
                 </div>
             </div>
         `;
@@ -196,7 +226,6 @@ async function saveExam(event) {
     try { await saveData('exams', examData); showToast('ذخیره شد!', 'success'); if (typeof clearFormDirty === 'function') clearFormDirty(); closeExamEditorModal(); await loadExamsData(); renderExamsData(); } catch (e) { showToast('خطا.', 'error'); }
 }
 async function deleteExam(examId) { if (!confirm('حذف آزمون؟')) return; try { await deleteData('exams', examId); const results = window.allExamResultsData.filter(r => r.examId === examId); for (const result of results) await deleteData('examResults', result.id); showToast('حذف شد.', 'success'); await loadExamsData(); renderExamsData(); } catch (e) { showToast('خطا.', 'error'); } }
-
 // ==========================================
 // 4. ثبت نمرات دستی
 // ==========================================
