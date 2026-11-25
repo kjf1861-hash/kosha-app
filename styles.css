@@ -1160,6 +1160,15 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
     margin-left: 6px;
 }
 
+/* ✅ آیکون‌های داخل عنوان کارت‌ها (مثل افزودن دانش‌آموز) - محدود کردن اندازه غول‌آسا */
+.card-title svg {
+    width: 24px !important;
+    height: 24px !important;
+    flex-shrink: 0;
+    vertical-align: middle;
+    margin-left: 4px;
+}
+
 /* آیکون‌های داخل دکمه‌های معمولی */
 .btn svg {
     width: 18px;
