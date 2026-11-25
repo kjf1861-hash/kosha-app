@@ -114,34 +114,61 @@ function renderStudentsList() {
         const globalRank = startIndex + i + 1;
         
         const medal = window.getMedalEmoji(st.totalScore, medals);
-        const medalHtml = medal ? `<span class="medal-badge">${medal}</span>` : '';
+        const medalHtml = medal ? `<span style="font-size:1.2rem; margin-right:4px;">${medal}</span>` : '';
 
         const g = groupMap[st.groupId];
         const groupBadge = g ? `<span class="group-label">${escapeHtml(g.symbol)} ${escapeHtml(g.name)}</span>` : '';
         
         const studentPass = st.nationalId ? generateStudentPassword(st.nationalId) : '---';
+        
+        // انتخاب رنگ آواتار از پالت ۷ رنگه بر اساس ID دانش‌آموز
+        const avatarColorClass = `av-color-${st.id % 7}`;
+        const avatarLetter = st.firstName ? st.firstName.charAt(0) : '؟';
 
         html += `
-            <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px; padding: 12px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap: wrap; gap: 10px;">
-                    <div style="display:flex; align-items:center; gap:5px; flex: 1 1 200px; min-width: 0;">
-                        <span style="font-weight:bold; min-width:25px; color:var(--text-muted);">${toPersianNumber(globalRank)}.</span>
-                        ${medalHtml}
-                        <span style="word-break: break-word;"><strong>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</strong></span>
-                        ${groupBadge}
-                    </div>
-                    <div style="display:flex; align-items:center; gap:5px; flex-shrink: 0; margin-right: auto;">
-                        <span class="rank-badge">${toPersianNumber(st.totalScore)} امتیاز</span>
-                        <div style="display:flex; gap:5px;">
-                            <button class="btn btn-secondary btn-sm" onclick="openStudentDetails(${st.id})" title="مشاهده جزئیات"><svg><use href="#ico-eye"/></svg></button>
-                            <button class="btn btn-secondary btn-sm" onclick="editStudent(${st.id})" title="ویرایش"><svg><use href="#ico-edit"/></svg></button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteStudent(${st.id})" title="حذف"><svg><use href="#ico-trash"/></svg></button>
+            <div class="student-modern-card">
+                <div class="student-modern-header">
+                    <div class="student-modern-profile">
+                        <div class="student-modern-avatar ${avatarColorClass}">
+                            ${escapeHtml(avatarLetter)}
+                        </div>
+                        <div class="student-modern-info">
+                            <div class="student-modern-name">
+                                ${medalHtml}
+                                <span>${escapeHtml(st.firstName)} ${escapeHtml(st.lastName)}</span>
+                            </div>
+                            <div class="student-modern-rank">
+                                <span style="display:inline-block; min-width:20px;">${toPersianNumber(globalRank)}.</span>
+                                ${groupBadge}
+                            </div>
                         </div>
                     </div>
+                    <div class="student-modern-score">
+                        ${toPersianNumber(st.totalScore)} امتیاز
+                    </div>
                 </div>
-                <div style="font-size: 0.8rem; color: var(--text-muted); margin-right: 25px; display: flex; flex-wrap: wrap; gap: 10px;">
-                    <span>🆔 کد ملی: <strong style="font-family: 'IRNumber';">${escapeHtml(toPersianNumber(st.nationalId || 'ثبت نشده'))}</strong></span>
-                    <span>🔑 رمز: <strong style="font-family: 'IRNumber'; color: var(--primary);">${toPersianNumber(studentPass)}</strong></span>
+                
+                <div class="student-modern-footer">
+                    <div class="student-meta-item">
+                        <span style="font-size:1rem;">🆔</span>
+                        <span>کد ملی: <strong>${escapeHtml(toPersianNumber(st.nationalId || 'ثبت نشده'))}</strong></span>
+                    </div>
+                    <div class="student-meta-item">
+                        <span style="font-size:1rem;">🔑</span>
+                        <span>رمز: <strong style="color: var(--color-blue);">${toPersianNumber(studentPass)}</strong></span>
+                    </div>
+                </div>
+
+                <div class="student-modern-actions">
+                    <button class="action-btn-circle btn-action-view" onclick="openStudentDetails(${st.id})" title="مشاهده جزئیات">
+                        <svg viewBox="0 0 24 24"><use href="#ico-eye"/></svg>
+                    </button>
+                    <button class="action-btn-circle btn-action-edit" onclick="editStudent(${st.id})" title="ویرایش">
+                        <svg viewBox="0 0 24 24"><use href="#ico-edit"/></svg>
+                    </button>
+                    <button class="action-btn-circle btn-action-delete" onclick="deleteStudent(${st.id})" title="حذف">
+                        <svg viewBox="0 0 24 24"><use href="#ico-trash"/></svg>
+                    </button>
                 </div>
             </div>
         `;
@@ -161,7 +188,6 @@ function renderStudentsList() {
         }
     }
 }
-
 async function editStudent(id) {
     const student = await getDataById('students', id);
     if (student) {
@@ -405,7 +431,7 @@ async function openStudentDetails(id) {
             hasSubjects = true;
         }
     });
-    if (!hasSubjects) subjectHtml += '<p style="color:#64748b; font-size:0.9rem; text-align:center;">هنوز امتیازی در هیچ درسی ثبت نشده است.</p>';
+    if (!hasSubjects) subjectHtml += '<p style="color:var(--text-muted); font-size:0.9rem; text-align:center;">هنوز امتیازی در هیچ درسی ثبت نشده است.</p>';
 
     let itemHtml = '<h4 style="color:var(--primary); margin-top:20px; margin-bottom:10px;">📝 دفعات و جزئیات ارزشیابی‌ها</h4>';
     let hasItems = false;
@@ -421,7 +447,7 @@ async function openStudentDetails(id) {
         itemHtml += `<div class="details-list-item" style="flex-wrap: wrap; gap: 5px;"><span style="word-break: break-word;">${escapeHtml(itemName)}</span><span style="color:var(--text-muted); font-size:0.85rem;">${escapeHtml(toPersianNumber(stats.count))} بار (${escapeHtml(toPersianNumber(stats.totalScore))} امتیاز)</span></div>`;
         hasItems = true;
     }
-    if (!hasItems) itemHtml += '<p style="color:#64748b; font-size:0.9rem; text-align:center;">هیچ ارزشیابی ثبت نشده است.</p>';
+    if (!hasItems) itemHtml += '<p style="color:var(--text-muted); font-size:0.9rem; text-align:center;">هیچ ارزشیابی ثبت نشده است.</p>';
 
     content.innerHTML = headerHtml + subjectHtml + itemHtml;
 
@@ -506,7 +532,7 @@ async function loadStudentExamsForDetails(studentId) {
         const result = studentResults.find(r => r.examId === exam.id);
         
         let scoreHtml = '';
-        let badgeColor = '#94a3b8';
+        let badgeColor = 'var(--text-muted)';
         
         if (result) {
             const percent = (result.score / exam.maxScore) * 100;
