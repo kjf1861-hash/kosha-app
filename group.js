@@ -111,25 +111,44 @@ function renderGroupsList() {
         const g = groupScores[i];
         const rank = i + 1;
         const medal = window.getMedalEmoji(g.totalScore, medals);
+        const medalHtml = medal ? `<span style="font-size:1.2rem; margin-right:4px;">${medal}</span>` : '';
+        
+        // انتخاب رنگ آواتار از پالت ۷ رنگه
+        const avatarColorClass = `av-color-${g.id % 7}`;
 
         html += `
-            <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 8px; padding: 15px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap: wrap; gap: 10px;">
-                    <div style="display:flex; align-items:center; gap:8px; flex: 1 1 200px; min-width: 0;">
-                        <span style="font-weight:bold; color:var(--text-muted); min-width:20px;">${toPersianNumber(rank)}.</span>
-                        <span class="medal-badge" style="font-size:1.3rem;">${medal}</span>
-                        <span style="font-size:1.5rem;">${escapeHtml(g.symbol)}</span>
-                        <div style="word-break: break-word;">
-                            <strong>${escapeHtml(g.name)}</strong>
-                            <div style="font-size:0.8rem; color:var(--text-muted);">${toPersianNumber(g.studentCount)} دانش‌آموز</div>
+            <div class="modern-list-card">
+                <div class="modern-card-header">
+                    <div class="student-modern-profile">
+                        <div class="modern-card-icon ${avatarColorClass}">
+                            ${escapeHtml(g.symbol)}
+                        </div>
+                        <div class="student-modern-info">
+                            <div class="student-modern-name">
+                                ${medalHtml}
+                                <span>${escapeHtml(g.name)}</span>
+                            </div>
+                            <div class="student-modern-rank">
+                                <span style="display:inline-block; min-width:20px; color:var(--text-muted); font-weight:bold;">${toPersianNumber(rank)}.</span>
+                                <span>${toPersianNumber(g.studentCount)} دانش‌آموز</span>
+                            </div>
                         </div>
                     </div>
-                    <span class="rank-badge" style="flex-shrink: 0;">${toPersianNumber(g.totalScore)} امتیاز</span>
+                    <div class="student-modern-score">
+                        ${toPersianNumber(g.totalScore)} امتیاز
+                    </div>
                 </div>
-                <div style="display:flex; justify-content:flex-end; gap:5px; margin-top:5px; border-top:1px dashed var(--border-color); padding-top:10px;">
-                    <button class="btn btn-secondary btn-sm" onclick="openGroupDetails(${g.id})" title="مشاهده جزئیات و مدیریت اعضا"><svg><use href="#ico-eye"/></svg></button>
-                    <button class="btn btn-secondary btn-sm" onclick="editGroup(${g.id})" title="ویرایش"><svg><use href="#ico-edit"/></svg></button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteGroup(${g.id})" title="حذف"><svg><use href="#ico-trash"/></svg></button>
+                
+                <div class="modern-card-actions">
+                    <button class="action-btn-circle btn-action-view" onclick="openGroupDetails(${g.id})" title="مشاهده جزئیات و مدیریت اعضا">
+                        <svg viewBox="0 0 24 24"><use href="#ico-eye"/></svg>
+                    </button>
+                    <button class="action-btn-circle btn-action-edit" onclick="editGroup(${g.id})" title="ویرایش">
+                        <svg viewBox="0 0 24 24"><use href="#ico-edit"/></svg>
+                    </button>
+                    <button class="action-btn-circle btn-action-delete" onclick="deleteGroup(${g.id})" title="حذف">
+                        <svg viewBox="0 0 24 24"><use href="#ico-trash"/></svg>
+                    </button>
                 </div>
             </div>
         `;
@@ -318,7 +337,7 @@ function renderGroupDetails() {
     const groupStudents = window.allStudentsData.filter(st => st.groupId === currentGroupDetailsId);
     
     if (groupStudents.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ دانش‌آموزی در این گروه وجود ندارد.</p>';
+        container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">هیچ دانش‌آموزی در این گروه وجود ندارد.</p>';
         return;
     }
 
