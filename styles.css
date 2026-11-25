@@ -1504,3 +1504,84 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 /* دکمه‌های عملیات رنگی برای آزمون */
 .btn-action-play { background: rgba(57, 73, 171, 0.12); color: var(--color-indigo); }
 .btn-action-grade { background: rgba(67, 160, 71, 0.12); color: var(--color-green); }
+/* =========================================================================
+   ✅ بخش جدید: استایل مدرن بخش تنظیمات (Settings Modal)
+   ========================================================================= */
+
+.settings-section {
+    background: var(--md-surface-container-lowest);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--md-surface-container-high);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.settings-header {
+    padding: 14px 16px;
+    font-weight: 800;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--md-surface-container-high);
+}
+
+.settings-header-blue { background: rgba(3, 155, 229, 0.1); color: var(--color-blue); }
+.settings-header-green { background: rgba(67, 160, 71, 0.1); color: var(--color-green); }
+.settings-header-orange { background: rgba(245, 124, 0, 0.1); color: var(--color-orange); }
+.settings-header-red { background: rgba(229, 57, 53, 0.1); color: var(--color-red); }
+
+.settings-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.settings-row-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: var(--md-surface-container);
+    border-radius: var(--radius-sm);
+    flex-wrap: wrap;
+    gap: 10px;
+    border: 1px solid transparent;
+}
+
+.settings-row-item:hover {
+    border-color: var(--md-surface-container-high);
+}
+
+.settings-btn-modern {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.settings-btn-modern:active { transform: scale(0.97); opacity: 0.9; }
+
+.btn-settings-blue { background: rgba(3, 155, 229, 0.15); color: var(--color-blue); }
+.btn-settings-orange { background: rgba(245, 124, 0, 0.15); color: var(--color-orange); }
+.btn-settings-red { background: rgba(229, 57, 53, 0.15); color: var(--color-red); }
+.btn-settings-green { background: rgba(67, 160, 71, 0.15); color: var(--color-green); }
+.btn-settings-violet { background: rgba(142, 36, 170, 0.15); color: var(--color-violet); }
+
+.danger-zone-box {
+    background: rgba(229, 57, 53, 0.05);
+    border: 2px dashed rgba(229, 57, 53, 0.3);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    margin-bottom: 10px;
+}
