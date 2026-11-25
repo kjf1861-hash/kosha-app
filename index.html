@@ -640,141 +640,87 @@
     </a>
 </nav>
 
-<div id="settings-modal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 600px;">
-        <div class="modal-header">⚙️ تنظیمات</div>
-        <div class="academic-year-badge">
-            <div class="ay-info">
-                <div class="ay-label">سال تحصیلی جاری</div>
-                <div class="ay-value" id="currentAcademicYearDisplay">۱۴۰۵-۱۴۰۶</div>
-            </div>
-            <button type="button" class="btn-change-year" onclick="openAcademicYearModal()">
-                🔄 تغییر
-            </button>
-        </div>
-        <div class="card" style="border: 2px solid var(--primary); box-shadow: none; padding: 15px; margin-bottom: 20px;">
-            <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">🏷️ نسخه و به‌روزرسانی</h3>
-            <div class="version-info-box">
-                <div style="font-size: 0.85rem; color: var(--text-muted);">نسخه فعلی برنامه</div>
-                <div class="version-value" id="currentVersionDisplay">—</div>
-                <div class="version-date" id="currentVersionDate">تاریخ انتشار: --</div>
-            </div>
-            <div style="margin-bottom: 12px;">
-                <label class="form-label" style="font-size: 0.9rem;">حالت به‌روزرسانی خودکار:</label>
-                <div class="update-mode-group" id="updateModeGroup">
-                    <label class="update-mode-option" data-mode="auto">
-                        <input type="radio" name="updateMode" value="auto">
-                        <span>🔄 <strong>خودکار</strong> — بدون اطلاع من، بی‌صدا آپدیت شود</span>
-                    </label>
-                    <label class="update-mode-option" data-mode="notify">
-                        <input type="radio" name="updateMode" value="notify">
-                        <span>🔔 <strong>اعلان بده</strong> — قبل از آپدیت از من بپرس (پیشنهادی)</span>
-                    </label>
-                    <label class="update-mode-option" data-mode="manual">
-                        <input type="radio" name="updateMode" value="manual">
-                        <span>✋ <strong>دستی</strong> — فقط وقتی من دکمه بررسی را زدم</span>
-                    </label>
-                </div>
-            </div>
-            <button type="button" class="btn btn-primary btn-block" onclick="checkForUpdatesManually()" id="checkUpdateBtn" style="margin-bottom: 8px;">
-                🔍 بررسی به‌روزرسانی
-            </button>
-            <div class="last-check-display" id="lastCheckDisplay">
-                ⏱️ آخرین بررسی: هرگز
-            </div>
-        </div>
-        <div class="card" style="border: none; box-shadow: none; padding: 0; margin-bottom: 20px;">
-            <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">🏫 مشخصات کلاس</h3>
-            <form id="class-form">
-                <div class="form-group"><label class="form-label" for="className">نام کلاس</label><input type="text" id="className" class="form-control" placeholder="شهید مهدی باکری" autocomplete="on" required></div>
-                <div class="form-group"><label class="form-label" for="classSymbol">نماد (ایموجی)</label><input type="text" id="classSymbol" class="form-control" placeholder="🏫" autocomplete="off"></div>
-                <div class="form-group"><label class="form-label" for="classMotto">شعار کلاس</label><input type="text" id="classMotto" class="form-control" placeholder="تحصیل، تهذیب، ورزش" autocomplete="on" required></div>
-                <div class="form-group"><label class="form-label" for="classGrade">پایه</label><input type="text" id="classGrade" class="form-control" placeholder="پنجم" autocomplete="on" required></div>
-                <div class="form-group"><label class="form-label" for="teacherName">نام آموزگار</label><input type="text" id="teacherName" class="form-control" placeholder="کریم جهانی فانی" autocomplete="on" required></div>
-                <div class="form-group"><label class="form-label" for="schoolName">مدرسه</label><input type="text" id="schoolName" class="form-control" placeholder="مثلاً: دبستان شهید بهشتی" autocomplete="on" required></div>
-                <input type="hidden" id="academicYear" value="">
-                <hr style="border-top: 1px dashed var(--border-color); margin: 15px 0;">
-                <div class="form-group">
-                    <label class="form-label">روزهای فعال هفته (برای برنامه هفتگی)</label>
-                    <div id="schedule-days-checkboxes" style="display: flex; flex-wrap: wrap; gap: 10px; background: var(--input-bg); padding: 12px; border-radius: var(--radius-sm);"></div>
-                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">روزهایی را که مدرسه دایر است انتخاب کنید.</p>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="schedulePeriodsCount">حداکثر تعداد زنگ‌ها در روز</label>
-                    <input type="number" id="schedulePeriodsCount" class="form-control" min="1" max="6" value="5" required>
-                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">حداکثر ۶ زنگ در روز</p>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block mt-4">💾 ذخیره مشخصات</button>
-            </form>
-        </div>
-        <hr style="border-top: 1px dashed var(--border-color); margin: 20px 0;">
-        <div class="card" style="border: none; box-shadow: none; padding: 0; margin-bottom: 20px;">
-            <h3 style="color: var(--primary); border-bottom: 2px dashed var(--primary-light); padding-bottom: 8px; margin-bottom: 15px;">📤 پشتیبان‌گیری و بازیابی</h3>
-            <div id="backup-status" style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 5px; padding: 8px; background: var(--input-bg); border-radius: 8px;">
-                آخرین پشتیبان‌گیری دستی: <strong>نامشخص</strong>
-            </div>
-            <div id="emergency-backup-status" style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 15px; padding: 8px; background: var(--input-bg); border-radius: 8px;">
-                ♻️ آخرین نسخه خودکار: <strong>در حال محاسبه...</strong>
-            </div>
-            <button type="button" class="btn btn-primary btn-block" onclick="exportData()">📤 خروجی JSON (پشتیبان دستی - تمام سال‌ها)</button>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; text-align: center; margin-bottom: 15px;">این فایل شامل تمام داده‌های تمام سال‌های تحصیلی است.</p>
-            <button type="button" class="btn btn-block" onclick="restoreFromEmergencyBackup()" style="background: #f59e0b; color: white; margin-bottom: 15px;">♻️ بازیابی از آخرین نسخه خودکار</button>
-            <div style="border-top: 1px dashed var(--border-color); padding-top: 15px; margin-bottom: 15px;">
-                <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 0.95rem;">🔔 یادآور پشتیبان‌گیری خودکار (مخصوص سال تحصیلی جاری)</h4>
-                <div class="form-group">
-                    <label class="form-label" style="font-size: 0.85rem;">یادآوری دانلود پشتیبان:</label>
-                    <select id="backupReminderType" class="form-control" style="margin-bottom: 8px;">
-                        <option value="off">غیرفعال</option>
-                        <option value="daily">روزانه</option>
-                        <option value="weekly">هفتگی</option>
-                        <option value="monthly">ماهانه</option>
-                    </select>
-                    <button type="button" class="btn btn-secondary btn-block btn-sm" onclick="saveBackupSettings()">💾 ذخیره تنظیمات یادآور</button>
-                </div>
-            </div>
-            <div style="border-top: 1px dashed var(--border-color); padding-top: 15px;">
-                <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center;">
-                    <span>📅 بازه‌های بایگانی (مخصوص سال تحصیلی جاری)</span>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="openPeriodEditor()" style="padding: 4px 10px; font-size: 0.8rem;">➕ بازه جدید</button>
-                </h4>
-                <div id="periods-list-container" style="margin-bottom: 15px;"></div>
-            </div>
-            <div style="border-top: 1px dashed var(--border-color); padding-top: 15px;">
-                <label class="form-label">بازیابی از فایل:</label>
-                <input type="file" id="importFile" accept=".json" class="form-control" onchange="importData(event)">
-            </div>
-        </div>
-        <hr style="border-top: 1px dashed var(--border-color); margin: 20px 0;">
-        <div class="card" style="border: 2px solid #ef4444; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); padding: 15px;">
-            <h3 style="color: #b91c1c; border-bottom: 2px dashed #fca5a5; padding-bottom: 8px; margin-bottom: 15px;">🗑️ بازنشانی و پاکسازی</h3>
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
-                    <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">📅 شروع سال تحصیلی جدید</strong>
-                    <p style="font-size: 0.8rem; color: #64748b; margin: 0 0 10px 0;">پاک کردن تمام سوابق ارزشیابی، حضور و غیاب‌ها و جلسات (دانش‌آموزان و دروس حفظ می‌شوند).</p>
-                    <button type="button" class="btn btn-secondary btn-block" onclick="resetYearlyRecords()" style="background: #fca5a5; color: #7f1d1d;">پاک کردن سوابق</button>
-                </div>
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
-                    <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">🧹 حذف سوابق یک درس یا فعالیت</strong>
-                    <select id="resetRecordSelect" class="form-control" style="margin-bottom: 10px;"></select>
-                    <button type="button" class="btn btn-secondary btn-block" onclick="resetSpecificRecords()" style="background: #fca5a5; color: #7f1d1d;">حذف سوابق انتخاب شده</button>
-                </div>
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fca5a5;">
-                    <strong style="color: #b91c1c; display: block; margin-bottom: 5px;">🧹 پاکسازی فنی (کش)</strong>
-                    <p style="font-size: 0.8rem; color: #64748b; margin: 0 0 10px 0;">اگر برنامه باگ زد یا آپدیت نشد، کش مرورگر را پاک کنید.</p>
-                    <button type="button" class="btn btn-secondary btn-block" onclick="resetTechnicalCache()" style="background: #fca5a5; color: #7f1d1d;">پاکسازی کش</button>
-                </div>
-                <div style="background: #fef2f2; padding: 12px; border-radius: 8px; border: 2px dashed #ef4444; margin-top: 5px;">
-                    <strong style="color: #dc2626; display: block; margin-bottom: 5px;">⚠️ بازنشانی کامل (تنظیمات کارخانه)</strong>
-                    <p style="font-size: 0.8rem; color: #7f1d1d; margin: 0 0 10px 0;">حذف کل اطلاعات برنامه (کلاس، دانش‌آموزان، دروس، سوابق و...). این عمل غیرقابل بازگشت است!</p>
-                    <button type="button" class="btn btn-primary btn-block" onclick="resetFactoryAll()" style="background: #dc2626; border: none;">حذف کل اطلاعات</button>
-                </div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary btn-block" onclick="closeSettingsModal()">بستن</button>
-        </div>
-    </div>
-</div>
+/* =========================================================================
+   ✅ بخش جدید: استایل مدرن بخش تنظیمات (Settings Modal)
+   ========================================================================= */
+
+.settings-section {
+    background: var(--md-surface-container-lowest);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--md-surface-container-high);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.settings-header {
+    padding: 14px 16px;
+    font-weight: 800;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--md-surface-container-high);
+}
+
+.settings-header-blue { background: rgba(3, 155, 229, 0.1); color: var(--color-blue); }
+.settings-header-green { background: rgba(67, 160, 71, 0.1); color: var(--color-green); }
+.settings-header-orange { background: rgba(245, 124, 0, 0.1); color: var(--color-orange); }
+.settings-header-red { background: rgba(229, 57, 53, 0.1); color: var(--color-red); }
+
+.settings-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.settings-row-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: var(--md-surface-container);
+    border-radius: var(--radius-sm);
+    flex-wrap: wrap;
+    gap: 10px;
+    border: 1px solid transparent;
+}
+
+.settings-row-item:hover {
+    border-color: var(--md-surface-container-high);
+}
+
+.settings-btn-modern {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.settings-btn-modern:active { transform: scale(0.97); opacity: 0.9; }
+
+.btn-settings-blue { background: rgba(3, 155, 229, 0.15); color: var(--color-blue); }
+.btn-settings-orange { background: rgba(245, 124, 0, 0.15); color: var(--color-orange); }
+.btn-settings-red { background: rgba(229, 57, 53, 0.15); color: var(--color-red); }
+.btn-settings-green { background: rgba(67, 160, 71, 0.15); color: var(--color-green); }
+.btn-settings-violet { background: rgba(142, 36, 170, 0.15); color: var(--color-violet); }
+
+.danger-zone-box {
+    background: rgba(229, 57, 53, 0.05);
+    border: 2px dashed rgba(229, 57, 53, 0.3);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    margin-bottom: 10px;
+}
 
 <div id="preview-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header">👁️ پیش‌نمایش</div><div id="preview-content"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closePreviewModal()">انصراف</button><button type="button" class="btn btn-primary" onclick="confirmAndSaveRecord()">✅ تأیید و ذخیره</button></div></div></div>
     <div id="edit-record-modal" class="modal-overlay"><div class="modal-content" style="max-width: 600px;"><div class="modal-header">✏️ ویرایش کامل رکورد ارزشیابی</div><form id="edit-record-form"><input type="hidden" id="editRecordId"><div class="form-group"><label class="form-label">درس</label><select id="editRecordSubject" class="form-control" required></select></div><div class="form-group"><label class="form-label">آیتم ارزشیابی</label><select id="editRecordItem" class="form-control" required></select></div><div class="form-group"><label class="form-label">عنوان</label><input type="text" id="editRecordTitle" class="form-control" required></div><div class="form-group"><label class="form-label">تاریخ</label><input type="text" id="editRecordDate" class="form-control" required></div><div class="form-group"><label class="form-label">امتیاز</label><input type="number" id="editRecordScore" class="form-control" required></div><div class="form-group"><label class="form-label">دانش‌آموزان</label><div id="edit-record-students-container" class="student-checkbox-list"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="closeEditModal()">انصراف</button><button type="button" class="btn btn-primary" onclick="saveEditedRecord(event)">💾 ذخیره تغییرات</button></div></form></div></div>
