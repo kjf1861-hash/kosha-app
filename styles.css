@@ -1446,3 +1446,61 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
     border-right: none;
     background: transparent;
 }
+/* =========================================================================
+   ✅ بخش جدید: استایل کارت‌های مدرن آزمون‌ها و سوابق ارزشیابی
+   ========================================================================= */
+
+.exam-icon-box {
+    width: 50px;
+    height: 50px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    flex-shrink: 0;
+    background: rgba(142, 36, 170, 0.15); /* بنفش */
+    color: var(--color-violet);
+}
+
+.record-icon-box {
+    width: 50px;
+    height: 50px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    flex-shrink: 0;
+    background: rgba(57, 73, 171, 0.15); /* نیلی */
+    color: var(--color-indigo);
+}
+
+.exam-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--md-surface-container-high);
+}
+
+.exam-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.exam-actions-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 12px;
+}
+
+/* دکمه‌های عملیات رنگی برای آزمون */
+.btn-action-play { background: rgba(57, 73, 171, 0.12); color: var(--color-indigo); }
+.btn-action-grade { background: rgba(67, 160, 71, 0.12); color: var(--color-green); }
