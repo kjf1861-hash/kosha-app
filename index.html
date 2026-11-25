@@ -7,7 +7,7 @@
     
     <meta name="theme-color" content="#ffffff">
     
-    <!-- ✅ تگ‌های استاندارد PWA و iOS (بر اساس head-tags.html با مسیرهای اصلاح‌شده) -->
+    <!-- ✅ تگ‌های استاندارد PWA و iOS -->
     <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
@@ -18,10 +18,8 @@
     <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
     
-    <!-- ✅ اصلاح ریشه‌ای: لود کردن version.js اول از همه -->
     <script src="version.js"></script>
     
-    <!-- ✅ اصلاح حرفه‌ای: تزریق داینامیک مانیفست با استفاده از نسخه -->
     <script>
         const manifestLink = document.createElement('link');
         manifestLink.rel = 'manifest';
@@ -33,13 +31,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- ✅ اصلاح سیستم کش: لود داینامیک CSS با نسخه -->
     <script>
         document.write('<link rel="stylesheet" href="styles.css?v=' + (window.APP_VERSION || 'v0') + '">');
     </script>
     
     <style>
-        /* ✅ اسپلش سفید و مینیمال (مشابه Play Store) */
         #splash-screen { 
             position: fixed; 
             top: 0; left: 0; 
@@ -66,7 +62,6 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.05); 
         }
         
-        /* رنگ متن‌ها برای پس‌زمینه سفید */
         .splash-title { 
             color: #1B2A41; 
             font-size: 2rem; 
@@ -105,7 +100,7 @@
         .view-toggle-btn { flex: 1; padding: 8px; border: 2px solid var(--border-color); background: var(--card-bg); border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; font-size: 0.9rem; font-weight: bold; color: var(--text-muted); }
         .view-toggle-btn.active { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
         
-        .page-header-title { text-align: center; font-size: 1.6rem; font-weight: bold; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .page-header-title { text-align: center; font-size: 1.5rem; font-weight: 800; color: var(--md-primary); margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
         .academic-year-badge {
             display: flex;
@@ -150,104 +145,28 @@
             font-weight: bold;
         }
         @media (hover: hover) and (pointer: fine) {
-    .year-option-item:hover {
-        border-color: var(--primary);
-        background: var(--primary-light);
-    }
-}
-        .year-option-item.selected {
-            border-color: var(--primary);
-            background: var(--primary-light);
+            .year-option-item:hover { border-color: var(--primary); background: var(--primary-light); }
         }
-        .year-option-item .year-radio {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            border: 2px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: white;
-        }
-        .year-option-item.selected .year-radio {
-            border-color: var(--primary);
-        }
-        .year-option-item.selected .year-radio::after {
-            content: '';
-            width: 12px;
-            height: 12px;
-            background: var(--primary);
-            border-radius: 50%;
-        }
+        .year-option-item.selected { border-color: var(--primary); background: var(--primary-light); }
+        .year-option-item .year-radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; background: white; }
+        .year-option-item.selected .year-radio { border-color: var(--primary); }
+        .year-option-item.selected .year-radio::after { content: ''; width: 12px; height: 12px; background: var(--primary); border-radius: 50%; }
 
-        .version-info-box {
-            background: var(--primary-light);
-            border: 1px solid var(--primary);
-            border-radius: var(--radius-sm);
-            padding: 15px;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        .version-info-box .version-value {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--primary);
-            font-family: 'IRNumber', monospace;
-            margin: 8px 0;
-        }
-        .version-info-box .version-date {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-        .update-mode-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .update-mode-option {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.9rem;
-        }
+        .version-info-box { background: var(--primary-light); border: 1px solid var(--primary); border-radius: var(--radius-sm); padding: 15px; margin-bottom: 15px; text-align: center; }
+        .version-info-box .version-value { font-size: 1.5rem; font-weight: 800; color: var(--primary); font-family: 'IRNumber', monospace; margin: 8px 0; }
+        .version-info-box .version-date { font-size: 0.85rem; color: var(--text-muted); }
+        .update-mode-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .update-mode-option { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
         @media (hover: hover) and (pointer: fine) {
-    .update-mode-option:hover {
-        border-color: var(--primary);
-        background: var(--primary-light);
-    }
-}
-        .update-mode-option input[type="radio"] {
-            accent-color: var(--primary);
-            width: 18px;
-            height: 18px;
-            flex-shrink: 0;
+            .update-mode-option:hover { border-color: var(--primary); background: var(--primary-light); }
         }
-        .update-mode-option.selected {
-            border-color: var(--primary);
-            background: var(--primary-light);
-            font-weight: 700;
-        }
-        .last-check-display {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            text-align: center;
-            margin-top: 8px;
-            padding: 6px;
-            background: var(--input-bg);
-            border-radius: 6px;
-        }
+        .update-mode-option input[type="radio"] { accent-color: var(--primary); width: 18px; height: 18px; flex-shrink: 0; }
+        .update-mode-option.selected { border-color: var(--primary); background: var(--primary-light); font-weight: 700; }
+        .last-check-display { font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 8px; padding: 6px; background: var(--input-bg); border-radius: 6px; }
     </style>
 </head>
 <body>
 
-    <!-- ✅ اسپلش با تصویر جدید از پوشه icons -->
     <div id="splash-screen">
         <div class="splash-logo">
             <img src="./icons/icon-192.png" alt="کوشا">
@@ -267,34 +186,34 @@
             <h1>کوشا</h1>
             <p id="header-subtitle">همیار پرتلاش معلم</p>
         </header>
-                <div class="container">
+        <div class="container">
             
             <div id="page-class" class="page-section active">
-                <div class="page-header-title"><svg><use href="#nav-home"/></svg> کلاس</div>
+                <div class="page-header-title"><svg viewBox="0 0 24 24"><use href="#nav-home"/></svg> کلاس</div>
                 <div class="dashboard-grid">
     <div class="dashboard-card card-blue">
-        <div class="dc-icon-wrapper"><svg><use href="#ico-students"/></svg></div>
+        <div class="dc-icon-wrapper"><svg viewBox="0 0 24 24"><use href="#ico-students"/></svg></div>
         <div class="dc-content">
             <div class="dc-value" id="stat-students">0</div>
             <div class="dc-label">دانش‌آموز</div>
         </div>
     </div>
     <div class="dashboard-card card-green">
-        <div class="dc-icon-wrapper"><svg><use href="#ico-subjects"/></svg></div>
+        <div class="dc-icon-wrapper"><svg viewBox="0 0 24 24"><use href="#ico-subjects"/></svg></div>
         <div class="dc-content">
             <div class="dc-value" id="stat-subjects">0</div>
             <div class="dc-label">درس</div>
         </div>
     </div>
     <div class="dashboard-card card-orange">
-        <div class="dc-icon-wrapper"><svg><use href="#ico-sessions"/></svg></div>
+        <div class="dc-icon-wrapper"><svg viewBox="0 0 24 24"><use href="#ico-sessions"/></svg></div>
         <div class="dc-content">
             <div class="dc-value" id="stat-sessions">0</div>
             <div class="dc-label">جلسه</div>
         </div>
     </div>
     <div class="dashboard-card card-violet">
-        <div class="dc-icon-wrapper"><svg><use href="#ico-records"/></svg></div>
+        <div class="dc-icon-wrapper"><svg viewBox="0 0 24 24"><use href="#ico-records"/></svg></div>
         <div class="dc-content">
             <div class="dc-value" id="stat-records">0</div>
             <div class="dc-label">ارزشیابی</div>
@@ -302,19 +221,18 @@
     </div>
 </div>
 
-<!-- بخش جدید: دسترسی سریع -->
 <h3 class="section-title-minimal">دسترسی سریع</h3>
 <div class="horizontal-scroll-container" id="quick-actions-container">
     <button class="quick-action-btn qa-blue" onclick="switchPage('page-score', document.querySelectorAll('.nav-item')[6])">
-        <div class="qa-icon"><svg><use href="#ico-quick-score"/></svg></div>
+        <div class="qa-icon"><svg viewBox="0 0 24 24"><use href="#ico-quick-score"/></svg></div>
         <span>ثبت ارزشیابی</span>
     </button>
     <button class="quick-action-btn qa-yellow" onclick="switchPage('page-score', document.querySelectorAll('.nav-item')[6]); setTimeout(()=>document.getElementById('specialRewardTitle').focus(), 500);">
-        <div class="qa-icon"><svg><use href="#ico-quick-reward"/></svg></div>
+        <div class="qa-icon"><svg viewBox="0 0 24 24"><use href="#ico-quick-reward"/></svg></div>
         <span>تشویق ویژه</span>
     </button>
     <button class="quick-action-btn qa-green" onclick="switchPage('page-session', document.querySelectorAll('.nav-item')[5])">
-        <div class="qa-icon"><svg><use href="#ico-quick-attendance"/></svg></div>
+        <div class="qa-icon"><svg viewBox="0 0 24 24"><use href="#ico-quick-attendance"/></svg></div>
         <span>حضور و غیاب</span>
     </button>
 </div>
@@ -361,21 +279,22 @@
                     </button>
                 </div>
             </div>
-                                    <div id="page-students" class="page-section">
-    <div class="page-header-title"><svg><use href="#nav-student"/></svg> دانش‌آموزان</div>
+
+            <div id="page-students" class="page-section">
+    <div class="page-header-title"><svg viewBox="0 0 24 24"><use href="#nav-student"/></svg> دانش‌آموزان</div>
     <div class="card">
-        <h2 class="card-title"><svg><use href="#ico-user-plus"/></svg> افزودن دانش‌آموز</h2>
+        <h2 class="card-title"><svg viewBox="0 0 24 24"><use href="#ico-user-plus"/></svg> افزودن دانش‌آموز</h2>
         <form id="student-form">
             <div class="form-group"><label class="form-label" for="studentFirstName">نام</label><input type="text" id="studentFirstName" class="form-control" placeholder="ارسلان" autocomplete="on" required></div>
             <div class="form-group"><label class="form-label" for="studentLastName">نام خانوادگی</label><input type="text" id="studentLastName" class="form-control" placeholder="قاسمی" autocomplete="on" required></div>
             <div class="form-group"><label class="form-label" for="studentNationalId">کد ملی (الزامی)</label><input type="tel" id="studentNationalId" class="form-control" placeholder="مثلاً: 0012345678" maxlength="10" autocomplete="off" required></div>
-            <button type="submit" class="btn btn-primary mt-4"><svg><use href="#ico-plus"/></svg> ثبت دانش‌آموز</button>
+            <button type="submit" class="btn btn-primary mt-4"><svg viewBox="0 0 24 24"><use href="#ico-plus"/></svg> ثبت دانش‌آموز</button>
         </form>
     </div>
     <div class="card">
         <h2 class="card-title" style="justify-content: space-between;">
-            <span style="display: flex; align-items: center; gap: 8px;"><svg><use href="#ico-list"/></svg> فهرست دانش‌آموزان</span>
-            <button type="button" class="btn btn-danger btn-sm" onclick="resetAllStudents()" title="حذف همه دانش‌آموزان" style="padding: 6px 10px; border-radius: 8px;"><svg><use href="#ico-trash"/></svg></button>
+            <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24"><use href="#ico-list"/></svg> فهرست دانش‌آموزان</span>
+            <button type="button" class="btn btn-danger btn-sm" onclick="resetAllStudents()" title="حذف همه دانش‌آموزان" style="padding: 6px 10px; border-radius: 8px;"><svg viewBox="0 0 24 24"><use href="#ico-trash"/></svg></button>
         </h2>
         <div id="students-list" class="list-group"></div>
         <div id="students-pagination" class="pagination-container" style="display:none;">
@@ -385,29 +304,28 @@
         </div>
     </div>
 </div>
-
 <div id="page-lesson" class="page-section">
-    <div class="page-header-title"><svg><use href="#nav-book"/></svg> دروس</div>
+    <div class="page-header-title"><svg viewBox="0 0 24 24"><use href="#nav-book"/></svg> دروس</div>
     <div class="card">
-        <h2 class="card-title"><svg><use href="#ico-plus"/></svg> افزودن مادهٔ درسی</h2>
+        <h2 class="card-title"><svg viewBox="0 0 24 24"><use href="#ico-plus"/></svg> افزودن مادهٔ درسی</h2>
         <form id="lesson-form">
             <div class="form-group"><label class="form-label" for="lessonName">عنوان</label><input type="text" id="lessonName" class="form-control" placeholder="مثلاً: ریاضی" autocomplete="on" required></div>
             <div class="form-group"><label class="form-label" for="lessonSymbol">نماد (ایموجی)</label><input type="text" id="lessonSymbol" class="form-control" placeholder="📐" autocomplete="off"></div>
             <div class="form-group"><label class="form-label" for="lessonMotto">شعار (اختیاری)</label><input type="text" id="lessonMotto" class="form-control" placeholder="مثلاً: ریاضیات، زبان جهان" autocomplete="on"></div>
-            <button type="submit" class="btn btn-primary mt-4"><svg><use href="#ico-plus"/></svg> ثبت درس</button>
+            <button type="submit" class="btn btn-primary mt-4"><svg viewBox="0 0 24 24"><use href="#ico-plus"/></svg> ثبت درس</button>
         </form>
     </div>
     <div class="card">
         <h2 class="card-title" style="justify-content: space-between;">
-            <span style="display: flex; align-items: center; gap: 8px;"><svg><use href="#ico-list"/></svg> فهرست مواد درسی</span>
-            <button type="button" class="btn btn-danger btn-sm" onclick="resetAllLessons()" title="حذف همه دروس" style="padding: 6px 10px; border-radius: 8px;"><svg><use href="#ico-trash"/></svg></button>
+            <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24"><use href="#ico-list"/></svg> فهرست مواد درسی</span>
+            <button type="button" class="btn btn-danger btn-sm" onclick="resetAllLessons()" title="حذف همه دروس" style="padding: 6px 10px; border-radius: 8px;"><svg viewBox="0 0 24 24"><use href="#ico-trash"/></svg></button>
         </h2>
         <div id="lessons-list" class="list-group"></div>
     </div>
 </div>
 
 <div id="page-calendar" class="page-section">
-    <div class="page-header-title"><svg><use href="#nav-calendar"/></svg> تقویم</div>
+    <div class="page-header-title"><svg viewBox="0 0 24 24"><use href="#nav-calendar"/></svg> تقویم</div>
     <div class="card">
         <h2 class="card-title" style="justify-content: space-between;">
             <span style="display: flex; align-items: center; gap: 8px;">📅 تقویم جامع</span>
@@ -428,9 +346,9 @@
 </div>
 
 <div id="page-group" class="page-section">
-    <div class="page-header-title"><svg><use href="#nav-groups"/></svg> گروه‌ها</div>
+    <div class="page-header-title"><svg viewBox="0 0 24 24"><use href="#nav-groups"/></svg> گروه‌ها</div>
     <div class="card">
-        <h2 class="card-title"><svg><use href="#ico-plus"/></svg> ایجاد گروه</h2>
+        <h2 class="card-title"><svg viewBox="0 0 24 24"><use href="#ico-plus"/></svg> ایجاد گروه</h2>
         <form id="group-form">
             <div class="form-group"><label class="form-label" for="groupName">نام گروه</label><input type="text" id="groupName" class="form-control" placeholder="شهباز بصیر" autocomplete="on" required></div>
             <div class="form-group"><label class="form-label" for="groupSymbol">نماد (ایموجی)</label><input type="text" id="groupSymbol" class="form-control" placeholder="🦅" autocomplete="off" required></div>
@@ -438,20 +356,20 @@
                 <label class="form-label" for="groupMotto">شعار گروه (اختیاری)</label>
                 <textarea id="groupMotto" class="form-control" placeholder="تیزبین باشیم..." autocomplete="on" rows="5"></textarea>
             </div>
-            <button type="submit" class="btn btn-primary mt-4"><svg><use href="#ico-plus"/></svg> ثبت گروه</button>
+            <button type="submit" class="btn btn-primary mt-4"><svg viewBox="0 0 24 24"><use href="#ico-plus"/></svg> ثبت گروه</button>
         </form>
     </div>
     <div class="card">
         <h2 class="card-title" style="justify-content: space-between;">
-            <span style="display: flex; align-items: center; gap: 8px;"><svg><use href="#ico-list"/></svg> فهرست گروه‌ها</span>
-            <button type="button" class="btn btn-danger btn-sm" onclick="resetGroupAssignments()" title="پاک کردن گروه‌بندی‌ها" style="padding: 6px 10px; border-radius: 8px;"><svg><use href="#ico-trash"/></svg></button>
+            <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24"><use href="#ico-list"/></svg> فهرست گروه‌ها</span>
+            <button type="button" class="btn btn-danger btn-sm" onclick="resetGroupAssignments()" title="پاک کردن گروه‌بندی‌ها" style="padding: 6px 10px; border-radius: 8px;"><svg viewBox="0 0 24 24"><use href="#ico-trash"/></svg></button>
         </h2>
         <div id="groups-list" class="list-group"></div>
     </div>
 </div>
 
 <div id="page-session" class="page-section">
-    <div class="page-header-title"><svg><use href="#nav-session"/></svg> جلسات</div>
+    <div class="page-header-title"><svg viewBox="0 0 24 24"><use href="#nav-session"/></svg> جلسات</div>
     <div class="card">
         <h2 class="card-title" style="justify-content: space-between;">
             <span style="display: flex; align-items: center; gap: 8px;">📅 برنامهٔ هفتگی</span>
@@ -516,52 +434,53 @@
         </div>
     </div>
 </div>
-        <div id="page-score" class="page-section">
-            <div class="page-header-title"><svg><use href="#nav-score"/></svg> امتیازات</div>
-            <div class="card">
-                <h2 class="card-title">📝 ارزشیابی</h2>
-                <button type="button" class="btn btn-secondary btn-block mb-4" onclick="openItemManagementModal()">⚙️ مدیریت آیتم‌های ارزشیابی</button>
-                <form id="record-form">
-                    <div class="form-group"><label class="form-label" for="recordSubject">درس (الزامی)</label><select id="recordSubject" class="form-control" required></select></div>
-                    <div class="form-group"><label class="form-label" for="recordTitle">عنوان (الزامی)</label><input type="text" id="recordTitle" class="form-control" placeholder="امتحان فصل اول: آفرینش" autocomplete="on" required></div>
-                    <div class="form-group"><label class="form-label" for="recordItem">آیتم ارزشیابی (الزامی)</label><select id="recordItem" class="form-control" required></select></div>
-                    <div class="form-group">
-                        <label class="form-label">انتخاب دانش‌آموزان (الزامی)</label>
-                        <div class="view-toggle-group">
-                            <button type="button" id="btnFlatView" class="view-toggle-btn active" onclick="switchStudentView('flat')">👦 نمای کلاسی</button>
-                            <button type="button" id="btnGroupView" class="view-toggle-btn" onclick="switchStudentView('grouped')">👥 نمای گروهی</button>
-                        </div>
-                        <div style="margin-bottom: 8px; display: flex; gap: 5px; flex-wrap: wrap;">
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllStudents(true)">انتخاب همه</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllStudents(false)">لغو همه</button>
-                        </div>
-                        <div id="students-checkbox-container" class="student-checkbox-list"></div>
-                    </div>
-                    <div id="dynamic-score-section" class="form-group" style="display: none; background: #eef2ff; padding: 15px; border-radius: 8px;">
-                        <label class="form-label" id="score-label">تعیین امتیاز</label>
-                        <div id="score-input-container"></div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">تاریخ (الزامی)</label>
-                        <details class="score-calendar-accordion" id="record-date-accordion">
-                            <summary><span>📅 انتخاب تاریخ از تقویم</span><span id="recordDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span></summary>
-                            <div class="score-calendar-body" id="record-calendar-body">
-                                <div class="calendar-header"><button type="button" onclick="changeScoreCalendarMonth('record', -1)">◀</button><div class="calendar-title" id="record-calendar-title"></div><button type="button" onclick="changeScoreCalendarMonth('record', 1)">▶</button></div>
-                                <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
-                                <div class="calendar-grid" id="record-calendar-grid"></div>
-                            </div>
-                            <div class="score-day-archive" id="record-day-archive" style="display:none;"><div id="record-day-archive-list"></div></div>
-                        </details>
-                        <input type="hidden" id="recordDate" value="">
-                    </div>
-                    <div class="form-group checkbox-group"><input type="checkbox" id="recordArf"><label for="recordArf">🎁 ارفاق آموزشی</label></div>
-                    <div style="display: flex; gap: 10px; margin-top: 20px;">
-                        <button type="button" class="btn btn-secondary" style="flex: 1; font-size: 0.9rem;" onclick="showPreview(false)">⏭️ ثبت و نفر بعدی</button>
-                        <button type="button" class="btn btn-primary" style="flex: 1; font-size: 0.9rem;" onclick="showPreview(true)">✅ ثبت نهایی</button>
-                    </div>
-                </form>
+
+<div id="page-score" class="page-section">
+    <div class="page-header-title"><svg viewBox="0 0 24 24"><use href="#nav-score"/></svg> امتیازات</div>
+    <div class="card">
+        <h2 class="card-title">📝 ارزشیابی</h2>
+        <button type="button" class="btn btn-secondary btn-block mb-4" onclick="openItemManagementModal()">⚙️ مدیریت آیتم‌های ارزشیابی</button>
+        <form id="record-form">
+            <div class="form-group"><label class="form-label" for="recordSubject">درس (الزامی)</label><select id="recordSubject" class="form-control" required></select></div>
+            <div class="form-group"><label class="form-label" for="recordTitle">عنوان (الزامی)</label><input type="text" id="recordTitle" class="form-control" placeholder="امتحان فصل اول: آفرینش" autocomplete="on" required></div>
+            <div class="form-group"><label class="form-label" for="recordItem">آیتم ارزشیابی (الزامی)</label><select id="recordItem" class="form-control" required></select></div>
+            <div class="form-group">
+                <label class="form-label">انتخاب دانش‌آموزان (الزامی)</label>
+                <div class="view-toggle-group">
+                    <button type="button" id="btnFlatView" class="view-toggle-btn active" onclick="switchStudentView('flat')">👦 نمای کلاسی</button>
+                    <button type="button" id="btnGroupView" class="view-toggle-btn" onclick="switchStudentView('grouped')">👥 نمای گروهی</button>
+                </div>
+                <div style="margin-bottom: 8px; display: flex; gap: 5px; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllStudents(true)">انتخاب همه</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllStudents(false)">لغو همه</button>
+                </div>
+                <div id="students-checkbox-container" class="student-checkbox-list"></div>
             </div>
-            <div class="card" style="margin-top: 20px;">
+            <div id="dynamic-score-section" class="form-group" style="display: none; background: #eef2ff; padding: 15px; border-radius: 8px;">
+                <label class="form-label" id="score-label">تعیین امتیاز</label>
+                <div id="score-input-container"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">تاریخ (الزامی)</label>
+                <details class="score-calendar-accordion" id="record-date-accordion">
+                    <summary><span>📅 انتخاب تاریخ از تقویم</span><span id="recordDateDisplay" style="font-size:0.85rem; color:var(--primary); font-weight:bold;">انتخاب نشده</span></summary>
+                    <div class="score-calendar-body" id="record-calendar-body">
+                        <div class="calendar-header"><button type="button" onclick="changeScoreCalendarMonth('record', -1)">◀</button><div class="calendar-title" id="record-calendar-title"></div><button type="button" onclick="changeScoreCalendarMonth('record', 1)">▶</button></div>
+                        <div class="calendar-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span class="friday">ج</span></div>
+                        <div class="calendar-grid" id="record-calendar-grid"></div>
+                    </div>
+                    <div class="score-day-archive" id="record-day-archive" style="display:none;"><div id="record-day-archive-list"></div></div>
+                </details>
+                <input type="hidden" id="recordDate" value="">
+            </div>
+            <div class="form-group checkbox-group"><input type="checkbox" id="recordArf"><label for="recordArf">🎁 ارفاق آموزشی</label></div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" style="flex: 1; font-size: 0.9rem;" onclick="showPreview(false)">⏭️ ثبت و نفر بعدی</button>
+                <button type="button" class="btn btn-primary" style="flex: 1; font-size: 0.9rem;" onclick="showPreview(true)">✅ ثبت نهایی</button>
+            </div>
+        </form>
+    </div>
+                <div class="card" style="margin-top: 20px;">
                 <h2 class="card-title">📝 سوابق ارزشیابی</h2>
                 <div class="form-group" style="margin-bottom: 10px;"><label class="form-label">فیلتر بر اساس درس</label><select id="recordsFilterSubject" class="form-control" onchange="loadAssessmentRecords()"><option value="">همه دروس</option></select></div>
                 <div class="form-group" style="margin-bottom: 10px;"><label class="form-label">فیلتر بر اساس دانش‌آموز</label><select id="recordsFilterStudent" class="form-control" onchange="loadAssessmentRecords()"><option value="">همه دانش‌آموزان</option></select></div>
@@ -682,7 +601,7 @@
         </div>
 
         <div id="page-exams" class="page-section">
-            <div class="page-header-title"><svg><use href="#nav-exams"/></svg> آزمون‌ها</div>
+            <div class="page-header-title"><svg viewBox="0 0 24 24"><use href="#nav-exams"/></svg> آزمون‌ها</div>
             <div class="card">
                 <button type="button" class="btn btn-primary btn-block" onclick="openExamEditorModal()">➕ افزودن آزمون جدید</button>
             </div>
@@ -720,6 +639,7 @@
         <svg viewBox="0 0 24 24"><path d="M22 9 12 4.5 2 9l10 4.5L22 9z"/><path d="M6 11.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5"/><path d="M22 9v5"/></svg>
     </a>
 </nav>
+
 <div id="settings-modal" class="modal-overlay">
     <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header">⚙️ تنظیمات</div>
@@ -1313,97 +1233,97 @@
         }
         
         async function selectAcademicYear(year) {
-    if (window.switchAcademicYear) {
-        const isSuccess = await window.switchAcademicYear(year);
-        if (isSuccess) {
-            closeAcademicYearModal();
+            if (window.switchAcademicYear) {
+                const isSuccess = await window.switchAcademicYear(year);
+                if (isSuccess) {
+                    closeAcademicYearModal();
+                }
+            } else {
+                closeAcademicYearModal();
+            }
         }
-    } else {
-        closeAcademicYearModal();
-    }
-}
 
         function openUpdateModal(versionInfo, force) {
-    const modal = document.getElementById('update-available-modal');
-    if (!modal) return;
-    
-    const isForced = force === true || (versionInfo && versionInfo.forceUpdate === true);
-    
-    const versionText = document.getElementById('update-version-text');
-    if (versionText && versionInfo) {
-        versionText.textContent = isForced
-            ? '⚠️ به‌روزرسانی اجباری — نسخه ' + versionInfo.version
-            : 'نسخه ' + versionInfo.version + ' آماده است';
-    }
-    
-    const notesText = document.getElementById('update-notes-text');
-    if (notesText && versionInfo) notesText.textContent = versionInfo.releaseNotes || 'تغییرات جدید آماده نصب هستند.';
-    
-    const dateText = document.getElementById('update-date-text');
-    if (dateText && versionInfo) dateText.textContent = 'تاریخ انتشار: ' + (versionInfo.releaseDate || '--');
-    
-    const snoozeBtn = document.getElementById('update-snooze-btn');
-    const skipBtn = document.getElementById('update-skip-btn');
-    const settingsBtn = document.getElementById('update-settings-btn');
-    const forceWarning = document.getElementById('update-force-warning');
-    
-    if (isForced) {
-        if (snoozeBtn) snoozeBtn.style.display = 'none';
-        if (skipBtn) skipBtn.style.display = 'none';
-        if (settingsBtn) settingsBtn.style.display = 'none';
-        if (forceWarning) forceWarning.style.display = 'block';
-    } else {
-        if (snoozeBtn) snoozeBtn.style.display = '';
-        if (skipBtn) skipBtn.style.display = '';
-        if (settingsBtn) settingsBtn.style.display = '';
-        if (forceWarning) forceWarning.style.display = 'none';
-    }
-    
-    modal.classList.add('show');
-}
+            const modal = document.getElementById('update-available-modal');
+            if (!modal) return;
+            
+            const isForced = force === true || (versionInfo && versionInfo.forceUpdate === true);
+            
+            const versionText = document.getElementById('update-version-text');
+            if (versionText && versionInfo) {
+                versionText.textContent = isForced
+                    ? '⚠️ به‌روزرسانی اجباری — نسخه ' + versionInfo.version
+                    : 'نسخه ' + versionInfo.version + ' آماده است';
+            }
+            
+            const notesText = document.getElementById('update-notes-text');
+            if (notesText && versionInfo) notesText.textContent = versionInfo.releaseNotes || 'تغییرات جدید آماده نصب هستند.';
+            
+            const dateText = document.getElementById('update-date-text');
+            if (dateText && versionInfo) dateText.textContent = 'تاریخ انتشار: ' + (versionInfo.releaseDate || '--');
+            
+            const snoozeBtn = document.getElementById('update-snooze-btn');
+            const skipBtn = document.getElementById('update-skip-btn');
+            const settingsBtn = document.getElementById('update-settings-btn');
+            const forceWarning = document.getElementById('update-force-warning');
+            
+            if (isForced) {
+                if (snoozeBtn) snoozeBtn.style.display = 'none';
+                if (skipBtn) skipBtn.style.display = 'none';
+                if (settingsBtn) settingsBtn.style.display = 'none';
+                if (forceWarning) forceWarning.style.display = 'block';
+            } else {
+                if (snoozeBtn) snoozeBtn.style.display = '';
+                if (skipBtn) skipBtn.style.display = '';
+                if (settingsBtn) settingsBtn.style.display = '';
+                if (forceWarning) forceWarning.style.display = 'none';
+            }
+            
+            modal.classList.add('show');
+        }
 
-function closeUpdateModal() {
-    const modal = document.getElementById('update-available-modal');
-    if (modal) modal.classList.remove('show');
-}
+        function closeUpdateModal() {
+            const modal = document.getElementById('update-available-modal');
+            if (modal) modal.classList.remove('show');
+        }
 
-function applyUpdateNow() {
-    if (typeof performUpdate === 'function') performUpdate();
-}
+        function applyUpdateNow() {
+            if (typeof performUpdate === 'function') performUpdate();
+        }
 
-function dismissUpdateNotification() {
-    if (typeof window.getCurrentUpdateIsForced === 'function' && window.getCurrentUpdateIsForced()) {
-        return;
-    }
-    if (typeof snoozeUpdateNotification === 'function') snoozeUpdateNotification();
-    closeUpdateModal();
-}
+        function dismissUpdateNotification() {
+            if (typeof window.getCurrentUpdateIsForced === 'function' && window.getCurrentUpdateIsForced()) {
+                return;
+            }
+            if (typeof snoozeUpdateNotification === 'function') snoozeUpdateNotification();
+            closeUpdateModal();
+        }
 
         window.addEventListener('load', async () => {
-    const minSplashTime = new Promise(resolve => setTimeout(resolve, 1200));
+            const minSplashTime = new Promise(resolve => setTimeout(resolve, 1200));
 
-    const initPromise = (async () => {
-        try {
-            if (typeof initApp === 'function') await initApp();
-        } catch (error) {
-            console.error("Init Error:", error);
-        }
-    })();
+            const initPromise = (async () => {
+                try {
+                    if (typeof initApp === 'function') await initApp();
+                } catch (error) {
+                    console.error("Init Error:", error);
+                }
+            })();
 
-    await Promise.all([minSplashTime, initPromise]);
+            await Promise.all([minSplashTime, initPromise]);
 
-    const splash = document.getElementById('splash-screen');
-    const app = document.getElementById('app-container');
-    
-    if (splash) splash.classList.add('splash-hidden');
-    if (app) app.style.display = 'block';
+            const splash = document.getElementById('splash-screen');
+            const app = document.getElementById('app-container');
+            
+            if (splash) splash.classList.add('splash-hidden');
+            if (app) app.style.display = 'block';
 
-    if (splash) {
-        setTimeout(() => { 
-            if (splash.parentElement) splash.remove(); 
-        }, 800);
-    }
-});
+            if (splash) {
+                setTimeout(() => { 
+                    if (splash.parentElement) splash.remove(); 
+                }, 800);
+            }
+        });
 
         function switchPage(pageId, navElement) {
             if (window.isFormDirty) {
@@ -1432,47 +1352,47 @@ function dismissUpdateNotification() {
         }
     </script>
 
-        <svg style="display: none;" aria-hidden="true">
-    <symbol id="ico-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"/></symbol>
-    <symbol id="ico-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"/></symbol>
-    <symbol id="ico-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2" fill="none" stroke="currentColor"/><path d="M12 16v-4M12 8h.01" stroke-width="2.5" stroke-linecap="round" fill="none" stroke="currentColor"/></symbol>
-    <symbol id="empty-students" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/><circle cx="12" cy="7" r="4" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
-    <symbol id="empty-lessons" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
-    <symbol id="empty-groups" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/><circle cx="9.5" cy="7" r="4" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
-    <symbol id="empty-exams" viewBox="0 0 24 24"><path d="M22 9 12 4.5 2 9l10 4.5L22 9z" stroke-width="1.5" stroke-linejoin="round" fill="none" stroke="currentColor"/><path d="M6 11.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
-    <symbol id="empty-records" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/></symbol>
-    
-    <!-- آیکون‌های توپر داشبورد (بدون تغییر) -->
-    <symbol id="ico-students" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/></symbol>
-    <symbol id="ico-subjects" viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z" fill="currentColor"/></symbol>
-    <symbol id="ico-sessions" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" fill="currentColor"/></symbol>
-    <symbol id="ico-records" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/></symbol>
-    <symbol id="ico-quick-score" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z" fill="currentColor"/></symbol>
-    <symbol id="ico-quick-reward" viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z" fill="currentColor"/></symbol>
-    <symbol id="ico-quick-attendance" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 15l-4-4 1.41-1.41L10 15.17l6.59-6.59L18 10l-8 8z" fill="currentColor"/></symbol>
-    <symbol id="ico-quran" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="currentColor"/></symbol>
-    <symbol id="ico-handwriting" viewBox="0 0 24 24"><path d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z" fill="currentColor"/></symbol>
-    <symbol id="ico-exam" viewBox="0 0 24 24"><path d="M20 8h-2.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5c-.49 0-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2.09v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8zm-6 8h-4v-2h4v2zm0-4h-4v-2h4v2z" fill="currentColor"/></symbol>
-    <symbol id="ico-progress" viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" fill="currentColor"/></symbol>
-    <symbol id="ico-user-plus" viewBox="0 0 24 24"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/></symbol>
-    <symbol id="ico-list" viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" fill="currentColor"/></symbol>
-    <symbol id="ico-eye" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" fill="currentColor"/></symbol>
-    <symbol id="ico-edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/></symbol>
-    <symbol id="ico-trash" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="currentColor"/></symbol>
-    <symbol id="ico-plus" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/></symbol>
-    <symbol id="ico-bar-chart" viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z" fill="currentColor"/></symbol>
-    <symbol id="ico-users" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/></symbol>
-    <symbol id="ico-book" viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z" fill="currentColor"/></symbol>
-    
-    <!-- ✅ آیکون‌های استاندارد و یکدست منو (خطی / Outline) -->
-    <symbol id="nav-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></symbol>
-    <symbol id="nav-student" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
-    <symbol id="nav-groups" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
-    <symbol id="nav-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
-    <symbol id="nav-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol>
-    <symbol id="nav-session" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></symbol>
-    <symbol id="nav-score" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
-    <symbol id="nav-exams" viewBox="0 0 24 24"><path d="M22 9 12 4.5 2 9l10 4.5L22 9z"/><path d="M6 11.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5"/><path d="M22 9v5"/></symbol>
-</svg>
+    <svg style="display: none;" aria-hidden="true">
+        <symbol id="ico-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"/></symbol>
+        <symbol id="ico-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor"/></symbol>
+        <symbol id="ico-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2" fill="none" stroke="currentColor"/><path d="M12 16v-4M12 8h.01" stroke-width="2.5" stroke-linecap="round" fill="none" stroke="currentColor"/></symbol>
+        <symbol id="empty-students" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/><circle cx="12" cy="7" r="4" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
+        <symbol id="empty-lessons" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
+        <symbol id="empty-groups" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/><circle cx="9.5" cy="7" r="4" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
+        <symbol id="empty-exams" viewBox="0 0 24 24"><path d="M22 9 12 4.5 2 9l10 4.5L22 9z" stroke-width="1.5" stroke-linejoin="round" fill="none" stroke="currentColor"/><path d="M6 11.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5" stroke-width="1.5" fill="none" stroke="currentColor"/></symbol>
+        <symbol id="empty-records" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="currentColor"/></symbol>
+        
+        <!-- آیکون‌های توپر داشبورد (بدون تغییر) -->
+        <symbol id="ico-students" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/></symbol>
+        <symbol id="ico-subjects" viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z" fill="currentColor"/></symbol>
+        <symbol id="ico-sessions" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" fill="currentColor"/></symbol>
+        <symbol id="ico-records" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/></symbol>
+        <symbol id="ico-quick-score" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z" fill="currentColor"/></symbol>
+        <symbol id="ico-quick-reward" viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z" fill="currentColor"/></symbol>
+        <symbol id="ico-quick-attendance" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 15l-4-4 1.41-1.41L10 15.17l6.59-6.59L18 10l-8 8z" fill="currentColor"/></symbol>
+        <symbol id="ico-quran" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="currentColor"/></symbol>
+        <symbol id="ico-handwriting" viewBox="0 0 24 24"><path d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z" fill="currentColor"/></symbol>
+        <symbol id="ico-exam" viewBox="0 0 24 24"><path d="M20 8h-2.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5c-.49 0-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2.09v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8zm-6 8h-4v-2h4v2zm0-4h-4v-2h4v2z" fill="currentColor"/></symbol>
+        <symbol id="ico-progress" viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" fill="currentColor"/></symbol>
+        <symbol id="ico-user-plus" viewBox="0 0 24 24"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/></symbol>
+        <symbol id="ico-list" viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" fill="currentColor"/></symbol>
+        <symbol id="ico-eye" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" fill="currentColor"/></symbol>
+        <symbol id="ico-edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/></symbol>
+        <symbol id="ico-trash" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="currentColor"/></symbol>
+        <symbol id="ico-plus" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/></symbol>
+        <symbol id="ico-bar-chart" viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z" fill="currentColor"/></symbol>
+        <symbol id="ico-users" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/></symbol>
+        <symbol id="ico-book" viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z" fill="currentColor"/></symbol>
+        
+        <!-- ✅ آیکون‌های استاندارد و یکدست منو (خطی / Outline) -->
+        <symbol id="nav-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></symbol>
+        <symbol id="nav-student" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+        <symbol id="nav-groups" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+        <symbol id="nav-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+        <symbol id="nav-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol>
+        <symbol id="nav-session" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></symbol>
+        <symbol id="nav-score" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+        <symbol id="nav-exams" viewBox="0 0 24 24"><path d="M22 9 12 4.5 2 9l10 4.5L22 9z"/><path d="M6 11.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5"/><path d="M22 9v5"/></symbol>
+    </svg>
 </body>
 </html>
