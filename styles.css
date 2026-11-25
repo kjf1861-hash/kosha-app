@@ -1152,7 +1152,7 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
     width: 24px;
     height: 24px;
     fill: none;
-    stroke: var(--md-primary);
+    stroke: var(--md-primary); /* رنگ اصلی آبی برای همه */
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
@@ -1221,7 +1221,7 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 }
 
 /* =========================================
-   ✅ زیباسازی تب‌های دانش‌آموزان، دروس و گروه‌ها (اصلاح نهایی رنگ‌ها)
+   ✅ زیباسازی تب‌های دانش‌آموزان، دروس و گروه‌ها
    ========================================= */
 
 /* نوار رنگی کناری برای لیست‌ها */
@@ -1269,16 +1269,10 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
     box-shadow: 0 4px 12px rgba(57, 73, 171, 0.3);
 }
 
-/* ✅ اصلاح نهایی: تغییر fill به stroke برای آیکون‌های عنوان */
-#page-students .page-header-title svg { 
-    stroke: var(--color-blue); 
-    fill: none; 
-}
-#page-lesson .page-header-title svg { 
-    stroke: var(--color-orange); 
-    fill: none; 
-}
-#page-group .page-header-title svg { 
-    stroke: var(--color-indigo); 
-    fill: none; 
+/* ✅ یکدست‌سازی نهایی رنگ آیکون‌های عنوان تمام صفحات */
+#page-students .page-header-title svg,
+#page-lesson .page-header-title svg,
+#page-group .page-header-title svg {
+    stroke: var(--md-primary); /* استفاده از رنگ اصلی آبی */
+    fill: none;
 }
