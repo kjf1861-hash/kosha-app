@@ -963,7 +963,7 @@ function loadAssessmentRecords() {
     if (countEl) countEl.textContent = `تعداد نتایج: ${toPersianNumber(filteredRecords.length)} رکورد`;
 
     if (filteredRecords.length === 0) { 
-        container.innerHTML = '<p style="text-align:center; color:#64748b;">هیچ رکوردی یافت نشد.</p>'; 
+        container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">هیچ رکوردی یافت نشد.</p>'; 
         if (pagination) pagination.style.display = 'none';
         return; 
     }
@@ -983,8 +983,7 @@ function loadAssessmentRecords() {
     let html = '';
     for (const rec of paginatedRecords) {
         const subject = subjectMap[rec.subjectId];
-        // ✅ اصلاح امنیتی: escape اطلاعات درس
-        const subjectName = subject ? `${escapeHtml(subject.symbol || '')} ${escapeHtml(subject.name)}` : 'بدون درس (تشویق/قرآن)';
+        const subjectName = subject ? `${escapeHtml(subject.symbol || '')} ${escapeHtml(subject.name)}` : 'بدون درس';
         
         let studentNames = '';
         if (rec.students && rec.students.length > 0) {
@@ -995,21 +994,45 @@ function loadAssessmentRecords() {
             }
             studentNames = names.join('، ');
         }
-        
-        // ✅ اصلاح امنیتی: escape عنوان، نام درس، آیتم و نام دانش‌آموزان
+
+        // آیا این رکورد ارفاق است یا خیر؟ برای تغییر رنگ آیکون
+        const isArf = rec.arf;
+        const iconBoxClass = isArf ? 'background: rgba(253, 216, 53, 0.15); color: #b48a00;' : 'background: rgba(57, 73, 171, 0.15); color: var(--color-indigo);';
+        const iconEmoji = isArf ? '🎁' : '📝';
+        const borderStyle = isArf ? 'border-right: 4px solid var(--color-yellow);' : 'border: 1px solid var(--md-surface-container-high);';
+
         html += `
-            <div class="record-item ${rec.arf ? 'arf-list-item' : ''}">
-                <div class="record-header">
-                    <span class="record-title">${escapeHtml(rec.title)} ${rec.arf ? '🎁' : ''}</span>
-                    <span class="record-score">${toPersianNumber(rec.finalScore)} امتیاز</span>
+            <div class="modern-list-card" style="margin-bottom: 12px; ${borderStyle}">
+                <div class="modern-card-header" style="align-items: flex-start;">
+                    <div class="student-modern-profile" style="align-items: flex-start; gap: 10px;">
+                        <div class="record-icon-box" style="${iconBoxClass}">
+                            ${iconEmoji}
+                        </div>
+                        <div class="student-modern-info">
+                            <div class="student-modern-name" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+                                <span>${escapeHtml(rec.title)}</span>
+                                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;">📚 ${subjectName} | ${escapeHtml(rec.itemName)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="student-modern-score" style="font-size: 0.85rem;">${toPersianNumber(rec.finalScore)} امتیاز</span>
                 </div>
-                <div class="record-details"><span>📚 ${subjectName} | ${escapeHtml(rec.itemName)}</span><span>📅 ${toPersianNumber(rec.date)}</span></div>
-                <div class="record-details" style="font-size: 0.8rem; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">👥 ${escapeHtml(studentNames)}</div>
-                <div class="record-actions">
-                    <button class="btn btn-secondary btn-sm" onclick="openEditRecordModal(${rec.id})">✏️ ویرایش</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteRecord(${rec.id})">🗑️ حذف</button>
+                
+                <div class="exam-meta-grid" style="grid-template-columns: 1fr;">
+                    <div class="exam-meta-item">📅 تاریخ ثبت: ${toPersianNumber(rec.date)}</div>
+                    <div class="exam-meta-item" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">👥 ${escapeHtml(studentNames || 'بدون دانش‌آموز')}</div>
                 </div>
-            </div>`;
+
+                <div class="exam-actions-wrap">
+                    <button class="action-btn-circle btn-action-edit" onclick="openEditRecordModal(${rec.id})" title="ویرایش">
+                        <svg viewBox="0 0 24 24"><use href="#ico-edit"/></svg>
+                    </button>
+                    <button class="action-btn-circle btn-action-delete" onclick="deleteRecord(${rec.id})" title="حذف">
+                        <svg viewBox="0 0 24 24"><use href="#ico-trash"/></svg>
+                    </button>
+                </div>
+            </div>
+        `;
     }
 
     container.innerHTML = html;
