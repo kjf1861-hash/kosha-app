@@ -1389,3 +1389,60 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
     color: var(--text-main);
     font-family: 'IRNumber', monospace;
 }
+/* =========================================================================
+   ✅ بخش جدید: استایل کارت‌های مدرن برای گروه‌ها و دروس
+   ========================================================================= */
+
+.modern-list-card {
+    background: var(--md-surface-container-lowest);
+    border: 1px solid var(--md-surface-container-high);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.modern-list-card:active {
+    transform: scale(0.98);
+}
+
+.modern-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+}
+
+.modern-card-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    flex-shrink: 0;
+}
+
+.modern-card-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 4px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--md-surface-container-high);
+}
+
+/* حذف حاشیه قدیمی مخصوص لیست‌های گروه و درس */
+#lessons-list .list-item, 
+#groups-list .list-item {
+    border-right: none;
+    background: transparent;
+}
