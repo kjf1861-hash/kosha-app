@@ -76,7 +76,6 @@ body, button, input, select, textarea, .form-control, .btn, .nav-item, .list-ite
 [data-theme="dark"] {
     color-scheme: dark;
     
-    /* در حالت شب رنگ اصلی کمی روشن‌تر می‌شود تا کنتراست حفظ شود */
     --md-primary: #29B6F6; 
     --md-on-primary: #000000;
     --md-primary-container: rgba(41, 182, 246, 0.20);
@@ -153,7 +152,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
     margin-bottom: 20px;
     position: relative;
     overflow: hidden;
-    border-bottom: none; /* حذف خط */
+    border-bottom: none;
     transition: background 0.3s ease;
 }
 
@@ -241,12 +240,12 @@ h1, h2, h3, h4, p { margin-top: 0; }
     display: flex;
     justify-content: space-around;
     align-items: center;
-    height: 80px; /* کمی بلندتر برای جا دادن نشانگر قرصی */
+    height: 80px;
     padding: 0 5px;
     padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: none; /* حذف سایه */
+    box-shadow: none;
     z-index: 100;
-    border-top: none; /* حذف خط بالای منو */
+    border-top: none;
     transition: background 0.3s ease;
 }
 
@@ -256,19 +255,19 @@ h1, h2, h3, h4, p { margin-top: 0; }
     align-items: center;
     justify-content: center;
     color: var(--md-on-surface-variant);
-    padding: 6px 2px; /* کاهش پدینگ افقی */
-    margin: 0 1px;    /* کاهش مارجین افقی */
+    padding: 6px 2px;
+    margin: 0 1px;
     text-decoration: none;
-    border-radius: 18px; /* کمی گردتر برای فشرده شدن بهتر */
-    flex: 1 1 0;      /* تقسیم مساوی فضا بین همه تب‌ها */
-    min-width: 0;     /* جلوگیری از سرریز شدن متن یا آیکون */
+    border-radius: 18px;
+    flex: 1 1 0;
+    min-width: 0;
     height: 60px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
 }
 
 .nav-item svg {
-    width: 22px; /* اندازه آیکون کمی کوچک‌تر شد تا در ۸ تب جا شود */
+    width: 22px;
     height: 22px;
     fill: none;
     stroke: currentColor;
@@ -278,21 +277,20 @@ h1, h2, h3, h4, p { margin-top: 0; }
     transition: all 0.3s ease;
 }
 
-/* حالت فعال (Google Play Pill Style) */
 .nav-item.active {
     color: var(--md-on-primary-container);
     background-color: var(--md-primary-container);
 }
 
 .nav-item.active svg {
-    stroke-width: 2.5; /* توپرتر شدن آیکون در حالت فعال */
+    stroke-width: 2.5;
     transform: scale(1.05);
 }
 
-/* حذف خط بالای تب فعال (کد قبلی) */
 .nav-item.active::before {
     display: none; 
 }
+
 /* =========================================
    Empty State (حالت خالی - مینیمال)
    ========================================= */
@@ -337,7 +335,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
     background: var(--md-primary);
     color: var(--md-on-primary);
     border: none;
-    border-radius: 999px; /* کاملاً گرد به سبک گوگل */
+    border-radius: 999px;
     font-family: inherit;
     font-size: 0.9rem;
     font-weight: 700;
@@ -359,7 +357,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
     bottom: 96px;
     left: 50%;
     transform: translateX(-50%) translateY(20px);
-    background: var(--md-on-surface); /* مشکی/سرمه‌ای برای حالت روشن */
+    background: var(--md-on-surface);
     color: var(--md-surface);
     padding: 14px 20px;
     border-radius: 12px;
@@ -395,7 +393,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
     stroke: currentColor;
     stroke-width: 2.5;
 }
-/* رنگ‌های معنایی برای نوار کناری Toast */
 .custom-toast-success { border-right: 4px solid var(--md-success); }
 .custom-toast-success svg { color: var(--md-success); }
 .custom-toast-error { border-right: 4px solid var(--md-error); }
@@ -425,7 +422,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
 
 @media (hover: hover) and (pointer: fine) {
     .list-item:hover { 
-        background-color: var(--md-surface-container); /* تغییر جزئی پس‌زمینه به جای سایه */
+        background-color: var(--md-surface-container);
     }
 }
 
@@ -452,7 +449,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
     align-items: center; 
     gap: 8px; 
     font-weight: 700; 
-    color: var(--text-main); /* متن باید خوانا بماند */
+    color: var(--text-main);
     margin-top: 8px; 
     flex-wrap: wrap; 
 }
@@ -477,7 +474,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
    ========================================= */
 .modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(15, 23, 42, 0.4); /* پس‌زمینه نیمه شفاف ملایم */
+    background: rgba(15, 23, 42, 0.4);
     display: flex; justify-content: center; align-items: center;
     z-index: 2000; opacity: 0; visibility: hidden; transition: all 0.3s ease;
     padding: 15px;
@@ -495,7 +492,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
     max-height: 90vh; 
     overflow-y: auto; 
     overflow-x: hidden;
-    border: none; /* حذف حاشیه */
+    border: none;
     box-sizing: border-box;
 }
 [data-theme="dark"] .modal-content {
@@ -563,7 +560,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
     flex-wrap: wrap; 
     gap: 5px; 
 }
-
 /* =========================================
    Group Accordion
    ========================================= */
@@ -634,7 +630,6 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
     min-width: 70px; 
 }
 
-/* استفاده از رنگ‌های معنایی پالت */
 .att-btn.present.active { background: rgba(67, 160, 71, 0.15); color: var(--color-green); border-color: var(--color-green); }
 .att-btn.absent.active { background: rgba(229, 57, 53, 0.15); color: var(--color-red); border-color: var(--color-red); }
 .att-btn.late.active { background: rgba(245, 124, 0, 0.15); color: var(--color-orange); border-color: var(--color-orange); }
@@ -683,12 +678,13 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 .rc-stat-box.late span { color: var(--color-orange); }
 .rc-subject-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dotted var(--md-surface-container-high); flex-wrap: wrap; gap: 5px; word-break: break-word; }
 .rc-subject-row:last-child { border-bottom: none; }
+
 /* =========================================
    Progress Bars (نوارهای پیشرفت - فلت)
    ========================================= */
 .score-bar-container { width: 100%; height: 8px; background-color: var(--md-surface-container-high); border-radius: 4px; margin-top: 8px; overflow: hidden; direction: ltr; }
 .score-bar-fill { height: 100%; background: var(--md-primary); border-radius: 4px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
-.score-bar-fill.is-first { background: var(--color-yellow); } /* مدال طلا */
+.score-bar-fill.is-first { background: var(--color-yellow); }
 
 .progress-bar-container { width: 100%; height: 8px; background-color: var(--md-surface-container-high); border-radius: 4px; overflow: hidden; margin-top: 5px; direction: ltr; }
 .progress-bar-fill { height: 100%; background: var(--md-primary); border-radius: 4px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -768,7 +764,7 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 .calendar-weekdays span.friday { color: var(--color-red); }
 
 .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; width: 100%; }
-.calendar-day { display: flex; justify-content: center; align-items: center; height: 40px; border-radius: 50%; /* دایره‌ای مانند گوگل */ background: transparent; border: 1px solid transparent; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; user-select: none; position: relative; }
+.calendar-day { display: flex; justify-content: center; align-items: center; height: 40px; border-radius: 50%; background: transparent; border: 1px solid transparent; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; user-select: none; position: relative; }
 .calendar-day.empty { background: transparent; cursor: default; border: none; pointer-events: none; }
 .calendar-day.friday, .calendar-day.holiday { color: var(--color-red); }
 .calendar-day.has-session { color: var(--color-green); border: 1px dashed var(--color-green); }
@@ -800,7 +796,6 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 .score-archive-item { padding: 8px 0; border-bottom: 1px solid var(--md-surface-container-high); display: flex; justify-content: space-between; align-items: center; color: var(--text-main); flex-wrap: wrap; gap: 5px; }
 .score-archive-item:last-child { border-bottom: none; }
 .score-archive-item strong { color: var(--md-primary); font-weight: 700; }
-
 /* =========================================
    Exam Editor (فرم ساخت آزمون)
    ========================================= */
@@ -1010,11 +1005,12 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
     outline: none;
     min-width: 0;
 }
+
 /* =========================================
    Special Cards (کارت‌های ویژه - فلت و مدرن)
    ========================================= */
 .card-warning {
-    background: rgba(253, 216, 53, 0.08); /* پس‌زمینه زرد بسیار ملایم از پالت */
+    background: rgba(253, 216, 53, 0.08);
     border: 1px solid var(--color-yellow);
     box-shadow: none;
 }
@@ -1032,7 +1028,7 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 }
 
 .card-info {
-    background: var(--md-primary-container); /* پس‌زمینه آبی ملایم */
+    background: var(--md-primary-container);
     border: 1px solid var(--color-blue);
     box-shadow: none;
 }
@@ -1050,7 +1046,7 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 }
 
 .card-quran {
-    background: rgba(67, 160, 71, 0.08); /* پس‌زمینه سبز ملایم */
+    background: rgba(67, 160, 71, 0.08);
     border: 1px solid var(--color-green);
     box-shadow: none;
 }
@@ -1070,245 +1066,72 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 /* =========================================
    ✅ مودال تنظیمات و به‌روزرسانی (سبک گوگل پلی)
    ========================================= */
-.update-mode-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 12px;
-}
-.update-mode-option {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    background: var(--md-surface-container-lowest);
-    border: 1px solid var(--md-surface-container-high);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.9rem;
-    flex-wrap: wrap;
-    word-break: break-word;
-}
-.update-mode-option input[type="radio"] {
-    accent-color: var(--md-primary);
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-    margin: 0;
-    cursor: pointer;
-}
-.update-mode-option span {
-    flex: 1 1 150px;
-    line-height: 1.5;
-}
-.update-mode-option.selected {
-    border-color: var(--md-primary);
-    background: var(--md-primary-container);
-    color: var(--md-on-primary-container);
-    font-weight: 700;
-}
+.update-mode-group { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.update-mode-option { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--md-surface-container-lowest); border: 1px solid var(--md-surface-container-high); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s ease; font-size: 0.9rem; flex-wrap: wrap; word-break: break-word; }
+.update-mode-option input[type="radio"] { accent-color: var(--md-primary); width: 20px; height: 20px; flex-shrink: 0; margin: 0; cursor: pointer; }
+.update-mode-option span { flex: 1 1 150px; line-height: 1.5; }
+.update-mode-option.selected { border-color: var(--md-primary); background: var(--md-primary-container); color: var(--md-on-primary-container); font-weight: 700; }
 
 @media (hover: hover) and (pointer: fine) {
-    .update-mode-option:hover {
-        background: var(--md-surface-container);
-        border-color: var(--md-primary);
-    }
-    .update-mode-option.selected:hover {
-        background: var(--md-primary-container);
-    }
+    .update-mode-option:hover { background: var(--md-surface-container); border-color: var(--md-primary); }
+    .update-mode-option.selected:hover { background: var(--md-primary-container); }
 }
 
-/* باکس نسخه */
-.version-info-box {
-    background: var(--md-surface-container-lowest);
-    border: 1px solid var(--md-surface-container-high);
-    border-radius: var(--radius-sm);
-    padding: 16px;
-    margin-bottom: 15px;
-    text-align: center;
-}
-.version-info-box .version-value {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--md-primary);
-    font-family: 'IRNumber', monospace;
-    margin: 8px 0;
-}
-.version-info-box .version-date {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-}
+.version-info-box { background: var(--md-surface-container-lowest); border: 1px solid var(--md-surface-container-high); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 15px; text-align: center; }
+.version-info-box .version-value { font-size: 1.5rem; font-weight: 800; color: var(--md-primary); font-family: 'IRNumber', monospace; margin: 8px 0; }
+.version-info-box .version-date { font-size: 0.85rem; color: var(--text-muted); }
 
-/* باکس سال تحصیلی */
-.academic-year-badge {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--md-surface-container);
-    border: 1px solid var(--md-surface-container-high);
-    border-radius: var(--radius-md);
-    padding: 16px 20px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-.academic-year-badge .ay-info {
-    text-align: right;
-    flex: 1 1 150px;
-    word-break: break-word;
-}
-.academic-year-badge .ay-label {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-}
-.academic-year-badge .ay-value {
-    font-size: 1.4rem;
-    font-weight: 800;
-    color: var(--text-main);
-    font-family: 'IRNumber', monospace;
-}
-.academic-year-badge .btn-change-year {
-    background: var(--md-primary);
-    color: var(--md-on-primary);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 999px; /* دکمه قرصی */
-    font-weight: 700;
-    cursor: pointer;
-    font-family: inherit;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: none; /* حذف سایه */
-    flex-shrink: 0;
-    transition: opacity 0.2s;
-}
-.academic-year-badge .btn-change-year:active {
-    opacity: 0.8;
-}
+.academic-year-badge { display: flex; justify-content: space-between; align-items: center; background: var(--md-surface-container); border: 1px solid var(--md-surface-container-high); border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.academic-year-badge .ay-info { text-align: right; flex: 1 1 150px; word-break: break-word; }
+.academic-year-badge .ay-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; }
+.academic-year-badge .ay-value { font-size: 1.4rem; font-weight: 800; color: var(--text-main); font-family: 'IRNumber', monospace; }
+.academic-year-badge .btn-change-year { background: var(--md-primary); color: var(--md-on-primary); border: none; padding: 10px 20px; border-radius: 999px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 8px; box-shadow: none; flex-shrink: 0; transition: opacity 0.2s; }
+.academic-year-badge .btn-change-year:active { opacity: 0.8; }
 
-.last-check-display {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    text-align: center;
-    margin-top: 12px;
-    padding: 8px;
-    background: var(--md-surface-container);
-    border-radius: 8px;
-}
+.last-check-display { font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 12px; padding: 8px; background: var(--md-surface-container); border-radius: 8px; }
+
 /* =========================================
    Dashboard V2 (Colored Cards & Quick Actions)
    ========================================= */
-.section-title-minimal {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: var(--text-main);
-    margin: 20px 0 12px 0;
-    padding-right: 4px;
-}
+.section-title-minimal { font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin: 20px 0 12px 0; padding-right: 4px; }
 
-.dashboard-grid { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 12px; 
-    margin-bottom: 10px; 
-}
+.dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
 
-.dashboard-card {
-    background: var(--md-surface-container-lowest);
-    border-radius: var(--radius-md);
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border: 1px solid var(--md-surface-container-high);
-    transition: transform 0.2s;
-    box-sizing: border-box;
-}
+.dashboard-card { background: var(--md-surface-container-lowest); border-radius: var(--radius-md); padding: 16px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--md-surface-container-high); transition: transform 0.2s; box-sizing: border-box; }
 .dashboard-card:active { transform: scale(0.97); }
 
-.dc-icon-wrapper {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-.dc-icon-wrapper svg {
-    width: 24px;
-    height: 24px;
-}
+.dc-icon-wrapper { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.dc-icon-wrapper svg { width: 24px; height: 24px; }
 
 .dc-content { display: flex; flex-direction: column; align-items: flex-start; }
 .dc-value { font-size: 1.4rem; font-weight: 800; line-height: 1.2; color: var(--text-main); }
 .dc-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
 
-/* رنگ‌های کارت‌های داشبورد */
 .card-blue .dc-icon-wrapper { background: rgba(3, 155, 229, 0.15); color: var(--color-blue); }
 .card-green .dc-icon-wrapper { background: rgba(67, 160, 71, 0.15); color: var(--color-green); }
 .card-orange .dc-icon-wrapper { background: rgba(245, 124, 0, 0.15); color: var(--color-orange); }
 .card-violet .dc-icon-wrapper { background: rgba(142, 36, 170, 0.15); color: var(--color-violet); }
 
-/* دکمه‌های دسترسی سریع */
-#quick-actions-container {
-    padding-bottom: 15px;
-    margin-bottom: 10px;
-}
+#quick-actions-container { padding-bottom: 15px; margin-bottom: 10px; }
 
-.quick-action-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 16px 20px;
-    border-radius: 16px;
-    min-width: 110px;
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 0.85rem;
-    font-weight: 700;
-    transition: transform 0.2s, opacity 0.2s;
-    flex-shrink: 0;
-}
+.quick-action-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 16px 20px; border-radius: 16px; min-width: 110px; border: none; cursor: pointer; font-family: inherit; font-size: 0.85rem; font-weight: 700; transition: transform 0.2s, opacity 0.2s; flex-shrink: 0; }
 .quick-action-btn:active { transform: scale(0.95); opacity: 0.8; }
 
 .qa-icon { display: flex; align-items: center; justify-content: center; }
 .qa-icon svg { width: 28px; height: 28px; }
 
-/* رنگ‌های دسترسی سریع */
 .qa-blue { background: rgba(3, 155, 229, 0.1); color: var(--color-blue); }
-.qa-yellow { background: rgba(253, 216, 53, 0.15); color: #b48a00; } /* زرد تیره‌تر برای خوانایی بهتر */
+.qa-yellow { background: rgba(253, 216, 53, 0.15); color: #b48a00; }
 .qa-green { background: rgba(67, 160, 71, 0.1); color: var(--color-green); }
 .qa-orange { background: rgba(245, 124, 0, 0.1); color: var(--color-orange); }
 .qa-violet { background: rgba(142, 36, 170, 0.1); color: var(--color-violet); }
 
-/* استایل کارت‌های فعالیت (بروزرسانی شده) */
-.activity-card {
-    min-width: 110px;
-    background: var(--md-surface-container-lowest);
-    border: 1px solid var(--md-surface-container-high);
-    border-radius: var(--radius-md);
-    padding: 16px 10px;
-    text-align: center;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
+.activity-card { min-width: 110px; background: var(--md-surface-container-lowest); border: 1px solid var(--md-surface-container-high); border-radius: var(--radius-md); padding: 16px 10px; text-align: center; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
 .activity-card .ac-icon { display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
 .activity-card .ac-icon svg { width: 28px; height: 28px; }
 .activity-card .ac-value { font-size: 1.3rem; font-weight: 800; }
 .activity-card .ac-label { font-size: 0.75rem; font-weight: 700; opacity: 0.8; }
 
-/* رنگ‌های آیکون کارت‌های فعالیت */
 .activity-card.qa-green .ac-icon { color: var(--color-green); }
 .activity-card.qa-green .ac-value { color: var(--color-green); }
 .activity-card.qa-blue .ac-icon { color: var(--color-blue); }
@@ -1319,8 +1142,9 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 .activity-card.qa-orange .ac-value { color: var(--color-orange); }
 .activity-card.qa-violet .ac-icon { color: var(--color-violet); }
 .activity-card.qa-violet .ac-value { color: var(--color-violet); }
+
 /* =========================================
-   Global SVG Icon Styling (اصلاح و یکدست‌سازی نهایی)
+   ✅ Global SVG Icon Styling (اصلاح نهایی و قطعی)
    ========================================= */
 
 /* آیکون‌های عنوان صفحات (بالای هر تب) */
@@ -1336,24 +1160,24 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
     margin-left: 6px;
 }
 
-/* آیکون‌های داخل دکمه‌های معمولی (با متن) */
+/* آیکون‌های داخل دکمه‌های معمولی */
 .btn svg {
     width: 18px;
     height: 18px;
     fill: currentColor;
-    stroke: none; /* برای اطمینان از نمایش توپر در دکمه‌ها */
+    stroke: none;
     vertical-align: middle;
     margin-left: 4px;
 }
 
-/* آیکون‌های داخل دکمه‌های کوچک (مثل عملیات لیست‌ها) */
+/* آیکون‌های داخل دکمه‌های کوچک */
 .btn-sm svg {
     width: 16px;
     height: 16px;
     margin-left: 0;
 }
 
-/* آیکون داخل دکمه‌های حالت خالی (Empty State) */
+/* آیکون داخل دکمه‌های حالت خالی */
 .empty-state .empty-action svg {
     width: 18px;
     height: 18px;
@@ -1371,11 +1195,6 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
     vertical-align: middle;
 }
 
-/* ✅ اصلاح خاص برای آیکون‌های منو در عنوان صفحات (اگر با استایل بالا هم‌خوانی نداشت) */
-.page-header-title svg use {
-    fill: none;
-    stroke: var(--md-primary);
-}
 /* =========================================
    ✅ رفع مشکل اسکرول افقی (داشبورد)
    ========================================= */
@@ -1393,10 +1212,10 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
 }
 
 /* =========================================
-   ✅ زیباسازی تب‌های دانش‌آموزان، دروس و گروه‌ها
+   ✅ زیباسازی تب‌های دانش‌آموزان، دروس و گروه‌ها (اصلاح نهایی رنگ‌ها)
    ========================================= */
 
-/* نوار رنگی کناری برای لیست‌ها (مشابه گوگل پلی) */
+/* نوار رنگی کناری برای لیست‌ها */
 #students-list .list-item {
     border-right: 4px solid var(--color-blue);
     background: linear-gradient(90deg, var(--md-surface-container-lowest) 90%, rgba(3, 155, 229, 0.05) 100%);
@@ -1410,7 +1229,7 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
     background: linear-gradient(90deg, var(--md-surface-container-lowest) 90%, rgba(57, 73, 171, 0.05) 100%);
 }
 
-/* زیباسازی دکمه‌های عملیات (چشم، مداد، سطل زباله) */
+/* زیباسازی دکمه‌های عملیات */
 #students-list .btn-secondary, #lessons-list .btn-secondary, #groups-list .btn-secondary {
     background: var(--md-primary-container);
     color: var(--md-primary);
@@ -1441,7 +1260,16 @@ details.group-accordion[open] summary { background: var(--md-surface-container);
     box-shadow: 0 4px 12px rgba(57, 73, 171, 0.3);
 }
 
-/* رنگ‌بندی آیکون‌های بالای هر صفحه */
-#page-students .page-header-title svg { fill: var(--color-blue); }
-#page-lesson .page-header-title svg { fill: var(--color-orange); }
-#page-group .page-header-title svg { fill: var(--color-indigo); }
+/* ✅ اصلاح نهایی: تغییر fill به stroke برای آیکون‌های عنوان */
+#page-students .page-header-title svg { 
+    stroke: var(--color-blue); 
+    fill: none; 
+}
+#page-lesson .page-header-title svg { 
+    stroke: var(--color-orange); 
+    fill: none; 
+}
+#page-group .page-header-title svg { 
+    stroke: var(--color-indigo); 
+    fill: none; 
+}
